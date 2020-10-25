@@ -1,0 +1,57 @@
+{
+	"name": "obsidian-confluence",
+	"version": "0.0.0",
+	"description": "This plugin allows you to publish your notes to Confluence",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"fmt": "npx prettier --write src/",
+		"prepare": "husky install"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/markdown-it": "^12.2.3",
+		"@types/mime-types": "^2.1.1",
+		"@types/node": "^16.11.6",
+		"@types/spark-md5": "^3.0.2",
+		"@typescript-eslint/eslint-plugin": "5.29.0",
+		"@typescript-eslint/parser": "5.29.0",
+		"builtin-modules": "3.3.0",
+		"esbuild": "0.14.47",
+		"husky": "^8.0.1",
+		"lint-staged": "^13.0.3",
+		"markdown-it": "^13.0.1",
+		"obsidian": "latest",
+		"prettier": "2.7.1",
+		"tslib": "2.4.0",
+		"typescript": "4.7.4"
+	},
+	"dependencies": {
+		"@atlaskit/adf-utils": "^17.1.4",
+		"@atlaskit/editor-common": "^70.2.0",
+		"@atlaskit/editor-confluence-transformer": "^8.1.31",
+		"@atlaskit/editor-json-transformer": "^8.8.1",
+		"confluence.js": "^1.6.1",
+		"form-data-encoder": "^2.1.3",
+		"formdata-node": "^5.0.0",
+		"markdown-it-table": "^2.0.4",
+		"markdown-it-task-checkbox": "^1.0.6",
+		"markdown-it-task-lists": "^2.1.1",
+		"markdown-it-wikilinks": "^1.2.0",
+		"mime-types": "^2.1.35",
+		"prosemirror-markdown": "^1.10.1",
+		"prosemirror-model": "1.14.3",
+		"spark-md5": "^3.0.2"
+	},
+	"lint-staged": {
+		"src/**/*": "prettier --write --ignore-unknown"
+	},
+	"resolutions": {
+		"prosemirror-model": "1.14.3"
+	}
+}

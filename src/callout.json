@@ -1,0 +1,23 @@
+{
+	"type": "doc",
+	"content": [
+		{
+			"type": "panel",
+			"attrs": {
+				"panelType": "info"
+			},
+			"content": [
+				{
+					"type": "paragraph",
+					"content": [
+						{
+							"text": "Testing",
+							"type": "text"
+						}
+					]
+				}
+			]
+		}
+	],
+	"version": 1
+}
