@@ -1,12 +1,14 @@
 {
 	"name": "obsidian-confluence",
-	"version": "1.0.0",
+	"version": "0.0.0",
 	"description": "This plugin allows you to publish your notes to Confluence",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"fmt": "npx prettier --write src/",
+		"prepare": "husky install"
 	},
 	"keywords": [],
 	"author": "",
@@ -17,12 +19,18 @@
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.14.47",
+		"husky": "^8.0.1",
+		"lint-staged": "^13.0.3",
 		"obsidian": "latest",
+		"prettier": "2.7.1",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
 		"confluence.js": "^1.6.1",
 		"showdown-confluence": "^2.0.2"
+	},
+	"lint-staged": {
+		"src/**/*": "prettier --write --ignore-unknown"
 	}
 }
