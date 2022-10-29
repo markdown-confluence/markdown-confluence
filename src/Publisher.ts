@@ -1,8 +1,9 @@
-import { Vault, MetadataCache, TFile } from "obsidian";
+import { App, Vault, MetadataCache, TFile } from "obsidian";
 import { CustomConfluenceClient } from "./MyBaseClient";
 import { MyPluginSettings } from "./Settings";
 import * as confluence from "showdown-confluence";
 import FolderFile from "./FolderFile.txt";
+import { CompletedModal } from "./CompletedModal";
 
 export class Publisher {
 	vault: Vault;
@@ -11,12 +12,15 @@ export class Publisher {
 	settings: MyPluginSettings;
 	confluenceClient: CustomConfluenceClient;
 	frontmatterRegex: RegExp = /^\s*?---\n([\s\S]*?)\n---/g;
+	app: App;
 
 	constructor(
+		app: App,
 		vault: Vault,
 		metadataCache: MetadataCache,
 		settings: MyPluginSettings
 	) {
+		this.app = app;
 		this.vault = vault;
 		this.metadataCache = metadataCache;
 		this.settings = settings;
@@ -79,9 +83,24 @@ export class Publisher {
 
 		const adrFiles = await Promise.all(adrFileTasks);
 		console.log({ adrFiles });
+
+		const stats = adrFiles.reduce(
+			(previousValue, currentValue) => {
+				const key = currentValue ? "successes" : "failures";
+				previousValue[key]++;
+				return previousValue;
+			},
+			{ successes: 0, failures: 0 }
+		);
+
+		new CompletedModal(this.app, stats).open();
 	}
 
-	async publishFile(file: TFile, spaceKey: string, parentPageId: string) {
+	async publishFile(
+		file: TFile,
+		spaceKey: string,
+		parentPageId: string
+	): Promise<boolean> {
 		let text = await this.vault.cachedRead(file);
 		console.log({ text });
 		const converter = new confluence.Converter();
@@ -106,7 +125,7 @@ export class Publisher {
 
 			if (currentPage?.body?.storage?.value === adr) {
 				console.log("Page is the same not updating");
-				return;
+				return true;
 			}
 
 			console.log("Updating page", { currentPage });
@@ -137,5 +156,7 @@ export class Publisher {
 				creatingPageContent
 			);
 		}
+
+		return true;
 	}
 }

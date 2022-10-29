@@ -15,6 +15,7 @@ export default class MyPlugin extends Plugin {
 			callback: async () => {
 				const { vault, workspace, metadataCache } = this.app;
 				const publisher = new Publisher(
+					this.app,
 					vault,
 					metadataCache,
 					this.settings
