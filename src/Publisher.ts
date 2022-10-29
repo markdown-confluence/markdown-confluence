@@ -38,7 +38,8 @@ export class Publisher {
 			try {
 				const frontMatter = this.metadataCache.getCache(
 					file.path
-				).frontmatter;
+				)!.frontmatter; //TODO: How to handle this better??
+
 				if (file.basename === "Test Note - Frontmatter opted out") {
 					console.log({ frontMatter });
 				}
@@ -70,8 +71,9 @@ export class Publisher {
 		const files = await this.getFilesMarkedForPublishing();
 		console.log({ filesToPublish: files });
 
-		const adrFileTasks = files.map((file) =>
-			this.publishFile(file, spaceToPublishTo.key, parentPage.id)
+		const adrFileTasks = files.map(
+			(file) =>
+				this.publishFile(file, spaceToPublishTo!.key, parentPage.id) //TODO: Handle missing space key better
 		);
 
 		const adrFiles = await Promise.all(adrFileTasks);
