@@ -104,7 +104,7 @@ export class Publisher {
 		if (contentByTitle.size > 0) {
 			const currentPage = contentByTitle.results[0];
 
-			if (currentPage.body.storage.value === adr) {
+			if (currentPage?.body?.storage?.value === adr) {
 				console.log("Page is the same not updating");
 				return;
 			}
