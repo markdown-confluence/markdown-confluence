@@ -2,6 +2,7 @@ import { Vault, MetadataCache, TFile } from "obsidian";
 import { CustomConfluenceClient } from "./MyBaseClient";
 import { MyPluginSettings } from "./Settings";
 import * as confluence from "showdown-confluence";
+import FolderFile from "./FolderFile.txt";
 
 export class Publisher {
 	vault: Vault;
@@ -92,7 +93,7 @@ export class Publisher {
 			type: "page",
 			spaceKey,
 			title: pageTitle,
-			expand: "version",
+			expand: ["version", "body.storage"],
 		};
 		console.log({ searchParams });
 		const contentByTitle = await this.confluenceClient.content.getContent(
@@ -102,6 +103,12 @@ export class Publisher {
 
 		if (contentByTitle.size > 0) {
 			const currentPage = contentByTitle.results[0];
+
+			if (currentPage.body.storage.value === adr) {
+				console.log("Page is the same not updating");
+				return;
+			}
+
 			console.log("Updating page", { currentPage });
 
 			const updateContentDetails = {
