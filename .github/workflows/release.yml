@@ -26,11 +26,12 @@ jobs:
           npm run build
           mkdir ${{ env.PLUGIN_NAME }}
           echo ${{ github.ref }}
-          sed -i 's/0\.0\.0/${{ github.ref }}/g' manifest.json
+          tag_name=$(git tag --sort version:refname | tail -n 1)
+          sed -i 's/0\.0\.0/$tag_name/g' manifest.json
           cp main.js manifest.json ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
           ls
-          echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
+          echo "::set-output name=tag_name::$tag_name"
 
       - name: Create Release
         id: create_release
