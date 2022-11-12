@@ -153,4 +153,5 @@ export class MyBaseClient implements Client {
 export class CustomConfluenceClient extends MyBaseClient {
 	content = new Api.Content(this);
 	space = new Api.Space(this);
+	contentAttachments = new Api.ContentAttachments(this);
 }
