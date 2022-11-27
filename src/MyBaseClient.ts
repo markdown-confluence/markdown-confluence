@@ -88,7 +88,24 @@ export class MyBaseClient implements Client {
 		callback: Callback<T> | never
 	): Promise<void | T> {
 		try {
+			console.info({ requestConfig });
 			const params = this.paramSerializer(requestConfig.params);
+
+			const requestContentType =
+				requestConfig?.headers?.hasOwnProperty("Content-Type") &&
+				requestConfig?.headers["Content-Type"]
+					.toString()
+					.startsWith("multipart/form-data")
+					? requestConfig?.headers["Content-Type"].toString()
+					: "application/json";
+			const requestBody =
+				requestConfig?.headers?.hasOwnProperty("Content-Type") &&
+				requestConfig?.headers["Content-Type"]
+					.toString()
+					.startsWith("multipart/form-data")
+					? requestConfig.data
+					: JSON.stringify(requestConfig.data);
+
 			const modifiedRequestConfig = {
 				...requestConfig,
 				headers: this.removeUndefinedProperties({
@@ -112,8 +129,10 @@ export class MyBaseClient implements Client {
 					...requestConfig.headers,
 				}),
 				url: `${this.config.host}${this.urlSuffix}${requestConfig.url}?${params}`,
-				body: JSON.stringify(requestConfig.data),
+				body: requestBody,
 				method: requestConfig.method?.toUpperCase(),
+				contentType: requestContentType,
+				throw: true,
 			};
 			console.log({ modifiedRequestConfig });
 			const response = await requestUrl(modifiedRequestConfig);

@@ -6,6 +6,7 @@ import { MarkdownParser } from "prosemirror-markdown";
 import { Schema, Node as PMNode } from "prosemirror-model";
 import { markdownItMedia } from "./media";
 import myTokenizer from "./callout";
+import taskLists from "./tasklist";
 
 function filterMdToPmSchemaMapping(schema: Schema, map: any) {
 	return Object.keys(map).reduce((newMap: any, key: string) => {
@@ -142,6 +143,10 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 		if (schema.nodes.panel) {
 			tokenizer.use(myTokenizer);
 		}
+
+		//if (schema.nodes.task) {
+		//	tokenizer.use(taskLists);
+		//}
 
 		(["nodes", "marks"] as (keyof SchemaMapping)[]).forEach((key) => {
 			for (const idx in pmSchemaToMdMapping[key]) {

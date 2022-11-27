@@ -1,92 +1,40 @@
-import { App, Vault, MetadataCache, TFile } from "obsidian";
 import { CustomConfluenceClient } from "./MyBaseClient";
 import { MyPluginSettings } from "./Settings";
 import FolderFile from "./FolderFile.json";
-import Test from "./callout.json";
-import { CompletedModal } from "./CompletedModal";
-import { MarkdownTransformer } from "./MarkdownTransformer";
-import { JSONTransformer } from "@atlaskit/editor-json-transformer";
-import { lookup } from "mime-types";
+import { JSONDocNode } from "@atlaskit/editor-json-transformer";
+
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
+import * as SparkMD5 from "spark-md5";
+import { doc, p } from "@atlaskit/adf-utils/builders";
+import { ADFEntity } from "@atlaskit/adf-utils/types";
+import MdToADF from "./mdToADF";
+import ObsidianAdaptor from "./adaptors/obsidian";
+import { LoaderAdaptor, MarkdownFile } from "./adaptors/types";
 
-export class FileToPublish {
-	private readonly adfContent: string;
-	private readonly title: string;
-
-	constructor(title: string, adfContent: string) {
-		this.title = title;
-		this.adfContent = adfContent;
-	}
-
-	public getTitle(): string {
-		return this.title;
-	}
-	public getAdfContent(): string {
-		return this.adfContent;
-	}
-}
 export class Publisher {
-	vault: Vault;
-	metadataCache: MetadataCache;
-
-	settings: MyPluginSettings;
 	confluenceClient: CustomConfluenceClient;
-	frontmatterRegex: RegExp = /^\s*?---\n([\s\S]*?)\n---/g;
-	app: App;
-	transformer: MarkdownTransformer;
-	serializer: JSONTransformer;
+	blankPageAdf: string = JSON.stringify(doc(p("Blank page to replace")));
+	mdToADFConverter: MdToADF;
+	adaptor: ObsidianAdaptor;
+	settings: MyPluginSettings;
 
-	constructor(
-		app: App,
-		vault: Vault,
-		metadataCache: MetadataCache,
-		settings: MyPluginSettings
-	) {
-		this.app = app;
-		this.vault = vault;
-		this.metadataCache = metadataCache;
+	constructor(vault: LoaderAdaptor, settings: MyPluginSettings) {
 		this.settings = settings;
 
-		this.transformer = new MarkdownTransformer();
-		this.serializer = new JSONTransformer();
+		this.mdToADFConverter = new MdToADF();
 
 		this.confluenceClient = new CustomConfluenceClient({
-			host: "https://hello.atlassian.net",
+			host: settings.confluenceBaseUrl,
 			authentication: {
 				basic: {
-					email: this.settings.atlassianUserName,
-					apiToken: this.settings.atlassianApiToken,
+					email: settings.atlassianUserName,
+					apiToken: settings.atlassianApiToken,
 				},
 			},
 		});
 	}
 
-	async getFilesMarkedForPublishing(): Promise<TFile[]> {
-		const files = this.vault.getMarkdownFiles();
-		const filesToPublish = [];
-		for (const file of files) {
-			try {
-				const frontMatter = this.metadataCache.getCache(
-					file.path
-				)!.frontmatter; //TODO: How to handle this better??
-
-				if (
-					(file.path.startsWith(this.settings.folderToPublish) &&
-						(!frontMatter ||
-							frontMatter["connie-publish"] !== false)) ||
-					(frontMatter && frontMatter["connie-publish"] === true)
-				) {
-					filesToPublish.push(file);
-				}
-			} catch {
-				//ignore
-			}
-		}
-
-		return filesToPublish;
-	}
-
-	async doPublish() {
+	async doPublish(): Promise<{ successes: number; failures: number }> {
 		const parentPage = await this.confluenceClient.content.getContentById({
 			id: this.settings.confluenceParentId,
 			expand: ["body.atlas_doc_format", "space"],
@@ -94,29 +42,9 @@ export class Publisher {
 		const spaceToPublishTo = parentPage.space;
 		console.log({ parentPage });
 
-		const files = await this.getFilesMarkedForPublishing();
-		const foldersToMake = new Set(
-			files.map((f) => {
-				let folderName = `/${f.path.replace(f.name, "")}`;
-				folderName = folderName.substring(0, folderName.length - 1);
-				return folderName;
-			})
-		);
-
-		console.log({ foldersToMake });
-
-		for (const folder of foldersToMake) {
-			const myFolders = folder.split("/");
-			const folderFile = `${folder}/${myFolders.last()}.md`;
-			console.log({ folderFile });
-			if (files.find((file) => `/${file.path}` === folderFile)) {
-				console.log("File Exists");
-			}
-		}
-
+		const files = await this.adaptor.getMarkdownFilesToUpload();
 		//TODO: Create fake file to publish
 		//TODO: Handle finding root folder
-		//TODO: Stop using TFile for publishing
 
 		const adrFileTasks = files.map(
 			(file) =>
@@ -134,26 +62,24 @@ export class Publisher {
 			{ successes: 0, failures: 0 }
 		);
 
-		new CompletedModal(this.app, stats).open();
+		return stats;
 	}
 
 	async publishFile(
-		file: TFile,
+		file: MarkdownFile,
 		spaceKey: string,
 		parentPageId: string
 	): Promise<boolean> {
-		let text = await this.vault.cachedRead(file);
-		text = text.replace(this.frontmatterRegex, "");
+		if (file.pageTitle !== "Testing2") {
+			return false;
+		}
 
-		const prosenodes = this.transformer.parse(text);
-		const adrobj = this.serializer.encode(prosenodes);
-		const adr = JSON.stringify(adrobj);
+		const adrobj = this.mdToADFConverter.parse(file.contents);
 
-		const pageTitle = file.basename;
 		const searchParams = {
 			type: "page",
 			spaceKey,
-			title: pageTitle,
+			title: file.pageTitle,
 			expand: ["version", "body.atlas_doc_format"],
 		};
 		const contentByTitle = await this.confluenceClient.content.getContent(
@@ -162,6 +88,13 @@ export class Publisher {
 
 		if (contentByTitle.size > 0) {
 			const currentPage = contentByTitle.results[0];
+
+			const updatedAdr = await this.uploadFiles(
+				currentPage.id,
+				file.absoluteFilePath,
+				adrobj
+			);
+			const adr = JSON.stringify(updatedAdr);
 
 			if (currentPage?.body?.atlas_doc_format?.value === adr) {
 				console.log("Page is the same not updating");
@@ -174,7 +107,7 @@ export class Publisher {
 				id: currentPage.id,
 				ancestors: [{ id: parentPageId }],
 				version: { number: (currentPage?.version?.number ?? 1) + 1 },
-				title: pageTitle,
+				title: file.pageTitle,
 				type: "page",
 				body: {
 					atlas_doc_format: {
@@ -185,17 +118,40 @@ export class Publisher {
 			};
 			console.log({ updateContentDetails });
 
-			await this.uploadFiles(currentPage.id, file.path, adrobj);
-
-			//await this.confluenceClient.content.updateContent(
-			//	updateContentDetails
-			//);
+			await this.confluenceClient.content.updateContent(
+				updateContentDetails
+			);
 		} else {
 			console.log("Creating page");
-			const creatingPageContent = {
+			const creatingBlankPageRequest = {
 				space: { key: spaceKey },
 				ancestors: [{ id: parentPageId }],
-				title: pageTitle,
+				title: file.pageTitle,
+				type: "page",
+				body: {
+					atlas_doc_format: {
+						value: this.blankPageAdf,
+						representation: "atlas_doc_format",
+					},
+				},
+			};
+			const pageDetails =
+				await this.confluenceClient.content.createContent(
+					creatingBlankPageRequest
+				);
+
+			const updatedAdr = await this.uploadFiles(
+				pageDetails.id,
+				file.absoluteFilePath,
+				adrobj
+			);
+
+			const adr = JSON.stringify(updatedAdr);
+			const updateContentDetails = {
+				id: pageDetails.id,
+				ancestors: [{ id: parentPageId }],
+				version: { number: (pageDetails?.version?.number ?? 1) + 1 },
+				title: file.pageTitle,
 				type: "page",
 				body: {
 					atlas_doc_format: {
@@ -204,11 +160,10 @@ export class Publisher {
 					},
 				},
 			};
-			console.log({ creatingPageContent });
-			const pageDetails =
-				await this.confluenceClient.content.createContent(
-					creatingPageContent
-				);
+			console.log({ updateContentDetails });
+			await this.confluenceClient.content.updateContent(
+				updateContentDetails
+			);
 		}
 
 		return true;
@@ -217,68 +172,149 @@ export class Publisher {
 	async uploadFiles(
 		pageId: string,
 		pageFilePath: string,
-		adr: any
-	): Promise<void> {
+		adr: JSONDocNode
+	): Promise<false | ADFEntity> {
 		const mediaNodes = filter(
 			adr,
 			(node) =>
 				node.type === "media" && (node.attrs || {})?.type === "file"
 		);
 
-		console.log({ mediaNodes });
+		const currentUploadedAttachments =
+			await this.confluenceClient.contentAttachments.getAttachments({
+				id: pageId,
+			});
+		console.log({ currentUploadedAttachments });
+		const currentAttachments = currentUploadedAttachments.results.reduce(
+			(prev, curr) => {
+				return {
+					...prev,
+					[`${curr.title}`]: {
+						filehash: curr.metadata.comment,
+						attachmentId: curr.extensions.fileId,
+						collectionName: curr.extensions.collectionName,
+					},
+				};
+			},
+			{}
+		);
+
+		console.log({ mediaNodes, currentAttachments });
 
 		const imagesToUpload = new Set(
 			mediaNodes.map((node) => node?.attrs?.url)
 		).values();
 
+		let imageMap: Record<string, UploadedImageData> = {};
+
 		for (const imageUrl of imagesToUpload) {
 			console.log({ testing: imageUrl });
 			const filename = imageUrl.split(":")[1];
-			await this.uploadFile(pageId, pageFilePath, filename);
-		}
+			const uploadedContent = await this.uploadFile(
+				pageId,
+				pageFilePath,
+				filename,
+				currentAttachments
+			);
 
-		traverse(adr, {
+			imageMap = {
+				...imageMap,
+				[imageUrl]: uploadedContent,
+			};
+		}
+		console.log({ beforeAdr: adr });
+
+		const afterAdf = traverse(adr, {
 			media: (node, parent) => {
-				if (
-					node.type === "file" &&
-					!!node.url &&
-					node.url.startswith("localfile:")
-				) {
-					console.info({ node });
-					const localPath = node.url.replace("localfile:", "");
+				if (node?.attrs?.type === "file") {
+					console.log({ node });
+					if (!imageMap[node?.attrs?.url]) {
+						return;
+					}
+					const mappedImage = imageMap[node.attrs.url];
+					node.attrs.collection = mappedImage.collection;
+					node.attrs.id = mappedImage.id;
+					delete node.attrs.url;
+					console.log({ node });
 				}
 			},
 		});
+
+		console.log({ afterAdr: afterAdf });
+
+		return afterAdf;
 	}
 
 	async uploadFile(
 		pageId: string,
 		pageFilePath: string,
-		fileNameToUpload: string
-	): Promise<void> {
-		const testing = this.metadataCache.getFirstLinkpathDest(
+		fileNameToUpload: string,
+		currentAttachments: Record<
+			string,
+			{ filehash: string; attachmentId: string; collectionName: string }
+		>
+	): Promise<UploadedImageData | null> {
+		console.log("UPLOAD FILE FUNCTION", fileNameToUpload);
+		const testing = await this.adaptor.readBinary(
 			fileNameToUpload,
 			pageFilePath
 		);
 		if (!!testing) {
-			const files = await this.vault.readBinary(testing);
-			const mimeType = lookup(testing.extension);
+			const spark = new SparkMD5.ArrayBuffer();
+			const currentFileMd5 = spark.append(testing.contents).end();
+			const pathMd5 = SparkMD5.hash(testing.filePath);
+			const uploadFilename = `${pathMd5}-${testing.filename}`;
+
+			if (
+				!!currentAttachments[uploadFilename] &&
+				currentAttachments[uploadFilename].filehash === currentFileMd5
+			) {
+				console.log("FILE ALREADY UPLOADED");
+				console.log({
+					fileDetails: currentAttachments[uploadFilename],
+				});
+				return {
+					filename: fileNameToUpload,
+					id: currentAttachments[uploadFilename].attachmentId,
+					collection:
+						currentAttachments[uploadFilename].collectionName,
+				};
+			}
 
 			const attachmentDetails = {
 				id: pageId,
 				attachments: [
 					{
-						file: new Blob([files], { type: mimeType }),
-						filename: testing.name,
+						file: new Blob([testing.contents], {
+							type: testing.mimeType,
+						}),
+						filename: uploadFilename,
 						minorEdit: false,
+						comment: currentFileMd5,
 					},
 				],
 			};
 
 			console.log({ testing, attachmentDetails });
-			//this.confluenceClient.contentAttachments.createOrUpdateAttachments(
-			//		attachmentDetails
-			//);
+			const attachmentResponse =
+				await this.confluenceClient.contentAttachments.createOrUpdateAttachments(
+					attachmentDetails
+				);
+
+			console.log({ attachmentReponse: attachmentResponse.results[0] });
+			return {
+				filename: fileNameToUpload,
+				id: attachmentResponse.results[0].extensions.fileId,
+				collection: `contentId-${attachmentResponse.results[0].container.id}`,
+			};
 		}
+
+		return null;
 	}
+}
+
+interface UploadedImageData {
+	filename: string;
+	id: string;
+	collection: string;
 }

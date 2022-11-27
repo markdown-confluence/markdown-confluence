@@ -2,6 +2,8 @@ import { Plugin } from "obsidian";
 import { MainSettingTab } from "./MainSettingTab";
 import { DEFAULT_SETTINGS, MyPluginSettings } from "./Settings";
 import { Publisher } from "./Publisher";
+import ObsidianAdaptor from "./adaptors/obsidian";
+import { CompletedModal } from "./CompletedModal";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -13,14 +15,13 @@ export default class MyPlugin extends Plugin {
 			id: "publish-to-confluence",
 			name: "Publish to Confluence",
 			callback: async () => {
-				const { vault, workspace, metadataCache } = this.app;
+				const { vault, metadataCache } = this.app;
 				const publisher = new Publisher(
-					this.app,
-					vault,
-					metadataCache,
+					new ObsidianAdaptor(vault, metadataCache, this.settings),
 					this.settings
 				);
-				await publisher.doPublish();
+				const stats = await publisher.doPublish();
+				new CompletedModal(this.app, stats).open();
 			},
 		});
 
