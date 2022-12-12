@@ -164,6 +164,8 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 			tokenizer.use(markdownItMedia);
 		}
 
+		tokenizer.use(log_tokens);
+
 		this.markdownParser = new MarkdownParser(
 			schema,
 			tokenizer,
@@ -177,4 +179,13 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 	parse(content: Markdown): PMNode {
 		return this.markdownParser.parse(content);
 	}
+}
+
+function log_tokens(md: MarkdownIt): void {
+	md.core.ruler.push("logger", logger);
+}
+
+function logger(state: any): boolean {
+	console.log({ tokens: state.tokens });
+	return false;
 }

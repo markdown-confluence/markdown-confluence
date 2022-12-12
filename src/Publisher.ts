@@ -8,17 +8,17 @@ import * as SparkMD5 from "spark-md5";
 import { doc, p } from "@atlaskit/adf-utils/builders";
 import { ADFEntity } from "@atlaskit/adf-utils/types";
 import MdToADF from "./mdToADF";
-import ObsidianAdaptor from "./adaptors/obsidian";
 import { LoaderAdaptor, MarkdownFile } from "./adaptors/types";
 
 export class Publisher {
 	confluenceClient: CustomConfluenceClient;
 	blankPageAdf: string = JSON.stringify(doc(p("Blank page to replace")));
 	mdToADFConverter: MdToADF;
-	adaptor: ObsidianAdaptor;
+	adaptor: LoaderAdaptor;
 	settings: MyPluginSettings;
 
-	constructor(vault: LoaderAdaptor, settings: MyPluginSettings) {
+	constructor(adaptor: LoaderAdaptor, settings: MyPluginSettings) {
+		this.adaptor = adaptor;
 		this.settings = settings;
 
 		this.mdToADFConverter = new MdToADF();
@@ -70,9 +70,9 @@ export class Publisher {
 		spaceKey: string,
 		parentPageId: string
 	): Promise<boolean> {
-		if (file.pageTitle !== "Testing2") {
-			return false;
-		}
+		//if (file.pageTitle !== "Testing2") {
+		//	return false;
+		//}
 
 		const adrobj = this.mdToADFConverter.parse(file.contents);
 
@@ -80,7 +80,7 @@ export class Publisher {
 			type: "page",
 			spaceKey,
 			title: file.pageTitle,
-			expand: ["version", "body.atlas_doc_format"],
+			expand: ["version", "body.atlas_doc_format", "body.storage"],
 		};
 		const contentByTitle = await this.confluenceClient.content.getContent(
 			searchParams
@@ -89,37 +89,24 @@ export class Publisher {
 		if (contentByTitle.size > 0) {
 			const currentPage = contentByTitle.results[0];
 
-			const updatedAdr = await this.uploadFiles(
+			console.log("BEFORE CURRENT ADF");
+			console.log(
+				JSON.stringify(
+					this.mdToADFConverter.convertConfluenceToADF(
+						currentPage?.body?.storage?.value ?? ""
+					)
+				)
+			);
+			console.log("AFTER CURRENT ADF");
+
+			await this.updatePageContent(
 				currentPage.id,
 				file.absoluteFilePath,
-				adrobj
-			);
-			const adr = JSON.stringify(updatedAdr);
-
-			if (currentPage?.body?.atlas_doc_format?.value === adr) {
-				console.log("Page is the same not updating");
-				return true;
-			}
-
-			console.log("Updating page", { currentPage });
-
-			const updateContentDetails = {
-				id: currentPage.id,
-				ancestors: [{ id: parentPageId }],
-				version: { number: (currentPage?.version?.number ?? 1) + 1 },
-				title: file.pageTitle,
-				type: "page",
-				body: {
-					atlas_doc_format: {
-						value: adr,
-						representation: "atlas_doc_format",
-					},
-				},
-			};
-			console.log({ updateContentDetails });
-
-			await this.confluenceClient.content.updateContent(
-				updateContentDetails
+				adrobj,
+				parentPageId,
+				currentPage!.version!.number,
+				file.pageTitle,
+				currentPage?.body?.atlas_doc_format?.value ?? ""
 			);
 		} else {
 			console.log("Creating page");
@@ -140,33 +127,81 @@ export class Publisher {
 					creatingBlankPageRequest
 				);
 
-			const updatedAdr = await this.uploadFiles(
+			await this.updatePageContent(
 				pageDetails.id,
 				file.absoluteFilePath,
-				adrobj
-			);
-
-			const adr = JSON.stringify(updatedAdr);
-			const updateContentDetails = {
-				id: pageDetails.id,
-				ancestors: [{ id: parentPageId }],
-				version: { number: (pageDetails?.version?.number ?? 1) + 1 },
-				title: file.pageTitle,
-				type: "page",
-				body: {
-					atlas_doc_format: {
-						value: adr,
-						representation: "atlas_doc_format",
-					},
-				},
-			};
-			console.log({ updateContentDetails });
-			await this.confluenceClient.content.updateContent(
-				updateContentDetails
+				adrobj,
+				parentPageId,
+				pageDetails!.version!.number,
+				file.pageTitle,
+				pageDetails?.body?.atlas_doc_format?.value ?? ""
 			);
 		}
 
 		return true;
+	}
+
+	async updatePageContent(
+		pageId: string,
+		originFileAbsoluteFilePath: string,
+		adf: JSONDocNode,
+		parentPageId: string,
+		pageVersionNumber: number,
+		pageTitle: string,
+		currentContents: string
+	) {
+		const updatedAdf = await this.uploadFiles(
+			pageId,
+			originFileAbsoluteFilePath,
+			adf
+		);
+
+		const updatedAdf2 = this.replaceLinkWithInlineSmartCard(updatedAdf);
+
+		const adr = JSON.stringify(updatedAdf2);
+
+		console.log("TESTING DIFF");
+		console.log(currentContents);
+		console.log(adr);
+
+		if (currentContents === adr) {
+			console.log("Page is the same not updating");
+			return true;
+		}
+
+		const updateContentDetails = {
+			id: pageId,
+			ancestors: [{ id: parentPageId }],
+			version: { number: pageVersionNumber + 1 },
+			title: pageTitle,
+			type: "page",
+			body: {
+				atlas_doc_format: {
+					value: adr,
+					representation: "atlas_doc_format",
+				},
+			},
+		};
+		console.log({ updateContentDetails });
+		await this.confluenceClient.content.updateContent(updateContentDetails);
+	}
+
+	replaceLinkWithInlineSmartCard(adf: JSONDocNode): false | ADFEntity {
+		const olivia = traverse(adf, {
+			text: (node, parent) => {
+				if (node.marks && node.marks[0].type === "link") {
+					node.type = "inlineCard";
+					node.attrs = { url: node.marks[0].attrs.href };
+					delete node.marks;
+					delete node.text;
+					return node;
+				}
+			},
+		});
+
+		console.log({ textingReplacement: JSON.stringify(olivia) });
+
+		return olivia;
 	}
 
 	async uploadFiles(
