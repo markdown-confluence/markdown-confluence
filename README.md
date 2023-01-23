@@ -1,9 +1,9 @@
-# Obsidian Confluence Plugin
+# Obsidian Confluence Integration Plugin
 
-This is an [Obsidian](https://obsidian.md) Plugin to connect Obsidian to Confluence.
+Copyright (c) 2022 Atlassian Pyt Ltd
+Copyright (c) 2022 Atlassian US, Inc.
 
-Current features are
+TBA - General Description of this OSS project
 
-## Publish to Confluence
-This will allow you to publish all files that exist under a folder specified in Settings or using `connie-publish: true` in the YAML Frontmatter of any file in the vault.
-
+## Disclaimer:
+The Apache license is only applicable to the Obsidian Confluence Integration (“Integration“), not to any third parties' services, websites, content or platforms that this Integration may enable you to connect with.  In another word, there is no license granted to you by the above identified licensor(s) to access any third-party services, websites, content, or platforms.  You are solely responsible for obtaining licenses from such third parties to use and access their services and to comply with their license terms. Please do not disclose any passwords, credentials, or tokens to any third-party service in your contribution to this Obsidian Confluence Integration project.”
