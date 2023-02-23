@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-confluence",
+	"name": "Confluence Integration",
+	"version": "0.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "This plugin allows you to publish your notes to Confluence",
+	"author": "obsidian-confluence",
+	"authorUrl": "https://github.com/obsidian-confluence",
+	"isDesktopOnly": true
+}

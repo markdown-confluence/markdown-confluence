@@ -1,3 +1,4 @@
+import { Api } from "confluence.js";
 export interface FilesToUpload extends Array<MarkdownFile> {}
 
 export interface MarkdownFile {
@@ -21,4 +22,10 @@ export interface LoaderAdaptor {
 		path: string,
 		referencedFromFilePath: string
 	): Promise<BinaryFile | false>;
+}
+
+export interface ConfluenceClient {
+	content: Api.Content;
+	space: Api.Space;
+	contentAttachments: Api.ContentAttachments;
 }

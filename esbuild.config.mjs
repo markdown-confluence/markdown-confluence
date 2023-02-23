@@ -38,5 +38,5 @@ esbuild.build({
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
-	outfile: 'main.js',
+	outfile: prod ? 'dist/main.js' : 'dev-vault/.obsidian/plugins/obsidian-confluence/main.js',
 }).catch(() => process.exit(1));

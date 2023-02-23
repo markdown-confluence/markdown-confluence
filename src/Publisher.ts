@@ -8,30 +8,30 @@ import * as SparkMD5 from "spark-md5";
 import { doc, p } from "@atlaskit/adf-utils/builders";
 import { ADFEntity } from "@atlaskit/adf-utils/types";
 import MdToADF from "./mdToADF";
-import { LoaderAdaptor, MarkdownFile } from "./adaptors/types";
+import {
+	ConfluenceClient,
+	LoaderAdaptor,
+	MarkdownFile,
+} from "./adaptors/types";
 
 export class Publisher {
-	confluenceClient: CustomConfluenceClient;
+	confluenceClient: ConfluenceClient;
 	blankPageAdf: string = JSON.stringify(doc(p("Blank page to replace")));
 	mdToADFConverter: MdToADF;
 	adaptor: LoaderAdaptor;
 	settings: MyPluginSettings;
 
-	constructor(adaptor: LoaderAdaptor, settings: MyPluginSettings) {
+	constructor(
+		adaptor: LoaderAdaptor,
+		settings: MyPluginSettings,
+		confluenceClient: ConfluenceClient
+	) {
 		this.adaptor = adaptor;
 		this.settings = settings;
 
 		this.mdToADFConverter = new MdToADF();
 
-		this.confluenceClient = new CustomConfluenceClient({
-			host: settings.confluenceBaseUrl,
-			authentication: {
-				basic: {
-					email: settings.atlassianUserName,
-					apiToken: settings.atlassianApiToken,
-				},
-			},
-		});
+		this.confluenceClient = confluenceClient;
 	}
 
 	async doPublish(): Promise<{ successes: number; failures: number }> {

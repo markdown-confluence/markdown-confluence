@@ -23,6 +23,10 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		const filesToPublish = [];
 		for (const file of files) {
 			try {
+				if (file.path.endsWith(".excalidraw")) {
+					continue;
+				}
+
 				const frontMatter = this.metadataCache.getCache(
 					file.path
 				)!.frontmatter; //TODO: How to handle this better??
