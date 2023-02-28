@@ -7,6 +7,9 @@ export interface MarkdownFile {
 	fileName: string;
 	contents: string;
 	pageTitle: string;
+	frontmatter: {
+		[key: string]: any;
+	};
 }
 
 export interface BinaryFile {

@@ -9,7 +9,6 @@ import { confluenceSchema as schema } from "@atlaskit/adf-schema/schema-confluen
 export default class MdToADF {
 	transformer: MarkdownTransformer;
 	serializer: JSONTransformer;
-	frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 	confluenceSerializer: ConfluenceTransformer;
 	constructor() {
 		this.transformer = new MarkdownTransformer();
@@ -18,7 +17,6 @@ export default class MdToADF {
 	}
 
 	parse(markdown: string): JSONDocNode {
-		markdown = markdown.replace(this.frontmatterRegex, "");
 		const prosenodes = this.transformer.parse(markdown);
 		return this.serializer.encode(prosenodes);
 	}

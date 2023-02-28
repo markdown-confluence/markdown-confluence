@@ -57,12 +57,24 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 					? frontMatter["title"]
 					: file.basename;
 
+			const parsedFrontMatter = {};
+			if (frontMatter) {
+				for (const [key, value] of Object.entries(frontMatter)) {
+					parsedFrontMatter[key] = value;
+				}
+			}
+
+			if (Object.entries(parsedFrontMatter).length > 0) {
+				console.log({ parsedFrontMatter });
+			}
+
 			filesToUpload.push({
 				pageTitle: pageTitle,
 				folderName: file.parent.name,
 				absoluteFilePath: file.path,
 				fileName: file.name,
 				contents: await this.vault.cachedRead(file),
+				frontmatter: parsedFrontMatter,
 			});
 		}
 

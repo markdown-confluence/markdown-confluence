@@ -17,6 +17,7 @@ import {
 export class Publisher {
 	confluenceClient: ConfluenceClient;
 	blankPageAdf: string = JSON.stringify(doc(p("Blank page to replace")));
+	frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 	mdToADFConverter: MdToADF;
 	adaptor: LoaderAdaptor;
 	settings: MyPluginSettings;
@@ -70,11 +71,27 @@ export class Publisher {
 		spaceKey: string,
 		parentPageId: string
 	): Promise<boolean> {
-		//if (file.pageTitle !== "Testing2") {
-		//	return false;
-		//}
+		let markdown = file.contents.replace(this.frontmatterRegex, "");
 
-		const adrobj = this.mdToADFConverter.parse(file.contents);
+		if (
+			file.frontmatter["frontmatter-to-publish"] &&
+			Array.isArray(file.frontmatter["frontmatter-to-publish"])
+		) {
+			console.log({
+				fmtopub: file.frontmatter["frontmatter-to-publish"],
+			});
+			let frontmatterHeader = "| Key | Value | \n | ----- | ----- |\n";
+			for (const key of file.frontmatter["frontmatter-to-publish"]) {
+				if (file.frontmatter[key]) {
+					const keyString = key.toString();
+					const valueString = file.frontmatter[key].toString();
+					frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
+				}
+			}
+			markdown = frontmatterHeader + markdown;
+		}
+
+		const adrobj = this.mdToADFConverter.parse(markdown);
 
 		const searchParams = {
 			type: "page",
