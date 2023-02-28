@@ -31,4 +31,5 @@ export interface ConfluenceClient {
 	content: Api.Content;
 	space: Api.Space;
 	contentAttachments: Api.ContentAttachments;
+	contentLabels: Api.ContentLabels;
 }

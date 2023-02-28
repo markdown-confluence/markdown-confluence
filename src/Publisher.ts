@@ -91,6 +91,18 @@ export class Publisher {
 			markdown = frontmatterHeader + markdown;
 		}
 
+		const tags = [];
+		if (
+			file.frontmatter["tags"] &&
+			Array.isArray(file.frontmatter["tags"])
+		) {
+			for (const label of file.frontmatter["tags"]) {
+				if (typeof label === "string") {
+					tags.push(label);
+				}
+			}
+		}
+
 		const adrobj = this.mdToADFConverter.parse(markdown);
 
 		const searchParams = {
@@ -123,7 +135,8 @@ export class Publisher {
 				parentPageId,
 				currentPage!.version!.number,
 				file.pageTitle,
-				currentPage?.body?.atlas_doc_format?.value ?? ""
+				currentPage?.body?.atlas_doc_format?.value ?? "",
+				tags
 			);
 		} else {
 			console.log("Creating page");
@@ -151,7 +164,8 @@ export class Publisher {
 				parentPageId,
 				pageDetails!.version!.number,
 				file.pageTitle,
-				pageDetails?.body?.atlas_doc_format?.value ?? ""
+				pageDetails?.body?.atlas_doc_format?.value ?? "",
+				tags
 			);
 		}
 
@@ -165,7 +179,8 @@ export class Publisher {
 		parentPageId: string,
 		pageVersionNumber: number,
 		pageTitle: string,
-		currentContents: string
+		currentContents: string,
+		labels: string[]
 	) {
 		const updatedAdf = await this.uploadFiles(
 			pageId,
@@ -201,6 +216,48 @@ export class Publisher {
 		};
 		console.log({ updateContentDetails });
 		await this.confluenceClient.content.updateContent(updateContentDetails);
+		const getLabelsForContent = {
+			id: pageId,
+		};
+		const currentLabels =
+			await this.confluenceClient.contentLabels.getLabelsForContent(
+				getLabelsForContent
+			);
+		if (currentLabels.size > 0) {
+			console.log({ currentLabels });
+		}
+
+		for (const existingLabel of currentLabels.results) {
+			if (!labels.includes(existingLabel.label)) {
+				await this.confluenceClient.contentLabels.removeLabelFromContentUsingQueryParameter(
+					{
+						id: pageId,
+						name: existingLabel.name,
+					}
+				);
+			}
+		}
+
+		const labelsToAdd = [];
+		for (const newLabel of labels) {
+			if (
+				currentLabels.results.findIndex(
+					(item) => item.label === newLabel
+				) === -1
+			) {
+				labelsToAdd.push({
+					prefix: "global",
+					name: newLabel,
+				});
+			}
+		}
+
+		if (labelsToAdd.length > 0) {
+			await this.confluenceClient.contentLabels.addLabelsToContent({
+				id: pageId,
+				body: labelsToAdd,
+			});
+		}
 	}
 
 	replaceLinkWithInlineSmartCard(adf: JSONDocNode): false | ADFEntity {

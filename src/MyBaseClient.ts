@@ -136,7 +136,6 @@ export class MyBaseClient implements Client {
 			};
 			console.log({ modifiedRequestConfig });
 			const response = await requestUrl(modifiedRequestConfig);
-
 			const callbackResponseHandler =
 				callback && ((data: T): void => callback(null, data));
 			const defaultResponseHandler = (data: T): T => data;
@@ -173,4 +172,5 @@ export class CustomConfluenceClient extends MyBaseClient {
 	content = new Api.Content(this);
 	space = new Api.Space(this);
 	contentAttachments = new Api.ContentAttachments(this);
+	contentLabels = new Api.ContentLabels(this);
 }
