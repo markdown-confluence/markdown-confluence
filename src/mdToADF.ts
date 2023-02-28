@@ -28,7 +28,11 @@ export default class MdToADF {
 	replaceLinkWithInlineSmartCard(adf: JSONDocNode): ADFEntity {
 		const olivia = traverse(adf, {
 			text: (node, parent) => {
-				if (node.marks && node.marks[0].type === "link") {
+				if (
+					node.marks &&
+					node.marks[0].type === "link" &&
+					node.marks[0].attrs.href === node.text
+				) {
 					node.type = "inlineCard";
 					node.attrs = { url: node.marks[0].attrs.href };
 					delete node.marks;
