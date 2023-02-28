@@ -1,7 +1,8 @@
 import type MarkdownIt from "markdown-it/lib";
 import type StateCore from "markdown-it/lib/rules_core/state_core";
 
-const panelRegex = /\[!(?<calloutType>.*)](?<collapseType>\+|-)*/;
+const panelRegex =
+	/\[!(?<calloutType>.*)](?<collapseType>[+-])*[ \t]*(?<title>.*)*/;
 
 //panelType Options: "info", "note", "warning", "success", "error", "custom"
 const panelTypeToAttributesMap = {
@@ -90,6 +91,7 @@ export function panel(state: StateCore): boolean {
 	let isInCallout = false;
 	let adfType = "panel";
 	let calloutStartIndex = 0;
+	let blockTitle = "";
 	const newTokens = state.tokens.reduce(
 		(previousTokens, token, currentIndex: number, allTokens) => {
 			let tokenToReturn = token;
@@ -111,10 +113,15 @@ export function panel(state: StateCore): boolean {
 						continue;
 					}
 
+					console.log({ check });
+
 					const calloutType = check.groups["calloutType"];
 					const collapseType = check.groups["collapseType"];
+					const title = check.groups["title"];
 					calloutStartIndex = currentCheck - 1;
 					isInCallout = true;
+					blockTitle =
+						typeof title === "string" ? title : calloutType;
 
 					if (collapseType === "+" || collapseType === "-") {
 						adfType = "expand";
@@ -122,7 +129,8 @@ export function panel(state: StateCore): boolean {
 						tokenToReturn.markup = ">";
 						tokenToReturn.block = true;
 						tokenToReturn.nesting = 1;
-						tokenToReturn.attrs = [["title", calloutType]];
+
+						tokenToReturn.attrs = [["title", blockTitle]];
 					} else {
 						adfType = "panel";
 						tokenToReturn = new state.Token("panel_open", "", 0);
@@ -141,9 +149,7 @@ export function panel(state: StateCore): boolean {
 			}
 			if (currentIndex === calloutStartIndex && isInCallout) {
 				const check = token.content.match(panelRegex);
-				const calloutTitle = capitalizeFirstLetter(
-					check.groups["calloutType"]
-				);
+				const calloutTitle = capitalizeFirstLetter(blockTitle);
 				token.content = token.content.replace(check[0], calloutTitle);
 				for (let i = 0; i < token.children.length; i++) {
 					const child = token.children[i];
