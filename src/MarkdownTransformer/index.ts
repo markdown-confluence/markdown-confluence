@@ -37,6 +37,7 @@ const pmSchemaToMdMapping: SchemaMapping = {
 		listItem: "list",
 		image: "image",
 		panel: "panel",
+		expand: "expand",
 	},
 	marks: {
 		em: "emphasis",
@@ -117,6 +118,14 @@ const mdToPmMapping = {
 				panelIconId: tok.attrGet("panelIconId"),
 				panelIconText: tok.attrGet("panelIconText"),
 				panelColor: tok.attrGet("panelColor"),
+			};
+		},
+	},
+	expand: {
+		block: "expand",
+		attrs: (tok: any) => {
+			return {
+				title: tok.attrGet("title"),
 			};
 		},
 	},

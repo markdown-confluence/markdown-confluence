@@ -1,7 +1,7 @@
 import type MarkdownIt from "markdown-it/lib";
 import type StateCore from "markdown-it/lib/rules_core/state_core";
 
-const panelRegex = /\[!(?<calloutType>.*)]/;
+const panelRegex = /\[!(?<calloutType>.*)](?<collapseType>\+|-)*/;
 
 //panelType Options: "info", "note", "warning", "success", "error", "custom"
 const panelTypeToAttributesMap = {
@@ -79,6 +79,7 @@ function getPanelAttributes(calloutType: string) {
 
 export default function example_plugin(md: MarkdownIt): void {
 	md.core.ruler.push("panel", panel);
+	md.core.ruler.push("expand", () => false);
 }
 
 function capitalizeFirstLetter(string) {
@@ -87,6 +88,7 @@ function capitalizeFirstLetter(string) {
 
 export function panel(state: StateCore): boolean {
 	let isInCallout = false;
+	let adfType = "panel";
 	let calloutStartIndex = 0;
 	const newTokens = state.tokens.reduce(
 		(previousTokens, token, currentIndex: number, allTokens) => {
@@ -110,18 +112,31 @@ export function panel(state: StateCore): boolean {
 					}
 
 					const calloutType = check.groups["calloutType"];
+					const collapseType = check.groups["collapseType"];
 					calloutStartIndex = currentCheck - 1;
 					isInCallout = true;
-					tokenToReturn = new state.Token("panel_open", "", 0);
-					tokenToReturn.markup = ">";
-					tokenToReturn.block = true;
-					tokenToReturn.nesting = 1;
-					tokenToReturn.attrs = getPanelAttributes(calloutType);
+
+					if (collapseType === "+" || collapseType === "-") {
+						adfType = "expand";
+						tokenToReturn = new state.Token("expand_open", "", 0);
+						tokenToReturn.markup = ">";
+						tokenToReturn.block = true;
+						tokenToReturn.nesting = 1;
+						tokenToReturn.attrs = [["title", calloutType]];
+					} else {
+						adfType = "panel";
+						tokenToReturn = new state.Token("panel_open", "", 0);
+						tokenToReturn.markup = ">";
+						tokenToReturn.block = true;
+						tokenToReturn.nesting = 1;
+						tokenToReturn.attrs = getPanelAttributes(calloutType);
+					}
+
 					break;
 				}
 			}
 			if (token.type === "blockquote_close" && isInCallout) {
-				token.type = "panel_close";
+				token.type = `${adfType}_close`;
 				token.tag = "";
 			}
 			if (currentIndex === calloutStartIndex && isInCallout) {
