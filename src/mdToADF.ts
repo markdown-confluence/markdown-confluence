@@ -5,6 +5,8 @@ import {
 import { MarkdownTransformer } from "./MarkdownTransformer";
 import { ConfluenceTransformer } from "@atlaskit/editor-confluence-transformer";
 import { confluenceSchema as schema } from "@atlaskit/adf-schema/schema-confluence";
+import { traverse } from "@atlaskit/adf-utils/traverse";
+import { ADFEntity } from "@atlaskit/adf-utils/types";
 
 export default class MdToADF {
 	transformer: MarkdownTransformer;
@@ -16,9 +18,33 @@ export default class MdToADF {
 		this.confluenceSerializer = new ConfluenceTransformer(schema);
 	}
 
-	parse(markdown: string): JSONDocNode {
+	parse(markdown: string): ADFEntity {
 		const prosenodes = this.transformer.parse(markdown);
-		return this.serializer.encode(prosenodes);
+		const adfNodes = this.serializer.encode(prosenodes);
+		const nodes = this.replaceLinkWithInlineSmartCard(adfNodes);
+		return nodes;
+	}
+
+	replaceLinkWithInlineSmartCard(adf: JSONDocNode): ADFEntity {
+		const olivia = traverse(adf, {
+			text: (node, parent) => {
+				if (node.marks && node.marks[0].type === "link") {
+					node.type = "inlineCard";
+					node.attrs = { url: node.marks[0].attrs.href };
+					delete node.marks;
+					delete node.text;
+					return node;
+				}
+			},
+		});
+
+		console.log({ textingReplacement: JSON.stringify(olivia) });
+
+		if (!olivia) {
+			throw new Error("Failed to traverse");
+		}
+
+		return olivia;
 	}
 
 	convertConfluenceToADF(cxhtml: string): JSONDocNode {

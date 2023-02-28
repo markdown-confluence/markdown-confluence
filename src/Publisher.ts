@@ -1,7 +1,5 @@
-import { CustomConfluenceClient } from "./MyBaseClient";
 import { MyPluginSettings } from "./Settings";
 import FolderFile from "./FolderFile.json";
-import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
 import * as SparkMD5 from "spark-md5";
@@ -175,7 +173,7 @@ export class Publisher {
 	async updatePageContent(
 		pageId: string,
 		originFileAbsoluteFilePath: string,
-		adf: JSONDocNode,
+		adf: ADFEntity,
 		parentPageId: string,
 		pageVersionNumber: number,
 		pageTitle: string,
@@ -188,9 +186,7 @@ export class Publisher {
 			adf
 		);
 
-		const updatedAdf2 = this.replaceLinkWithInlineSmartCard(updatedAdf);
-
-		const adr = JSON.stringify(updatedAdf2);
+		const adr = JSON.stringify(updatedAdf);
 
 		console.log("TESTING DIFF");
 		console.log(currentContents);
@@ -260,28 +256,10 @@ export class Publisher {
 		}
 	}
 
-	replaceLinkWithInlineSmartCard(adf: JSONDocNode): false | ADFEntity {
-		const olivia = traverse(adf, {
-			text: (node, parent) => {
-				if (node.marks && node.marks[0].type === "link") {
-					node.type = "inlineCard";
-					node.attrs = { url: node.marks[0].attrs.href };
-					delete node.marks;
-					delete node.text;
-					return node;
-				}
-			},
-		});
-
-		console.log({ textingReplacement: JSON.stringify(olivia) });
-
-		return olivia;
-	}
-
 	async uploadFiles(
 		pageId: string,
 		pageFilePath: string,
-		adr: JSONDocNode
+		adr: ADFEntity
 	): Promise<false | ADFEntity> {
 		const mediaNodes = filter(
 			adr,
