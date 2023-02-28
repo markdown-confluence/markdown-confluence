@@ -46,8 +46,19 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		const filesToUpload = [];
 
 		for (const file of filesToPublish) {
+			const frontMatter = this.metadataCache.getCache(
+				file.path
+			)!.frontmatter; //TODO: How to handle this better??
+
+			const pageTitle =
+				frontMatter &&
+				frontMatter["title"] &&
+				typeof frontMatter["title"] === "string"
+					? frontMatter["title"]
+					: file.basename;
+
 			filesToUpload.push({
-				pageTitle: file.basename,
+				pageTitle: pageTitle,
 				folderName: file.parent.name,
 				absoluteFilePath: file.path,
 				fileName: file.name,
