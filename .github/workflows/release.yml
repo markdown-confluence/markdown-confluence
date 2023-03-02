@@ -3,7 +3,7 @@ name: Release Obsidian plugin
 on:
   push:
     branches:
-	    - main
+      - main
 
 env:
   PLUGIN_NAME: obsidian-confluence # Change this to match the id of your plugin.
