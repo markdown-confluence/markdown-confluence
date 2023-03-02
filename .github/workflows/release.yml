@@ -2,8 +2,8 @@ name: Release Obsidian plugin
 
 on:
   push:
-    tags:
-      - "*"
+    branches:
+	    - main
 
 env:
   PLUGIN_NAME: obsidian-confluence # Change this to match the id of your plugin.
@@ -18,33 +18,31 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: "14.x" # You might need to adjust this value to your own version
+          node-version: "18.x" # You might need to adjust this value to your own version
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.7
+        with:
+          versionSpec: '5.x'
 
       # Get the version number and put it in an environment file
       - name: Get Version
         id: version
-        run: |
-          echo "tag=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
+        run: echo "tag=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
 
       # Build the plugin
       - name: Build
         id: build
         run: |
           sed -i "s/0\.0\.0/${{ env.tag }}/g" manifest.json
-          npm install
+          npm ci
           npm run build --if-present
+          zip -r ${{ github.event.repository.name }}-${{ env.tag }}.zip dist
 
-      # Package the required files into a zip
-      - name: Package
-        run: |
-          mkdir ${{ github.event.repository.name }}
-          cp main.js manifest.json README.md ${{ github.event.repository.name }}
-          zip -r ${{ github.event.repository.name }}-${{ env.tag }}.zip ${{ github.event.repository.name }}
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            ${{ github.event.repository.name }}-${{ env.tag }}.zip
-            main.js
-            manifest.json
+#      - name: Release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          files: |
+#            ${{ github.event.repository.name }}-${{ env.tag }}.zip
+#            dist/main.js
+#            dist/manifest.json

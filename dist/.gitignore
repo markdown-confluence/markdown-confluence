@@ -3,3 +3,4 @@
 # Except this file
 !.gitignore
 !manifest.json
+!README.md
