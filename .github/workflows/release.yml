@@ -34,7 +34,7 @@ jobs:
       - name: Build
         id: build
         run: |
-          sed -i "s/0\.0\.0/${{ env.tag }}/g" manifest.json
+          sed -i "s/0\.0\.0/${{ env.tag }}/g" dist/manifest.json
           npm ci
           npm run build --if-present
           zip -r ${{ github.event.repository.name }}-${{ env.tag }}.zip dist
