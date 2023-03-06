@@ -5,7 +5,7 @@ const panelRegex =
 	/\[!(?<calloutType>.*)](?<collapseType>[+-])*[ \t]*(?<title>.*)*/;
 
 //panelType Options: "info", "note", "warning", "success", "error", "custom"
-const panelTypeToAttributesMap = {
+const panelTypeToAttributesMap: Record<string, [string, string][]> = {
 	note: [["panelType", "note"]],
 	abstract: [
 		["panelType", "custom"],
@@ -83,7 +83,7 @@ export default function example_plugin(md: MarkdownIt): void {
 	md.core.ruler.push("expand", () => false);
 }
 
-function capitalizeFirstLetter(string) {
+function capitalizeFirstLetter(string: string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
@@ -109,19 +109,20 @@ export function panel(state: StateCore): boolean {
 
 					const check = tokenToCheck.content.match(panelRegex);
 
-					if (check === null) {
+					if (
+						check === null ||
+						check === undefined ||
+						check.groups === undefined
+					) {
 						continue;
 					}
-
-					console.log({ check });
 
 					const calloutType = check.groups["calloutType"];
 					const collapseType = check.groups["collapseType"];
 					const title = check.groups["title"];
 					calloutStartIndex = currentCheck - 1;
 					isInCallout = true;
-					blockTitle =
-						typeof title === "string" ? title : calloutType;
+					blockTitle = !!title ? title : calloutType;
 
 					if (collapseType === "+" || collapseType === "-") {
 						adfType = "expand";
@@ -150,15 +151,22 @@ export function panel(state: StateCore): boolean {
 			if (currentIndex === calloutStartIndex && isInCallout) {
 				const check = token.content.match(panelRegex);
 				const calloutTitle = capitalizeFirstLetter(blockTitle);
-				token.content = token.content.replace(check[0], calloutTitle);
-				for (let i = 0; i < token.children.length; i++) {
-					const child = token.children[i];
-					if (child.content.includes(check[0])) {
-						child.content = child.content.replace(
-							check[0],
-							calloutTitle
-						);
-						break;
+				if (check && check.length > 1) {
+					token.content = token.content.replace(
+						check[0],
+						calloutTitle
+					);
+					if (token.children) {
+						for (let i = 0; i < token.children.length; i++) {
+							const child = token.children[i];
+							if (child.content.includes(check[0])) {
+								child.content = child.content.replace(
+									check[0],
+									calloutTitle
+								);
+								break;
+							}
+						}
 					}
 				}
 			}

@@ -57,7 +57,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 					? frontMatter["title"]
 					: file.basename;
 
-			const parsedFrontMatter = {};
+			const parsedFrontMatter: Record<string, any> = {};
 			if (frontMatter) {
 				for (const [key, value] of Object.entries(frontMatter)) {
 					parsedFrontMatter[key] = value;
