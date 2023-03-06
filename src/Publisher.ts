@@ -118,11 +118,7 @@ export class Publisher {
 
 			console.log("BEFORE CURRENT ADF");
 			console.log(
-				JSON.stringify(
-					this.mdToADFConverter.convertConfluenceToADF(
-						currentPage?.body?.storage?.value ?? ""
-					)
-				)
+				JSON.stringify(currentPage?.body?.atlas_doc_format?.value)
 			);
 			console.log("AFTER CURRENT ADF");
 

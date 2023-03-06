@@ -51,9 +51,4 @@ export default class MdToADF {
 
 		return olivia;
 	}
-
-	convertConfluenceToADF(cxhtml: string): JSONDocNode {
-		const prosenodes = this.confluenceSerializer.parse(cxhtml);
-		return this.serializer.encode(prosenodes);
-	}
 }
