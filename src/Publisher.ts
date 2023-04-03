@@ -11,6 +11,9 @@ import {
 	LoaderAdaptor,
 	MarkdownFile,
 } from "./adaptors/types";
+import { MermaidRenderer, ChartData } from "./mermaid_renderers/types";
+import * as path from "path";
+import { Readable } from "stream";
 
 export class Publisher {
 	confluenceClient: ConfluenceClient;
@@ -19,14 +22,17 @@ export class Publisher {
 	mdToADFConverter: MdToADF;
 	adaptor: LoaderAdaptor;
 	settings: MyPluginSettings;
+	mermaidRenderer: MermaidRenderer;
 
 	constructor(
 		adaptor: LoaderAdaptor,
 		settings: MyPluginSettings,
-		confluenceClient: ConfluenceClient
+		confluenceClient: ConfluenceClient,
+		mermaidRenderer: MermaidRenderer
 	) {
 		this.adaptor = adaptor;
 		this.settings = settings;
+		this.mermaidRenderer = mermaidRenderer;
 
 		this.mdToADFConverter = new MdToADF();
 
@@ -44,6 +50,9 @@ export class Publisher {
 		const files = await this.adaptor.getMarkdownFilesToUpload();
 		//TODO: Create fake file to publish
 		//TODO: Handle finding root folder
+
+		const folderTree = createFolderStructure(files);
+		console.log({ folderTree });
 
 		const adrFileTasks = files.map(
 			(file) =>
@@ -263,6 +272,34 @@ export class Publisher {
 				node.type === "media" && (node.attrs || {})?.type === "file"
 		);
 
+		const mermaidNodes = filter(
+			adr,
+			(node) =>
+				node.type == "codeBlock" &&
+				(node.attrs || {})?.language === "mermaid"
+		);
+		if (mermaidNodes.length > 0) {
+			console.log({ mermaidNodes });
+		}
+
+		const mermaidNodesToUpload = new Set(
+			mermaidNodes.map((node) => {
+				const mermaidText =
+					node?.content?.at(0)?.text ??
+					"flowchart LR\nid1[Missing Chart]";
+				const pathMd5 = SparkMD5.hash(mermaidText);
+				const uploadFilename = `RenderedMermaidChart-${pathMd5}.png`;
+				return { name: uploadFilename, data: mermaidText } as ChartData;
+			})
+		).values();
+
+		const mermaidChartsAsImages =
+			await this.mermaidRenderer.captureMermaidCharts([
+				...mermaidNodesToUpload,
+			]);
+
+		console.log({ mermaidChartsAsImages });
+
 		const currentUploadedAttachments =
 			await this.confluenceClient.contentAttachments.getAttachments({
 				id: pageId,
@@ -288,7 +325,7 @@ export class Publisher {
 			mediaNodes.map((node) => node?.attrs?.url)
 		).values();
 
-		let imageMap: Record<string, UploadedImageData> = {};
+		let imageMap: Record<string, UploadedImageData | null> = {};
 
 		for (const imageUrl of imagesToUpload) {
 			console.log({ testing: imageUrl });
@@ -305,6 +342,21 @@ export class Publisher {
 				[imageUrl]: uploadedContent,
 			};
 		}
+
+		for (const mermaidImage of mermaidChartsAsImages) {
+			const uploadedContent = await this.uploadBuffer(
+				pageId,
+				mermaidImage[0],
+				mermaidImage[1],
+				currentAttachments
+			);
+
+			imageMap = {
+				...imageMap,
+				[mermaidImage[0]]: uploadedContent,
+			};
+		}
+
 		console.log({ beforeAdr: adr });
 
 		const afterAdf = traverse(adr, {
@@ -315,10 +367,47 @@ export class Publisher {
 						return;
 					}
 					const mappedImage = imageMap[node.attrs.url];
-					node.attrs.collection = mappedImage.collection;
-					node.attrs.id = mappedImage.id;
-					delete node.attrs.url;
-					console.log({ node });
+					if (mappedImage !== null) {
+						node.attrs.collection = mappedImage.collection;
+						node.attrs.id = mappedImage.id;
+						delete node.attrs.url;
+						console.log({ node });
+						return node;
+					}
+				}
+			},
+			codeBlock: (node, parent) => {
+				if (node?.attrs?.language === "mermaid") {
+					console.log({ mermaidNode: node });
+					const mermaidContent = node?.content?.at(0)?.text;
+					if (!mermaidContent) {
+						return;
+					}
+					const mermaidFilename = getMermaidFileName(mermaidContent);
+
+					if (!imageMap[mermaidFilename]) {
+						return;
+					}
+					const mappedImage = imageMap[mermaidFilename];
+					if (mappedImage !== null) {
+						node.type = "mediaSingle";
+						node.attrs.layout = "center";
+						if (node.content) {
+							node.content = [
+								{
+									type: "media",
+									attrs: {
+										type: "file",
+										collection: mappedImage.collection,
+										id: mappedImage.id,
+									},
+								},
+							];
+						}
+						delete node.attrs.language;
+						console.log({ mermaidNodeEnd: node });
+						return node;
+					}
 				}
 			},
 		});
@@ -326,6 +415,67 @@ export class Publisher {
 		console.log({ afterAdr: afterAdf });
 
 		return afterAdf;
+	}
+
+	async uploadBuffer(
+		pageId: string,
+		uploadFilename: string,
+		fileBuffer: Buffer,
+		currentAttachments: Record<
+			string,
+			{ filehash: string; attachmentId: string; collectionName: string }
+		>
+	): Promise<UploadedImageData | null> {
+		console.log("UPLOAD BUFFER FUNCTION", uploadFilename);
+
+		const spark = new SparkMD5.ArrayBuffer();
+		const currentFileMd5 = spark.append(fileBuffer).end();
+
+		if (
+			!!currentAttachments[uploadFilename] &&
+			currentAttachments[uploadFilename].filehash === currentFileMd5
+		) {
+			console.log("FILE ALREADY UPLOADED");
+			console.log({
+				fileDetails: currentAttachments[uploadFilename],
+			});
+			return {
+				filename: uploadFilename,
+				id: currentAttachments[uploadFilename].attachmentId,
+				collection: currentAttachments[uploadFilename].collectionName,
+			};
+		}
+
+		const attachmentDetails = {
+			id: pageId,
+			attachments: [
+				{
+					file: fileBuffer, // Readable.from(fileBuffer.entries()),
+					/*
+					file: new Blob([fileBuffer.buffer], {
+						type: "image/png",
+					}),
+					*/
+					filename: uploadFilename,
+					minorEdit: false,
+					comment: currentFileMd5,
+					contentType: "image/png",
+				},
+			],
+		};
+
+		console.log({ attachmentDetails });
+		const attachmentResponse =
+			await this.confluenceClient.contentAttachments.createOrUpdateAttachments(
+				attachmentDetails
+			);
+
+		console.log({ attachmentReponse: attachmentResponse.results[0] });
+		return {
+			filename: uploadFilename,
+			id: attachmentResponse.results[0].extensions.fileId,
+			collection: `contentId-${attachmentResponse.results[0].container.id}`,
+		};
 	}
 
 	async uploadFile(
@@ -368,9 +518,12 @@ export class Publisher {
 				id: pageId,
 				attachments: [
 					{
+						file: Buffer.from(testing.contents),
+						/*
 						file: new Blob([testing.contents], {
 							type: testing.mimeType,
 						}),
+*/
 						filename: uploadFilename,
 						minorEdit: false,
 						comment: currentFileMd5,
@@ -396,8 +549,117 @@ export class Publisher {
 	}
 }
 
+function getMermaidFileName(mermaidContent: string) {
+	const mermaidText = mermaidContent ?? "flowchart LR\nid1[Missing Chart]";
+	const pathMd5 = SparkMD5.hash(mermaidText);
+	const uploadFilename = `RenderedMermaidChart-${pathMd5}.png`;
+	return uploadFilename;
+}
+
 interface UploadedImageData {
 	filename: string;
 	id: string;
 	collection: string;
 }
+
+interface TreeNode {
+	name: string;
+	children: TreeNode[];
+	file?: MarkdownFile;
+}
+const findCommonPath = (paths: string[]): string => {
+	const [firstPath, ...rest] = paths;
+	const commonPathParts = firstPath.split(path.sep);
+
+	rest.forEach((filePath) => {
+		const pathParts = filePath.split(path.sep);
+		for (let i = 0; i < commonPathParts.length; i++) {
+			if (pathParts[i] !== commonPathParts[i]) {
+				commonPathParts.splice(i);
+				break;
+			}
+		}
+	});
+
+	return commonPathParts.join(path.sep);
+};
+
+const createTreeNode = (name: string): TreeNode => ({
+	name,
+	children: [],
+});
+
+const addFileToTree = (
+	treeNode: TreeNode,
+	file: MarkdownFile,
+	relativePath: string,
+	fileNames: Set<string>
+) => {
+	const [folderName, ...remainingPath] = relativePath.split(path.sep);
+
+	if (remainingPath.length === 0) {
+		if (fileNames.has(file.fileName)) {
+			throw new Error(
+				`File name "${file.fileName}" is not unique across all folders.`
+			);
+		}
+		fileNames.add(file.fileName);
+		treeNode.children.push({ ...createTreeNode(folderName), file });
+	} else {
+		let childNode = treeNode.children.find(
+			(node) => node.name === folderName
+		);
+
+		if (!childNode) {
+			childNode = createTreeNode(folderName);
+			treeNode.children.push(childNode);
+		}
+
+		addFileToTree(childNode, file, remainingPath.join(path.sep), fileNames);
+	}
+};
+
+const createFolderStructure = (markdownFiles: MarkdownFile[]): TreeNode => {
+	const commonPath = findCommonPath(
+		markdownFiles.map((file) => file.absoluteFilePath)
+	);
+	const rootNode = createTreeNode(commonPath);
+	const fileNames = new Set<string>();
+
+	markdownFiles.forEach((file) => {
+		const relativePath = path.relative(commonPath, file.absoluteFilePath);
+		addFileToTree(rootNode, file, relativePath, fileNames);
+	});
+	console.log({ folderRoot: rootNode });
+	const processNode = (node: TreeNode) => {
+		const indexFile = node.children.find(
+			(child) => path.parse(child.name).name === node.name
+		);
+
+		if (indexFile) {
+			node.file = indexFile.file;
+			node.children = node.children.filter(
+				(child) => child !== indexFile
+			);
+		} else {
+			node.file = {
+				folderName: node.name,
+				absoluteFilePath: path.join(
+					commonPath,
+					node.name,
+					`${node.name}.md`
+				),
+				fileName: `${node.name}.md`,
+				contents: "Predefined string template",
+				pageTitle: node.name,
+				frontmatter: {},
+			};
+		}
+
+		node.children.forEach(processNode);
+	};
+
+	processNode(rootNode);
+
+	return rootNode;
+};

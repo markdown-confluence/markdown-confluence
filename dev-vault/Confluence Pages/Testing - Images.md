@@ -10,7 +10,7 @@
 ![[og-image.png]]
 ```
 
-![[og-image.png]]
+![[og-image.jpg]]
 
 #### Resizing images
 

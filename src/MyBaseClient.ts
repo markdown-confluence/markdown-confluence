@@ -7,6 +7,7 @@ import {
 	AuthenticationService,
 } from "confluence.js";
 import { requestUrl } from "obsidian";
+import * as fs from "fs/promises";
 
 const ATLASSIAN_TOKEN_CHECK_FLAG = "X-Atlassian-Token";
 const ATLASSIAN_TOKEN_CHECK_NOCHECK_VALUE = "no-check";
@@ -89,6 +90,15 @@ export class MyBaseClient implements Client {
 	): Promise<void | T> {
 		try {
 			console.info({ requestConfig });
+
+			if (requestConfig?.headers?.hasOwnProperty("content-type")) {
+				requestConfig.headers["Content-Type"] =
+					requestConfig?.headers["content-type"].toString();
+				delete requestConfig?.headers["content-type"];
+			}
+
+			console.info({ requestConfig });
+
 			const params = this.paramSerializer(requestConfig.params);
 
 			const requestContentType =
@@ -98,18 +108,20 @@ export class MyBaseClient implements Client {
 					.startsWith("multipart/form-data")
 					? requestConfig?.headers["Content-Type"].toString()
 					: "application/json";
-			const requestBody =
+			let requestBody =
 				requestConfig?.headers?.hasOwnProperty("Content-Type") &&
 				requestConfig?.headers["Content-Type"]
 					.toString()
 					.startsWith("multipart/form-data")
-					? requestConfig.data
-					: JSON.stringify(requestConfig.data);
+					? [
+							requestConfig.data.getHeaders(),
+							requestConfig.data.getBuffer().buffer,
+					  ]
+					: [{}, JSON.stringify(requestConfig.data)];
 
 			const modifiedRequestConfig = {
 				...requestConfig,
 				headers: this.removeUndefinedProperties({
-					"Content-Type": "application/json",
 					"User-Agent": "Obsidian.md",
 					Accept: "application/json",
 					[ATLASSIAN_TOKEN_CHECK_FLAG]: this.config
@@ -127,15 +139,26 @@ export class MyBaseClient implements Client {
 							}
 						),
 					...requestConfig.headers,
+					"Content-Type": requestContentType,
+					...requestBody[0],
 				}),
 				url: `${this.config.host}${this.urlSuffix}${requestConfig.url}?${params}`,
-				body: requestBody,
+				body: requestBody[1],
 				method: requestConfig.method?.toUpperCase(),
 				contentType: requestContentType,
 				throw: true,
 			};
+			delete modifiedRequestConfig.data;
+
 			console.log({ modifiedRequestConfig });
 			const response = await requestUrl(modifiedRequestConfig);
+
+			console.log({
+				response,
+				request: modifiedRequestConfig,
+				requestConfig,
+			});
+
 			const callbackResponseHandler =
 				callback && ((data: T): void => callback(null, data));
 			const defaultResponseHandler = (data: T): T => data;
@@ -147,7 +170,7 @@ export class MyBaseClient implements Client {
 
 			return responseHandler(response.json);
 		} catch (e: any) {
-			console.log({ httpError: e });
+			console.log({ httpError: e, requestConfig });
 			const err =
 				this.config.newErrorHandling && e.isAxiosError
 					? e.response.data
@@ -166,6 +189,10 @@ export class MyBaseClient implements Client {
 			return errorHandler(err);
 		}
 	}
+}
+
+function bufferToArrayBuffer(b: Buffer | Uint8Array | ArrayBufferView) {
+	return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
 }
 
 export class CustomConfluenceClient extends MyBaseClient {

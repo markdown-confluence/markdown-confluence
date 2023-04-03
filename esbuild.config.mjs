@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from 'builtin-modules'
+import { polyfillNode } from "esbuild-plugin-polyfill-node";
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 
 const banner =
 `/*
@@ -15,7 +17,7 @@ esbuild.build({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ['src/main.ts'],
+	entryPoints: ['src/main.ts', 'src/mermaid_renderer.js'],
 	bundle: true,
 	external: [
 		'obsidian',
@@ -31,13 +33,24 @@ esbuild.build({
 		'@lezer/common',
 		'@lezer/highlight',
 		'@lezer/lr',
-		...builtins],
+		...builtins
+	],
 	format: 'cjs',
 	watch: !prod,
-	target: 'es2018',
+	target: 'chrome106',
 	logLevel: "info",
 	sourcemap: 'inline',
 	treeShaking: true,
-	outfile: prod ? 'dist/main.js' : 'dev-vault/.obsidian/plugins/obsidian-confluence/main.js',
+	outdir: prod ? 'dist' : 'dev-vault/.obsidian/plugins/obsidian-confluence',
 	mainFields: ['module', 'main'],
+/*
+	plugins: [
+		polyfillNode({
+			globals: {
+				process: false,
+			},
+			polyfills: [],
+		}),
+	],
+*/
 }).catch(() => process.exit(1));
