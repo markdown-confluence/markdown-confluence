@@ -5,6 +5,7 @@ import { Publisher } from "./Publisher";
 import ObsidianAdaptor from "./adaptors/obsidian";
 import { CompletedModal } from "./CompletedModal";
 import { CustomConfluenceClient } from "./MyBaseClient";
+import { ElectronMermaidRenderer } from "./mermaid_renderers/electron";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -13,6 +14,7 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		const { vault, metadataCache } = this.app;
+		const mermaidRenderer = new ElectronMermaidRenderer();
 		const confluenceClient = new CustomConfluenceClient({
 			host: this.settings.confluenceBaseUrl,
 			authentication: {
@@ -25,7 +27,8 @@ export default class MyPlugin extends Plugin {
 		const publisher = new Publisher(
 			new ObsidianAdaptor(vault, metadataCache, this.settings),
 			this.settings,
-			confluenceClient
+			confluenceClient,
+			mermaidRenderer
 		);
 
 		this.addRibbonIcon(

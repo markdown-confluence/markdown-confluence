@@ -3,8 +3,8 @@
     "baseUrl": ".",
     "inlineSourceMap": true,
     "inlineSources": true,
-    "module": "ESNext",
-    "target": "es2022",
+    "module": "CommonJS",
+    "target": "ES2021",
     "allowJs": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
@@ -17,7 +17,7 @@
       "ES5",
       "ES6",
       "ES7",
-		"ESNext"
+      "ES2021"
     ]
   },
   "include": [
