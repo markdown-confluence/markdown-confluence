@@ -11,11 +11,12 @@ window.renderMermaidChart = async (chartData) => {
 		const chartElement = document.querySelector("#graphDiv");
 		chartElement.innerHTML = svg;
 
+		const svgElement = document.querySelector("#graphDiv svg");
 		resolve({
 			x: 0,
 			y: 0,
-			width: chartElement.clientWidth,
-			height: chartElement.clientHeight,
+			width: svgElement.scrollWidth,
+			height: svgElement.scrollHeight,
 		});
 	});
 };
