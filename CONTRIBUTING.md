@@ -1,6 +1,6 @@
 # Contributing to [Project name]
 
-Thank you for considering a contribution to [Project name]! Pull requests, issues and comments are welcome. For pull requests, please:
+Thank you for considering a contribution! Pull requests, issues and comments are welcome. For pull requests, please:
 
 * Add tests for new features and bug fixes
 * Follow the existing style
