@@ -16,10 +16,6 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 					height: 600,
 					show: false,
 					frame: false,
-					//			  webPreferences: {
-					//				nodeIntegration: true,
-					//				contextIsolation: false,
-					//			  },
 				});
 
 				// Load the HTML file with the Mermaid.js chart
@@ -30,10 +26,31 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 					)
 				);
 
+				const mermaidConfig = {
+					theme: "base",
+					themeVariables: {
+						background: "#ffffff",
+						mainBkg: "#ddebff",
+						primaryColor: "#ddebff",
+						primaryTextColor: "#192b50",
+						primaryBorderColor: "#0052cc",
+						secondaryColor: "#ff8f73",
+						secondaryTextColor: "#192b50",
+						secondaryBorderColor: "#df360c",
+						tertiaryColor: "#c0b6f3",
+						tertiaryTextColor: "#fefefe",
+						tertiaryBorderColor: "#5243aa",
+						noteBkgColor: "#ffc403",
+						noteTextColor: "#182a4e",
+						textColor: "#ff0000",
+						titleColor: "#0052cc",
+					},
+				};
+
 				// Render the chart and get the dimensions
 				const dimensions = await chartWindow.webContents
 					.executeJavaScript(`
-			  renderMermaidChart(\`${chart.data}\`);
+			  renderMermaidChart(\`${chart.data}\`, ${JSON.stringify(mermaidConfig)});
 			`);
 
 				// Resize the window to fit the chart dimensions
