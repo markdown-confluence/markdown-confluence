@@ -1,8 +1,8 @@
 import mermaid from "mermaid";
 
-mermaid.initialize({ startOnLoad: false });
+window.renderMermaidChart = async (chartData, mermaidConfig) => {
+	mermaid.initialize({ ...mermaidConfig, startOnLoad: false });
 
-window.renderMermaidChart = async (chartData) => {
 	return new Promise(async (resolve) => {
 		console.log({ chartData });
 		const { svg } = await mermaid.render("graphDiv2", chartData);

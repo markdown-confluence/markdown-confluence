@@ -1,4 +1,4 @@
-import { Plugin, Notice } from "obsidian";
+import { Plugin, Notice, Editor, MarkdownView } from "obsidian";
 import { MainSettingTab } from "./MainSettingTab";
 import { DEFAULT_SETTINGS, MyPluginSettings } from "./Settings";
 import { Publisher } from "./Publisher";
@@ -53,7 +53,7 @@ export default class MyPlugin extends Plugin {
 		);
 
 		this.addCommand({
-			id: "publish-all-to-confluence",
+			id: "obsidian-confluence-publish-all",
 			name: "Publish All to Confluence",
 			checkCallback: (checking: boolean) => {
 				if (!this._isSyncing) {
@@ -70,6 +70,83 @@ export default class MyPlugin extends Plugin {
 					}
 					return true;
 				}
+			},
+		});
+
+		this.addCommand({
+			id: "obsidian-confluence-enable-publishing",
+			name: "Enable publishing to Confluence",
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				view: MarkdownView
+			) => {
+				if (checking) {
+					const frontMatter = this.app.metadataCache.getCache(
+						view.file.path
+					)?.frontmatter;
+					const file = view.file;
+					const enabledForPublishing =
+						(file.path.startsWith(this.settings.folderToPublish) &&
+							(!frontMatter ||
+								frontMatter["connie-publish"] !== false)) ||
+						(frontMatter && frontMatter["connie-publish"] === true);
+					return !enabledForPublishing;
+				}
+
+				this.app.fileManager.processFrontMatter(
+					view.file,
+					(frontmatter) => {
+						if (
+							view.file.path.startsWith(
+								this.settings.folderToPublish
+							)
+						) {
+							delete frontmatter["connie-publish"];
+						} else {
+							frontmatter["connie-publish"] = true;
+						}
+					}
+				);
+			},
+		});
+
+		this.addCommand({
+			id: "obsidian-confluence-disable-publishing",
+			name: "Disable publishing to Confluence",
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				view: MarkdownView
+			) => {
+				if (checking) {
+					const frontMatter = this.app.metadataCache.getCache(
+						view.file.path
+					)?.frontmatter;
+					console.log({ frontMatter });
+					const file = view.file;
+					const enabledForPublishing =
+						(file.path.startsWith(this.settings.folderToPublish) &&
+							(!frontMatter ||
+								frontMatter["connie-publish"] !== false)) ||
+						(frontMatter && frontMatter["connie-publish"] === true);
+					return enabledForPublishing;
+				}
+
+				this.app.fileManager.processFrontMatter(
+					view.file,
+					(frontmatter) => {
+						if (
+							view.file.path.startsWith(
+								this.settings.folderToPublish
+							)
+						) {
+							frontmatter["connie-publish"] = false;
+						} else {
+							delete frontmatter["connie-publish"];
+						}
+					}
+				);
 			},
 		});
 

@@ -13,13 +13,66 @@ import {
 } from "./adaptors/types";
 import { MermaidRenderer, ChartData } from "./mermaid_renderers/types";
 import * as path from "path";
-import { Readable } from "stream";
+
+const mdToADFConverter = new MdToADF();
+const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
+
+interface AdfFile {
+	folderName: string;
+	absoluteFilePath: string;
+	fileName: string;
+	contents: ADFEntity;
+	pageTitle: string;
+	frontmatter: {
+		[key: string]: any;
+	};
+	tags: string[];
+}
+
+interface ConfluenceNode {
+	file: AdfFile;
+	pageId: string;
+	version: number;
+	existingAdf: string;
+	parentPageId: string;
+}
+interface ConfluenceTreeNode {
+	file: AdfFile;
+	pageId: string;
+	version: number;
+	existingAdf: string;
+	children: ConfluenceTreeNode[];
+}
+
+function flattenTree(
+	node: ConfluenceTreeNode,
+	parentPageId?: string
+): ConfluenceNode[] {
+	const nodes: ConfluenceNode[] = [];
+	const { file, pageId, version, existingAdf, children } = node;
+
+	if (parentPageId) {
+		nodes.push({
+			file,
+			pageId,
+			version,
+			existingAdf,
+			parentPageId: parentPageId,
+		});
+	}
+
+	if (children) {
+		children.forEach((child) => {
+			nodes.push(...flattenTree(child, pageId));
+		});
+	}
+
+	return nodes;
+}
 
 export class Publisher {
 	confluenceClient: ConfluenceClient;
 	blankPageAdf: string = JSON.stringify(doc(p("Blank page to replace")));
-	frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
-	mdToADFConverter: MdToADF;
 	adaptor: LoaderAdaptor;
 	settings: MyPluginSettings;
 	mermaidRenderer: MermaidRenderer;
@@ -34,8 +87,6 @@ export class Publisher {
 		this.settings = settings;
 		this.mermaidRenderer = mermaidRenderer;
 
-		this.mdToADFConverter = new MdToADF();
-
 		this.confluenceClient = confluenceClient;
 	}
 
@@ -45,19 +96,21 @@ export class Publisher {
 			expand: ["body.atlas_doc_format", "space"],
 		});
 		const spaceToPublishTo = parentPage.space;
-		console.log({ parentPage });
 
 		const files = await this.adaptor.getMarkdownFilesToUpload();
-		//TODO: Create fake file to publish
-		//TODO: Handle finding root folder
-
 		const folderTree = createFolderStructure(files);
-		console.log({ folderTree });
-
-		const adrFileTasks = files.map(
-			(file) =>
-				this.publishFile(file, spaceToPublishTo!.key, parentPage.id) //TODO: Handle missing space key better
+		const confluencePageTree = await this.createFileStructureInConfluence(
+			folderTree,
+			spaceToPublishTo!.key,
+			parentPage.id,
+			parentPage.id,
+			false
 		);
+		const confluencePagesToPublish = flattenTree(confluencePageTree);
+
+		const adrFileTasks = confluencePagesToPublish.map((file) => {
+			return this.publishFile(file);
+		});
 
 		const adrFiles = await Promise.all(adrFileTasks);
 
@@ -73,50 +126,73 @@ export class Publisher {
 		return stats;
 	}
 
-	async publishFile(
-		file: MarkdownFile,
+	async createFileStructureInConfluence(
+		node: TreeNode,
 		spaceKey: string,
-		parentPageId: string
-	): Promise<boolean> {
-		let markdown = file.contents.replace(this.frontmatterRegex, "");
-
-		if (
-			file.frontmatter["frontmatter-to-publish"] &&
-			Array.isArray(file.frontmatter["frontmatter-to-publish"])
-		) {
-			console.log({
-				fmtopub: file.frontmatter["frontmatter-to-publish"],
-			});
-			let frontmatterHeader = "| Key | Value | \n | ----- | ----- |\n";
-			for (const key of file.frontmatter["frontmatter-to-publish"]) {
-				if (file.frontmatter[key]) {
-					const keyString = key.toString();
-					const valueString = file.frontmatter[key].toString();
-					frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
-				}
-			}
-			markdown = frontmatterHeader + markdown;
+		parentPageId: string,
+		topPageId: string,
+		createPage: boolean
+	): Promise<ConfluenceTreeNode> {
+		if (!node.file) {
+			throw new Error("Missing file on node");
 		}
 
-		const tags = [];
-		if (
-			file.frontmatter["tags"] &&
-			Array.isArray(file.frontmatter["tags"])
-		) {
-			for (const label of file.frontmatter["tags"]) {
-				if (typeof label === "string") {
-					tags.push(label);
-				}
-			}
+		let myPageId: string | undefined;
+		let version: number;
+		let existingAdf: string | undefined;
+
+		if (createPage) {
+			const pageDetails = await this.ensurePageExists(
+				node.file,
+				spaceKey,
+				parentPageId,
+				topPageId
+			);
+			myPageId = pageDetails.id;
+			version = pageDetails.version;
+			existingAdf = pageDetails.existingAdf;
+		} else {
+			myPageId = parentPageId;
+			version = 0;
+			existingAdf = "";
 		}
 
-		const adrobj = this.mdToADFConverter.parse(markdown);
+		if (myPageId === undefined) {
+			throw new Error("Missing myPageId");
+		}
 
+		const childDetailsTasks = node.children.map((childNode) => {
+			return this.createFileStructureInConfluence(
+				childNode,
+				spaceKey,
+				myPageId,
+				topPageId,
+				true
+			);
+		});
+
+		const childDetails = await Promise.all(childDetailsTasks);
+
+		return {
+			file: node.file,
+			pageId: myPageId,
+			version,
+			existingAdf: existingAdf ?? "",
+			children: childDetails,
+		};
+	}
+
+	async ensurePageExists(
+		file: AdfFile,
+		spaceKey: string,
+		parentPageId: string,
+		topPageId: string
+	) {
 		const searchParams = {
 			type: "page",
 			spaceKey,
 			title: file.pageTitle,
-			expand: ["version", "body.atlas_doc_format", "body.storage"],
+			expand: ["version", "body.atlas_doc_format", "ancestors"],
 		};
 		const contentByTitle = await this.confluenceClient.content.getContent(
 			searchParams
@@ -125,22 +201,24 @@ export class Publisher {
 		if (contentByTitle.size > 0) {
 			const currentPage = contentByTitle.results[0];
 
-			console.log("BEFORE CURRENT ADF");
-			console.log(
-				JSON.stringify(currentPage?.body?.atlas_doc_format?.value)
-			);
-			console.log("AFTER CURRENT ADF");
+			// TODO: Ensure is part of topPageId page tree
+			console.log({ ancestors: currentPage.ancestors });
+			if (
+				!currentPage.ancestors?.some(
+					(ancestor) => ancestor.id == topPageId
+				)
+			) {
+				throw new Error(
+					`${file.pageTitle} is trying to overwrite a page outside the page tree from the selected top page`
+				);
+			}
 
-			await this.updatePageContent(
-				currentPage.id,
-				file.absoluteFilePath,
-				adrobj,
-				parentPageId,
-				currentPage!.version!.number,
-				file.pageTitle,
-				currentPage?.body?.atlas_doc_format?.value ?? "",
-				tags
-			);
+			return {
+				id: currentPage.id,
+				title: file.pageTitle,
+				version: currentPage!.version!.number,
+				existingAdf: currentPage?.body?.atlas_doc_format?.value,
+			};
 		} else {
 			console.log("Creating page");
 			const creatingBlankPageRequest = {
@@ -159,18 +237,35 @@ export class Publisher {
 				await this.confluenceClient.content.createContent(
 					creatingBlankPageRequest
 				);
-
-			await this.updatePageContent(
-				pageDetails.id,
-				file.absoluteFilePath,
-				adrobj,
-				parentPageId,
-				pageDetails!.version!.number,
-				file.pageTitle,
-				pageDetails?.body?.atlas_doc_format?.value ?? "",
-				tags
-			);
+			return {
+				id: pageDetails.id,
+				title: file.pageTitle,
+				version: pageDetails!.version!.number,
+				existingAdf: pageDetails?.body?.atlas_doc_format?.value,
+			};
 		}
+	}
+
+	async publishFile(node: ConfluenceNode): Promise<boolean> {
+		/*
+		const currentPage = contentByTitle.results[0];
+
+		console.log("BEFORE CURRENT ADF");
+		console.log(
+			JSON.stringify(currentPage?.body?.atlas_doc_format?.value)
+		);
+		console.log("AFTER CURRENT ADF");
+		*/
+		await this.updatePageContent(
+			node.pageId, // currentPage.id,
+			node.file.absoluteFilePath,
+			node.file.contents,
+			node.parentPageId,
+			node.version, //currentPage!.version!.number,
+			node.file.pageTitle,
+			node.existingAdf, // currentPage?.body?.atlas_doc_format?.value ?? "",
+			node.file.tags
+		);
 
 		return true;
 	}
@@ -278,18 +373,16 @@ export class Publisher {
 				node.type == "codeBlock" &&
 				(node.attrs || {})?.language === "mermaid"
 		);
-		if (mermaidNodes.length > 0) {
-			console.log({ mermaidNodes });
-		}
 
 		const mermaidNodesToUpload = new Set(
 			mermaidNodes.map((node) => {
-				const mermaidText =
-					node?.content?.at(0)?.text ??
-					"flowchart LR\nid1[Missing Chart]";
-				const pathMd5 = SparkMD5.hash(mermaidText);
-				const uploadFilename = `RenderedMermaidChart-${pathMd5}.png`;
-				return { name: uploadFilename, data: mermaidText } as ChartData;
+				const mermaidDetails = getMermaidFileName(
+					node?.content?.at(0)?.text
+				);
+				return {
+					name: mermaidDetails.uploadFilename,
+					data: mermaidDetails.mermaidText,
+				} as ChartData;
 			})
 		).values();
 
@@ -298,13 +391,11 @@ export class Publisher {
 				...mermaidNodesToUpload,
 			]);
 
-		console.log({ mermaidChartsAsImages });
-
 		const currentUploadedAttachments =
 			await this.confluenceClient.contentAttachments.getAttachments({
 				id: pageId,
 			});
-		console.log({ currentUploadedAttachments });
+
 		const currentAttachments = currentUploadedAttachments.results.reduce(
 			(prev, curr) => {
 				return {
@@ -318,8 +409,6 @@ export class Publisher {
 			},
 			{}
 		);
-
-		console.log({ mediaNodes, currentAttachments });
 
 		const imagesToUpload = new Set(
 			mediaNodes.map((node) => node?.attrs?.url)
@@ -357,8 +446,6 @@ export class Publisher {
 			};
 		}
 
-		console.log({ beforeAdr: adr });
-
 		const afterAdf = traverse(adr, {
 			media: (node, parent) => {
 				if (node?.attrs?.type === "file") {
@@ -378,17 +465,17 @@ export class Publisher {
 			},
 			codeBlock: (node, parent) => {
 				if (node?.attrs?.language === "mermaid") {
-					console.log({ mermaidNode: node });
 					const mermaidContent = node?.content?.at(0)?.text;
 					if (!mermaidContent) {
 						return;
 					}
 					const mermaidFilename = getMermaidFileName(mermaidContent);
 
-					if (!imageMap[mermaidFilename]) {
+					if (!imageMap[mermaidFilename.uploadFilename]) {
 						return;
 					}
-					const mappedImage = imageMap[mermaidFilename];
+					const mappedImage =
+						imageMap[mermaidFilename.uploadFilename];
 					if (mappedImage !== null) {
 						node.type = "mediaSingle";
 						node.attrs.layout = "center";
@@ -405,14 +492,11 @@ export class Publisher {
 							];
 						}
 						delete node.attrs.language;
-						console.log({ mermaidNodeEnd: node });
 						return node;
 					}
 				}
 			},
 		});
-
-		console.log({ afterAdr: afterAdf });
 
 		return afterAdf;
 	}
@@ -426,8 +510,6 @@ export class Publisher {
 			{ filehash: string; attachmentId: string; collectionName: string }
 		>
 	): Promise<UploadedImageData | null> {
-		console.log("UPLOAD BUFFER FUNCTION", uploadFilename);
-
 		const spark = new SparkMD5.ArrayBuffer();
 		const currentFileMd5 = spark.append(fileBuffer).end();
 
@@ -435,10 +517,6 @@ export class Publisher {
 			!!currentAttachments[uploadFilename] &&
 			currentAttachments[uploadFilename].filehash === currentFileMd5
 		) {
-			console.log("FILE ALREADY UPLOADED");
-			console.log({
-				fileDetails: currentAttachments[uploadFilename],
-			});
 			return {
 				filename: uploadFilename,
 				id: currentAttachments[uploadFilename].attachmentId,
@@ -450,12 +528,7 @@ export class Publisher {
 			id: pageId,
 			attachments: [
 				{
-					file: fileBuffer, // Readable.from(fileBuffer.entries()),
-					/*
-					file: new Blob([fileBuffer.buffer], {
-						type: "image/png",
-					}),
-					*/
+					file: fileBuffer,
 					filename: uploadFilename,
 					minorEdit: false,
 					comment: currentFileMd5,
@@ -464,13 +537,11 @@ export class Publisher {
 			],
 		};
 
-		console.log({ attachmentDetails });
 		const attachmentResponse =
 			await this.confluenceClient.contentAttachments.createOrUpdateAttachments(
 				attachmentDetails
 			);
 
-		console.log({ attachmentReponse: attachmentResponse.results[0] });
 		return {
 			filename: uploadFilename,
 			id: attachmentResponse.results[0].extensions.fileId,
@@ -487,7 +558,6 @@ export class Publisher {
 			{ filehash: string; attachmentId: string; collectionName: string }
 		>
 	): Promise<UploadedImageData | null> {
-		console.log("UPLOAD FILE FUNCTION", fileNameToUpload);
 		const testing = await this.adaptor.readBinary(
 			fileNameToUpload,
 			pageFilePath
@@ -502,10 +572,6 @@ export class Publisher {
 				!!currentAttachments[uploadFilename] &&
 				currentAttachments[uploadFilename].filehash === currentFileMd5
 			) {
-				console.log("FILE ALREADY UPLOADED");
-				console.log({
-					fileDetails: currentAttachments[uploadFilename],
-				});
 				return {
 					filename: fileNameToUpload,
 					id: currentAttachments[uploadFilename].attachmentId,
@@ -519,11 +585,6 @@ export class Publisher {
 				attachments: [
 					{
 						file: Buffer.from(testing.contents),
-						/*
-						file: new Blob([testing.contents], {
-							type: testing.mimeType,
-						}),
-*/
 						filename: uploadFilename,
 						minorEdit: false,
 						comment: currentFileMd5,
@@ -531,13 +592,11 @@ export class Publisher {
 				],
 			};
 
-			console.log({ testing, attachmentDetails });
 			const attachmentResponse =
 				await this.confluenceClient.contentAttachments.createOrUpdateAttachments(
 					attachmentDetails
 				);
 
-			console.log({ attachmentReponse: attachmentResponse.results[0] });
 			return {
 				filename: fileNameToUpload,
 				id: attachmentResponse.results[0].extensions.fileId,
@@ -549,11 +608,11 @@ export class Publisher {
 	}
 }
 
-function getMermaidFileName(mermaidContent: string) {
+function getMermaidFileName(mermaidContent: string | undefined) {
 	const mermaidText = mermaidContent ?? "flowchart LR\nid1[Missing Chart]";
 	const pathMd5 = SparkMD5.hash(mermaidText);
 	const uploadFilename = `RenderedMermaidChart-${pathMd5}.png`;
-	return uploadFilename;
+	return { uploadFilename, mermaidText };
 }
 
 interface UploadedImageData {
@@ -565,7 +624,7 @@ interface UploadedImageData {
 interface TreeNode {
 	name: string;
 	children: TreeNode[];
-	file?: MarkdownFile;
+	file?: AdfFile;
 }
 const findCommonPath = (paths: string[]): string => {
 	const [firstPath, ...rest] = paths;
@@ -589,6 +648,42 @@ const createTreeNode = (name: string): TreeNode => ({
 	children: [],
 });
 
+function convertMDtoADF(file: MarkdownFile): AdfFile {
+	let markdown = file.contents.replace(frontmatterRegex, "");
+
+	if (
+		file.frontmatter["frontmatter-to-publish"] &&
+		Array.isArray(file.frontmatter["frontmatter-to-publish"])
+	) {
+		let frontmatterHeader = "| Key | Value | \n | ----- | ----- |\n";
+		for (const key of file.frontmatter["frontmatter-to-publish"]) {
+			if (file.frontmatter[key]) {
+				const keyString = key.toString();
+				const valueString = file.frontmatter[key].toString();
+				frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
+			}
+		}
+		markdown = frontmatterHeader + markdown;
+	}
+
+	const tags = [];
+	if (file.frontmatter["tags"] && Array.isArray(file.frontmatter["tags"])) {
+		for (const label of file.frontmatter["tags"]) {
+			if (typeof label === "string") {
+				tags.push(label);
+			}
+		}
+	}
+
+	const adrobj = mdToADFConverter.parse(markdown);
+
+	return {
+		...file,
+		contents: adrobj,
+		tags,
+	};
+}
+
 const addFileToTree = (
 	treeNode: TreeNode,
 	file: MarkdownFile,
@@ -604,7 +699,11 @@ const addFileToTree = (
 			);
 		}
 		fileNames.add(file.fileName);
-		treeNode.children.push({ ...createTreeNode(folderName), file });
+		const adfFile = convertMDtoADF(file);
+		treeNode.children.push({
+			...createTreeNode(folderName),
+			file: adfFile,
+		});
 	} else {
 		let childNode = treeNode.children.find(
 			(node) => node.name === folderName
@@ -632,28 +731,27 @@ const createFolderStructure = (markdownFiles: MarkdownFile[]): TreeNode => {
 	});
 	console.log({ folderRoot: rootNode });
 	const processNode = (node: TreeNode) => {
-		const indexFile = node.children.find(
-			(child) => path.parse(child.name).name === node.name
-		);
-
-		if (indexFile) {
-			node.file = indexFile.file;
-			node.children = node.children.filter(
-				(child) => child !== indexFile
+		if (!node.file) {
+			const indexFile = node.children.find(
+				(child) => path.parse(child.name).name === node.name
 			);
-		} else {
-			node.file = {
-				folderName: node.name,
-				absoluteFilePath: path.join(
-					commonPath,
-					node.name,
-					`${node.name}.md`
-				),
-				fileName: `${node.name}.md`,
-				contents: "Predefined string template",
-				pageTitle: node.name,
-				frontmatter: {},
-			};
+
+			if (indexFile) {
+				node.file = indexFile.file;
+				node.children = node.children.filter(
+					(child) => child !== indexFile
+				);
+			} else {
+				node.file = {
+					folderName: node.name,
+					absoluteFilePath: path.join(commonPath, node.name),
+					fileName: `${node.name}.md`,
+					contents: FolderFile,
+					pageTitle: node.name,
+					frontmatter: {},
+					tags: [],
+				};
+			}
 		}
 
 		node.children.forEach(processNode);
