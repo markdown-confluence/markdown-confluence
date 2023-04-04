@@ -1,4 +1,4 @@
-# Contributing to [Project name]
+# Contributing
 
 Thank you for considering a contribution! Pull requests, issues and comments are welcome. For pull requests, please:
 
