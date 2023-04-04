@@ -51,13 +51,13 @@ function flattenTree(
 	const nodes: ConfluenceNode[] = [];
 	const { file, pageId, version, existingAdf, children } = node;
 
-	if (file.absoluteFilePath !== ".") {
+	if (parentPageId) {
 		nodes.push({
 			file,
 			pageId,
 			version,
 			existingAdf,
-			parentPageId: parentPageId ?? "",
+			parentPageId: parentPageId,
 		});
 	}
 
@@ -105,7 +105,8 @@ export class Publisher {
 			folderTree,
 			spaceToPublishTo!.key,
 			parentPage.id,
-			parentPage.id
+			parentPage.id,
+			false
 		);
 		console.log({ confluencePageTree });
 		const confluencePagesToPublish = flattenTree(confluencePageTree);
@@ -133,7 +134,8 @@ export class Publisher {
 		node: TreeNode,
 		spaceKey: string,
 		parentPageId: string,
-		topPageId: string
+		topPageId: string,
+		createPage: boolean
 	): Promise<ConfluenceTreeNode> {
 		if (!node.file) {
 			throw new Error("Missing file on node");
@@ -143,7 +145,7 @@ export class Publisher {
 		let version: number;
 		let existingAdf: string | undefined;
 
-		if (node.file.absoluteFilePath !== ".") {
+		if (createPage) {
 			const pageDetails = await this.ensurePageExists(
 				node.file,
 				spaceKey,
@@ -168,7 +170,8 @@ export class Publisher {
 				childNode,
 				spaceKey,
 				myPageId,
-				topPageId
+				topPageId,
+				true
 			);
 		});
 
