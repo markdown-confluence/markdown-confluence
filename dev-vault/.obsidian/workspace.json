@@ -8,25 +8,14 @@
         "type": "tabs",
         "children": [
           {
-            "id": "3acd9360c845d9dc",
+            "id": "3a3c400bdf18f949",
             "type": "leaf",
             "state": {
               "type": "empty",
               "state": {}
             }
-          },
-          {
-            "id": "e600d54293323e47",
-            "type": "leaf",
-            "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.1.15"
-              }
-            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -69,6 +58,14 @@
             "type": "leaf",
             "state": {
               "type": "starred",
+              "state": {}
+            }
+          },
+          {
+            "id": "8e87328fd15abe60",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
               "state": {}
             }
           }
@@ -136,8 +133,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -147,36 +143,44 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "obsidian42-brat:BRAT": false
+      "obsidian42-brat:BRAT": false,
+      "obsidian-confluence:Publish to Confluence": false
     }
   },
-  "active": "e600d54293323e47",
+  "active": "15f8973b48737c43",
   "lastOpenFiles": [
+    "Test Page.md",
+    "Root Not Top",
+    "Other Pages/Test Fence.md",
+    "Root Not Top/Other Pages/Testing - Frontmatter - Publish Frontmatter.md",
+    "Root Not Top/Confluence Pages/Testing - Diagram.md",
+    "Root Not Top/Confluence Pages/Testing - Comments.md",
+    "Root Not Top/Confluence Pages/og-image.jpg",
+    "Confluence Pages/og-image.jpg-back.jpg",
+    "Root Not Top/Confluence Pages/Testing - Images.md",
+    "Root Not Top/Confluence Pages/Testing All Format.md",
+    "Root Not Top/Confluence Pages/Testing - Code.md",
+    "Structure Test/Folder Note Test.md",
+    "Root Not Top/Structure Test/Folder Note Test/Folder Note Test.md",
+    "Root Not Top/Structure Test/Folder Note Test",
+    "Root Not Top/Structure Test",
     "Confluence Pages/Untitled 1.md",
     "Confluence Pages/Untitled.md",
-    "Confluence Pages/Testing - Internal Links.md",
-    "Confluence Pages/Testing - External Links.md",
-    "Confluence Pages/Testing - Diagram.md",
-    "Other Pages/Testing Frontmatter Publish.md",
-    "Confluence Pages/Testing All Format.md",
-    "Confluence Pages/Testing - Callouts.md",
-    "Confluence Pages/Testing - Comments.md",
+    "Root Not Top/Confluence Pages/Testing - Internal Links.md",
+    "Root Not Top/Confluence Pages/Testing - External Links.md",
+    "Root Not Top/Other Pages/Testing Frontmatter Publish.md",
+    "Root Not Top/Confluence Pages/Testing - Callouts.md",
     "Confluence Pages/Untitled 2.md",
-    "Confluence Pages/Testing - Footnotes.md",
-    "Confluence Pages/Testing - Math.md",
-    "Confluence Pages/Testing - Highlighting.md",
-    "Confluence Pages/Testing - Horizontal Bar.md",
-    "Confluence Pages/Testing - Strike-through.md",
-    "Confluence Pages/Testing - Tables.md",
-    "Confluence Pages/Testing - Task list.md",
-    "Confluence Pages/Testing - Code.md",
-    "Confluence Pages/Testing - Blockquotes.md",
-    "Confluence Pages/Testing - Images.md",
-    "Confluence Pages/Testing - Lists.md",
-    "Confluence Pages/Testing - Emphasis.md",
-    "Confluence Pages/Testing - Headings.md",
-    "Confluence Pages/Testing - Embeds.md",
-    "Other Pages",
-    "Confluence Pages"
+    "Root Not Top/Confluence Pages/Testing - Footnotes.md",
+    "Root Not Top/Confluence Pages/Testing - Math.md",
+    "Root Not Top/Confluence Pages/Testing - Highlighting.md",
+    "Root Not Top/Confluence Pages/Testing - Horizontal Bar.md",
+    "Root Not Top/Confluence Pages/Testing - Strike-through.md",
+    "Root Not Top/Confluence Pages/Testing - Tables.md",
+    "Root Not Top/Confluence Pages/Testing - Task list.md",
+    "Root Not Top/Confluence Pages/Testing - Blockquotes.md",
+    "Root Not Top/Confluence Pages/Testing - Lists.md",
+    "Root Not Top/Other Pages",
+    "Root Not Top/Confluence Pages"
   ]
 }

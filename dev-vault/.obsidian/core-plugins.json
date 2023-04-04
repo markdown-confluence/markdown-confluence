@@ -13,8 +13,9 @@
   "note-composer",
   "command-palette",
   "editor-status",
-  "starred",
+  "bookmarks",
   "outline",
   "word-count",
+  "starred",
   "file-recovery"
 ]
