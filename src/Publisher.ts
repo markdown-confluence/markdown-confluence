@@ -96,11 +96,9 @@ export class Publisher {
 			expand: ["body.atlas_doc_format", "space"],
 		});
 		const spaceToPublishTo = parentPage.space;
-		console.log({ parentPage });
 
 		const files = await this.adaptor.getMarkdownFilesToUpload();
 		const folderTree = createFolderStructure(files);
-		console.log({ folderTree });
 		const confluencePageTree = await this.createFileStructureInConfluence(
 			folderTree,
 			spaceToPublishTo!.key,
@@ -108,12 +106,10 @@ export class Publisher {
 			parentPage.id,
 			false
 		);
-		console.log({ confluencePageTree });
 		const confluencePagesToPublish = flattenTree(confluencePageTree);
-		console.log({ confluencePagesToPublish });
 
 		const adrFileTasks = confluencePagesToPublish.map((file) => {
-			return this.publishFile(file); //TODO: Handle missing space key better
+			return this.publishFile(file);
 		});
 
 		const adrFiles = await Promise.all(adrFileTasks);
@@ -206,6 +202,16 @@ export class Publisher {
 			const currentPage = contentByTitle.results[0];
 
 			// TODO: Ensure is part of topPageId page tree
+			console.log({ ancestors: currentPage.ancestors });
+			if (
+				!currentPage.ancestors?.some(
+					(ancestor) => ancestor.id == topPageId
+				)
+			) {
+				throw new Error(
+					`${file.pageTitle} is trying to overwrite a page outside the page tree from the selected top page`
+				);
+			}
 
 			return {
 				id: currentPage.id,
