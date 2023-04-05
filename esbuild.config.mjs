@@ -41,14 +41,4 @@ esbuild.build({
 	treeShaking: true,
 	outdir: prod ? 'dist' : 'dev-vault/.obsidian/plugins/obsidian-confluence',
 	mainFields: ['module', 'main'],
-/*
-	plugins: [
-		polyfillNode({
-			globals: {
-				process: false,
-			},
-			polyfills: [],
-		}),
-	],
-*/
 }).catch(() => process.exit(1));

@@ -1,4 +1,11 @@
-import { Plugin, Notice, Editor, MarkdownView } from "obsidian";
+import {
+	Plugin,
+	Notice,
+	Editor,
+	MarkdownView,
+	WorkspaceLeaf,
+	Workspace,
+} from "obsidian";
 import { MainSettingTab } from "./MainSettingTab";
 import { DEFAULT_SETTINGS, MyPluginSettings } from "./Settings";
 import { Publisher } from "./Publisher";
@@ -6,14 +13,46 @@ import ObsidianAdaptor from "./adaptors/obsidian";
 import { CompletedModal } from "./CompletedModal";
 import { CustomConfluenceClient } from "./MyBaseClient";
 import { ElectronMermaidRenderer } from "./mermaid_renderers/electron";
+import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	_isSyncing: boolean = false;
+	adfView: AdfView;
+	workspace: Workspace;
+
+	activeLeafPath(workspace: Workspace) {
+		return workspace.activeLeaf?.view.getState().file;
+	}
+
+	activeLeafName(workspace: Workspace) {
+		return (
+			workspace.activeLeaf?.getDisplayText() ||
+			" TODO TESTING CRAP TO BE REMOVED "
+		);
+	}
+
+	adfPreview() {
+		const fileInfo = {
+			path: this.activeLeafPath(this.workspace),
+			basename: this.activeLeafName(this.workspace),
+		};
+		this.initPreview(fileInfo);
+	}
+
+	async initPreview(fileInfo: any) {
+		if (this.app.workspace.getLeavesOfType(ADF_VIEW_TYPE).length > 0) {
+			return;
+		}
+		const preview = this.app.workspace.getLeaf("split");
+		const mmPreview = new AdfView(this.settings, preview, fileInfo);
+		preview.open(mmPreview);
+	}
 
 	async onload() {
 		await this.loadSettings();
-		const { vault, metadataCache } = this.app;
+		const { vault, metadataCache, workspace } = this.app;
+		this.workspace = workspace;
 		const mermaidRenderer = new ElectronMermaidRenderer();
 		const confluenceClient = new CustomConfluenceClient({
 			host: this.settings.confluenceBaseUrl,
@@ -30,6 +69,22 @@ export default class MyPlugin extends Plugin {
 			confluenceClient,
 			mermaidRenderer
 		);
+
+		this.registerView(
+			ADF_VIEW_TYPE,
+			(leaf: WorkspaceLeaf) =>
+				(this.adfView = new AdfView(this.settings, leaf, {
+					path: this.activeLeafPath(this.workspace),
+					basename: this.activeLeafName(this.workspace),
+				}))
+		);
+
+		this.addCommand({
+			id: "app:adf-preview",
+			name: "Preview the current note rendered to ADF",
+			callback: () => this.adfPreview(),
+			hotkeys: [],
+		});
 
 		this.addRibbonIcon(
 			"cloud",
@@ -153,7 +208,9 @@ export default class MyPlugin extends Plugin {
 		this.addSettingTab(new MainSettingTab(this.app, this));
 	}
 
-	onunload() {}
+	async onunload() {
+		this.app.workspace.detachLeavesOfType(ADF_VIEW_TYPE);
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(
