@@ -56,6 +56,7 @@ export default class AdfView extends ItemView {
 		let md = await this.app.vault.adapter.read(this.filePath);
 		const adf = this.mdToADF.parse(md);
 		ReactDOM.render(
+			// @ts-ignore
 			React.createElement(ReactRenderer, { document: adf }),
 			container
 		);

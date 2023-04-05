@@ -161,11 +161,13 @@ export class Publisher {
 			throw new Error("Missing myPageId");
 		}
 
+		const nonNullMyPageId = myPageId;
+
 		const childDetailsTasks = node.children.map((childNode) => {
 			return this.createFileStructureInConfluence(
 				childNode,
 				spaceKey,
-				myPageId,
+				nonNullMyPageId,
 				topPageId,
 				true
 			);
@@ -175,7 +177,7 @@ export class Publisher {
 
 		return {
 			file: node.file,
-			pageId: myPageId,
+			pageId: nonNullMyPageId,
 			version,
 			existingAdf: existingAdf ?? "",
 			children: childDetails,
