@@ -37,7 +37,7 @@ esbuild.build({
 	watch: !prod,
 	target: 'chrome106',
 	logLevel: "info",
-	sourcemap: 'inline',
+	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
 	outdir: prod ? 'dist' : 'dev-vault/.obsidian/plugins/obsidian-confluence',
 	mainFields: ['module', 'main'],
