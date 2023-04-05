@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/v1.0.1...v1.0.2) (2023-04-05)
+
+
+### Bug Fixes
+
+* **ci:** List files uploaded to GitHub ([7612bcd](https://github.com/obsidian-confluence/obsidian-confluence/commit/7612bcd6b67c8ba712611e553dff985f8cae38bd))
+* **ci:** Remove Sourcemap to save size ([0a1398b](https://github.com/obsidian-confluence/obsidian-confluence/commit/0a1398bb880c3201598ec860c68c1b82b016fa4a))
+
 ## [1.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/v1.0.0...v1.0.1) (2023-04-05)
 
 
