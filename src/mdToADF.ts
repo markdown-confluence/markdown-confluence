@@ -18,14 +18,14 @@ export default class MdToADF {
 		this.confluenceSerializer = new ConfluenceTransformer(schema);
 	}
 
-	parse(markdown: string): ADFEntity {
+	parse(markdown: string) {
 		const prosenodes = this.transformer.parse(markdown);
 		const adfNodes = this.serializer.encode(prosenodes);
 		const nodes = this.replaceLinkWithInlineSmartCard(adfNodes);
 		return nodes;
 	}
 
-	replaceLinkWithInlineSmartCard(adf: JSONDocNode): ADFEntity {
+	replaceLinkWithInlineSmartCard(adf: JSONDocNode): JSONDocNode {
 		const olivia = traverse(adf, {
 			text: (node, parent) => {
 				if (
@@ -49,6 +49,6 @@ export default class MdToADF {
 			throw new Error("Failed to traverse");
 		}
 
-		return olivia;
+		return olivia as JSONDocNode;
 	}
 }
