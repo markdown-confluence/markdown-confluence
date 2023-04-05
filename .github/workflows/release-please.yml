@@ -39,5 +39,6 @@ jobs:
           TAG=${{ steps.release-please.outputs.tag_name }}
           FILES=$(echo dist/*)
           gh release upload $TAG $FILES
+          echo $FILES
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
