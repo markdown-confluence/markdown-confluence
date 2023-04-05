@@ -20,6 +20,7 @@ export default class MyPlugin extends Plugin {
 	_isSyncing: boolean = false;
 	adfView: AdfView;
 	workspace: Workspace;
+	publisher: Publisher;
 
 	activeLeafPath(workspace: Workspace) {
 		return workspace.activeLeaf?.view.getState().file;
@@ -49,7 +50,7 @@ export default class MyPlugin extends Plugin {
 		preview.open(mmPreview);
 	}
 
-	async onload() {
+	async init() {
 		await this.loadSettings();
 		const { vault, metadataCache, workspace } = this.app;
 		this.workspace = workspace;
@@ -63,12 +64,17 @@ export default class MyPlugin extends Plugin {
 				},
 			},
 		});
-		const publisher = new Publisher(
+
+		this.publisher = new Publisher(
 			new ObsidianAdaptor(vault, metadataCache, this.settings),
 			this.settings,
 			confluenceClient,
 			mermaidRenderer
 		);
+	}
+
+	async onload() {
+		await this.init();
 
 		this.registerView(
 			ADF_VIEW_TYPE,
@@ -96,7 +102,7 @@ export default class MyPlugin extends Plugin {
 				}
 				this._isSyncing = true;
 				try {
-					const stats = await publisher.doPublish();
+					const stats = await this.publisher.doPublish();
 					new CompletedModal(this.app, stats).open();
 				} catch (exceptionVar) {
 					new Notice("Error publishing to Confluence");
@@ -114,7 +120,7 @@ export default class MyPlugin extends Plugin {
 				if (!this._isSyncing) {
 					if (!checking) {
 						this._isSyncing = true;
-						publisher
+						this.publisher
 							.doPublish()
 							.then((stats) => {
 								new CompletedModal(this.app, stats).open();
@@ -221,6 +227,7 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async saveSettings() {
+		await this.init();
 		await this.saveData(this.settings);
 	}
 }
