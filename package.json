@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-confluence",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "This plugin allows you to publish your notes to Confluence",
 	"main": "main.js",
 	"type": "module",
