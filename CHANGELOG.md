@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.0...1.2.1) (2023-04-06)
+
+
+### Bug Fixes
+
+* **ci:** Remove v from github release ([3d3c07e](https://github.com/obsidian-confluence/obsidian-confluence/commit/3d3c07ef3b96c6f73561f5cd2aa0e44e7f6034c9))
+
 ## [1.2.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/v1.1.0...1.2.0) (2023-04-06)
 
 
