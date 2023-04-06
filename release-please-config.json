@@ -3,6 +3,7 @@
       ".": {
         "release-type": "node",
         "include-v-in-tag": false,
+        "include-component-in-tag": false,
         "extra-files": ["dist/manifest.json"]
       }
     }
