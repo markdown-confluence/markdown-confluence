@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/obsidian-confluence/obsidian-confluence/compare/v1.0.2...v1.0.3) (2023-04-06)
+
+
+### Bug Fixes
+
+* **Mermaid:** Remove extra console.log ([cfbddd5](https://github.com/obsidian-confluence/obsidian-confluence/commit/cfbddd531d4b79e3bd2447e39299db19b6393014))
+
 ## [1.0.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/v1.0.1...v1.0.2) (2023-04-05)
 
 
