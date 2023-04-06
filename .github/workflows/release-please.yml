@@ -19,10 +19,7 @@ jobs:
       - id: release-please
         uses: google-github-actions/release-please-action@v3
         with:
-          release-type: node
-          package-name: release-please-action
-          extra-files: |
-            dist/manifest.json
+          command: manifest
       
       - name: Use Node.js
         uses: actions/setup-node@v1
