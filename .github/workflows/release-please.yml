@@ -37,5 +37,7 @@ jobs:
           FILES=$(echo dist/*)
           gh release upload $TAG $FILES
           echo $FILES
+          NEW_TAG="${TAG#v}"
+          gh release edit $TAG -t $NEW_TAG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
