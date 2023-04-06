@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.1...1.2.2) (2023-04-06)
+
+
+### Bug Fixes
+
+* **ci:** Move manifest to root of repo to align with Obsidian requirements ([78d09e4](https://github.com/obsidian-confluence/obsidian-confluence/commit/78d09e43daad45aa0cf51f5f1ca874fa5b13e8e1))
+
 ## [1.2.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.0...1.2.1) (2023-04-06)
 
 
