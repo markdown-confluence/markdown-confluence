@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.2...1.2.3) (2023-04-06)
+
+
+### Bug Fixes
+
+* **ci:** Remove extra comment in manifest.json ([05d9657](https://github.com/obsidian-confluence/obsidian-confluence/commit/05d965738ac77b951acc39348bb7e4a64c627b1f))
+
 ## [1.2.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.1...1.2.2) (2023-04-06)
 
 
