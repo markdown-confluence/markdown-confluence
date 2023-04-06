@@ -1,6 +1,11 @@
 import * as path from "path";
 import { BrowserWindow } from "@electron/remote";
 import { ChartData, MermaidRenderer } from "./types";
+import MermaidRendererClient from "mermaid_renderer.esbuild";
+
+const mermaid_render_html = URL.createObjectURL(
+	new Blob([MermaidRendererClient], { type: "text/html" })
+);
 
 export class ElectronMermaidRenderer implements MermaidRenderer {
 	async captureMermaidCharts(
@@ -18,13 +23,8 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 					frame: false,
 				});
 
-				// Load the HTML file with the Mermaid.js chart
-				await chartWindow.loadFile(
-					path.join(
-						"/Users/andrewmcclenaghan/dev/obsidian-confluence/obsidian-confluence/dev-vault/.obsidian/plugins/obsidian-confluence",
-						"mermaid_renderer.html"
-					)
-				);
+				console.log({ mermaid_render_html });
+				await chartWindow.loadURL(mermaid_render_html);
 
 				const mermaidConfig = {
 					theme: "base",

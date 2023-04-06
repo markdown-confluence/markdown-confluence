@@ -9,13 +9,60 @@ if you want to view the source, please visit the github repository of this plugi
 */
 `;
 
+
+const mermaid_renderer_plugin = {
+	name: 'mermaid_renderer_plugin',
+	setup(build) {
+		build.onResolve({ filter: /mermaid_renderer\.esbuild$/ }, args => {
+			return {
+				path: args.path,
+				namespace: 'mermaid-binary',
+			  }
+		});
+		build.onLoad({ filter: /mermaid_renderer\.esbuild$/, namespace: 'mermaid-binary' }, async (args) => {
+			const result = await esbuild.build({
+				entryPoints: ['src/mermaid_renderer.js'],
+				bundle: true,
+				format: 'cjs',
+				target: 'chrome106',
+				logLevel: 'info',
+				sourcemap: false,
+				treeShaking: true,
+				write: false,
+				mainFields: ['module', 'main']
+			}).catch(() => process.exit(1));
+
+			const fileContents = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mermaid Chart</title>
+  </head>
+  <body>
+  	<div id="graphDiv"></div>
+    <script type="text/javascript">
+	${result.outputFiles[0].text}
+	</script>
+  </body>
+</html>
+			`;
+
+			return {
+				contents: fileContents,
+				loader: 'binary',
+			}
+		})
+	}
+};
+
 const prod = (process.argv[2] === 'production');
 
 esbuild.build({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ['src/main.ts', 'src/mermaid_renderer.js'],
+	entryPoints: ['src/main.ts'],
 	bundle: true,
 	external: [
 		'obsidian',
@@ -41,4 +88,5 @@ esbuild.build({
 	treeShaking: true,
 	outdir: prod ? 'dist' : 'dev-vault/.obsidian/plugins/obsidian-confluence',
 	mainFields: ['module', 'main'],
+	plugins: [mermaid_renderer_plugin],
 }).catch(() => process.exit(1));
