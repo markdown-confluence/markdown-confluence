@@ -227,7 +227,7 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async saveSettings() {
-		await this.init();
 		await this.saveData(this.settings);
+		await this.init();
 	}
 }
