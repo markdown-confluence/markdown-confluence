@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.3...1.2.4) (2023-04-07)
+
+
+### Bug Fixes
+
+* **settings:** SaveSettings before Init ([64c4e41](https://github.com/obsidian-confluence/obsidian-confluence/commit/64c4e41565364525bfb2b53480630d30c875b91d))
+
 ## [1.2.3](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.2...1.2.3) (2023-04-06)
 
 
