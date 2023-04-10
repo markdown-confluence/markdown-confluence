@@ -59,7 +59,8 @@
 		"react": "^16.14.0",
 		"react-dom": "^16.14.0",
 		"spark-md5": "^3.0.2",
-		"uuid": "^9.0.0"
+		"uuid": "^9.0.0",
+		"react-intl-next": "npm:react-intl@^5.18.1"
 	},
 	"lint-staged": {
 		"src/**/*": "prettier --write --ignore-unknown"
