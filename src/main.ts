@@ -66,7 +66,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.publisher = new Publisher(
-			new ObsidianAdaptor(vault, metadataCache, this.settings),
+			new ObsidianAdaptor(vault, metadataCache, this.settings, this.app),
 			this.settings,
 			confluenceClient,
 			mermaidRenderer

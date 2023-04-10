@@ -1,4 +1,4 @@
-import { Vault, MetadataCache } from "obsidian";
+import { Vault, MetadataCache, App, TFile } from "obsidian";
 import { MyPluginSettings } from "src/Settings";
 import { BinaryFile, FilesToUpload, LoaderAdaptor } from "./types";
 import { lookup } from "mime-types";
@@ -7,15 +7,18 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 	vault: Vault;
 	metadataCache: MetadataCache;
 	settings: MyPluginSettings;
+	app: App;
 
 	constructor(
 		vault: Vault,
 		metadataCache: MetadataCache,
-		settings: MyPluginSettings
+		settings: MyPluginSettings,
+		app: App
 	) {
 		this.vault = vault;
 		this.metadataCache = metadataCache;
 		this.settings = settings;
+		this.app = app;
 	}
 
 	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
@@ -52,9 +55,9 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 
 			const pageTitle =
 				frontMatter &&
-				frontMatter["title"] &&
-				typeof frontMatter["title"] === "string"
-					? frontMatter["title"]
+				frontMatter["connie-title"] &&
+				typeof frontMatter["connie-title"] === "string"
+					? frontMatter["connie-title"]
 					: file.basename;
 
 			const parsedFrontMatter: Record<string, any> = {};
@@ -102,5 +105,17 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		}
 
 		return false;
+	}
+
+	async updateMarkdownPageId(
+		absoluteFilePath: string,
+		pageId: string
+	): Promise<void> {
+		let file = this.app.vault.getAbstractFileByPath(absoluteFilePath);
+		if (file instanceof TFile) {
+			this.app.fileManager.processFrontMatter(file, (fm) => {
+				fm["connie-page-id"] = pageId;
+			});
+		}
 	}
 }

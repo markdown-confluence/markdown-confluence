@@ -27,18 +27,18 @@ interface AdfFile {
 		[key: string]: any;
 	};
 	tags: string[];
+	pageId: string | undefined;
+	dontChangeParentPageId: boolean;
 }
 
 interface ConfluenceNode {
 	file: AdfFile;
-	pageId: string;
 	version: number;
 	existingAdf: string;
 	parentPageId: string;
 }
 interface ConfluenceTreeNode {
 	file: AdfFile;
-	pageId: string;
 	version: number;
 	existingAdf: string;
 	children: ConfluenceTreeNode[];
@@ -49,12 +49,11 @@ function flattenTree(
 	parentPageId?: string
 ): ConfluenceNode[] {
 	const nodes: ConfluenceNode[] = [];
-	const { file, pageId, version, existingAdf, children } = node;
+	const { file, version, existingAdf, children } = node;
 
 	if (parentPageId) {
 		nodes.push({
 			file,
-			pageId,
 			version,
 			existingAdf,
 			parentPageId: parentPageId,
@@ -63,7 +62,7 @@ function flattenTree(
 
 	if (children) {
 		children.forEach((child) => {
-			nodes.push(...flattenTree(child, pageId));
+			nodes.push(...flattenTree(child, file.pageId));
 		});
 	}
 
@@ -137,7 +136,6 @@ export class Publisher {
 			throw new Error("Missing file on node");
 		}
 
-		let myPageId: string | undefined;
 		let version: number;
 		let existingAdf: string | undefined;
 
@@ -148,20 +146,20 @@ export class Publisher {
 				parentPageId,
 				topPageId
 			);
-			myPageId = pageDetails.id;
+			node.file.pageId = pageDetails.id;
 			version = pageDetails.version;
 			existingAdf = pageDetails.existingAdf;
 		} else {
-			myPageId = parentPageId;
+			node.file.pageId = parentPageId;
 			version = 0;
 			existingAdf = "";
 		}
 
-		if (myPageId === undefined) {
+		if (node.file.pageId === undefined) {
 			throw new Error("Missing myPageId");
 		}
 
-		const nonNullMyPageId = myPageId;
+		const nonNullMyPageId = node.file.pageId;
 
 		const childDetailsTasks = node.children.map((childNode) => {
 			return this.createFileStructureInConfluence(
@@ -177,7 +175,6 @@ export class Publisher {
 
 		return {
 			file: node.file,
-			pageId: nonNullMyPageId,
 			version,
 			existingAdf: existingAdf ?? "",
 			children: childDetails,
@@ -190,6 +187,21 @@ export class Publisher {
 		parentPageId: string,
 		topPageId: string
 	) {
+		if (file.pageId) {
+			const contentById =
+				await this.confluenceClient.content.getContentById({
+					id: file.pageId,
+					expand: ["version", "body.atlas_doc_format", "ancestors"],
+				});
+
+			return {
+				id: contentById.id,
+				title: file.pageTitle,
+				version: contentById!.version!.number,
+				existingAdf: contentById?.body?.atlas_doc_format?.value,
+			};
+		}
+
 		const searchParams = {
 			type: "page",
 			spaceKey,
@@ -215,6 +227,10 @@ export class Publisher {
 				);
 			}
 
+			await this.adaptor.updateMarkdownPageId(
+				file.absoluteFilePath,
+				currentPage.id
+			);
 			return {
 				id: currentPage.id,
 				title: file.pageTitle,
@@ -239,6 +255,11 @@ export class Publisher {
 				await this.confluenceClient.content.createContent(
 					creatingBlankPageRequest
 				);
+
+			await this.adaptor.updateMarkdownPageId(
+				file.absoluteFilePath,
+				pageDetails.id
+			);
 			return {
 				id: pageDetails.id,
 				title: file.pageTitle,
@@ -249,24 +270,20 @@ export class Publisher {
 	}
 
 	async publishFile(node: ConfluenceNode): Promise<boolean> {
-		/*
-		const currentPage = contentByTitle.results[0];
+		if (!node.file.pageId) {
+			throw new Error("Missing Page ID");
+		}
 
-		console.log("BEFORE CURRENT ADF");
-		console.log(
-			JSON.stringify(currentPage?.body?.atlas_doc_format?.value)
-		);
-		console.log("AFTER CURRENT ADF");
-		*/
 		await this.updatePageContent(
-			node.pageId, // currentPage.id,
+			node.file.pageId,
 			node.file.absoluteFilePath,
 			node.file.contents,
 			node.parentPageId,
-			node.version, //currentPage!.version!.number,
+			node.version,
 			node.file.pageTitle,
-			node.existingAdf, // currentPage?.body?.atlas_doc_format?.value ?? "",
-			node.file.tags
+			node.existingAdf,
+			node.file.tags,
+			node.file
 		);
 
 		return true;
@@ -280,7 +297,8 @@ export class Publisher {
 		pageVersionNumber: number,
 		pageTitle: string,
 		currentContents: string,
-		labels: string[]
+		labels: string[],
+		adfFile: AdfFile
 	) {
 		const updatedAdf = await this.uploadFiles(
 			pageId,
@@ -301,7 +319,9 @@ export class Publisher {
 
 		const updateContentDetails = {
 			id: pageId,
-			ancestors: [{ id: parentPageId }],
+			...(adfFile.dontChangeParentPageId
+				? {}
+				: { ancestors: [{ id: parentPageId }] }),
 			version: { number: pageVersionNumber + 1 },
 			title: pageTitle,
 			type: "page",
@@ -677,12 +697,38 @@ function convertMDtoADF(file: MarkdownFile): AdfFile {
 		}
 	}
 
+	let pageId: string | undefined;
+	if (file.frontmatter["connie-page-id"]) {
+		switch (typeof file.frontmatter["connie-page-id"]) {
+			case "string":
+			case "number":
+				pageId = file.frontmatter["connie-page-id"].toString();
+				break;
+			default:
+				pageId = undefined;
+		}
+	}
+
+	let dontChangeParentPageId: boolean = false;
+	if (file.frontmatter["connie-dont-change-parent-page"]) {
+		switch (typeof file.frontmatter["connie-dont-change-parent-page"]) {
+			case "boolean":
+				dontChangeParentPageId =
+					file.frontmatter["connie-dont-change-parent-page"];
+				break;
+			default:
+				dontChangeParentPageId = false;
+		}
+	}
+
 	const adrobj = mdToADFConverter.parse(markdown);
 
 	return {
 		...file,
 		contents: adrobj,
 		tags,
+		pageId,
+		dontChangeParentPageId,
 	};
 }
 
@@ -752,6 +798,8 @@ const createFolderStructure = (markdownFiles: MarkdownFile[]): TreeNode => {
 					pageTitle: node.name,
 					frontmatter: {},
 					tags: [],
+					pageId: undefined,
+					dontChangeParentPageId: false,
 				};
 			}
 		}
