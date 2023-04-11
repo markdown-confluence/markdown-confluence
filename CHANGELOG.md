@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.4...1.3.0) (2023-04-11)
+
+
+### Features
+
+* **AdfPreview:** Make local files render correctly in ADF Preview ([860bfb8](https://github.com/obsidian-confluence/obsidian-confluence/commit/860bfb8e5cf1f094231abd2f4b4e7ae6bc91e7fd))
+* **eslint:** Add checks to GH Actions ([e786154](https://github.com/obsidian-confluence/obsidian-confluence/commit/e7861542f9dbe99bbc81bb0cecfee00f32ae5c5a))
+* **PageId:** Specify PageId when page published to Confluence ([c545009](https://github.com/obsidian-confluence/obsidian-confluence/commit/c5450092bb8abdf106d80d5a12b4a075dbd61130))
+
+
+### Bug Fixes
+
+* **cli:** Build error ([8d2698b](https://github.com/obsidian-confluence/obsidian-confluence/commit/8d2698b47c6244fe2304b44b78b557358dfe5797))
+* **eslint:** Fix eslint issues ([cbaa567](https://github.com/obsidian-confluence/obsidian-confluence/commit/cbaa5671bb7e16c1b79b636cb06ed930298b29a6))
+
 ## [1.2.4](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.3...1.2.4) (2023-04-07)
 
 
