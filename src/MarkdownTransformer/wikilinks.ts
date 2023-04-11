@@ -48,9 +48,6 @@ export function wikilinks(state: StateInline): boolean {
 
 	let token = state.push("link_open", "a", 1);
 	token.attrs = [["href", href]];
-	if (alias) {
-		token.attrs.push(["title", alias]);
-	}
 	state.md.inline.tokenize(state);
 	token = state.push("link_close", "a", -1);
 

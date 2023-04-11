@@ -33,10 +33,7 @@ export default class MdToADF {
 					node.marks[0].type === "link" &&
 					node.marks[0].attrs
 				) {
-					if (
-						!node.marks[0].attrs.title &&
-						node.marks[0].attrs.href === node.text
-					) {
+					if (node.marks[0].attrs.href === node.text) {
 						node.type = "inlineCard";
 						node.attrs = { url: node.marks[0].attrs.href };
 						delete node.marks;

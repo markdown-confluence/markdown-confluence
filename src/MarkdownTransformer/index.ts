@@ -157,10 +157,6 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 
 		tokenizer.use(wikilinksPlugin);
 
-		//if (schema.nodes.task) {
-		//	tokenizer.use(taskLists);
-		//}
-
 		(["nodes", "marks"] as (keyof SchemaMapping)[]).forEach((key) => {
 			for (const idx in pmSchemaToMdMapping[key]) {
 				if (schema[key][idx]) {
