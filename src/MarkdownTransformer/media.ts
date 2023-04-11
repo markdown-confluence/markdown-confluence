@@ -79,7 +79,7 @@ function createRule() {
 					: undefined;
 
 			return [
-				["url", `localfile:${filename}`],
+				["url", `file://${filename}`],
 				["type", "file"],
 				...(width ? [["width", `${width}`]] : []),
 				...(height ? [["height", `${height}`]] : []),

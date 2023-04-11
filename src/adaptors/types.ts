@@ -20,6 +20,7 @@ export interface BinaryFile {
 }
 
 export interface LoaderAdaptor {
+	updateMarkdownPageId(absoluteFilePath: string, id: string): Promise<void>;
 	getMarkdownFilesToUpload(): Promise<FilesToUpload>;
 	readBinary(
 		path: string,
