@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.3.0...1.4.0) (2023-04-11)
+
+
+### Features
+
+* **PublishDialog:** Add more detail to publish completed / failed dialog ([ddce9fc](https://github.com/obsidian-confluence/obsidian-confluence/commit/ddce9fc483edd724f608e0d37f62030588da1d09))
+* **SinglePage:** Publish updates for 1 page only ([41e5ac4](https://github.com/obsidian-confluence/obsidian-confluence/commit/41e5ac4f6dee96fd51531fe6200c9f34dd571261))
+* **Wikilinks:** First pass at supporting Wikilinks Syntax ([57e9f65](https://github.com/obsidian-confluence/obsidian-confluence/commit/57e9f65da1ddb4beb21d997bdf8652a6eed29720))
+* **Wikilinks:** Support smart links and pages in multiple spaces ([20656f4](https://github.com/obsidian-confluence/obsidian-confluence/commit/20656f489d32a50ebd70587f25ca0d167c721cf0))
+
 ## [1.3.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.2.4...1.3.0) (2023-04-11)
 
 
