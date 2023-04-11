@@ -149,6 +149,49 @@ export default class MyPlugin extends Plugin {
 		);
 
 		this.addCommand({
+			id: "obsidian-confluence-publish-current",
+			name: "Publish Current File to Confluence",
+			checkCallback: (checking: boolean) => {
+				if (!this.isSyncing) {
+					if (!checking) {
+						this.isSyncing = true;
+						this.publisher
+							.doPublish(this.activeLeafPath(this.workspace))
+							.then((stats) => {
+								new CompletedModal(this.app, {
+									uploadResults: stats,
+								}).open();
+							})
+							.catch((error) => {
+								if (error instanceof Error) {
+									new CompletedModal(this.app, {
+										uploadResults: {
+											successfulUploads: 0,
+											errorMessage: error.message,
+											failedFiles: [],
+										},
+									}).open();
+								} else {
+									new CompletedModal(this.app, {
+										uploadResults: {
+											successfulUploads: 0,
+											errorMessage:
+												stringifyObject(error),
+											failedFiles: [],
+										},
+									}).open();
+								}
+							})
+							.finally(() => {
+								this.isSyncing = false;
+							});
+					}
+					return true;
+				}
+			},
+		});
+
+		this.addCommand({
 			id: "obsidian-confluence-publish-all",
 			name: "Publish All to Confluence",
 			checkCallback: (checking: boolean) => {
