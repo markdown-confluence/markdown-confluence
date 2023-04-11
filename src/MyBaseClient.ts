@@ -7,7 +7,6 @@ import {
 	AuthenticationService,
 } from "confluence.js";
 import { requestUrl } from "obsidian";
-import * as fs from "fs/promises";
 
 const ATLASSIAN_TOKEN_CHECK_FLAG = "X-Atlassian-Token";
 const ATLASSIAN_TOKEN_CHECK_NOCHECK_VALUE = "no-check";
@@ -17,6 +16,7 @@ export class MyBaseClient implements Client {
 
 	constructor(protected readonly config: Config) {}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	protected paramSerializer(parameters: Record<string, any>): string {
 		const parts: string[] = [];
 
@@ -61,7 +61,9 @@ export class MyBaseClient implements Client {
 	}
 
 	protected removeUndefinedProperties(
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		obj: Record<string, any>
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	): Record<string, any> {
 		return Object.entries(obj)
 			.filter(([, value]) => typeof value !== "undefined")
@@ -77,11 +79,13 @@ export class MyBaseClient implements Client {
 	async sendRequest<T>(
 		requestConfig: RequestConfig,
 		callback: never,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		telemetryData?: any
 	): Promise<T>;
 	async sendRequest<T>(
 		requestConfig: RequestConfig,
 		callback: Callback<T>,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		telemetryData?: any
 	): Promise<void>;
 	async sendRequest<T>(
@@ -108,7 +112,7 @@ export class MyBaseClient implements Client {
 					.startsWith("multipart/form-data")
 					? requestConfig?.headers["Content-Type"].toString()
 					: "application/json";
-			let requestBody =
+			const requestBody =
 				requestConfig?.headers?.hasOwnProperty("Content-Type") &&
 				requestConfig?.headers["Content-Type"]
 					.toString()
@@ -133,9 +137,10 @@ export class MyBaseClient implements Client {
 						await AuthenticationService.getAuthenticationToken(
 							this.config.authentication,
 							{
+								// eslint-disable-next-line @typescript-eslint/naming-convention
 								baseURL: this.config.host,
 								url: `${this.config.host}${this.urlSuffix}`,
-								method: requestConfig.method!,
+								method: requestConfig.method ?? "GET",
 							}
 						),
 					...requestConfig.headers,
@@ -169,6 +174,7 @@ export class MyBaseClient implements Client {
 			this.config.middlewares?.onResponse?.(response.json);
 
 			return responseHandler(response.json);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (e: any) {
 			console.log({ httpError: e, requestConfig });
 			const err =
@@ -189,10 +195,6 @@ export class MyBaseClient implements Client {
 			return errorHandler(err);
 		}
 	}
-}
-
-function bufferToArrayBuffer(b: Buffer | Uint8Array | ArrayBufferView) {
-	return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
 }
 
 export class CustomConfluenceClient extends MyBaseClient {

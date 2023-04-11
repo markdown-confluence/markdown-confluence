@@ -13,18 +13,18 @@ import {
 } from "./adaptors/types";
 import { MermaidRenderer, ChartData } from "./mermaid_renderers/types";
 import * as path from "path";
+import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 
 const mdToADFConverter = new MdToADF();
-const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 
-interface AdfFile {
+export interface AdfFile {
 	folderName: string;
 	absoluteFilePath: string;
 	fileName: string;
-	contents: ADFEntity;
+	contents: JSONDocNode;
 	pageTitle: string;
 	frontmatter: {
-		[key: string]: any;
+		[key: string]: unknown;
 	};
 	tags: string[];
 	pageId: string | undefined;
@@ -94,13 +94,17 @@ export class Publisher {
 			id: this.settings.confluenceParentId,
 			expand: ["body.atlas_doc_format", "space"],
 		});
+		if (!parentPage.space) {
+			throw new Error("Missing Space Key");
+		}
+
 		const spaceToPublishTo = parentPage.space;
 
 		const files = await this.adaptor.getMarkdownFilesToUpload();
 		const folderTree = createFolderStructure(files);
 		const confluencePageTree = await this.createFileStructureInConfluence(
 			folderTree,
-			spaceToPublishTo!.key,
+			spaceToPublishTo.key,
 			parentPage.id,
 			parentPage.id,
 			false
@@ -197,7 +201,7 @@ export class Publisher {
 			return {
 				id: contentById.id,
 				title: file.pageTitle,
-				version: contentById!.version!.number,
+				version: contentById?.version?.number ?? 1,
 				existingAdf: contentById?.body?.atlas_doc_format?.value,
 			};
 		}
@@ -234,7 +238,7 @@ export class Publisher {
 			return {
 				id: currentPage.id,
 				title: file.pageTitle,
-				version: currentPage!.version!.number,
+				version: currentPage?.version?.number ?? 1,
 				existingAdf: currentPage?.body?.atlas_doc_format?.value,
 			};
 		} else {
@@ -245,6 +249,7 @@ export class Publisher {
 				title: file.pageTitle,
 				type: "page",
 				body: {
+					// eslint-disable-next-line @typescript-eslint/naming-convention
 					atlas_doc_format: {
 						value: this.blankPageAdf,
 						representation: "atlas_doc_format",
@@ -263,7 +268,7 @@ export class Publisher {
 			return {
 				id: pageDetails.id,
 				title: file.pageTitle,
-				version: pageDetails!.version!.number,
+				version: pageDetails?.version?.number ?? 1,
 				existingAdf: pageDetails?.body?.atlas_doc_format?.value,
 			};
 		}
@@ -326,6 +331,7 @@ export class Publisher {
 			title: pageTitle,
 			type: "page",
 			body: {
+				// eslint-disable-next-line @typescript-eslint/naming-convention
 				atlas_doc_format: {
 					value: adr,
 					representation: "atlas_doc_format",
@@ -584,7 +590,7 @@ export class Publisher {
 			fileNameToUpload,
 			pageFilePath
 		);
-		if (!!testing) {
+		if (testing) {
 			const spark = new SparkMD5.ArrayBuffer();
 			const currentFileMd5 = spark.append(testing.contents).end();
 			const pathMd5 = SparkMD5.hash(testing.filePath);
@@ -670,68 +676,6 @@ const createTreeNode = (name: string): TreeNode => ({
 	children: [],
 });
 
-function convertMDtoADF(file: MarkdownFile): AdfFile {
-	let markdown = file.contents.replace(frontmatterRegex, "");
-
-	if (
-		file.frontmatter["frontmatter-to-publish"] &&
-		Array.isArray(file.frontmatter["frontmatter-to-publish"])
-	) {
-		let frontmatterHeader = "| Key | Value | \n | ----- | ----- |\n";
-		for (const key of file.frontmatter["frontmatter-to-publish"]) {
-			if (file.frontmatter[key]) {
-				const keyString = key.toString();
-				const valueString = file.frontmatter[key].toString();
-				frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
-			}
-		}
-		markdown = frontmatterHeader + markdown;
-	}
-
-	const tags = [];
-	if (file.frontmatter["tags"] && Array.isArray(file.frontmatter["tags"])) {
-		for (const label of file.frontmatter["tags"]) {
-			if (typeof label === "string") {
-				tags.push(label);
-			}
-		}
-	}
-
-	let pageId: string | undefined;
-	if (file.frontmatter["connie-page-id"]) {
-		switch (typeof file.frontmatter["connie-page-id"]) {
-			case "string":
-			case "number":
-				pageId = file.frontmatter["connie-page-id"].toString();
-				break;
-			default:
-				pageId = undefined;
-		}
-	}
-
-	let dontChangeParentPageId: boolean = false;
-	if (file.frontmatter["connie-dont-change-parent-page"]) {
-		switch (typeof file.frontmatter["connie-dont-change-parent-page"]) {
-			case "boolean":
-				dontChangeParentPageId =
-					file.frontmatter["connie-dont-change-parent-page"];
-				break;
-			default:
-				dontChangeParentPageId = false;
-		}
-	}
-
-	const adrobj = mdToADFConverter.parse(markdown);
-
-	return {
-		...file,
-		contents: adrobj,
-		tags,
-		pageId,
-		dontChangeParentPageId,
-	};
-}
-
 const addFileToTree = (
 	treeNode: TreeNode,
 	file: MarkdownFile,
@@ -747,7 +691,7 @@ const addFileToTree = (
 			);
 		}
 		fileNames.add(file.fileName);
-		const adfFile = convertMDtoADF(file);
+		const adfFile = mdToADFConverter.convertMDtoADF(file);
 		treeNode.children.push({
 			...createTreeNode(folderName),
 			file: adfFile,
@@ -794,7 +738,7 @@ const createFolderStructure = (markdownFiles: MarkdownFile[]): TreeNode => {
 					folderName: node.name,
 					absoluteFilePath: path.join(commonPath, node.name),
 					fileName: `${node.name}.md`,
-					contents: FolderFile,
+					contents: FolderFile as JSONDocNode,
 					pageTitle: node.name,
 					frontmatter: {},
 					tags: [],

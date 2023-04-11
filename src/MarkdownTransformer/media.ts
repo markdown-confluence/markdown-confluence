@@ -5,12 +5,14 @@ export type Token = {
 	level: number;
 	tag: string;
 	attrs?: string[][];
-	children?: any[];
+	children?: unknown[];
 };
 
 export interface MdState {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	Token: Token;
 	tokens: Token[];
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	md: any;
 }
 
@@ -72,7 +74,7 @@ function createRule() {
 
 			const filename = contentSplit[0];
 			const widthHeight = contentSplit[1]?.split("x");
-			const width = !!widthHeight ? widthHeight[0] : undefined;
+			const width = widthHeight ? widthHeight[0] : undefined;
 			const height =
 				!!widthHeight && widthHeight.length > 1
 					? widthHeight[1]
@@ -151,6 +153,7 @@ function createRule() {
 						)
 						.reverse();
 
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					const matches = token.content.match(regx)!;
 					let inlineContentStack = token.content;
 					matches.forEach((match) => {
@@ -211,6 +214,7 @@ function createRule() {
 	};
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const markdownItMedia = (md: any) => {
 	md.core.ruler.before("inline", "media", createRule());
 };

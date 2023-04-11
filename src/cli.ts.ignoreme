@@ -1,3 +1,6 @@
+/* eslint-disable */
+
+/*
 Error.stackTraceLimit = Infinity;
 
 import * as fs from "fs";
@@ -39,3 +42,4 @@ for (const filename of mdFiles) {
 		flag: "w",
 	});
 }
+*/

@@ -1,8 +1,6 @@
 import {
-	EventRef,
 	FileSystemAdapter,
 	ItemView,
-	Menu,
 	Vault,
 	Workspace,
 	WorkspaceLeaf,
@@ -13,8 +11,9 @@ import ReactDOM from "react-dom";
 import { ReactRenderer } from "@atlaskit/renderer";
 import MdToADF from "./mdToADF";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { traverse, filter } from "@atlaskit/adf-utils/traverse";
+import { traverse } from "@atlaskit/adf-utils/traverse";
 import { IntlProvider } from "react-intl-next";
+import { LoaderAdaptor } from "./adaptors/types";
 
 export const ADF_VIEW_TYPE = "AtlassianDocumentFormatView";
 
@@ -25,7 +24,8 @@ export default class AdfView extends ItemView {
 	fileName: string;
 	vault: Vault;
 	workspace: Workspace;
-	mdToADF: MdToADF;
+	mdToAdf: MdToADF;
+	adaptor: LoaderAdaptor;
 
 	getViewType(): string {
 		return ADF_VIEW_TYPE;
@@ -41,7 +41,8 @@ export default class AdfView extends ItemView {
 	constructor(
 		settings: MyPluginSettings,
 		leaf: WorkspaceLeaf,
-		initialFileInfo: { path: string; basename: string }
+		initialFileInfo: { path: string; basename: string },
+		adaptor: LoaderAdaptor
 	) {
 		super(leaf);
 		this.settings = settings;
@@ -49,16 +50,16 @@ export default class AdfView extends ItemView {
 		this.fileName = initialFileInfo.basename;
 		this.vault = this.app.vault;
 		this.workspace = this.app.workspace;
-		this.mdToADF = new MdToADF();
+		this.mdToAdf = new MdToADF();
+		this.adaptor = adaptor;
 	}
 
 	async onOpen() {
 		const container = this.containerEl.children[1] as HTMLElement;
-		// TODO: SET BACKGROUND TO LIGHT
 		container.style.backgroundColor = "#FFFFFF";
 
-		let md = await this.app.vault.adapter.read(this.filePath);
-		const adf = this.mdToADF.parse(md);
+		const md = await this.adaptor.loadMarkdownFile(this.filePath);
+		const adf = this.mdToAdf.convertMDtoADF(md).contents;
 		const renderADF = this.convertMediaFilesToLocalPath(adf);
 
 		const locale = "en";
@@ -80,7 +81,6 @@ export default class AdfView extends ItemView {
 	}
 
 	convertMediaFilesToLocalPath(adf: JSONDocNode): JSONDocNode {
-		const basePath = this.getBasePath();
 		return traverse(adf, {
 			media: (node, parent) => {
 				if (node?.attrs?.type === "file") {
@@ -98,7 +98,7 @@ export default class AdfView extends ItemView {
 					const path = test.getResourcePath(vaultPath.path);
 					console.log({ path });
 					node.attrs.type = "external";
-					node.attrs.url = path; // currentUrl.replace("file://", `file://${basePath}`);
+					node.attrs.url = path;
 					return node;
 				}
 			},
@@ -106,7 +106,7 @@ export default class AdfView extends ItemView {
 	}
 
 	getBasePath() {
-		let adapter = app.vault.adapter;
+		const adapter = app.vault.adapter;
 		if (adapter instanceof FileSystemAdapter) {
 			return adapter.getBasePath();
 		}

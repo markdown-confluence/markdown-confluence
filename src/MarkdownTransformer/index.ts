@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { defaultSchema } from "@atlaskit/adf-schema/schema-default";
-// import { Transformer } from "@atlaskit/editor-common/dist/esm/types/";
 import { Transformer } from "@atlaskit/editor-common/types";
 import MarkdownIt from "markdown-it";
 import { markdownItTable } from "markdown-it-table";

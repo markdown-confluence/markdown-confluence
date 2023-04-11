@@ -1,13 +1,10 @@
-declare module "showdown-confluence";
-declare module "md-to-adf-dailykos/source/index";
-
 declare module "*.txt" {
-	const content: any;
+	const content: string;
 	export default content;
 }
 
 declare module "*.json" {
-	const content: any;
+	const content: unknown;
 	export default content;
 }
 
