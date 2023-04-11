@@ -14,8 +14,16 @@ import {
 import { MermaidRenderer, ChartData } from "./mermaid_renderers/types";
 import * as path from "path";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
+import { UploadResults } from "./CompletedView";
+import stringifyObject from "stringify-object";
 
 const mdToADFConverter = new MdToADF();
+
+interface FilePublishResult {
+	successfulUpload: boolean;
+	absoluteFilePath: string;
+	reason?: string;
+}
 
 export interface AdfFile {
 	folderName: string;
@@ -89,7 +97,7 @@ export class Publisher {
 		this.confluenceClient = confluenceClient;
 	}
 
-	async doPublish(): Promise<{ successes: number; failures: number }> {
+	async doPublish(): Promise<UploadResults> {
 		const parentPage = await this.confluenceClient.content.getContentById({
 			id: this.settings.confluenceParentId,
 			expand: ["body.atlas_doc_format", "space"],
@@ -117,16 +125,25 @@ export class Publisher {
 
 		const adrFiles = await Promise.all(adrFileTasks);
 
-		const stats = adrFiles.reduce(
-			(previousValue, currentValue) => {
-				const key = currentValue ? "successes" : "failures";
-				previousValue[key]++;
-				return previousValue;
-			},
-			{ successes: 0, failures: 0 }
-		);
+		const returnVal: UploadResults = {
+			successfulUploads: 0,
+			errorMessage: null,
+			failedFiles: [],
+		};
 
-		return stats;
+		adrFiles.forEach((element) => {
+			if (element.successfulUpload) {
+				returnVal.successfulUploads = returnVal.successfulUploads + 1;
+				return;
+			}
+
+			returnVal.failedFiles.push({
+				fileName: element.absoluteFilePath,
+				reason: element.reason ?? "No Reason Provided",
+			});
+		});
+
+		return returnVal;
 	}
 
 	async createFileStructureInConfluence(
@@ -274,24 +291,35 @@ export class Publisher {
 		}
 	}
 
-	async publishFile(node: ConfluenceNode): Promise<boolean> {
-		if (!node.file.pageId) {
-			throw new Error("Missing Page ID");
+	async publishFile(node: ConfluenceNode): Promise<FilePublishResult> {
+		try {
+			if (!node.file.pageId) {
+				throw new Error("Missing Page ID");
+			}
+
+			await this.updatePageContent(
+				node.file.pageId,
+				node.file.absoluteFilePath,
+				node.file.contents,
+				node.parentPageId,
+				node.version,
+				node.file.pageTitle,
+				node.existingAdf,
+				node.file.tags,
+				node.file
+			);
+
+			return {
+				successfulUpload: true,
+				absoluteFilePath: node.file.absoluteFilePath,
+			};
+		} catch (e: unknown) {
+			return {
+				successfulUpload: false,
+				absoluteFilePath: node.file.absoluteFilePath,
+				reason: stringifyObject(e),
+			};
 		}
-
-		await this.updatePageContent(
-			node.file.pageId,
-			node.file.absoluteFilePath,
-			node.file.contents,
-			node.parentPageId,
-			node.version,
-			node.file.pageTitle,
-			node.existingAdf,
-			node.file.tags,
-			node.file
-		);
-
-		return true;
 	}
 
 	async updatePageContent(
@@ -475,7 +503,7 @@ export class Publisher {
 		}
 
 		const afterAdf = traverse(adr, {
-			media: (node, parent) => {
+			media: (node, _parent) => {
 				if (node?.attrs?.type === "file") {
 					console.log({ node });
 					if (!imageMap[node?.attrs?.url]) {
@@ -491,7 +519,7 @@ export class Publisher {
 					}
 				}
 			},
-			codeBlock: (node, parent) => {
+			codeBlock: (node, _parent) => {
 				if (node?.attrs?.language === "mermaid") {
 					const mermaidContent = node?.content?.at(0)?.text;
 					if (!mermaidContent) {

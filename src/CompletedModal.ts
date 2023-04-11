@@ -1,19 +1,22 @@
 import { Modal, App } from "obsidian";
+import CompletedView, { UploadResultsProps } from "./CompletedView";
+import ReactDOM from "react-dom";
+import React from "react";
 
 export class CompletedModal extends Modal {
-	uploadStatuses: { successes: number; failures: number };
+	uploadResults: UploadResultsProps;
 
-	constructor(
-		app: App,
-		uploadStatuses: { successes: number; failures: number }
-	) {
+	constructor(app: App, uploadResults: UploadResultsProps) {
 		super(app);
-		this.uploadStatuses = uploadStatuses;
+		this.uploadResults = uploadResults;
 	}
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.setText(JSON.stringify(this.uploadStatuses));
+		ReactDOM.render(
+			React.createElement(CompletedView, this.uploadResults),
+			contentEl
+		);
 	}
 
 	onClose() {

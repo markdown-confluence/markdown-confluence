@@ -3,6 +3,7 @@
     "baseUrl": ".",
     "inlineSourceMap": true,
     "inlineSources": true,
+    "jsx": "react",
     "module": "CommonJS",
     "target": "ES2021",
     "allowJs": true,
