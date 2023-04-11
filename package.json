@@ -10,7 +10,8 @@
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"fmt": "npx prettier --write src/",
 		"prepare": "husky install",
-		"lint": "eslint --ignore-path .eslintignore --ext .js,.ts ."
+		"lint": "eslint --ignore-path .eslintignore --ext .js,.ts src/",
+		"prettier-check": "npx prettier --check src/"
 	},
 	"keywords": [],
 	"author": "andymac4182",
