@@ -80,7 +80,7 @@ function flattenTree(
 
 export class Publisher {
 	confluenceClient: ConfluenceClient;
-	blankPageAdf: string = JSON.stringify(doc(p("Blank page to replace")));
+	blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
 	adaptor: LoaderAdaptor;
 	settings: MyPluginSettings;
 	mermaidRenderer: MermaidRenderer;
@@ -98,7 +98,7 @@ export class Publisher {
 		this.confluenceClient = confluenceClient;
 	}
 
-	async doPublish(): Promise<UploadResults> {
+	async doPublish(publishFilter?: string): Promise<UploadResults> {
 		const parentPage = await this.confluenceClient.content.getContentById({
 			id: this.settings.confluenceParentId,
 			expand: ["body.atlas_doc_format", "space"],
@@ -118,7 +118,7 @@ export class Publisher {
 			parentPage.id,
 			false
 		);
-		const confluencePagesToPublish = flattenTree(confluencePageTree);
+		let confluencePagesToPublish = flattenTree(confluencePageTree);
 
 		const fileToPageIdMap: Record<string, AdfFile> = {};
 
@@ -169,6 +169,12 @@ export class Publisher {
 				},
 			}) as JSONDocNode;
 		});
+
+		if (publishFilter) {
+			confluencePagesToPublish = confluencePagesToPublish.filter(
+				(file) => file.file.absoluteFilePath === publishFilter
+			);
+		}
 
 		const adrFileTasks = confluencePagesToPublish.map((file) => {
 			return this.publishFile(file);
