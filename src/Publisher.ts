@@ -119,6 +119,48 @@ export class Publisher {
 		);
 		const confluencePagesToPublish = flattenTree(confluencePageTree);
 
+		const fileToPageIdMap: Record<string, string> = {};
+
+		confluencePagesToPublish.forEach((node) => {
+			if (!node.file.pageId) {
+				throw new Error("Missing Page ID");
+			}
+
+			fileToPageIdMap[node.file.fileName] = node.file.pageId;
+		});
+
+		confluencePagesToPublish.forEach((node) => {
+			node.file.contents = traverse(node.file.contents, {
+				text: (node, _parent) => {
+					if (
+						node.marks &&
+						node.marks[0].type === "link" &&
+						node.marks[0].attrs
+					) {
+						if (
+							typeof node.marks[0].attrs.href === "string" &&
+							node.marks[0].attrs.href.startsWith("wikilink")
+						) {
+							const wikilinkUrl = new URL(
+								node.marks[0].attrs.href
+							);
+							const pagename = `${wikilinkUrl.pathname}.md`;
+
+							const linkPageId = fileToPageIdMap[pagename];
+							const confluenceUrl = `${this.settings.confluenceBaseUrl}/wiki/spaces/~557058aea5688c52b94d15aabe96def1abc413/pages/${linkPageId}${wikilinkUrl.hash}`;
+							console.log({
+								pagename,
+								fileToPageIdMap,
+								wikiurl: confluenceUrl,
+							});
+							node.marks[0].attrs.href = confluenceUrl;
+							return node;
+						}
+					}
+				},
+			}) as JSONDocNode;
+		});
+
 		const adrFileTasks = confluencePagesToPublish.map((file) => {
 			return this.publishFile(file);
 		});

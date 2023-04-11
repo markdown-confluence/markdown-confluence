@@ -3,8 +3,6 @@ import {
 	JSONTransformer,
 } from "@atlaskit/editor-json-transformer";
 import { MarkdownTransformer } from "./MarkdownTransformer";
-import { ConfluenceTransformer } from "@atlaskit/editor-confluence-transformer";
-import { confluenceSchema as schema } from "@atlaskit/adf-schema/schema-confluence";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { MarkdownFile } from "./adaptors/types";
 import { AdfFile } from "./Publisher";
@@ -15,39 +13,39 @@ const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 export default class MdToADF {
 	transformer: MarkdownTransformer;
 	serializer: JSONTransformer;
-	confluenceSerializer: ConfluenceTransformer;
 	constructor() {
 		this.transformer = new MarkdownTransformer();
 		this.serializer = new JSONTransformer();
-		this.confluenceSerializer = new ConfluenceTransformer(schema);
 	}
 
 	private parse(markdown: string) {
 		const prosenodes = this.transformer.parse(markdown);
 		const adfNodes = this.serializer.encode(prosenodes);
-		const nodes = this.replaceLinkWithInlineSmartCard(adfNodes);
+		const nodes = this.processADF(adfNodes);
 		return nodes;
 	}
 
-	private replaceLinkWithInlineSmartCard(adf: JSONDocNode): JSONDocNode {
+	private processADF(adf: JSONDocNode): JSONDocNode {
 		const olivia = traverse(adf, {
 			text: (node, _parent) => {
 				if (
 					node.marks &&
 					node.marks[0].type === "link" &&
-					node.marks[0].attrs &&
-					node.marks[0].attrs.href === node.text
+					node.marks[0].attrs
 				) {
-					node.type = "inlineCard";
-					node.attrs = { url: node.marks[0].attrs.href };
-					delete node.marks;
-					delete node.text;
-					return node;
+					if (
+						!node.marks[0].attrs.title &&
+						node.marks[0].attrs.href === node.text
+					) {
+						node.type = "inlineCard";
+						node.attrs = { url: node.marks[0].attrs.href };
+						delete node.marks;
+						delete node.text;
+						return node;
+					}
 				}
 			},
 		});
-
-		console.log({ textingReplacement: JSON.stringify(olivia) });
 
 		if (!olivia) {
 			throw new Error("Failed to traverse");
