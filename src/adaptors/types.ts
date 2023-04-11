@@ -1,5 +1,5 @@
 import { Api } from "confluence.js";
-export interface FilesToUpload extends Array<MarkdownFile> {}
+export type FilesToUpload = Array<MarkdownFile>;
 
 export interface MarkdownFile {
 	folderName: string;
@@ -8,7 +8,7 @@ export interface MarkdownFile {
 	contents: string;
 	pageTitle: string;
 	frontmatter: {
-		[key: string]: any;
+		[key: string]: unknown;
 	};
 }
 
@@ -21,6 +21,7 @@ export interface BinaryFile {
 
 export interface LoaderAdaptor {
 	updateMarkdownPageId(absoluteFilePath: string, id: string): Promise<void>;
+	loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile>;
 	getMarkdownFilesToUpload(): Promise<FilesToUpload>;
 	readBinary(
 		path: string,

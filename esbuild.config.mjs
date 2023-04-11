@@ -15,6 +15,7 @@ const mermaid_renderer_plugin = {
 	setup(build) {
 		build.onResolve({ filter: /mermaid_renderer\.esbuild$/ }, args => {
 			return {
+				watchFiles: ['src/mermaid_renderer.js'],
 				path: args.path,
 				namespace: 'mermaid-binary',
 			  }

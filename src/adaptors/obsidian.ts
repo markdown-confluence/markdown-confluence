@@ -1,6 +1,11 @@
 import { Vault, MetadataCache, App, TFile } from "obsidian";
 import { MyPluginSettings } from "src/Settings";
-import { BinaryFile, FilesToUpload, LoaderAdaptor } from "./types";
+import {
+	BinaryFile,
+	FilesToUpload,
+	LoaderAdaptor,
+	MarkdownFile,
+} from "./types";
 import { lookup } from "mime-types";
 
 export default class ObsidianAdaptor implements LoaderAdaptor {
@@ -30,9 +35,11 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 					continue;
 				}
 
-				const frontMatter = this.metadataCache.getCache(
-					file.path
-				)!.frontmatter; //TODO: How to handle this better??
+				const fileFM = this.metadataCache.getCache(file.path);
+				if (!fileFM) {
+					throw new Error("Missing File in Metadata Cache");
+				}
+				const frontMatter = fileFM.frontmatter; //TODO: How to handle this better??
 
 				if (
 					(file.path.startsWith(this.settings.folderToPublish) &&
@@ -49,39 +56,40 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		const filesToUpload = [];
 
 		for (const file of filesToPublish) {
-			const frontMatter = this.metadataCache.getCache(
-				file.path
-			)!.frontmatter; //TODO: How to handle this better??
-
-			const pageTitle =
-				frontMatter &&
-				frontMatter["connie-title"] &&
-				typeof frontMatter["connie-title"] === "string"
-					? frontMatter["connie-title"]
-					: file.basename;
-
-			const parsedFrontMatter: Record<string, any> = {};
-			if (frontMatter) {
-				for (const [key, value] of Object.entries(frontMatter)) {
-					parsedFrontMatter[key] = value;
-				}
-			}
-
-			if (Object.entries(parsedFrontMatter).length > 0) {
-				console.log({ parsedFrontMatter });
-			}
-
-			filesToUpload.push({
-				pageTitle: pageTitle,
-				folderName: file.parent.name,
-				absoluteFilePath: file.path,
-				fileName: file.name,
-				contents: await this.vault.cachedRead(file),
-				frontmatter: parsedFrontMatter,
-			});
+			const markdownFile = await this.loadMarkdownFile(file.path);
+			filesToUpload.push(markdownFile);
 		}
 
 		return filesToUpload;
+	}
+
+	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
+		const file = this.app.vault.getAbstractFileByPath(absoluteFilePath);
+		if (!(file instanceof TFile)) {
+			throw new Error("Not a TFile");
+		}
+
+		const fileFM = this.metadataCache.getCache(file.path);
+		if (!fileFM) {
+			throw new Error("Missing File in Metadata Cache");
+		}
+		const frontMatter = fileFM.frontmatter;
+
+		const parsedFrontMatter: Record<string, unknown> = {};
+		if (frontMatter) {
+			for (const [key, value] of Object.entries(frontMatter)) {
+				parsedFrontMatter[key] = value;
+			}
+		}
+
+		return {
+			pageTitle: file.basename,
+			folderName: file.parent.name,
+			absoluteFilePath: file.path,
+			fileName: file.name,
+			contents: await this.vault.cachedRead(file),
+			frontmatter: parsedFrontMatter,
+		};
 	}
 
 	async readBinary(
@@ -92,7 +100,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 			path,
 			referencedFromFilePath
 		);
-		if (!!testing) {
+		if (testing) {
 			const files = await this.vault.readBinary(testing);
 			const mimeType =
 				lookup(testing.extension) || "application/octet-stream";
@@ -111,7 +119,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		absoluteFilePath: string,
 		pageId: string
 	): Promise<void> {
-		let file = this.app.vault.getAbstractFileByPath(absoluteFilePath);
+		const file = this.app.vault.getAbstractFileByPath(absoluteFilePath);
 		if (file instanceof TFile) {
 			this.app.fileManager.processFrontMatter(file, (fm) => {
 				fm["connie-page-id"] = pageId;

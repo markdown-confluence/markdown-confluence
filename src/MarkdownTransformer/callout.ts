@@ -78,7 +78,7 @@ function getPanelAttributes(calloutType: string) {
 	return panelTypeToAttributesMap["info"];
 }
 
-export default function example_plugin(md: MarkdownIt): void {
+export default function calloutPlugin(md: MarkdownIt): void {
 	md.core.ruler.push("panel", panel);
 	md.core.ruler.push("expand", () => false);
 }
@@ -97,6 +97,7 @@ export function panel(state: StateCore): boolean {
 			let tokenToReturn = token;
 			if (token.type === "blockquote_open") {
 				let currentCheck = currentIndex + 1; // Start after this token
+				// eslint-disable-next-line no-constant-condition
 				while (true) {
 					const tokenToCheck = allTokens[currentCheck];
 					currentCheck = currentCheck + 1;
@@ -122,7 +123,7 @@ export function panel(state: StateCore): boolean {
 					const title = check.groups["title"];
 					calloutStartIndex = currentCheck - 1;
 					isInCallout = true;
-					blockTitle = !!title ? title : calloutType;
+					blockTitle = title ? title : calloutType;
 
 					if (collapseType === "+" || collapseType === "-") {
 						adfType = "expand";

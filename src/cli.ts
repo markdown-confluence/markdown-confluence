@@ -1,3 +1,4 @@
+/* eslint-disable */
 Error.stackTraceLimit = Infinity;
 
 import * as fs from "fs";
