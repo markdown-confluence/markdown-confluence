@@ -37,6 +37,7 @@ export interface AdfFile {
 	tags: string[];
 	pageId: string | undefined;
 	dontChangeParentPageId: boolean;
+	spaceKey?: string;
 }
 
 interface ConfluenceNode {
@@ -119,6 +120,56 @@ export class Publisher {
 		);
 		const confluencePagesToPublish = flattenTree(confluencePageTree);
 
+		const fileToPageIdMap: Record<string, AdfFile> = {};
+
+		confluencePagesToPublish.forEach((node) => {
+			if (!node.file.pageId) {
+				throw new Error("Missing Page ID");
+			}
+
+			fileToPageIdMap[node.file.fileName] = node.file;
+		});
+
+		confluencePagesToPublish.forEach((node) => {
+			node.file.contents = traverse(node.file.contents, {
+				text: (node, _parent) => {
+					if (
+						node.marks &&
+						node.marks[0].type === "link" &&
+						node.marks[0].attrs
+					) {
+						if (
+							typeof node.marks[0].attrs.href === "string" &&
+							node.marks[0].attrs.href.startsWith("wikilink")
+						) {
+							const wikilinkUrl = new URL(
+								node.marks[0].attrs.href
+							);
+							const pagename = `${wikilinkUrl.pathname}.md`;
+
+							const linkPage = fileToPageIdMap[pagename];
+							if (linkPage) {
+								const confluenceUrl = `${this.settings.confluenceBaseUrl}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
+								node.marks[0].attrs.href = confluenceUrl;
+								if (node.text === wikilinkUrl.pathname) {
+									node.type = "inlineCard";
+									node.attrs = {
+										url: node.marks[0].attrs.href,
+									};
+									delete node.marks;
+									delete node.text;
+									return node;
+								}
+							} else {
+								node.marks.remove(node.marks[0]);
+							}
+							return node;
+						}
+					}
+				},
+			}) as JSONDocNode;
+		});
+
 		const adrFileTasks = confluencePagesToPublish.map((file) => {
 			return this.publishFile(file);
 		});
@@ -168,10 +219,12 @@ export class Publisher {
 				topPageId
 			);
 			node.file.pageId = pageDetails.id;
+			node.file.spaceKey = pageDetails.spaceKey;
 			version = pageDetails.version;
 			existingAdf = pageDetails.existingAdf;
 		} else {
 			node.file.pageId = parentPageId;
+			node.file.spaceKey = spaceKey;
 			version = 0;
 			existingAdf = "";
 		}
@@ -212,14 +265,24 @@ export class Publisher {
 			const contentById =
 				await this.confluenceClient.content.getContentById({
 					id: file.pageId,
-					expand: ["version", "body.atlas_doc_format", "ancestors"],
+					expand: [
+						"version",
+						"body.atlas_doc_format",
+						"ancestors",
+						"space",
+					],
 				});
+
+			if (!contentById.space?.key) {
+				throw new Error("Missing Space Key");
+			}
 
 			return {
 				id: contentById.id,
 				title: file.pageTitle,
 				version: contentById?.version?.number ?? 1,
 				existingAdf: contentById?.body?.atlas_doc_format?.value,
+				spaceKey: contentById.space.key,
 			};
 		}
 
@@ -257,6 +320,7 @@ export class Publisher {
 				title: file.pageTitle,
 				version: currentPage?.version?.number ?? 1,
 				existingAdf: currentPage?.body?.atlas_doc_format?.value,
+				spaceKey,
 			};
 		} else {
 			console.log("Creating page");
@@ -287,6 +351,7 @@ export class Publisher {
 				title: file.pageTitle,
 				version: pageDetails?.version?.number ?? 1,
 				existingAdf: pageDetails?.body?.atlas_doc_format?.value,
+				spaceKey,
 			};
 		}
 	}

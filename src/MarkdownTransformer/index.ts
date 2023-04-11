@@ -8,6 +8,7 @@ import { MarkdownParser } from "prosemirror-markdown";
 import { Schema, Node as PMNode } from "prosemirror-model";
 import { markdownItMedia } from "./media";
 import myTokenizer from "./callout";
+import wikilinksPlugin from "./wikilinks";
 
 function filterMdToPmSchemaMapping(schema: Schema, map: any) {
 	return Object.keys(map).reduce((newMap: any, key: string) => {
@@ -154,9 +155,7 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 			tokenizer.use(myTokenizer);
 		}
 
-		//if (schema.nodes.task) {
-		//	tokenizer.use(taskLists);
-		//}
+		tokenizer.use(wikilinksPlugin);
 
 		(["nodes", "marks"] as (keyof SchemaMapping)[]).forEach((key) => {
 			for (const idx in pmSchemaToMdMapping[key]) {
