@@ -14,6 +14,7 @@ import { CompletedModal } from "./CompletedModal";
 import { CustomConfluenceClient } from "./MyBaseClient";
 import { ElectronMermaidRenderer } from "./mermaid_renderers/electron";
 import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
+import stringifyObject from "stringify-object";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -120,10 +121,27 @@ export default class MyPlugin extends Plugin {
 				this.isSyncing = true;
 				try {
 					const stats = await this.publisher.doPublish();
-					new CompletedModal(this.app, stats).open();
-				} catch (exceptionVar) {
-					new Notice("Error publishing to Confluence");
-					console.error(exceptionVar);
+					new CompletedModal(this.app, {
+						uploadResults: stats,
+					}).open();
+				} catch (error) {
+					if (error instanceof Error) {
+						new CompletedModal(this.app, {
+							uploadResults: {
+								successfulUploads: 0,
+								errorMessage: error.message,
+								failedFiles: [],
+							},
+						}).open();
+					} else {
+						new CompletedModal(this.app, {
+							uploadResults: {
+								successfulUploads: 0,
+								errorMessage: stringifyObject(error),
+								failedFiles: [],
+							},
+						}).open();
+					}
 				} finally {
 					this.isSyncing = false;
 				}
@@ -140,7 +158,29 @@ export default class MyPlugin extends Plugin {
 						this.publisher
 							.doPublish()
 							.then((stats) => {
-								new CompletedModal(this.app, stats).open();
+								new CompletedModal(this.app, {
+									uploadResults: stats,
+								}).open();
+							})
+							.catch((error) => {
+								if (error instanceof Error) {
+									new CompletedModal(this.app, {
+										uploadResults: {
+											successfulUploads: 0,
+											errorMessage: error.message,
+											failedFiles: [],
+										},
+									}).open();
+								} else {
+									new CompletedModal(this.app, {
+										uploadResults: {
+											successfulUploads: 0,
+											errorMessage:
+												stringifyObject(error),
+											failedFiles: [],
+										},
+									}).open();
+								}
 							})
 							.finally(() => {
 								this.isSyncing = false;
