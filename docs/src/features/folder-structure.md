@@ -1,0 +1,1 @@
+When you publish the plugin will find the closest most common folder and upload files matching that folder structure. This enables easy management of your files when they are published. 
