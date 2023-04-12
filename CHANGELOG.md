@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.4.0...2.0.0) (2023-04-12)
+
+
+### Bug Fixes
+
+* **Obsidian:** Update to match recommendations from https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md ([a038a46](https://github.com/obsidian-confluence/obsidian-confluence/commit/a038a46c08fb363d46a3f80ba431d165a507ca64))
+
+
+### Miscellaneous Chores
+
+* release 2.0.0 ([a9eae0c](https://github.com/obsidian-confluence/obsidian-confluence/commit/a9eae0cf43f20e3eb57096792c78f7215e6f2dd0))
+
 ## [1.4.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.3.0...1.4.0) (2023-04-11)
 
 
