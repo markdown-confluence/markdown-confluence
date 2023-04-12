@@ -19,8 +19,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # To push a branch 
-      pull-requests: write  # To create a PR from that branch
+      contents: read
+      pages: write
+      id-token: write
     steps:
     - uses: actions/checkout@v3
       with:
