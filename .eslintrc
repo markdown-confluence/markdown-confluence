@@ -1,0 +1,35 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "env": { "node": true, "browser": true },
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "prettier"
+    ], 
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    "rules": {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
+      "@typescript-eslint/ban-ts-comment": "off",
+      "no-prototype-builtins": "off",
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/naming-convention": ["error", 
+      {
+        "selector": "property",
+        "format": ["strictCamelCase"],
+        "filter": {
+          // you can expand this regex to add more allowed names
+          "regex": "^(code_block|list_item|bullet_list|ordered_list|code_inline|media_single|User-Agent|Accept|Authorization|Content-Type)$",
+          "match": false
+        }
+      }]
+    },
+    "ignorePatterns": ["dist/**", "dev-vault/**", "dist-cli/**", ".husky/**"]
+  }
