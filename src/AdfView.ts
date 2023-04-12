@@ -20,7 +20,7 @@ export const ADF_VIEW_TYPE = "AtlassianDocumentFormatView";
 export default class AdfView extends ItemView {
 	displayText: string;
 	settings: MyPluginSettings;
-	filePath: string;
+	filePath: string | undefined;
 	fileName: string;
 	vault: Vault;
 	workspace: Workspace;
@@ -41,7 +41,7 @@ export default class AdfView extends ItemView {
 	constructor(
 		settings: MyPluginSettings,
 		leaf: WorkspaceLeaf,
-		initialFileInfo: { path: string; basename: string },
+		initialFileInfo: { path: string | undefined; basename: string },
 		adaptor: LoaderAdaptor
 	) {
 		super(leaf);
@@ -57,6 +57,11 @@ export default class AdfView extends ItemView {
 	async onOpen() {
 		const container = this.containerEl.children[1] as HTMLElement;
 		container.style.backgroundColor = "#FFFFFF";
+
+		if (!this.filePath) {
+			container.textContent = "Current file not supported";
+			return;
+		}
 
 		const md = await this.adaptor.loadMarkdownFile(this.filePath);
 		const adf = this.mdToAdf.convertMDtoADF(md).contents;
@@ -90,7 +95,7 @@ export default class AdfView extends ItemView {
 					const vaultPath =
 						this.app.metadataCache.getFirstLinkpathDest(
 							currentUrl.replace("file://", ""),
-							this.filePath
+							this.filePath ?? ""
 						);
 					if (!vaultPath) {
 						return false;

@@ -25,13 +25,12 @@ export default class MyPlugin extends Plugin {
 	adaptor: ObsidianAdaptor;
 
 	activeLeafPath(workspace: Workspace) {
-		return workspace.activeLeaf?.view.getState().file;
+		return workspace.getActiveViewOfType(MarkdownView)?.file.path;
 	}
 
 	activeLeafName(workspace: Workspace) {
 		return (
-			workspace.activeLeaf?.getDisplayText() ||
-			" TODO TESTING CRAP TO BE REMOVED "
+			workspace.getActiveViewOfType(MarkdownView)?.getDisplayText() ?? ""
 		);
 	}
 
@@ -43,7 +42,10 @@ export default class MyPlugin extends Plugin {
 		this.initPreview(fileInfo);
 	}
 
-	async initPreview(fileInfo: { path: string; basename: string }) {
+	async initPreview(fileInfo: {
+		path: string | undefined;
+		basename: string;
+	}) {
 		if (this.app.workspace.getLeavesOfType(ADF_VIEW_TYPE).length > 0) {
 			return;
 		}
@@ -92,7 +94,7 @@ export default class MyPlugin extends Plugin {
 		this.registerView(
 			ADF_VIEW_TYPE,
 			(leaf: WorkspaceLeaf) =>
-				(this.adfView = new AdfView(
+				new AdfView(
 					this.settings,
 					leaf,
 					{
@@ -100,7 +102,7 @@ export default class MyPlugin extends Plugin {
 						basename: this.activeLeafName(this.workspace),
 					},
 					this.adaptor
-				))
+				)
 		);
 
 		this.addCommand({
@@ -284,7 +286,6 @@ export default class MyPlugin extends Plugin {
 					const frontMatter = this.app.metadataCache.getCache(
 						view.file.path
 					)?.frontmatter;
-					console.log({ frontMatter });
 					const file = view.file;
 					const enabledForPublishing =
 						(file.path.startsWith(this.settings.folderToPublish) &&
