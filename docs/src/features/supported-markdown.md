@@ -1,0 +1,14 @@
+- Blockquotes
+- Callouts
+- Code
+- Diagrams (Mermaid.js)
+- Images (Image Upload Supported)
+- Linking
+	- Wikilinks
+- Headings
+- Horizontal Bar
+- Lists
+- Text Formatting
+	- Strike-through
+	- Emphasis
+- Tables

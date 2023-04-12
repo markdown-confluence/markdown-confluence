@@ -1,0 +1,6 @@
+[book]
+authors = ["andymac4182"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Obsidian Confluence Integration"
