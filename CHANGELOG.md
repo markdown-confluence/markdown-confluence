@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.0.0...2.0.1) (2023-04-13)
+
+
+### Bug Fixes
+
+* **images:** Fix for image upload ([6b973f2](https://github.com/obsidian-confluence/obsidian-confluence/commit/6b973f2fc2a97b299c1abb61708407c097a80706))
+
 ## [2.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/1.4.0...2.0.0) (2023-04-12)
 
 
