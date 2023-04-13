@@ -6,8 +6,8 @@ src = "src"
 title = "Obsidian Confluence Integration"
 
 [output.html]
-git-repository-url = "https://github.com/rust-lang/mdBook"
+git-repository-url = "https://github.com/obsidian-confluence/obsidian-confluence"
 git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
+edit-url-template = "https://github.com/obsidian-confluence/obsidian-confluence/edit/main/docs/{path}"
 cname = "obsidian-confluence.com"
 
