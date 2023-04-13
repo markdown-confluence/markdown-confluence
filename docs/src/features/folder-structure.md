@@ -6,7 +6,7 @@ The folder structure feature is designed to help you easily manage and organize 
 
 When you publish your files, the plugin will automatically find the first common folder and upload the files according to that folder structure.
 
-![](Pasted%20image%2020230413135017.png)
+![](attachments/Pasted%20image%2020230413135017.png)
 
 ### Preventing Pages from Moving
 
