@@ -12,3 +12,4 @@
 	- Strike-through
 	- Emphasis
 - Tables
+- [Callouts](./callouts.md)
