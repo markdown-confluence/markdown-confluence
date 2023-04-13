@@ -545,7 +545,7 @@ export class Publisher {
 
 		for (const imageUrl of imagesToUpload) {
 			console.log({ testing: imageUrl });
-			const filename = imageUrl.split(":")[1];
+			const filename = imageUrl.split("://")[1];
 			const uploadedContent = await this.uploadFile(
 				pageId,
 				pageFilePath,
