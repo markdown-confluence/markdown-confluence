@@ -1,14 +1,24 @@
-Any images in the vault that are included in a page are uploaded as attachments for the page that includes the image. This will mean if the same image is used in multiple pages it is uploaded into each page. 
+## Image Upload
 
+The Image Upload feature ensures that any images included in a page are uploaded as attachments for that specific page in Confluence. This means that if the same image is used in multiple pages, it is uploaded into each respective page as an attachment.
 
-## Preventing images being uploaded multiple times
-To prevent needing to retrieve the image from Confluence everytime publish is ran the hash (MD5) of the image file contents are stored as a comment on the Attachment. This means that images are only uploaded once per page and only updated when the contents change. 
+### Preventing Duplicate Image Uploads
 
-To make it easier to ensure no conflicts on file names when uploading images to Confluence the filename is set to `${Absolute Path MD5}-${Filename without path}`. 
+In order to avoid retrieving the image from Confluence every time the publish process is run, the plugin uses the hash (MD5) of the image file contents and stores it as a comment on the attachment. This ensures that images are uploaded only once per page and are updated only when the contents change.
 
-Currently no images are deleted from Confluence.
+To prevent conflicts with file names when uploading images to Confluence, the plugin uses the following naming convention for the uploaded images:
 
+```
+${Absolute Path MD5}-${Filename without path}
+```
 
-## References
-- https://help.obsidian.md/Linking+notes+and+files/Embedding+files#Embed+an+image+in+a+note
-- https://support.atlassian.com/confluence-cloud/docs/manage-uploaded-files/
+This naming convention helps to avoid conflicts and ensures that each uploaded image has a unique identifier.
+
+### Limitations
+
+Currently, the Confluence Integration plugin does not support deleting images from Confluence.
+
+### References
+
+- [Embed an image in a note - Obsidian Help](https://help.obsidian.md/Linking+notes+and+files/Embedding+files#Embed+an+image+in+a+note)
+- [Manage uploaded files - Atlassian Support](https://support.atlassian.com/confluence-cloud/docs/manage-uploaded-files/)

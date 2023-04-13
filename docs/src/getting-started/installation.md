@@ -5,4 +5,3 @@
     - `Atlassian User Name`: Your Atlassian account's email address
     - `Atlassian API Token`: Your Atlassian API token. You can generate one from your [Atlassian Account Settings](https://id.atlassian.com/manage-profile/security/api-tokens).
     - `Folder To Publish`: The name of the folder in Obsidian containing the notes you want to publish (default: "Confluence Pages")
-3. 
