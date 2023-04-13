@@ -13,4 +13,4 @@
 	- [YAML Frontmatter](./features/yaml-frontmatter.md)
 	- [Callouts](./features/callouts.md)
 	- [Wikilinks](./features/wikilinks.md)
-
+- [Thanks](thanks.md)
