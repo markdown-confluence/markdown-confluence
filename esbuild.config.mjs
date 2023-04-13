@@ -30,7 +30,8 @@ const mermaid_renderer_plugin = {
 				sourcemap: false,
 				treeShaking: true,
 				write: false,
-				mainFields: ['module', 'main']
+				mainFields: ['module', 'main'],
+				minify: true,
 			}).catch(() => process.exit(1));
 
 			const fileContents = `
@@ -90,4 +91,5 @@ esbuild.build({
 	outdir: prod ? 'dist' : 'dev-vault/.obsidian/plugins/obsidian-confluence',
 	mainFields: ['module', 'main'],
 	plugins: [mermaid_renderer_plugin],
+	minify: true,
 }).catch(() => process.exit(1));
