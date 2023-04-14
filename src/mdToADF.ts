@@ -6,7 +6,6 @@ import { MarkdownTransformer } from "./MarkdownTransformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { MarkdownFile } from "./adaptors/types";
 import { AdfFile } from "./Publisher";
-import stringifyObject from "stringify-object";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 
@@ -61,14 +60,16 @@ export default class MdToADF {
 				: file.pageTitle;
 
 		if (
-			file.frontmatter["frontmatter-to-publish"] &&
-			Array.isArray(file.frontmatter["frontmatter-to-publish"])
+			file.frontmatter["connie-frontmatter-to-publish"] &&
+			Array.isArray(file.frontmatter["connie-frontmatter-to-publish"])
 		) {
 			let frontmatterHeader = "| Key | Value | \n | ----- | ----- |\n";
-			for (const key of file.frontmatter["frontmatter-to-publish"]) {
+			for (const key of file.frontmatter[
+				"connie-frontmatter-to-publish"
+			]) {
 				if (file.frontmatter[key]) {
 					const keyString = key.toString();
-					const valueString = stringifyObject(file.frontmatter[key]);
+					const valueString = JSON.stringify(file.frontmatter[key]);
 					frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
 				}
 			}

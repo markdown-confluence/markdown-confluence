@@ -256,6 +256,406 @@ exports[`parses escaping.md 1`] = `
 }
 `;
 
+exports[`parses file1.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/folder1/file1.md",
+  "contents": {
+    "content": [
+      {
+        "attrs": {
+          "isNumberColumnEnabled": false,
+          "layout": "default",
+        },
+        "content": [
+          {
+            "content": [
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Key",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableHeader",
+              },
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Value",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableHeader",
+              },
+            ],
+            "type": "tableRow",
+          },
+          {
+            "content": [
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "author",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableCell",
+              },
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": ""John Doe"",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableCell",
+              },
+            ],
+            "type": "tableRow",
+          },
+          {
+            "content": [
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "date",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableCell",
+              },
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": ""2023-04-14"",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableCell",
+              },
+            ],
+            "type": "tableRow",
+          },
+        ],
+        "type": "table",
+      },
+      {
+        "attrs": {
+          "level": 1,
+        },
+        "content": [
+          {
+            "text": "Test Content",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "content": [
+          {
+            "text": "Hello, World!",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": true,
+  "fileName": "file1.md",
+  "folderName": "folder1",
+  "frontmatter": {
+    "author": "John Doe",
+    "connie-dont-change-parent-page": true,
+    "connie-frontmatter-to-publish": [
+      "author",
+      "date",
+    ],
+    "connie-page-id": "12345",
+    "connie-title": "Custom Title",
+    "date": "2023-04-14",
+    "tags": [
+      "test",
+      "example",
+    ],
+  },
+  "pageId": "12345",
+  "pageTitle": "Custom Title",
+  "tags": [
+    "test",
+    "example",
+  ],
+}
+`;
+
+exports[`parses file2.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/folder2/file2.md",
+  "contents": {
+    "content": [
+      {
+        "attrs": {
+          "isNumberColumnEnabled": false,
+          "layout": "default",
+        },
+        "content": [
+          {
+            "content": [
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Key",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableHeader",
+              },
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Value",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableHeader",
+              },
+            ],
+            "type": "tableRow",
+          },
+          {
+            "content": [
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "project",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableCell",
+              },
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": ""Project Name"",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableCell",
+              },
+            ],
+            "type": "tableRow",
+          },
+        ],
+        "type": "table",
+      },
+      {
+        "attrs": {
+          "level": 2,
+        },
+        "content": [
+          {
+            "text": "Another Test",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "content": [
+          {
+            "text": "This is another test.",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "file2.md",
+  "folderName": "folder2",
+  "frontmatter": {
+    "connie-dont-change-parent-page": false,
+    "connie-frontmatter-to-publish": [
+      "project",
+    ],
+    "connie-page-id": 67890,
+    "connie-title": "Another Custom Title",
+    "project": "Project Name",
+    "tags": [
+      "demo",
+      42,
+    ],
+  },
+  "pageId": "67890",
+  "pageTitle": "Another Custom Title",
+  "tags": [
+    "demo",
+  ],
+}
+`;
+
+exports[`parses file3.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/folder3/file3.md",
+  "contents": {
+    "content": [
+      {
+        "attrs": {
+          "isNumberColumnEnabled": false,
+          "layout": "default",
+        },
+        "content": [
+          {
+            "content": [
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Key",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableHeader",
+              },
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Value",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableHeader",
+              },
+            ],
+            "type": "tableRow",
+          },
+        ],
+        "type": "table",
+      },
+      {
+        "attrs": {
+          "level": 3,
+        },
+        "content": [
+          {
+            "text": "Third Test",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "content": [
+          {
+            "text": "Yet another test content.",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "file3.md",
+  "folderName": "folder3",
+  "frontmatter": {
+    "connie-dont-change-parent-page": "invalid",
+    "connie-frontmatter-to-publish": [],
+    "connie-page-id": "qwerty",
+    "connie-title": 98765,
+    "tags": [
+      "sample",
+      "test",
+    ],
+  },
+  "pageId": "qwerty",
+  "pageTitle": "Third Test Page",
+  "tags": [
+    "sample",
+    "test",
+  ],
+}
+`;
+
 exports[`parses headers.md 1`] = `
 {
   "absoluteFilePath": "/path/to/headers.md",

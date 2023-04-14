@@ -8,7 +8,7 @@ This section provides a brief overview of the recommended workflow for publishin
 
 2. Organize your files and folders within your Obsidian vault according to your desired Confluence structure.
 
-3. Use YAML frontmatter to customize page properties, such as `connie-title`, `tags`, and `frontmatter-to-publish`, as needed.
+3. Use YAML frontmatter to customize page properties, such as `connie-title`, `tags`, and `connie-frontmatter-to-publish`, as needed.
 
 4. Publish your pages by running the publish command provided by the Confluence Integration plugin. The plugin will upload your pages and files, maintaining the folder structure and hierarchy defined in your Obsidian vault.
 

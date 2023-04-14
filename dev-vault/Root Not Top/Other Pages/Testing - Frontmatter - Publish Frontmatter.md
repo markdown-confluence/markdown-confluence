@@ -6,8 +6,7 @@ array-multiline:
   - testing tag2
 string: Testing
 boolean-value: true
-
-frontmatter-to-publish:
+connie-frontmatter-to-publish:
   - array-singleline
   - array-multiline
   - string

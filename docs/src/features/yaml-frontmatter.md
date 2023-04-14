@@ -14,7 +14,7 @@ connie-title: New Title
 ---
 ```
 
-### frontmatter-to-publish
+### connie-frontmatter-to-publish
 
 This item is set to an array of frontmatter keys that you want to include in a table at the beginning of the document.
 
@@ -32,7 +32,7 @@ array-multiline:
   - testing tag2
 string: Testing
 boolean-value: true
-frontmatter-to-publish:
+connie-frontmatter-to-publish:
   - array-singleline
   - array-multiline
   - string

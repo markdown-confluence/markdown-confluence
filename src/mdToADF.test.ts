@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { expect, test } from "@jest/globals";
 import { MarkdownFile } from "./adaptors/types";
 import MdToADF from "./mdToADF";
@@ -137,6 +138,51 @@ const markdownTestCases: MarkdownFile[] = [
 			title: "Escaping",
 			description:
 				"A Markdown file demonstrating how to escape special characters.",
+		},
+	},
+	{
+		folderName: "folder1",
+		absoluteFilePath: "/path/to/folder1/file1.md",
+		fileName: "file1.md",
+		contents: "# Test Content\nHello, World!",
+		pageTitle: "Test Page",
+		frontmatter: {
+			"connie-title": "Custom Title",
+			"connie-frontmatter-to-publish": ["author", "date"],
+			author: "John Doe",
+			date: "2023-04-14",
+			tags: ["test", "example"],
+			"connie-page-id": "12345",
+			"connie-dont-change-parent-page": true,
+		},
+	},
+	{
+		folderName: "folder2",
+		absoluteFilePath: "/path/to/folder2/file2.md",
+		fileName: "file2.md",
+		contents: "## Another Test\nThis is another test.",
+		pageTitle: "Another Test Page",
+		frontmatter: {
+			"connie-title": "Another Custom Title",
+			"connie-frontmatter-to-publish": ["project"],
+			project: "Project Name",
+			tags: ["demo", 42],
+			"connie-page-id": 67890,
+			"connie-dont-change-parent-page": false,
+		},
+	},
+	{
+		folderName: "folder3",
+		absoluteFilePath: "/path/to/folder3/file3.md",
+		fileName: "file3.md",
+		contents: "### Third Test\nYet another test content.",
+		pageTitle: "Third Test Page",
+		frontmatter: {
+			"connie-title": 98765,
+			"connie-frontmatter-to-publish": [],
+			tags: ["sample", "test"],
+			"connie-page-id": "qwerty",
+			"connie-dont-change-parent-page": "invalid",
 		},
 	},
 ];
