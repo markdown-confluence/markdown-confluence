@@ -39,7 +39,7 @@ jobs:
     - name: Run Tests
       id: tests
       continue-on-error: true
-      run: npm run tests
+      run: npm run test
 
     - name: Run npm build
       id: build
