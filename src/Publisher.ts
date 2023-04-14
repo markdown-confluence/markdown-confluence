@@ -2,7 +2,7 @@ import { MyPluginSettings } from "./Settings";
 import FolderFile from "./FolderFile.json";
 
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
-import * as SparkMD5 from "spark-md5";
+import SparkMD5 from "spark-md5";
 import { doc, p } from "@atlaskit/adf-utils/builders";
 import { ADFEntity } from "@atlaskit/adf-utils/types";
 import MdToADF from "./mdToADF";

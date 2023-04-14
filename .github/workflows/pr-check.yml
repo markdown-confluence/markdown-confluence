@@ -8,6 +8,11 @@ on:
 jobs:
   build-and-lint:
     runs-on: ubuntu-latest
+    outputs:
+      eslint_status: ${{ steps.eslint.outcome }}
+      prettier_status: ${{ steps.prettier.outcome }}
+      tests_status: ${{ steps.tests.outcome }}
+      build_status: ${{ steps.build.outcome }}
 
     steps:
     - name: Check out repository code
@@ -22,13 +27,35 @@ jobs:
       run: npm ci
 
     - name: Run ESLint
+      id: eslint
+      continue-on-error: true
       run: npm run lint
 
     - name: Run Prettier check
+      id: prettier
+      continue-on-error: true
       run: npm run prettier-check
 
+    - name: Run Tests
+      id: tests
+      continue-on-error: true
+      run: npm run test
+
     - name: Run npm build
+      id: build
+      continue-on-error: true
       run: npm run build
 
-    - name: Report errors
-      run: echo "Build and lint checks completed successfully."
+    - name: Report Errors
+      if: ${{ always() }}
+      run: |
+        echo "ESLint status: ${{ steps.eslint.outcome }}"
+        echo "Prettier status: ${{ steps.prettier.outcome }}"
+        echo "Tests status: ${{ steps.tests.outcome }}"
+        echo "Build status: ${{ steps.build.outcome }}"
+        if [[ ${{ steps.eslint.outcome }} == 'failure' ]] \
+        || [[ ${{ steps.prettier.outcome }} == 'failure' ]] \
+        || [[ ${{ steps.tests.outcome }} == 'failure' ]] \
+        || [[ ${{ steps.build.outcome }} == 'failure' ]]; then
+          exit 1
+        fi

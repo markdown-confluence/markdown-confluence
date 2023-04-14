@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from 'builtin-modules'
+import { writeFileSync } from 'fs';
+
 
 const banner =
 `/*
@@ -60,7 +62,7 @@ const mermaid_renderer_plugin = {
 
 const prod = (process.argv[2] === 'production');
 
-esbuild.build({
+const buildConfig = {
 	banner: {
 		js: banner,
 	},
@@ -83,7 +85,6 @@ esbuild.build({
 		...builtins
 	],
 	format: 'cjs',
-	watch: !prod,
 	target: 'chrome106',
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
@@ -92,4 +93,13 @@ esbuild.build({
 	mainFields: ['module', 'main'],
 	plugins: [mermaid_renderer_plugin],
 	minify: true,
-}).catch(() => process.exit(1));
+	metafile: true,
+};
+
+if (prod) {
+	const buildResult = await esbuild.build(buildConfig);
+	writeFileSync("./dist/meta.json", JSON.stringify(buildResult.metafile));
+} else {
+	const context = await esbuild.context(buildConfig);
+	await context.watch();
+}
