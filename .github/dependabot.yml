@@ -9,3 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "deps(dependabot)"
+      prefix-development: "deps-dev(dependabot)"
+      include: "scope"
