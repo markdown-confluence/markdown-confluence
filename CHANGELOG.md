@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.1.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.0.1...2.1.0) (2023-04-14)
+
+
+### Features
+
+* **build:** Minify outputs to save size in main.js file ([c879d5d](https://github.com/obsidian-confluence/obsidian-confluence/commit/c879d5ddb3f40376fea7b2ce903818865bcac175))
+* **ci:** Export meta.json from esbuild ([c27ca7d](https://github.com/obsidian-confluence/obsidian-confluence/commit/c27ca7d67230a5aa051c94407a69745dbcf83f81))
+* **tests:** Add initial unit tests and GH Actions to ensure they pass ([b7f636e](https://github.com/obsidian-confluence/obsidian-confluence/commit/b7f636e2fb8e8a99c06cd60d227e38ae9e8d2873))
+
+
+### Bug Fixes
+
+* **ci:** Fix errors ([ffeea5c](https://github.com/obsidian-confluence/obsidian-confluence/commit/ffeea5c80bde3c5674716059e450b8c6963f8e9d))
+* **ci:** Learn to check ([a494231](https://github.com/obsidian-confluence/obsidian-confluence/commit/a494231840544e19cc8ac7bc090be6f327bc68dc))
+* **ci:** Run Release Please via PAT to allow GHA checks to run ([adb0708](https://github.com/obsidian-confluence/obsidian-confluence/commit/adb07085f4bd026f994b5c8201abe0782e9b3828))
+* **test:** Fix snapshot test to test passing all tests ([8e26790](https://github.com/obsidian-confluence/obsidian-confluence/commit/8e26790ff219105ccfd54078239515164369b0b6))
+
+
+### Dependencies
+
+* **deps:** bump @atlaskit/renderer from 107.2.0 to 107.3.2 ([7ae7a58](https://github.com/obsidian-confluence/obsidian-confluence/commit/7ae7a58ebdca4a516eba61504ef3299d4c42f6ce))
+
 ## [2.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.0.0...2.0.1) (2023-04-13)
 
 
