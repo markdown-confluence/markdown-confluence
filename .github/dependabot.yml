@@ -10,6 +10,6 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "deps(dependabot)"
-      prefix-development: "deps-dev(dependabot)"
+      prefix: "deps"
+      prefix-development: "deps-dev"
       include: "scope"
