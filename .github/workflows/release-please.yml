@@ -20,6 +20,7 @@ jobs:
         uses: google-github-actions/release-please-action@v3
         with:
           command: manifest
+          token: ${{ secrets.RELEASE_PLEASE_PAT }}
       
       - name: Use Node.js
         uses: actions/setup-node@v2
