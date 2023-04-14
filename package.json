@@ -48,7 +48,7 @@
     "@atlaskit/adf-utils": "^17.1.4",
     "@atlaskit/editor-common": "^72.4.0",
     "@atlaskit/editor-confluence-transformer": "^8.1.33",
-    "@atlaskit/editor-json-transformer": "^8.8.1",
+    "@atlaskit/editor-json-transformer": "^8.8.3",
     "@atlaskit/renderer": "^107.2.0",
     "@electron/remote": "^2.0.9",
     "@types/prosemirror-state": "^1.3.0",
