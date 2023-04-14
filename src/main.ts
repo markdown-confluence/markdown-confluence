@@ -14,7 +14,6 @@ import { CompletedModal } from "./CompletedModal";
 import { CustomConfluenceClient } from "./MyBaseClient";
 import { ElectronMermaidRenderer } from "./mermaid_renderers/electron";
 import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
-import stringifyObject from "stringify-object";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -139,7 +138,7 @@ export default class MyPlugin extends Plugin {
 						new CompletedModal(this.app, {
 							uploadResults: {
 								successfulUploads: 0,
-								errorMessage: stringifyObject(error),
+								errorMessage: JSON.stringify(error),
 								failedFiles: [],
 							},
 						}).open();
@@ -177,8 +176,7 @@ export default class MyPlugin extends Plugin {
 									new CompletedModal(this.app, {
 										uploadResults: {
 											successfulUploads: 0,
-											errorMessage:
-												stringifyObject(error),
+											errorMessage: JSON.stringify(error),
 											failedFiles: [],
 										},
 									}).open();
@@ -220,8 +218,7 @@ export default class MyPlugin extends Plugin {
 									new CompletedModal(this.app, {
 										uploadResults: {
 											successfulUploads: 0,
-											errorMessage:
-												stringifyObject(error),
+											errorMessage: JSON.stringify(error),
 											failedFiles: [],
 										},
 									}).open();

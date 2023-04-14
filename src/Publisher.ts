@@ -15,7 +15,6 @@ import { MermaidRenderer, ChartData } from "./mermaid_renderers/types";
 import * as path from "path";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { UploadResults } from "./CompletedView";
-import stringifyObject from "stringify-object";
 
 const mdToADFConverter = new MdToADF();
 
@@ -388,7 +387,7 @@ export class Publisher {
 			return {
 				successfulUpload: false,
 				absoluteFilePath: node.file.absoluteFilePath,
-				reason: stringifyObject(e),
+				reason: JSON.stringify(e),
 			};
 		}
 	}
