@@ -60,7 +60,7 @@ const mermaid_renderer_plugin = {
 
 const prod = (process.argv[2] === 'production');
 
-esbuild.build({
+const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
@@ -83,7 +83,6 @@ esbuild.build({
 		...builtins
 	],
 	format: 'cjs',
-	watch: !prod,
 	target: 'chrome106',
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
@@ -92,4 +91,11 @@ esbuild.build({
 	mainFields: ['module', 'main'],
 	plugins: [mermaid_renderer_plugin],
 	minify: true,
-}).catch(() => process.exit(1));
+});
+
+
+if (prod) {
+	context.build().catch(() => process.exit(1));
+} else {
+	context.watch().catch(() => process.exit(1));
+}

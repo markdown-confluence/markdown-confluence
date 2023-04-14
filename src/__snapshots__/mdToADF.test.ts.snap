@@ -1,0 +1,710 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parses blockquotes.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/blockquotes.md",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "content": [
+              {
+                "text": "Blockquote example",
+                "type": "text",
+              },
+            ],
+            "type": "paragraph",
+          },
+        ],
+        "type": "blockquote",
+      },
+      {
+        "content": [
+          {
+            "content": [
+              {
+                "text": "Another blockquote example",
+                "type": "text",
+              },
+            ],
+            "type": "paragraph",
+          },
+        ],
+        "type": "blockquote",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "blockquotes.md",
+  "folderName": "blockquotes",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating blockquotes.",
+    "title": "Blockquotes",
+  },
+  "pageId": undefined,
+  "pageTitle": "Blockquotes",
+  "tags": [],
+}
+`;
+
+exports[`parses code.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/code.md",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "text": "Inline ",
+            "type": "text",
+          },
+          {
+            "marks": [
+              {
+                "type": "code",
+              },
+            ],
+            "text": "code",
+            "type": "text",
+          },
+          {
+            "text": " example",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "attrs": {},
+        "content": [
+          {
+            "text": "Code block example",
+            "type": "text",
+          },
+        ],
+        "type": "codeBlock",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "code.md",
+  "folderName": "code",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating inline code and code blocks.",
+    "title": "Code",
+  },
+  "pageId": undefined,
+  "pageTitle": "Code",
+  "tags": [],
+}
+`;
+
+exports[`parses emphasis.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/emphasis.m",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "type": "em",
+              },
+            ],
+            "text": "Italic text",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "type": "em",
+              },
+            ],
+            "text": "Italic text",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "type": "strong",
+              },
+            ],
+            "text": "Bold text",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "type": "strong",
+              },
+            ],
+            "text": "Bold text",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "type": "em",
+              },
+              {
+                "type": "strong",
+              },
+            ],
+            "text": "Bold and italic text",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "type": "em",
+              },
+              {
+                "type": "strong",
+              },
+            ],
+            "text": "Bold and italic text",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "emphasis.md",
+  "folderName": "emphasis",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating different text emphasis styles.",
+    "title": "Emphasis",
+  },
+  "pageId": undefined,
+  "pageTitle": "Emphasis",
+  "tags": [],
+}
+`;
+
+exports[`parses escaping.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/escaping.md",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "text": "*Escape asterisks*",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "text": "[Escape brackets]",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "escaping.md",
+  "folderName": "escaping",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating how to escape special characters.",
+    "title": "Escaping",
+  },
+  "pageId": undefined,
+  "pageTitle": "Escaping",
+  "tags": [],
+}
+`;
+
+exports[`parses headers.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/headers.md",
+  "contents": {
+    "content": [
+      {
+        "attrs": {
+          "level": 1,
+        },
+        "content": [
+          {
+            "text": "Header 1",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 2,
+        },
+        "content": [
+          {
+            "text": "Header 2",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 3,
+        },
+        "content": [
+          {
+            "text": "Header 3",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 4,
+        },
+        "content": [
+          {
+            "text": "Header 4",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 5,
+        },
+        "content": [
+          {
+            "text": "Header 5",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 6,
+        },
+        "content": [
+          {
+            "text": "Header 6",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "headers.md",
+  "folderName": "headers",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating different header levels.",
+    "title": "Headers",
+  },
+  "pageId": undefined,
+  "pageTitle": "Headers",
+  "tags": [],
+}
+`;
+
+exports[`parses horizontal_rules.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/horizontal_rules.md",
+  "contents": {
+    "content": [
+      {
+        "type": "rule",
+      },
+      {
+        "type": "rule",
+      },
+      {
+        "type": "rule",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "horizontal_rules.md",
+  "folderName": "horizontal_rules",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating different horizontal rule styles.",
+    "title": "Horizontal Rules",
+  },
+  "pageId": undefined,
+  "pageTitle": "Horizontal Rules",
+  "tags": [],
+}
+`;
+
+exports[`parses images.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/images.md",
+  "contents": {
+    "content": [
+      {
+        "attrs": {
+          "layout": "center",
+        },
+        "content": [
+          {
+            "attrs": {
+              "type": "external",
+              "url": "/path/to/image.jpg",
+            },
+            "type": "media",
+          },
+        ],
+        "type": "mediaSingle",
+      },
+      {
+        "attrs": {
+          "layout": "center",
+        },
+        "content": [
+          {
+            "attrs": {
+              "type": "external",
+              "url": "/path/to/image.jpg",
+            },
+            "type": "media",
+          },
+        ],
+        "type": "mediaSingle",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "images.md",
+  "folderName": "images",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating different image styles.",
+    "title": "Images",
+  },
+  "pageId": undefined,
+  "pageTitle": "Images",
+  "tags": [],
+}
+`;
+
+exports[`parses inline_html.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/inline_html.md",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "text": "<p>Paragraph with <strong>bold</strong> and <em>italic</em> text.</p>",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "inline_html.md",
+  "folderName": "inline_html",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating the use of inline HTML.",
+    "title": "Inline HTML",
+  },
+  "pageId": undefined,
+  "pageTitle": "Inline HTML",
+  "tags": [],
+}
+`;
+
+exports[`parses links.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/links.md",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "attrs": {
+                  "href": "https://example.com",
+                },
+                "type": "link",
+              },
+            ],
+            "text": "Example link",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "attrs": {
+                  "href": "https://example.com",
+                },
+                "type": "link",
+              },
+            ],
+            "text": "Example link with title",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "links.md",
+  "folderName": "links",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating different link styles.",
+    "title": "Links",
+  },
+  "pageId": undefined,
+  "pageTitle": "Links",
+  "tags": [],
+}
+`;
+
+exports[`parses lists.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/lists.md",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "First ordered list item",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "Second ordered list item",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+        ],
+        "type": "orderedList",
+      },
+      {
+        "content": [
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "Unordered list item",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "Another unordered list item",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+        ],
+        "type": "bulletList",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "lists.md",
+  "folderName": "lists",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating ordered and unordered lists.",
+    "title": "Lists",
+  },
+  "pageId": undefined,
+  "pageTitle": "Lists",
+  "tags": [],
+}
+`;
+
+exports[`parses tables.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/tables.md",
+  "contents": {
+    "content": [
+      {
+        "attrs": {
+          "isNumberColumnEnabled": false,
+          "layout": "default",
+        },
+        "content": [
+          {
+            "content": [
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Header 1",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableHeader",
+              },
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Header 2",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableHeader",
+              },
+            ],
+            "type": "tableRow",
+          },
+          {
+            "content": [
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Cell 1",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableCell",
+              },
+              {
+                "attrs": {},
+                "content": [
+                  {
+                    "content": [
+                      {
+                        "text": "Cell 2",
+                        "type": "text",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "tableCell",
+              },
+            ],
+            "type": "tableRow",
+          },
+        ],
+        "type": "table",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "tables.md",
+  "folderName": "tables",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating tables.",
+    "title": "Tables",
+  },
+  "pageId": undefined,
+  "pageTitle": "Tables",
+  "tags": [],
+}
+`;

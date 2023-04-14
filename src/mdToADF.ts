@@ -11,8 +11,8 @@ import stringifyObject from "stringify-object";
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 
 export default class MdToADF {
-	transformer: MarkdownTransformer;
-	serializer: JSONTransformer;
+	private transformer: MarkdownTransformer;
+	private serializer: JSONTransformer;
 	constructor() {
 		this.transformer = new MarkdownTransformer();
 		this.serializer = new JSONTransformer();
