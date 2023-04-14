@@ -18,10 +18,10 @@
           {"type": "deps", "section": "Dependencies"},
           {"type": "revert", "section": "Reverts"},
           {"type": "docs", "section": "Documentation"},
+		  {"type": "test", "section": "Tests"},
+		  {"type": "refactor", "section": "Code Refactoring"},
           {"type": "style", "section": "Styles", "hidden": true},
           {"type": "chore", "section": "Miscellaneous Chores", "hidden": true},
-          {"type": "refactor", "section": "Code Refactoring", "hidden": true},
-          {"type": "test", "section": "Tests", "hidden": true},
           {"type": "build", "section": "Build System", "hidden": true},
           {"type": "ci", "section": "Continuous Integration", "hidden": true}
         ]
