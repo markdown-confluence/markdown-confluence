@@ -106,7 +106,7 @@ exports[`parses code.md 1`] = `
 
 exports[`parses emphasis.md 1`] = `
 {
-  "absoluteFilePath": "/path/to/emphasis.m",
+  "absoluteFilePath": "/path/to/emphasis.md",
   "contents": {
     "content": [
       {
