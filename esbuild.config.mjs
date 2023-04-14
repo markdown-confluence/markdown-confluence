@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from 'builtin-modules'
+import { writeFileSync } from 'fs';
+
 
 const banner =
 `/*
@@ -91,10 +93,12 @@ const buildConfig = {
 	mainFields: ['module', 'main'],
 	plugins: [mermaid_renderer_plugin],
 	minify: true,
+	metafile: true,
 };
 
 if (prod) {
-	await esbuild.build(buildConfig);
+	const buildResult = await esbuild.build(buildConfig);
+	writeFileSync("./dist/meta.json", JSON.stringify(buildResult.metafile));
 } else {
 	const context = await esbuild.context(buildConfig);
 	await context.watch();
