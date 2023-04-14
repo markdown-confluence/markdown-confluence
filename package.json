@@ -22,7 +22,7 @@
     "@types/markdown-it": "^12.2.3",
     "@types/mime-types": "^2.1.1",
     "@types/node": "^16.11.6",
-    "@types/prosemirror-model": "^1.16.2",
+    "@types/prosemirror-model": "^1.17.0",
     "@types/react-dom": "^18.0.11",
     "@types/spark-md5": "^3.0.2",
     "@types/stringify-object": "^4.0.2",
@@ -65,7 +65,7 @@
     "mermaid": "^10.1.0",
     "mime-types": "^2.1.35",
     "prosemirror-markdown": "^1.10.1",
-    "prosemirror-model": "1.14.3",
+    "prosemirror-model": "1.19.0",
     "punycode": "^1.4.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
@@ -78,6 +78,6 @@
     "src/**/*": "prettier --write --ignore-unknown"
   },
   "resolutions": {
-    "prosemirror-model": "1.14.3"
+    "prosemirror-model": "1.19.0"
   }
 }
