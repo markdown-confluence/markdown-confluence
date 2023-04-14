@@ -62,7 +62,7 @@
     "markdown-it-task-checkbox": "^1.0.6",
     "markdown-it-task-lists": "^2.1.1",
     "markdown-it-wikilinks": "^1.2.0",
-    "mermaid": "^10.0.2",
+    "mermaid": "^10.1.0",
     "mime-types": "^2.1.35",
     "prosemirror-markdown": "^1.10.1",
     "prosemirror-model": "1.14.3",
