@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.1.0...2.1.1) (2023-04-14)
+
+
+### Bug Fixes
+
+* Rename frontmatter-to-publish to connie-frontmatter-to-publish ([d18d209](https://github.com/obsidian-confluence/obsidian-confluence/commit/d18d20998fdd686a2aefe2aefbda33a4c2b86341))
+* **stringifyObject:** Replacing stringify-object with JSON.stringify ([0297b44](https://github.com/obsidian-confluence/obsidian-confluence/commit/0297b44b42af151e88d9a942a814b6dffabe5f20))
+
+
+### Dependencies
+
+* Remove unused deps ([2bfd5c4](https://github.com/obsidian-confluence/obsidian-confluence/commit/2bfd5c4741202f4d18639254758ac9f914ec8eab))
+
 ## [2.1.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.0.1...2.1.0) (2023-04-14)
 
 
