@@ -9,7 +9,7 @@ import { ConfluenceSettings } from "./Settings";
 import React from "react";
 import ReactDOM from "react-dom";
 import { ReactRenderer } from "@atlaskit/renderer";
-import MdToADF from "./mdToADF";
+import MdToADF from "./MdToADF";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { IntlProvider } from "react-intl-next";
@@ -89,7 +89,6 @@ export default class AdfView extends ItemView {
 		return traverse(adf, {
 			media: (node, parent) => {
 				if (node?.attrs?.type === "file") {
-					console.log({ node });
 					const currentUrl = node?.attrs?.url as string;
 					const test = this.app.vault.adapter as FileSystemAdapter;
 					const vaultPath =
@@ -101,7 +100,6 @@ export default class AdfView extends ItemView {
 						return false;
 					}
 					const path = test.getResourcePath(vaultPath.path);
-					console.log({ path });
 					node.attrs.type = "external";
 					node.attrs.url = path;
 					return node;

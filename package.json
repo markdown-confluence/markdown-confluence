@@ -19,6 +19,7 @@
   "license": "Apache 2.0",
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@types/deep-equal": "^1.0.1",
     "@types/markdown-it": "^12.2.3",
     "@types/mime-types": "^2.1.1",
     "@types/node": "^16.11.6",
@@ -53,6 +54,7 @@
     "@types/prosemirror-transform": "^1.4.2",
     "@types/prosemirror-view": "^1.23.1",
     "confluence.js": "^1.6.3",
+    "deep-equal": "^2.2.0",
     "formdata-node": "^5.0.0",
     "gray-matter": "^4.0.3",
     "markdown-it-table": "^2.0.4",

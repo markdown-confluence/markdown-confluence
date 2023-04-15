@@ -93,15 +93,11 @@ export class MyBaseClient implements Client {
 		callback: Callback<T> | never
 	): Promise<void | T> {
 		try {
-			console.info({ requestConfig });
-
 			if (requestConfig?.headers?.hasOwnProperty("content-type")) {
 				requestConfig.headers["Content-Type"] =
 					requestConfig?.headers["content-type"].toString();
 				delete requestConfig?.headers["content-type"];
 			}
-
-			console.info({ requestConfig });
 
 			const params = this.paramSerializer(requestConfig.params);
 
@@ -155,7 +151,6 @@ export class MyBaseClient implements Client {
 			};
 			delete modifiedRequestConfig.data;
 
-			console.log({ modifiedRequestConfig });
 			const response = await requestUrl(modifiedRequestConfig);
 
 			console.log({

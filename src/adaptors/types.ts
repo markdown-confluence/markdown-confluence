@@ -29,7 +29,7 @@ export interface LoaderAdaptor {
 	): Promise<BinaryFile | false>;
 }
 
-export interface ConfluenceClient {
+export interface CustomConfluenceClient {
 	content: Api.Content;
 	space: Api.Space;
 	contentAttachments: Api.ContentAttachments;

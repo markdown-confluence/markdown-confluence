@@ -1,5 +1,5 @@
 import { BrowserWindow } from "@electron/remote";
-import { ChartData, MermaidRenderer } from "./types";
+import { ChartData, MermaidRenderer } from ".";
 import MermaidRendererClient from "mermaid_renderer.esbuild";
 
 const mermaidRenderHtml = URL.createObjectURL(
@@ -13,7 +13,6 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 		const capturedCharts = new Map<string, Buffer>();
 
 		const promises = charts.map(async (chart) => {
-			// Create a new BrowserWindow instance
 			const chartWindow = new BrowserWindow({
 				width: 800,
 				height: 600,

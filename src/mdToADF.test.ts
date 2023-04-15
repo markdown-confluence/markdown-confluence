@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { expect, test } from "@jest/globals";
 import { MarkdownFile } from "./adaptors/types";
-import MdToADF from "./mdToADF";
+import MdToADF from "./MdToADF";
 
 const markdownTestCases: MarkdownFile[] = [
 	{

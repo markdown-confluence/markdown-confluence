@@ -5,7 +5,7 @@ import {
 import { MarkdownTransformer } from "./MarkdownTransformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { MarkdownFile } from "./adaptors/types";
-import { AdfFile } from "./Publisher";
+import { LocalAdfFile } from "./Publisher";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 
@@ -50,7 +50,7 @@ export default class MdToADF {
 		return olivia as JSONDocNode;
 	}
 
-	convertMDtoADF(file: MarkdownFile): AdfFile {
+	convertMDtoADF(file: MarkdownFile): LocalAdfFile {
 		let markdown = file.contents.replace(frontmatterRegex, "");
 
 		file.pageTitle =
