@@ -14,6 +14,12 @@ Copyright (c) 2022 Atlassian US, Inc.
 
 ## Getting Started
 
+## Alternative Installation
+> Due to waiting for https://github.com/obsidianmd/obsidian-releases/pull/1867 to be merged.
+> 
+> If you would like to use the plugin currently you will need to use [Alternative Installation](https://obsidian-confluence.com/getting-started/installation-brat.html) instructions.
+
+
 1. Install the `obsidian-confluence` plugin from Obsidian's community plugins browser.
 2. Open the plugin settings and configure the following fields:
 

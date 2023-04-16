@@ -5,6 +5,9 @@ multilingual = false
 src = "src"
 title = "Obsidian Confluence Integration"
 
+[book]
+create-missing = false
+
 [output.html]
 git-repository-url = "https://github.com/obsidian-confluence/obsidian-confluence"
 git-repository-icon = "fa-github"
