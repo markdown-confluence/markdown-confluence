@@ -15,7 +15,7 @@ import { CustomConfluenceClient } from "./MyBaseClient";
 import { ElectronMermaidRenderer } from "./mermaid_renderers/electron";
 import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
 
-export default class MyPlugin extends Plugin {
+export default class ConfluencePlugin extends Plugin {
 	settings: ConfluenceSettings;
 	private isSyncing = false;
 	adfView: AdfView;

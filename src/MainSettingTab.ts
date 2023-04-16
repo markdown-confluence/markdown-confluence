@@ -1,10 +1,10 @@
 import { App, Setting, PluginSettingTab } from "obsidian";
-import MyPlugin from "./main";
+import ConfluencePlugin from "./main";
 
 export class MainSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: ConfluencePlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: ConfluencePlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
