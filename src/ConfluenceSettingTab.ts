@@ -1,7 +1,7 @@
 import { App, Setting, PluginSettingTab } from "obsidian";
 import ConfluencePlugin from "./main";
 
-export class MainSettingTab extends PluginSettingTab {
+export class ConfluenceSettingTab extends PluginSettingTab {
 	plugin: ConfluencePlugin;
 
 	constructor(app: App, plugin: ConfluencePlugin) {

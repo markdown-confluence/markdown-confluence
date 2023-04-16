@@ -6,7 +6,7 @@ import {
 	WorkspaceLeaf,
 	Workspace,
 } from "obsidian";
-import { MainSettingTab } from "./MainSettingTab";
+import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
 import { DEFAULT_SETTINGS, ConfluenceSettings } from "./Settings";
 import { Publisher } from "./Publisher";
 import ObsidianAdaptor from "./adaptors/obsidian";
@@ -309,7 +309,7 @@ export default class ConfluencePlugin extends Plugin {
 			},
 		});
 
-		this.addSettingTab(new MainSettingTab(this.app, this));
+		this.addSettingTab(new ConfluenceSettingTab(this.app, this));
 	}
 
 	async onunload() {
