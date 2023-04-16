@@ -4,6 +4,7 @@
 
 - [Getting Started](./getting-started/publishing.md)
 	- [Installation](./getting-started/installation.md)
+	- [Installation - BRAT](./getting-started/installation-brat.md)
 - [Supported Features](./features/index.md)
 	- [Supported Markdown](./features/supported-markdown.md)
 	- [Folder Note](./features/folder-note.md)
