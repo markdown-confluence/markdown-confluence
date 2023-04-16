@@ -1,11 +1,11 @@
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { ConfluenceAdfFile, ConfluenceNode } from "./Publisher";
-import { MyPluginSettings } from "./Settings";
+import { ConfluenceSettings } from "./Settings";
 
 export function prepareAdf(
 	confluencePagesToPublish: ConfluenceNode[],
-	settings: MyPluginSettings
+	settings: ConfluenceSettings
 ) {
 	const fileToPageIdMap: Record<string, ConfluenceAdfFile> = {};
 
