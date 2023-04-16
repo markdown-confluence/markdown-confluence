@@ -7,7 +7,7 @@ import {
 	Workspace,
 } from "obsidian";
 import { MainSettingTab } from "./MainSettingTab";
-import { DEFAULT_SETTINGS, MyPluginSettings } from "./Settings";
+import { DEFAULT_SETTINGS, ConfluenceSettings } from "./Settings";
 import { Publisher } from "./Publisher";
 import ObsidianAdaptor from "./adaptors/obsidian";
 import { CompletedModal } from "./CompletedModal";
@@ -16,7 +16,7 @@ import { ElectronMermaidRenderer } from "./mermaid_renderers/electron";
 import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+	settings: ConfluenceSettings;
 	private isSyncing = false;
 	adfView: AdfView;
 	workspace: Workspace;

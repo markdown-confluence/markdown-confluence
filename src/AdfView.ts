@@ -5,7 +5,7 @@ import {
 	Workspace,
 	WorkspaceLeaf,
 } from "obsidian";
-import { MyPluginSettings } from "./Settings";
+import { ConfluenceSettings } from "./Settings";
 import React from "react";
 import ReactDOM from "react-dom";
 import { ReactRenderer } from "@atlaskit/renderer";
@@ -19,7 +19,7 @@ export const ADF_VIEW_TYPE = "AtlassianDocumentFormatView";
 
 export default class AdfView extends ItemView {
 	displayText: string;
-	settings: MyPluginSettings;
+	settings: ConfluenceSettings;
 	filePath: string | undefined;
 	fileName: string;
 	vault: Vault;
@@ -39,7 +39,7 @@ export default class AdfView extends ItemView {
 	}
 
 	constructor(
-		settings: MyPluginSettings,
+		settings: ConfluenceSettings,
 		leaf: WorkspaceLeaf,
 		initialFileInfo: { path: string | undefined; basename: string },
 		adaptor: LoaderAdaptor

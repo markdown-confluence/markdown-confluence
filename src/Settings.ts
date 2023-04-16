@@ -1,4 +1,4 @@
-export interface MyPluginSettings {
+export interface ConfluenceSettings {
 	confluenceBaseUrl: string;
 	confluenceParentId: string;
 	atlassianUserName: string;
@@ -6,7 +6,7 @@ export interface MyPluginSettings {
 	folderToPublish: string;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
+export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	confluenceBaseUrl: "",
 	confluenceParentId: "",
 	atlassianUserName: "",

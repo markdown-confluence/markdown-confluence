@@ -1,4 +1,4 @@
-import { MyPluginSettings } from "./Settings";
+import { ConfluenceSettings } from "./Settings";
 import FolderFile from "./FolderFile.json";
 
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
@@ -81,12 +81,12 @@ export class Publisher {
 	confluenceClient: ConfluenceClient;
 	blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
 	adaptor: LoaderAdaptor;
-	settings: MyPluginSettings;
+	settings: ConfluenceSettings;
 	mermaidRenderer: MermaidRenderer;
 
 	constructor(
 		adaptor: LoaderAdaptor,
-		settings: MyPluginSettings,
+		settings: ConfluenceSettings,
 		confluenceClient: ConfluenceClient,
 		mermaidRenderer: MermaidRenderer
 	) {

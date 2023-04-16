@@ -1,5 +1,5 @@
 import { Vault, MetadataCache, App, TFile } from "obsidian";
-import { MyPluginSettings } from "src/Settings";
+import { ConfluenceSettings } from "src/Settings";
 import {
 	BinaryFile,
 	FilesToUpload,
@@ -11,13 +11,13 @@ import { lookup } from "mime-types";
 export default class ObsidianAdaptor implements LoaderAdaptor {
 	vault: Vault;
 	metadataCache: MetadataCache;
-	settings: MyPluginSettings;
+	settings: ConfluenceSettings;
 	app: App;
 
 	constructor(
 		vault: Vault,
 		metadataCache: MetadataCache,
-		settings: MyPluginSettings,
+		settings: ConfluenceSettings,
 		app: App
 	) {
 		this.vault = vault;
