@@ -1,4 +1,4 @@
-import { MyPluginSettings } from "src/Settings";
+import { ConfluenceSettings } from "src/Settings";
 import { BinaryFile, FilesToUpload, LoaderAdaptor } from "./types";
 import { lookup } from "mime-types";
 import * as fs from "fs";
@@ -18,10 +18,10 @@ interface MarkdownFile {
 }
 
 export default class FilesystemAdaptor implements LoaderAdaptor {
-	settings: MyPluginSettings;
+	settings: ConfluenceSettings;
 	folderPath: string;
 
-	constructor(settings: MyPluginSettings, folderPath: string) {
+	constructor(settings: ConfluenceSettings, folderPath: string) {
 		this.settings = settings;
 		this.folderPath = folderPath;
 	}

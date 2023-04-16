@@ -10,9 +10,9 @@ import {
 } from "./adaptors/types";
 import { ChartData, MermaidRenderer } from "./mermaid_renderers";
 import { Publisher } from "./Publisher";
-import { MyPluginSettings } from "./Settings";
+import { ConfluenceSettings } from "./Settings";
 
-const settings: MyPluginSettings = {
+const settings: ConfluenceSettings = {
 	confluenceBaseUrl: process.env.ATLASSIAN_SITE_URL ?? "MISSING SITE",
 	confluenceParentId: "",
 	atlassianUserName: process.env.ATLASSIAN_USERNAME ?? "NO EMAIL",

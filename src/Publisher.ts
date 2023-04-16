@@ -1,6 +1,4 @@
 import { ConfluenceSettings } from "./Settings";
-import FolderFile from "./FolderFile.json";
-
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
 import { ADFEntity } from "@atlaskit/adf-utils/types";
 import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors/types";
@@ -73,8 +71,7 @@ export interface ConfluenceTreeNode {
 }
 
 export class Publisher {
-	confluenceClient: ConfluenceClient;
-	blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
+	confluenceClient: CustomConfluenceClient;
 	adaptor: LoaderAdaptor;
 	settings: ConfluenceSettings;
 	mermaidRenderer: MermaidRenderer;
@@ -82,7 +79,7 @@ export class Publisher {
 	constructor(
 		adaptor: LoaderAdaptor,
 		settings: ConfluenceSettings,
-		confluenceClient: ConfluenceClient,
+		confluenceClient: CustomConfluenceClient,
 		mermaidRenderer: MermaidRenderer
 	) {
 		this.adaptor = adaptor;
