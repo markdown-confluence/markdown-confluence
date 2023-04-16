@@ -16,3 +16,7 @@ By utilizing the Folder Note feature, you can achieve the following benefits:
 - Easily manage the content and hierarchy of your pages in Confluence.
 - Move a folder of files to a new Space in Confluence.
 - Seamlessly upload files as child pages underneath the corresponding folder representation in Confluence.
+
+
+# Obsidian Use
+You can use this feature in Obsidian using the [Obsidian folder notes](https://github.com/LostPaul/obsidian-folder-notes/tree/main) plugin.
