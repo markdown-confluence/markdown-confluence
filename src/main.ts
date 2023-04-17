@@ -129,17 +129,17 @@ export default class ConfluencePlugin extends Plugin {
 					if (error instanceof Error) {
 						new CompletedModal(this.app, {
 							uploadResults: {
-								successfulUploads: 0,
 								errorMessage: error.message,
 								failedFiles: [],
+								filesUploadResult: [],
 							},
 						}).open();
 					} else {
 						new CompletedModal(this.app, {
 							uploadResults: {
-								successfulUploads: 0,
 								errorMessage: JSON.stringify(error),
 								failedFiles: [],
+								filesUploadResult: [],
 							},
 						}).open();
 					}
@@ -167,17 +167,17 @@ export default class ConfluencePlugin extends Plugin {
 								if (error instanceof Error) {
 									new CompletedModal(this.app, {
 										uploadResults: {
-											successfulUploads: 0,
 											errorMessage: error.message,
 											failedFiles: [],
+											filesUploadResult: [],
 										},
 									}).open();
 								} else {
 									new CompletedModal(this.app, {
 										uploadResults: {
-											successfulUploads: 0,
 											errorMessage: JSON.stringify(error),
 											failedFiles: [],
+											filesUploadResult: [],
 										},
 									}).open();
 								}
@@ -209,17 +209,17 @@ export default class ConfluencePlugin extends Plugin {
 								if (error instanceof Error) {
 									new CompletedModal(this.app, {
 										uploadResults: {
-											successfulUploads: 0,
 											errorMessage: error.message,
 											failedFiles: [],
+											filesUploadResult: [],
 										},
 									}).open();
 								} else {
 									new CompletedModal(this.app, {
 										uploadResults: {
-											successfulUploads: 0,
 											errorMessage: JSON.stringify(error),
 											failedFiles: [],
+											filesUploadResult: [],
 										},
 									}).open();
 								}
