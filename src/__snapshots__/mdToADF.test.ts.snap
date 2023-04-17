@@ -78,7 +78,6 @@ exports[`parses code.md 1`] = `
         "type": "paragraph",
       },
       {
-        "attrs": {},
         "content": [
           {
             "text": "Code block example",
@@ -263,14 +262,19 @@ exports[`parses file1.md 1`] = `
     "content": [
       {
         "attrs": {
-          "isNumberColumnEnabled": false,
           "layout": "default",
         },
         "content": [
           {
             "content": [
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -285,7 +289,13 @@ exports[`parses file1.md 1`] = `
                 "type": "tableHeader",
               },
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -305,7 +315,13 @@ exports[`parses file1.md 1`] = `
           {
             "content": [
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -320,7 +336,13 @@ exports[`parses file1.md 1`] = `
                 "type": "tableCell",
               },
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -340,7 +362,13 @@ exports[`parses file1.md 1`] = `
           {
             "content": [
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -355,7 +383,13 @@ exports[`parses file1.md 1`] = `
                 "type": "tableCell",
               },
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -434,14 +468,19 @@ exports[`parses file2.md 1`] = `
     "content": [
       {
         "attrs": {
-          "isNumberColumnEnabled": false,
           "layout": "default",
         },
         "content": [
           {
             "content": [
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -456,7 +495,13 @@ exports[`parses file2.md 1`] = `
                 "type": "tableHeader",
               },
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -476,7 +521,13 @@ exports[`parses file2.md 1`] = `
           {
             "content": [
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -491,7 +542,13 @@ exports[`parses file2.md 1`] = `
                 "type": "tableCell",
               },
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -567,14 +624,19 @@ exports[`parses file3.md 1`] = `
     "content": [
       {
         "attrs": {
-          "isNumberColumnEnabled": false,
           "layout": "default",
         },
         "content": [
           {
             "content": [
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -589,7 +651,13 @@ exports[`parses file3.md 1`] = `
                 "type": "tableHeader",
               },
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -926,6 +994,9 @@ exports[`parses lists.md 1`] = `
   "contents": {
     "content": [
       {
+        "attrs": {
+          "order": 1,
+        },
         "content": [
           {
             "content": [
@@ -1015,14 +1086,19 @@ exports[`parses tables.md 1`] = `
     "content": [
       {
         "attrs": {
-          "isNumberColumnEnabled": false,
           "layout": "default",
         },
         "content": [
           {
             "content": [
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -1037,7 +1113,13 @@ exports[`parses tables.md 1`] = `
                 "type": "tableHeader",
               },
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -1057,7 +1139,13 @@ exports[`parses tables.md 1`] = `
           {
             "content": [
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [
@@ -1072,7 +1160,13 @@ exports[`parses tables.md 1`] = `
                 "type": "tableCell",
               },
               {
-                "attrs": {},
+                "attrs": {
+                  "colspan": 1,
+                  "colwidth": [
+                    340,
+                  ],
+                  "rowspan": 1,
+                },
                 "content": [
                   {
                     "content": [

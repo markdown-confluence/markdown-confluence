@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: "ci-check"
+  cancel-in-progress: false
+
 jobs:
   build-and-lint:
     runs-on: ubuntu-latest
@@ -40,6 +44,10 @@ jobs:
       id: tests
       continue-on-error: true
       run: npm run test
+      env:
+        ATLASSIAN_SITE_URL: ${{ secrets.ATLASSIAN_SITE_URL }}
+        ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
+        ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
 
     - name: Run npm build
       id: build
