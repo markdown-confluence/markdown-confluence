@@ -2,7 +2,6 @@ import { ConfluenceSettings } from "./Settings";
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
 import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors/types";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { UploadResults } from "./CompletedView";
 import {
 	getMermaidFileName,
 	MermaidRenderer,
@@ -13,6 +12,7 @@ import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
 import { uploadBuffer, UploadedImageData, uploadFile } from "./Attachments";
 import { prepareAdf } from "./AdfPostProcess";
 import { adfEqual } from "./AdfEqual";
+import { UploadResults } from "./CompletedModal";
 
 export interface LocalAdfFileTreeNode {
 	name: string;
@@ -21,7 +21,7 @@ export interface LocalAdfFileTreeNode {
 }
 
 interface FilePublishResult {
-	successfulUpload: boolean;
+	successfulUploadResult?: UploadAdfFileResult;
 	node: ConfluenceNode;
 	reason?: string;
 }
@@ -67,6 +67,13 @@ export interface ConfluenceTreeNode {
 	version: number;
 	existingAdf: string;
 	children: ConfluenceTreeNode[];
+}
+
+export interface UploadAdfFileResult {
+	adfFile: ConfluenceAdfFile;
+	contentResult: "same" | "updated";
+	imageResult: "same" | "updated";
+	labelResult: "same" | "updated";
 }
 
 export class Publisher {
@@ -130,14 +137,16 @@ export class Publisher {
 		const adrFiles = await this.publish(publishFilter);
 
 		const returnVal: UploadResults = {
-			successfulUploads: 0,
 			errorMessage: null,
 			failedFiles: [],
+			filesUploadResult: [],
 		};
 
 		adrFiles.forEach((element) => {
-			if (element.successfulUpload) {
-				returnVal.successfulUploads = returnVal.successfulUploads + 1;
+			if (element.successfulUploadResult) {
+				returnVal.filesUploadResult.push(
+					element.successfulUploadResult
+				);
 				return;
 			}
 
@@ -154,7 +163,7 @@ export class Publisher {
 		node: ConfluenceNode
 	): Promise<FilePublishResult> {
 		try {
-			await this.updatePageContent(
+			const successfulUploadResult = await this.updatePageContent(
 				node.parentPageId,
 				node.version,
 				node.existingAdf,
@@ -162,12 +171,11 @@ export class Publisher {
 			);
 
 			return {
-				successfulUpload: true,
 				node,
+				successfulUploadResult,
 			};
 		} catch (e: unknown) {
 			return {
-				successfulUpload: false,
 				node,
 				reason: JSON.stringify(e), // TODO: Understand why this doesn't show error message properly
 			};
@@ -179,40 +187,52 @@ export class Publisher {
 		pageVersionNumber: number,
 		currentContents: string,
 		adfFile: ConfluenceAdfFile
-	) {
+	): Promise<UploadAdfFileResult> {
+		const result: UploadAdfFileResult = {
+			adfFile,
+			contentResult: "same",
+			imageResult: "same",
+			labelResult: "same",
+		};
 		const updatedAdf = await this.uploadFiles(
 			adfFile.pageId,
 			adfFile.absoluteFilePath,
 			adfFile.contents
 		);
 
+		if (!adfEqual(adfFile.contents, updatedAdf)) {
+			result.imageResult = "updated";
+		}
+
 		const adr = JSON.stringify(updatedAdf);
 
-		if (adfEqual(JSON.parse(currentContents), updatedAdf)) {
-			return true;
-		} else {
+		if (!adfEqual(JSON.parse(currentContents), updatedAdf)) {
+			result.contentResult = "updated";
 			console.log("TESTING DIFF");
 			console.log(currentContents);
 			console.log(adr);
+
+			const updateContentDetails = {
+				id: adfFile.pageId,
+				...(adfFile.dontChangeParentPageId
+					? {}
+					: { ancestors: [{ id: parentPageId }] }),
+				version: { number: pageVersionNumber + 1 },
+				title: adfFile.pageTitle,
+				type: "page",
+				body: {
+					// eslint-disable-next-line @typescript-eslint/naming-convention
+					atlas_doc_format: {
+						value: adr,
+						representation: "atlas_doc_format",
+					},
+				},
+			};
+			await this.confluenceClient.content.updateContent(
+				updateContentDetails
+			);
 		}
 
-		const updateContentDetails = {
-			id: adfFile.pageId,
-			...(adfFile.dontChangeParentPageId
-				? {}
-				: { ancestors: [{ id: parentPageId }] }),
-			version: { number: pageVersionNumber + 1 },
-			title: adfFile.pageTitle,
-			type: "page",
-			body: {
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				atlas_doc_format: {
-					value: adr,
-					representation: "atlas_doc_format",
-				},
-			},
-		};
-		await this.confluenceClient.content.updateContent(updateContentDetails);
 		const getLabelsForContent = {
 			id: adfFile.pageId,
 		};
@@ -223,6 +243,7 @@ export class Publisher {
 
 		for (const existingLabel of currentLabels.results) {
 			if (!adfFile.tags.includes(existingLabel.label)) {
+				result.labelResult = "updated";
 				await this.confluenceClient.contentLabels.removeLabelFromContentUsingQueryParameter(
 					{
 						id: adfFile.pageId,
@@ -247,11 +268,14 @@ export class Publisher {
 		}
 
 		if (labelsToAdd.length > 0) {
+			result.labelResult = "updated";
 			await this.confluenceClient.contentLabels.addLabelsToContent({
 				id: adfFile.pageId,
 				body: labelsToAdd,
 			});
 		}
+
+		return result;
 	}
 
 	private async uploadFiles(
