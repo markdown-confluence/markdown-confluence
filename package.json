@@ -20,6 +20,7 @@
   "devDependencies": {
     "@jest/globals": "^29.5.0",
     "@types/deep-equal": "^1.0.1",
+    "@types/lodash": "^4.14.194",
     "@types/markdown-it": "^12.2.3",
     "@types/mime-types": "^2.1.1",
     "@types/node": "^16.11.6",
@@ -57,6 +58,7 @@
     "deep-equal": "^2.2.0",
     "formdata-node": "^5.0.0",
     "gray-matter": "^4.0.3",
+    "lodash": "^4.17.21",
     "markdown-it-table": "^2.0.4",
     "mermaid": "^10.1.0",
     "mime-types": "^2.1.35",
@@ -66,6 +68,7 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-intl-next": "npm:react-intl@^5.18.1",
+    "sort-any": "^4.0.5",
     "spark-md5": "^3.0.2",
     "uuid": "^9.0.0"
   },

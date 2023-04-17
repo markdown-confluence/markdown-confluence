@@ -1,6 +1,5 @@
 import { ConfluenceSettings } from "./Settings";
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
-import { ADFEntity } from "@atlaskit/adf-utils/types";
 import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors/types";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { UploadResults } from "./CompletedView";
@@ -13,7 +12,7 @@ import { createFolderStructure as createLocalAdfTree } from "./TreeLocal";
 import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
 import { uploadBuffer, UploadedImageData, uploadFile } from "./Attachments";
 import { prepareAdf } from "./AdfPostProcess";
-import deepEqual from "deep-equal";
+import { adfEqual } from "./AdfEqual";
 
 export interface LocalAdfFileTreeNode {
 	name: string;
@@ -189,13 +188,12 @@ export class Publisher {
 
 		const adr = JSON.stringify(updatedAdf);
 
-		console.log("TESTING DIFF");
-		console.log(currentContents);
-		console.log(adr);
-
-		if (deepEqual(JSON.parse(currentContents), updatedAdf)) {
-			console.log("Page is the same not updating");
+		if (adfEqual(JSON.parse(currentContents), updatedAdf)) {
 			return true;
+		} else {
+			console.log("TESTING DIFF");
+			console.log(currentContents);
+			console.log(adr);
 		}
 
 		const updateContentDetails = {
@@ -259,8 +257,8 @@ export class Publisher {
 	private async uploadFiles(
 		pageId: string,
 		pageFilePath: string,
-		adr: ADFEntity
-	): Promise<false | ADFEntity> {
+		adr: JSONDocNode
+	): Promise<JSONDocNode> {
 		const mediaNodes = filter(
 			adr,
 			(node) =>
@@ -402,6 +400,10 @@ export class Publisher {
 			},
 		});
 
-		return afterAdf;
+		if (!afterAdf) {
+			return adr;
+		}
+
+		return afterAdf as JSONDocNode;
 	}
 }

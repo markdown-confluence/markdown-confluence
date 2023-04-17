@@ -41,6 +41,38 @@ export default class MdToADF {
 					}
 				}
 			},
+			table: (node, _parent) => {
+				if (
+					node.attrs &&
+					"isNumberColumnEnabled" in node.attrs &&
+					node.attrs["isNumberColumnEnabled"] === false
+				) {
+					delete node.attrs["isNumberColumnEnabled"];
+				}
+				return node;
+			},
+			tableRow: (node, _parent) => {
+				return node;
+			},
+			tableHeader: (node, _parent) => {
+				node.attrs = { colspan: 1, rowspan: 1, colwidth: [340] };
+				return node;
+			},
+			tableCell: (node, _parent) => {
+				node.attrs = { colspan: 1, rowspan: 1, colwidth: [340] };
+				return node;
+			},
+			orderedList: (node, _parent) => {
+				node.attrs = { order: 1 };
+				return node;
+			},
+			codeBlock: (node, _parent) => {
+				if (node.attrs && Object.keys(node.attrs).length === 0) {
+					delete node.attrs;
+				}
+
+				return node;
+			},
 		});
 
 		if (!olivia) {

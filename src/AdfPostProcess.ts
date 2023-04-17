@@ -48,27 +48,6 @@ export function prepareAdf(
 					}
 				}
 			},
-			table: (node, _parent) => {
-				if (
-					node.attrs &&
-					"isNumberColumnEnabled" in node.attrs &&
-					node.attrs["isNumberColumnEnabled"] === false
-				) {
-					delete node.attrs["isNumberColumnEnabled"];
-				}
-				return node;
-			},
-			tableRow: (node, _parent) => {
-				return node;
-			},
-			tableHeader: (node, _parent) => {
-				node.attrs = { colspan: 1, rowspan: 1, colwidth: [340] };
-				return node;
-			},
-			tableCell: (node, _parent) => {
-				node.attrs = { colspan: 1, rowspan: 1, colwidth: [340] };
-				return node;
-			},
 		}) as JSONDocNode;
 	});
 }
