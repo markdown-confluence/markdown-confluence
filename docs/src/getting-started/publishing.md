@@ -1,6 +1,6 @@
 ## Getting Started: Publishing and Moving Pages
 
-This section provides a brief overview of the recommended workflow for publishing pages using the Confluence Integration plugin for Obsidian and how to move them in Confluence if necessary.
+This section provides a brief overview of the recommended workflow for publishing pages using the Confluence Integration plugin for Obsidian and how to move the published pages in Confluence if necessary.
 
 ### Publishing Pages
 
