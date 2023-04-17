@@ -294,4 +294,4 @@ test("Upload to Confluence", async () => {
 
 		expect(returnedAdf).toEqual(uploadedAdf);
 	}
-});
+}, 300000);
