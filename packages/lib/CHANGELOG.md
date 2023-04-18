@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/lib-v3.0.0...lib-v3.0.1) (2023-04-18)
+
+
+### Bug Fixes
+
+* NPM Access to Public ([74be60d](https://github.com/obsidian-confluence/obsidian-confluence/commit/74be60d2db7eb106cb55202006b9afa1cb4fea2d))
+
 ## [3.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/lib-v3.0.4...lib-v3.0.0) (2023-04-18)
 
 
