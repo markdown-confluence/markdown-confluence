@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.3.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.2.0...obsidian-confluence-root-v3.3.0) (2023-04-18)
+
+
+### Features
+
+* Update a page when you are the last modifier ([5c42d77](https://github.com/obsidian-confluence/obsidian-confluence/commit/5c42d7787cf4c53098759ac221a81369e033df3d))
+
+
+### Bug Fixes
+
+* npm fmt ([206269c](https://github.com/obsidian-confluence/obsidian-confluence/commit/206269cc887eb75659dd77673318715eb3db1457))
+* Updates requested https://github.com/obsidianmd/obsidian-releases/pull/1867#issuecomment-1512710718 ([47c4bf9](https://github.com/obsidian-confluence/obsidian-confluence/commit/47c4bf9d6ba2efb70e2ae62d59623f13f5db9183))
+
 ## [3.2.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.1.0...obsidian-confluence-root-v3.2.0) (2023-04-18)
 
 

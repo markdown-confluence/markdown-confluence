@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.3.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.2.0...@markdown-confluence/lib-v3.3.0) (2023-04-18)
+
+
+### Features
+
+* Update a page when you are the last modifier ([5c42d77](https://github.com/obsidian-confluence/obsidian-confluence/commit/5c42d7787cf4c53098759ac221a81369e033df3d))
+
+
+### Bug Fixes
+
+* npm fmt ([206269c](https://github.com/obsidian-confluence/obsidian-confluence/commit/206269cc887eb75659dd77673318715eb3db1457))
+
 ## [3.2.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.1.0...@markdown-confluence/lib-v3.2.0) (2023-04-18)
 
 
