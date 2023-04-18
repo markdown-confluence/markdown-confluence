@@ -1,5 +1,5 @@
 {
-  "package/obsidian": "2.1.1",
-  "package/lib": "2.1.1",
-  "package/mermaid-electron-renderer": "2.1.1"
+  "packages/obsidian": "2.1.1",
+  "packages/lib": "2.1.1",
+  "packages/mermaid-electron-renderer": "2.1.1"
 }
