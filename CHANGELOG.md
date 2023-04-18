@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.0.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.0.1...obsidian-confluence-root-v3.0.2) (2023-04-18)
+
+
+### Bug Fixes
+
+* NPM Access to Public ([74be60d](https://github.com/obsidian-confluence/obsidian-confluence/commit/74be60d2db7eb106cb55202006b9afa1cb4fea2d))
+* Start work towards manual release ([3439f99](https://github.com/obsidian-confluence/obsidian-confluence/commit/3439f997b0959a8471d224963fba8b650f6f529a))
+* Test my local plugin ([c7f7d30](https://github.com/obsidian-confluence/obsidian-confluence/commit/c7f7d30a1b3b6b32774c61c55452c9da95d2ab17))
+
 ## [3.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.0.0...obsidian-confluence-root-v3.0.1) (2023-04-18)
 
 
