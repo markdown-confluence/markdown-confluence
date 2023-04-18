@@ -1,5 +1,12 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
+    * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
+
 ## [3.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/3.0.1...3.0.0) (2023-04-18)
 
 
