@@ -50,12 +50,12 @@ jobs:
           FILES=$(echo dist/*)
           gh release create $TAG -t $TAG --generate-notes --latest --target ${{ steps.release-please.outputs.sha }} ./dist/*
           echo $FILES
-          NEW_TAG="${TAG#v}"
-          gh release edit $TAG -t $NEW_TAG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish to NPM
         if: ${{ steps.release-please.outputs.release_created }}
-        run: npm publish -w @markdown-confluence/lib
+        run: |
+          npm publish -w @markdown-confluence/lib
+          npm publish -w @markdown-confluence/mermaid-electron-renderer
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
