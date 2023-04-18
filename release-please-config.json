@@ -1,8 +1,5 @@
 {
-      "include-v-in-tag": false,
-      "include-component-in-tag": false,
-      "release-type": "node",
-      
+      "release-type": "node",     
       "changelog-sections": [
         {"type": "feat", "section": "Features"},
         {"type": "fix", "section": "Bug Fixes"},
@@ -18,7 +15,10 @@
         {"type": "ci", "section": "Continuous Integration", "hidden": true}
       ],
     "packages": {
-      "packages/obsidian": {},
+      "packages/obsidian": {
+        "include-v-in-tag": false,
+        "include-component-in-tag": false
+      },
       "packages/lib": {},
       "packages/mermaid-electron-renderer": {},
       ".": {
