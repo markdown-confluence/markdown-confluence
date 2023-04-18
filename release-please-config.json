@@ -19,7 +19,8 @@
       ],
       "group-pull-request-title-pattern": "chore: release ${version}",
     "packages": {
-      "packages/obsidian": {
+      ".": {
+        "release-type": "simple",
         "extra-files": [
             {
                 "type": "json",
@@ -27,10 +28,11 @@
                 "jsonpath": "$.version"
               }
         ]
-      }
+      },
+      "packages/obsidian": {},
+      "packages/lib": {},
+      "packages/mermaid-electron-renderer": {}
     },
-    "packages/lib": {},
-    "packages/mermaid-electron-renderer": {},
   "plugins": [
     {
     "type": "node-workspace",
