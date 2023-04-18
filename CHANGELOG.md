@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/3.0.1...3.0.2) (2023-04-18)
+
+
+### Bug Fixes
+
+* Bump version I hope ([39b93eb](https://github.com/obsidian-confluence/obsidian-confluence/commit/39b93eba447f2a1f706ff6e65e7e8cabea08bf75))
+
 ## [3.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/3.0.0...3.0.1) (2023-04-18)
 
 
