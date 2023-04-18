@@ -145,7 +145,8 @@ async function ensurePageExists(
 			id: contentById.id,
 			title: file.pageTitle,
 			version: contentById?.version?.number ?? 1,
-			lastUpdatedBy: contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
+			lastUpdatedBy:
+				contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: contentById?.body?.atlas_doc_format?.value,
 			spaceKey: contentById.space.key,
 		};
@@ -180,7 +181,8 @@ async function ensurePageExists(
 			id: currentPage.id,
 			title: file.pageTitle,
 			version: currentPage?.version?.number ?? 1,
-			lastUpdatedBy: currentPage?.version?.by?.accountId ?? "NO ACCOUNT ID",
+			lastUpdatedBy:
+				currentPage?.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: currentPage?.body?.atlas_doc_format?.value,
 			spaceKey,
 		};
@@ -210,7 +212,8 @@ async function ensurePageExists(
 			id: pageDetails.id,
 			title: file.pageTitle,
 			version: pageDetails?.version?.number ?? 1,
-			lastUpdatedBy: pageDetails?.version?.by?.accountId ?? "NO ACCOUNT ID",
+			lastUpdatedBy:
+				pageDetails?.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: pageDetails?.body?.atlas_doc_format?.value,
 			spaceKey,
 		};

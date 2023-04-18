@@ -311,8 +311,7 @@ export default class ConfluencePlugin extends Plugin {
 		this.addSettingTab(new ConfluenceSettingTab(this.app, this));
 	}
 
-	async onunload() {
-	}
+	async onunload() {}
 
 	async loadSettings() {
 		this.settings = Object.assign(

@@ -36,5 +36,3 @@ export interface CustomConfluenceClient {
 	contentLabels: Api.ContentLabels;
 	users: Api.Users;
 }
-
-

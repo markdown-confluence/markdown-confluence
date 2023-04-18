@@ -12,6 +12,6 @@
     "packages/*"
   ],
   "lint-staged": {
-    "src/**/*": "prettier --write --ignore-unknown"
+    "packages/**/*": "npm run fmt -ws --if-present"
   }
 }

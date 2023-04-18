@@ -69,14 +69,14 @@ export interface ConfluenceAdfFile {
 export interface ConfluenceNode {
 	file: ConfluenceAdfFile;
 	version: number;
-	lastUpdatedBy: string,
+	lastUpdatedBy: string;
 	existingAdf: string;
 	parentPageId: string;
 }
 export interface ConfluenceTreeNode {
 	file: ConfluenceAdfFile;
 	version: number;
-	lastUpdatedBy: string,
+	lastUpdatedBy: string;
 	existingAdf: string;
 	children: ConfluenceTreeNode[];
 }
@@ -109,8 +109,9 @@ export class Publisher {
 	}
 
 	async publish(publishFilter?: string) {
-		if(!this.myAccountId) {
-			const currentUser = await this.confluenceClient.users.getCurrentUser();
+		if (!this.myAccountId) {
+			const currentUser =
+				await this.confluenceClient.users.getCurrentUser();
 			this.myAccountId = currentUser.accountId;
 		}
 
@@ -186,7 +187,7 @@ export class Publisher {
 				node.version,
 				node.existingAdf,
 				node.file,
-				node.lastUpdatedBy,
+				node.lastUpdatedBy
 			);
 
 			return {
@@ -213,10 +214,12 @@ export class Publisher {
 		pageVersionNumber: number,
 		currentContents: string,
 		adfFile: ConfluenceAdfFile,
-		lastUpdatedBy: string,
+		lastUpdatedBy: string
 	): Promise<UploadAdfFileResult> {
 		if (lastUpdatedBy !== this.myAccountId) {
-			throw new Error(`Page last updated by another user. Won't publish over their changes. MyAccountId: ${this.myAccountId}, Last Updated By: ${lastUpdatedBy}`);
+			throw new Error(
+				`Page last updated by another user. Won't publish over their changes. MyAccountId: ${this.myAccountId}, Last Updated By: ${lastUpdatedBy}`
+			);
 		}
 
 		const result: UploadAdfFileResult = {
