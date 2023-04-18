@@ -104,7 +104,7 @@ export default class ConfluencePlugin extends Plugin {
 		);
 
 		this.addCommand({
-			id: "app:adf-preview",
+			id: "adf-preview",
 			name: "Preview the current note rendered to ADF",
 			callback: () => this.adfPreview(),
 			hotkeys: [],
@@ -149,7 +149,7 @@ export default class ConfluencePlugin extends Plugin {
 		);
 
 		this.addCommand({
-			id: "obsidian-confluence-publish-current",
+			id: "publish-current",
 			name: "Publish Current File to Confluence",
 			checkCallback: (checking: boolean) => {
 				if (!this.isSyncing) {
@@ -191,7 +191,7 @@ export default class ConfluencePlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "obsidian-confluence-publish-all",
+			id: "publish-all",
 			name: "Publish All to Confluence",
 			checkCallback: (checking: boolean) => {
 				if (!this.isSyncing) {
@@ -233,7 +233,7 @@ export default class ConfluencePlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "obsidian-confluence-enable-publishing",
+			id: "enable-publishing",
 			name: "Enable publishing to Confluence",
 			editorCheckCallback: (
 				checking: boolean,
@@ -271,7 +271,7 @@ export default class ConfluencePlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "obsidian-confluence-disable-publishing",
+			id: "disable-publishing",
 			name: "Disable publishing to Confluence",
 			editorCheckCallback: (
 				checking: boolean,
@@ -312,7 +312,6 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	async onunload() {
-		this.app.workspace.detachLeavesOfType(ADF_VIEW_TYPE);
 	}
 
 	async loadSettings() {
