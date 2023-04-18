@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/3.0.0...3.0.1) (2023-04-18)
+
+
+### Bug Fixes
+
+* Dir path for copy ([0f499da](https://github.com/obsidian-confluence/obsidian-confluence/commit/0f499dae4252a4053bde8de749ace04da69454dd))
+* Don't publish till release created ([861ae0a](https://github.com/obsidian-confluence/obsidian-confluence/commit/861ae0a0b12e649c2b0385ea417cdda81e1eae82))
+* Group name ([cec80c5](https://github.com/obsidian-confluence/obsidian-confluence/commit/cec80c50da2432477e033f3635f8fb27de246245))
+* Try reordering plugins ([42706d9](https://github.com/obsidian-confluence/obsidian-confluence/commit/42706d9f167fbdeb125477ac167326d8e939166a))
+* Work around bug in release-please ([b740114](https://github.com/obsidian-confluence/obsidian-confluence/commit/b74011475d85c5ca4551aba998b1ea3b8627a025))
+
 ## [3.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.1.1...3.0.0) (2023-04-18)
 
 
