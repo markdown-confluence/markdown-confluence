@@ -1,5 +1,11 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
+
 ## [3.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.1.1...3.0.0) (2023-04-18)
 
 

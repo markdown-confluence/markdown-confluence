@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.0.3](https://github.com/obsidian-confluence/obsidian-confluence/compare/3.0.2...3.0.3) (2023-04-18)
+
+
+### Bug Fixes
+
+* Bump lib ([18c4d27](https://github.com/obsidian-confluence/obsidian-confluence/commit/18c4d27b07d21ed793bbb8492d83109afde1356d))
+* Bump obsidian version ([c42e0d2](https://github.com/obsidian-confluence/obsidian-confluence/commit/c42e0d2335c52a4beddcb0273e17ad287b9166ea))
+* Flip plugins order again ([3003b70](https://github.com/obsidian-confluence/obsidian-confluence/commit/3003b704f9378cf180aaaaabe95feba3ea740b22))
+* Move "." to the bottom ([e3a68ce](https://github.com/obsidian-confluence/obsidian-confluence/commit/e3a68cee680ac1f65f49577f537937a2ae502cfd))
+
 ## [3.0.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/3.0.1...3.0.2) (2023-04-18)
 
 
