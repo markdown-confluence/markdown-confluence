@@ -36,13 +36,13 @@
     },
   "plugins": [
     {
+      "type": "node-workspace",
+      "merge": false
+    },
+    {
       "type": "linked-versions",
       "groupName": "all packages",
       "components": [""]
-    },
-    {
-      "type": "node-workspace",
-      "merge": false
     }
   ]
 }
