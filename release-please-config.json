@@ -17,7 +17,7 @@
         {"type": "build", "section": "Build System", "hidden": true},
         {"type": "ci", "section": "Continuous Integration", "hidden": true}
       ],
-      "group-pull-request-title-pattern": "chore: release ${version}",
+      "group-pull-request-title-pattern": "chore: release ${component} ${version}",
     "packages": {
       ".": {
         "component": "root",
