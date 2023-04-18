@@ -74,6 +74,10 @@
     },
     "resolutions": {
         "prosemirror-model": "1.14.3"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
     }
 }
   
