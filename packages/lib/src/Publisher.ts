@@ -1,18 +1,28 @@
 import { ConfluenceSettings } from "./Settings";
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
-import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors/types";
+import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import {
-	getMermaidFileName,
-	MermaidRenderer,
-	ChartData,
-} from "./mermaid_renderers";
 import { createFolderStructure as createLocalAdfTree } from "./TreeLocal";
 import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
 import { uploadBuffer, UploadedImageData, uploadFile } from "./Attachments";
 import { prepareAdf } from "./AdfPostProcess";
 import { adfEqual } from "./AdfEqual";
-import { UploadResults } from "./CompletedModal";
+import {
+	getMermaidFileName,
+	MermaidRenderer,
+	ChartData,
+} from "./mermaid_renderers";
+
+export interface FailedFile {
+	fileName: string;
+	reason: string;
+}
+
+export interface UploadResults {
+	errorMessage: string | null;
+	failedFiles: FailedFile[];
+	filesUploadResult: UploadAdfFileResult[];
+}
 
 export interface LocalAdfFileTreeNode {
 	name: string;

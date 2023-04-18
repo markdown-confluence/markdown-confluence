@@ -1,6 +1,7 @@
 {
     "packages": {
-      ".": {
+      "packages/obsidian": {
+        "component": "obsidian",
         "release-type": "node",
         "include-v-in-tag": false,
         "include-component-in-tag": false,
@@ -18,13 +19,65 @@
           {"type": "deps", "section": "Dependencies"},
           {"type": "revert", "section": "Reverts"},
           {"type": "docs", "section": "Documentation"},
-		  {"type": "test", "section": "Tests"},
-		  {"type": "refactor", "section": "Code Refactoring"},
+          {"type": "test", "section": "Tests"},
+          {"type": "refactor", "section": "Code Refactoring"},
           {"type": "style", "section": "Styles", "hidden": true},
           {"type": "chore", "section": "Miscellaneous Chores", "hidden": true},
           {"type": "build", "section": "Build System", "hidden": true},
           {"type": "ci", "section": "Continuous Integration", "hidden": true}
         ]
       }
-    }
+    },
+    "packages/lib": {
+      "component": "lib",
+      "release-type": "node",
+      "include-v-in-tag": false,
+      "include-component-in-tag": false,
+      "changelog-sections": [
+        {"type": "feat", "section": "Features"},
+        {"type": "fix", "section": "Bug Fixes"},
+        {"type": "perf", "section": "Performance Improvements"},
+        {"type": "deps", "section": "Dependencies"},
+        {"type": "revert", "section": "Reverts"},
+        {"type": "docs", "section": "Documentation"},
+        {"type": "test", "section": "Tests"},
+        {"type": "refactor", "section": "Code Refactoring"},
+        {"type": "style", "section": "Styles", "hidden": true},
+        {"type": "chore", "section": "Miscellaneous Chores", "hidden": true},
+        {"type": "build", "section": "Build System", "hidden": true},
+        {"type": "ci", "section": "Continuous Integration", "hidden": true}
+      ]
+    },
+    "packages/mermaid-electron-renderer": {
+      "component": "mermaid-electron-renderer",
+      "release-type": "node",
+      "include-v-in-tag": false,
+      "include-component-in-tag": false,
+      "changelog-sections": [
+        {"type": "feat", "section": "Features"},
+        {"type": "fix", "section": "Bug Fixes"},
+        {"type": "perf", "section": "Performance Improvements"},
+        {"type": "deps", "section": "Dependencies"},
+        {"type": "revert", "section": "Reverts"},
+        {"type": "docs", "section": "Documentation"},
+        {"type": "test", "section": "Tests"},
+        {"type": "refactor", "section": "Code Refactoring"},
+        {"type": "style", "section": "Styles", "hidden": true},
+        {"type": "chore", "section": "Miscellaneous Chores", "hidden": true},
+        {"type": "build", "section": "Build System", "hidden": true},
+        {"type": "ci", "section": "Continuous Integration", "hidden": true}
+      ]
+    },
+  "plugins": [
+    {
+    "type": "node-workspace",
+    "merge": false
+  },
+  {
+    "type": "linked-versions",
+    "group-name": "all packages",
+    "components": [
+      "obsidian", "lib", "mermaid-electron-renderer"
+    ]
+  }]
 }

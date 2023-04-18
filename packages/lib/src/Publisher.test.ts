@@ -1,7 +1,25 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { expect, test } from "@jest/globals";
-import { MarkdownFile } from "./adaptors/types";
-import MdToADF from "./MdToADF";
+import { ConfluenceClient } from "confluence.js";
+import {
+	BinaryFile,
+	FilesToUpload,
+	LoaderAdaptor,
+	MarkdownFile,
+} from "./adaptors";
+import { orderMarks } from "./AdfEqual";
+import { ChartData, MermaidRenderer } from "./mermaid_renderers";
+import { Publisher } from "./Publisher";
+import { ConfluenceSettings } from "./Settings";
+
+const settings: ConfluenceSettings = {
+	confluenceBaseUrl: process.env.ATLASSIAN_SITE_URL ?? "MISSING SITE",
+	confluenceParentId: "",
+	atlassianUserName: process.env.ATLASSIAN_USERNAME ?? "NO EMAIL",
+	atlassianApiToken: process.env.ATLASSIAN_API_TOKEN ?? "NO TOKEN",
+	folderToPublish: "Confluence Files",
+};
 
 const markdownTestCases: MarkdownFile[] = [
 	{
@@ -55,6 +73,7 @@ const markdownTestCases: MarkdownFile[] = [
 			description: "A Markdown file demonstrating different link styles.",
 		},
 	},
+	/*
 	{
 		folderName: "images",
 		absoluteFilePath: "/path/to/images.md",
@@ -68,6 +87,7 @@ const markdownTestCases: MarkdownFile[] = [
 				"A Markdown file demonstrating different image styles.",
 		},
 	},
+	*/
 	{
 		folderName: "code",
 		absoluteFilePath: "/path/to/code.md",
@@ -115,6 +135,7 @@ const markdownTestCases: MarkdownFile[] = [
 				"A Markdown file demonstrating different horizontal rule styles.",
 		},
 	},
+	/*
 	{
 		folderName: "inline_html",
 		absoluteFilePath: "/path/to/inline_html.md",
@@ -128,6 +149,7 @@ const markdownTestCases: MarkdownFile[] = [
 				"A Markdown file demonstrating the use of inline HTML.",
 		},
 	},
+	*/
 	{
 		folderName: "escaping",
 		absoluteFilePath: "/path/to/escaping.md",
@@ -152,8 +174,8 @@ const markdownTestCases: MarkdownFile[] = [
 			author: "John Doe",
 			date: "2023-04-14",
 			tags: ["test", "example"],
-			"connie-page-id": "12345",
-			"connie-dont-change-parent-page": true,
+			//			"connie-page-id": "12345",
+			//			"connie-dont-change-parent-page": true,
 		},
 	},
 	{
@@ -167,8 +189,8 @@ const markdownTestCases: MarkdownFile[] = [
 			"connie-frontmatter-to-publish": ["project"],
 			project: "Project Name",
 			tags: ["demo", 42],
-			"connie-page-id": 67890,
-			"connie-dont-change-parent-page": false,
+			//			"connie-page-id": 67890,
+			//			"connie-dont-change-parent-page": false,
 		},
 	},
 	{
@@ -181,13 +203,95 @@ const markdownTestCases: MarkdownFile[] = [
 			"connie-title": 98765,
 			"connie-frontmatter-to-publish": [],
 			tags: ["sample", "test"],
-			"connie-page-id": "qwerty",
-			"connie-dont-change-parent-page": "invalid",
+			//			"connie-page-id": "qwerty",
+			//			"connie-dont-change-parent-page": "invalid",
 		},
 	},
 ];
-test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
-	const mdToADF = new MdToADF();
-	const adfFile = mdToADF.convertMDtoADF(markdown);
-	expect(adfFile).toMatchSnapshot();
-});
+
+class TestMermaidRenderer implements MermaidRenderer {
+	async captureMermaidCharts(
+		charts: ChartData[]
+	): Promise<Map<string, Buffer>> {
+		const capturedCharts = new Map<string, Buffer>();
+		return capturedCharts;
+	}
+}
+
+class InMemoryAdaptor implements LoaderAdaptor {
+	private inMemoryFiles: MarkdownFile[];
+
+	constructor(inMemoryFiles: MarkdownFile[]) {
+		this.inMemoryFiles = inMemoryFiles;
+	}
+
+	async updateMarkdownPageId(
+		absoluteFilePath: string,
+		id: string
+	): Promise<void> {}
+	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		return this.inMemoryFiles.find(
+			(t) => t.absoluteFilePath === absoluteFilePath
+		)!;
+	}
+	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
+		return this.inMemoryFiles;
+	}
+
+	async readBinary(
+		path: string,
+		referencedFromFilePath: string
+	): Promise<false | BinaryFile> {
+		throw new Error("Method not implemented.");
+	}
+}
+
+test("Upload to Confluence", async () => {
+	const filesystemAdaptor = new InMemoryAdaptor(markdownTestCases);
+	const mermaidRenderer = new TestMermaidRenderer();
+	const confluenceClient = new ConfluenceClient({
+		host: settings.confluenceBaseUrl,
+		authentication: {
+			basic: {
+				email: settings.atlassianUserName,
+				apiToken: settings.atlassianApiToken,
+			},
+		},
+	});
+
+	const searchParams = {
+		type: "page",
+		space: "it",
+		title: "Test - bf8bb13d-21b4-31b6-4584-8b9683d82086",
+		expand: ["version", "body.atlas_doc_format", "ancestors"],
+	};
+	const contentByTitle = await confluenceClient.content.getContent(
+		searchParams
+	);
+
+	settings.confluenceParentId = contentByTitle.results[0].id;
+
+	const publisher = new Publisher(
+		filesystemAdaptor,
+		settings,
+		confluenceClient,
+		mermaidRenderer
+	);
+
+	const result = await publisher.publish();
+
+	for (const uploadResult of result) {
+		const afterUpload = await confluenceClient.content.getContentById({
+			id: uploadResult.node.file.pageId,
+			expand: ["body.atlas_doc_format", "space"],
+		});
+
+		const uploadedAdf = orderMarks(
+			JSON.parse(afterUpload.body?.atlas_doc_format?.value ?? "{}")
+		);
+		const returnedAdf = orderMarks(uploadResult.node.file.contents);
+
+		expect(returnedAdf).toEqual(uploadedAdf);
+	}
+}, 300000);

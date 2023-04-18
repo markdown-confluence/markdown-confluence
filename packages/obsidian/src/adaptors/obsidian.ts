@@ -1,23 +1,23 @@
 import { Vault, MetadataCache, App, TFile } from "obsidian";
-import { ConfluenceSettings } from "src/Settings";
 import {
+	ConfluenceUploadSettings,
 	BinaryFile,
 	FilesToUpload,
 	LoaderAdaptor,
 	MarkdownFile,
-} from "./types";
+} from "@markdown-confluence/lib";
 import { lookup } from "mime-types";
 
 export default class ObsidianAdaptor implements LoaderAdaptor {
 	vault: Vault;
 	metadataCache: MetadataCache;
-	settings: ConfluenceSettings;
+	settings: ConfluenceUploadSettings.ConfluenceSettings;
 	app: App;
 
 	constructor(
 		vault: Vault,
 		metadataCache: MetadataCache,
-		settings: ConfluenceSettings,
+		settings: ConfluenceUploadSettings.ConfluenceSettings,
 		app: App
 	) {
 		this.vault = vault;

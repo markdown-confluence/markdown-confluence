@@ -33,17 +33,17 @@ jobs:
     - name: Run ESLint
       id: eslint
       continue-on-error: true
-      run: npm run lint
+      run: npm run lint -ws --if-present
 
     - name: Run Prettier check
       id: prettier
       continue-on-error: true
-      run: npm run prettier-check
+      run: npm run prettier-check -ws --if-present
 
     - name: Run Tests
       id: tests
       continue-on-error: true
-      run: npm run test
+      run: npm run test -ws --if-present
       env:
         ATLASSIAN_SITE_URL: ${{ secrets.ATLASSIAN_SITE_URL }}
         ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
@@ -52,7 +52,7 @@ jobs:
     - name: Run npm build
       id: build
       continue-on-error: true
-      run: npm run build
+      run: npm run build -ws --if-present
 
     - name: Report Errors
       if: ${{ always() }}

@@ -42,7 +42,7 @@ export function prepareAdf(
 								return node;
 							}
 						} else {
-							node.marks.remove(node.marks[0]);
+							delete node.marks[0];
 						}
 						return node;
 					}

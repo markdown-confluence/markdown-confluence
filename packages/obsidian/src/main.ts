@@ -6,17 +6,16 @@ import {
 	WorkspaceLeaf,
 	Workspace,
 } from "obsidian";
+import { ConfluenceUploadSettings, Publisher } from "@markdown-confluence/lib";
+import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
-import { DEFAULT_SETTINGS, ConfluenceSettings } from "./Settings";
-import { Publisher } from "./Publisher";
 import ObsidianAdaptor from "./adaptors/obsidian";
 import { CompletedModal } from "./CompletedModal";
 import { CustomConfluenceClient } from "./MyBaseClient";
-import { ElectronMermaidRenderer } from "./mermaid_renderers/electron";
 import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
 
 export default class ConfluencePlugin extends Plugin {
-	settings: ConfluenceSettings;
+	settings: ConfluenceUploadSettings.ConfluenceSettings;
 	private isSyncing = false;
 	adfView: AdfView;
 	workspace: Workspace;
@@ -319,7 +318,7 @@ export default class ConfluencePlugin extends Plugin {
 	async loadSettings() {
 		this.settings = Object.assign(
 			{},
-			DEFAULT_SETTINGS,
+			ConfluenceUploadSettings.DEFAULT_SETTINGS,
 			await this.loadData()
 		);
 	}

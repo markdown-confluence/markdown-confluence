@@ -1,5 +1,5 @@
 import SparkMD5 from "spark-md5";
-import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors/types";
+import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors";
 
 export interface UploadedImageData {
 	filename: string;

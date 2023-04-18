@@ -5,21 +5,23 @@ import {
 	Workspace,
 	WorkspaceLeaf,
 } from "obsidian";
-import { ConfluenceSettings } from "./Settings";
+import {
+	ConfluenceUploadSettings,
+	MdToADF,
+	LoaderAdaptor,
+} from "@markdown-confluence/lib";
 import React from "react";
 import ReactDOM from "react-dom";
 import { ReactRenderer } from "@atlaskit/renderer";
-import MdToADF from "./MdToADF";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { IntlProvider } from "react-intl-next";
-import { LoaderAdaptor } from "./adaptors/types";
 
 export const ADF_VIEW_TYPE = "AtlassianDocumentFormatView";
 
 export default class AdfView extends ItemView {
 	displayText: string;
-	settings: ConfluenceSettings;
+	settings: ConfluenceUploadSettings.ConfluenceSettings;
 	filePath: string | undefined;
 	fileName: string;
 	vault: Vault;
@@ -39,7 +41,7 @@ export default class AdfView extends ItemView {
 	}
 
 	constructor(
-		settings: ConfluenceSettings,
+		settings: ConfluenceUploadSettings.ConfluenceSettings,
 		leaf: WorkspaceLeaf,
 		initialFileInfo: { path: string | undefined; basename: string },
 		adaptor: LoaderAdaptor
