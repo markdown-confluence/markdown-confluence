@@ -31,8 +31,9 @@ jobs:
       - name: Upload release assets
         if: ${{ steps.release-please.outputs.release_created }}
         run: |
-          cp README.md dist/
-          cp manifest.json dist/
+          mkdir -p packages/obsidian/dist/
+          cp README.md packages/obsidian/dist/
+          cp manifest.json packages/obsidian/dist/
           
           npm ci
           npm run lint -ws --if-present
