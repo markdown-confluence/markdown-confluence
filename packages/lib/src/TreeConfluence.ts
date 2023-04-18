@@ -6,7 +6,7 @@ import {
 	LocalAdfFileTreeNode,
 } from "./Publisher";
 import { doc, p } from "@atlaskit/adf-utils/builders";
-import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors/types";
+import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors";
 
 const blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
 

@@ -2,7 +2,6 @@ import esbuild from "esbuild";
 import process from "process";
 import builtins from 'builtin-modules'
 import { writeFileSync } from 'fs';
-import { mermaidRendererPlugin } from './.build/mermaidRendererPlugin.js'
 
 
 const banner =
@@ -41,9 +40,8 @@ const buildConfig = {
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
-	outdir: prod ? 'dist' : 'dev-vault/.obsidian/plugins/obsidian-confluence',
+	outdir: prod ? 'dist' : '../../dev-vault/.obsidian/plugins/obsidian-confluence',
 	mainFields: ['module', 'main'],
-	plugins: [mermaidRendererPlugin],
 	minify: true,
 	metafile: true,
 };

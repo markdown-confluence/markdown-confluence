@@ -1,5 +1,5 @@
 import { BrowserWindow } from "@electron/remote";
-import { ChartData, MermaidRenderer } from ".";
+import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
 import MermaidRendererClient from "mermaid_renderer.esbuild";
 
 const mermaidRenderHtml = URL.createObjectURL(

@@ -1,6 +1,6 @@
 import path from "path";
-import { MarkdownFile } from "./adaptors/types";
-import MdToADF from "./MdToADF";
+import { MarkdownFile } from "./adaptors";
+import { MdToADF } from "./MdToADF";
 import FolderFile from "./FolderFile.json";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { LocalAdfFileTreeNode } from "./Publisher";

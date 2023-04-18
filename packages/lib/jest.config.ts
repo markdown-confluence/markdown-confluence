@@ -199,6 +199,6 @@ export default {
   // watchman: true,
 
   
-  transformIgnorePatterns: ["node_modules/(?!(.*))"]
+  transformIgnorePatterns: [".*/node_modules/.*"]
 
 };

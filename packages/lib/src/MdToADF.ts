@@ -4,12 +4,12 @@ import {
 } from "@atlaskit/editor-json-transformer";
 import { MarkdownTransformer } from "./MarkdownTransformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
-import { MarkdownFile } from "./adaptors/types";
+import { MarkdownFile } from "./adaptors";
 import { LocalAdfFile } from "./Publisher";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 
-export default class MdToADF {
+export class MdToADF {
 	private transformer: MarkdownTransformer;
 	private serializer: JSONTransformer;
 	constructor() {
@@ -108,7 +108,7 @@ export default class MdToADF {
 			markdown = frontmatterHeader + markdown;
 		}
 
-		const tags = [];
+		const tags: string[] = [];
 		if (
 			file.frontmatter["tags"] &&
 			Array.isArray(file.frontmatter["tags"])
