@@ -35,6 +35,11 @@
     {
       "type": "node-workspace",
       "merge": true
+    },
+    {
+      "type": "./.build/linked-versions/index.js",
+      "groupName": "obsidian packages",
+      "components": ["ignored"]
     }
   ]
 }
