@@ -15,10 +15,7 @@
         {"type": "ci", "section": "Continuous Integration", "hidden": true}
       ],
     "packages": {
-      "packages/obsidian": {
-        "include-v-in-tag": false,
-        "include-component-in-tag": false
-      },
+      "packages/obsidian": {},
       "packages/lib": {},
       "packages/mermaid-electron-renderer": {},
       ".": {
@@ -34,12 +31,12 @@
   "plugins": [
     {
       "type": "node-workspace",
-      "merge": true
+      "merge": false
     },
     {
-      "type": "./.build/linked-versions/index.js",
+      "type": "linked-versions",
       "groupName": "obsidian packages",
-      "components": ["ignored"]
+      "components": ["obsidian-confluence", "obsidian-confluence-root", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer"]
     }
   ]
 }
