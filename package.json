@@ -1,17 +1,17 @@
 {
-    "name": "obsidian-confluence-root",
-    "private": true,
-    "version": "3.0.4",
-    "type": "module",
-    "scripts": {
-      "prepare": "husky install",
-      "devall": "npm run dev --workspace=@markdown-confluence/lib & npm run dev --workspace=@markdown-confluence/mermaid-electron-renderer & npm run dev --workspace=obsidian-confluence"
-    },
-    "devDependencies": {},
-    "workspaces": [
-      "packages/*"
-    ],
-    "lint-staged": {
-      "src/**/*": "prettier --write --ignore-unknown"
-    }
+  "name": "obsidian-confluence-root",
+  "private": true,
+  "version": "3.0.0",
+  "type": "module",
+  "scripts": {
+    "prepare": "husky install",
+    "devall": "npm run dev --workspace=@markdown-confluence/lib & npm run dev --workspace=@markdown-confluence/mermaid-electron-renderer & npm run dev --workspace=obsidian-confluence"
+  },
+  "devDependencies": {},
+  "workspaces": [
+    "packages/*"
+  ],
+  "lint-staged": {
+    "src/**/*": "prettier --write --ignore-unknown"
   }
+}
