@@ -15,10 +15,17 @@
         {"type": "ci", "section": "Continuous Integration", "hidden": true}
       ],
     "packages": {
-      "packages/obsidian": {},
-      "packages/lib": {},
-      "packages/mermaid-electron-renderer": {},
+      "packages/obsidian": {
+        "component": "obsidian-confluence"
+      },
+      "packages/lib": {
+        "component": "@markdown-confluence/lib"
+      },
+      "packages/mermaid-electron-renderer": {
+        "component": "@markdown-confluence/mermaid-electron-renderer"
+      },
       ".": {
+        "component": "obsidian-confluence-root",
         "extra-files": [
             {
                 "type": "json",
