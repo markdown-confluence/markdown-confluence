@@ -15,12 +15,13 @@ function flattenTree(
 	parentPageId?: string
 ): ConfluenceNode[] {
 	const nodes: ConfluenceNode[] = [];
-	const { file, version, existingAdf, children } = node;
+	const { file, version, lastUpdatedBy, existingAdf, children } = node;
 
 	if (parentPageId) {
 		nodes.push({
 			file,
 			version,
+			lastUpdatedBy,
 			existingAdf,
 			parentPageId: parentPageId,
 		});
@@ -73,6 +74,7 @@ async function createFileStructureInConfluence(
 
 	let version: number;
 	let existingAdf: string | undefined;
+	let lastUpdatedBy: string | undefined;
 	const file: ConfluenceAdfFile = {
 		...node.file,
 		pageId: parentPageId,
@@ -92,6 +94,7 @@ async function createFileStructureInConfluence(
 		file.spaceKey = pageDetails.spaceKey;
 		version = pageDetails.version;
 		existingAdf = pageDetails.existingAdf;
+		lastUpdatedBy = pageDetails.lastUpdatedBy;
 	} else {
 		version = 0;
 		existingAdf = "";
@@ -114,6 +117,7 @@ async function createFileStructureInConfluence(
 	return {
 		file: file,
 		version,
+		lastUpdatedBy: lastUpdatedBy ?? "",
 		existingAdf: existingAdf ?? "",
 		children: childDetails,
 	};
@@ -141,6 +145,7 @@ async function ensurePageExists(
 			id: contentById.id,
 			title: file.pageTitle,
 			version: contentById?.version?.number ?? 1,
+			lastUpdatedBy: contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: contentById?.body?.atlas_doc_format?.value,
 			spaceKey: contentById.space.key,
 		};
@@ -175,6 +180,7 @@ async function ensurePageExists(
 			id: currentPage.id,
 			title: file.pageTitle,
 			version: currentPage?.version?.number ?? 1,
+			lastUpdatedBy: currentPage?.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: currentPage?.body?.atlas_doc_format?.value,
 			spaceKey,
 		};
@@ -204,6 +210,7 @@ async function ensurePageExists(
 			id: pageDetails.id,
 			title: file.pageTitle,
 			version: pageDetails?.version?.number ?? 1,
+			lastUpdatedBy: pageDetails?.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: pageDetails?.body?.atlas_doc_format?.value,
 			spaceKey,
 		};

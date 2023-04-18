@@ -34,4 +34,7 @@ export interface CustomConfluenceClient {
 	space: Api.Space;
 	contentAttachments: Api.ContentAttachments;
 	contentLabels: Api.ContentLabels;
+	users: Api.Users;
 }
+
+

@@ -197,4 +197,5 @@ export class CustomConfluenceClient extends MyBaseClient {
 	space = new Api.Space(this);
 	contentAttachments = new Api.ContentAttachments(this);
 	contentLabels = new Api.ContentLabels(this);
+	users = new Api.Users(this);
 }
