@@ -5,7 +5,7 @@
      "rootDir": "src",
          "outDir": "dist",
          "declarationDir": "dist",
-         "emitDeclarationOnly": true,
+         "noEmit": true,
          "skipLibCheck": true,
   },
   "include":[ "**/*.ts", "**/*.tsx"  ],
