@@ -36,14 +36,15 @@
     },
   "plugins": [
     {
-    "type": "node-workspace",
-    "merge": false
-  },
-  {
-    "type": "linked-versions",
-    "group-name": "all packages",
-    "components": [
-      "root", "obsidian-confluence", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer"
-    ]
-  }]
+      "type": "linked-versions",
+      "group-name": "all packages",
+      "components": [
+        "root", "obsidian-confluence", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer"
+      ]
+    },
+    {
+      "type": "node-workspace",
+      "merge": false
+    }
+  ]
 }
