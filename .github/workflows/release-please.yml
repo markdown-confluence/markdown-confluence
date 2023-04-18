@@ -23,9 +23,10 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
       
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x" # You might need to adjust this value to your own version      
+          node-version: "16.x"
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Upload release assets
         if: ${{ steps.release-please.outputs.release_created }}
@@ -49,3 +50,7 @@ jobs:
           gh release edit $TAG -t $NEW_TAG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to NPM
+        run: npm publish -w @markdown-confluence/lib
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
