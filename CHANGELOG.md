@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.2.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.1.0...obsidian-confluence-root-v3.2.0) (2023-04-18)
+
+
+### Features
+
+* Publish `mermaid-electron-renderer` ([351d78d](https://github.com/obsidian-confluence/obsidian-confluence/commit/351d78d4cc9a9e06c2216a0dbfa60988bc76abf2))
+
+
+### Bug Fixes
+
+* Speed up builds ([fa77fc3](https://github.com/obsidian-confluence/obsidian-confluence/commit/fa77fc336032a761a760d30998939f052e815b5a))
+
 ## [3.1.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.0.2...obsidian-confluence-root-v3.1.0) (2023-04-18)
 
 

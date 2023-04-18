@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.1.0...@markdown-confluence/lib-v3.2.0) (2023-04-18)
+
+
+### Miscellaneous Chores
+
+* **@markdown-confluence/lib:** Synchronize obsidian packages versions
+
 ## [3.1.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.0.1...@markdown-confluence/lib-v3.1.0) (2023-04-18)
 
 
