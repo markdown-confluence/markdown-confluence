@@ -40,12 +40,15 @@ jobs:
           npm run prettier-check -ws --if-present
           npm run build -ws --if-present
 
-          cd packages/obsidian
-          zip -r ${{ github.event.repository.name }}-${{ env.tag }}.zip dist
+          ORIGINAL_TAG=${{ steps.release-please.outputs.tag_name }}
+          IFS='-v' read -ra PARTS <<< "$ORIGINAL_TAG"
+          TAG="${PARTS[-1]}"
 
-          TAG=${{ steps.release-please.outputs.tag_name }}
+          cd packages/obsidian
+          zip -r ${{ github.event.repository.name }}-$TAG.zip dist
+
           FILES=$(echo dist/*)
-          gh release upload $TAG $FILES
+          gh release create $TAG -t $TAG --generate-notes --latest --target ${{ steps.release-please.outputs.sha }} ./dist/*
           echo $FILES
           NEW_TAG="${TAG#v}"
           gh release edit $TAG -t $NEW_TAG
