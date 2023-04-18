@@ -44,7 +44,7 @@
         "typescript": "4.7.4"
     },
     "dependencies": {
-        "@atlaskit/adf-utils": "^17.1.4",
+        "@atlaskit/adf-utils": "^18.1.0",
         "@atlaskit/editor-common": "^72.4.0",
         "@atlaskit/editor-confluence-transformer": "^8.1.33",
         "@atlaskit/editor-json-transformer": "^8.8.3",
