@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.2.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.1.1...2.2.0) (2023-04-18)
+
+
+### Features
+
+* **AdfEqual:** Updates to make the ADF closer to what Confluence returns ([348f00e](https://github.com/obsidian-confluence/obsidian-confluence/commit/348f00e3d98bf6843f886310eeadf75ca86be1e3))
+* **build:** Add `mermaidRendererPlugin.js` ([a64a176](https://github.com/obsidian-confluence/obsidian-confluence/commit/a64a1763c8c440e8d826b8f4a8bc6aa304eafc38))
+* Include stats/expanded file names on publish ([d618b66](https://github.com/obsidian-confluence/obsidian-confluence/commit/d618b665521364ebfbea05a2713ff70f74630b91))
+* Lots of changes to enable better testing ([0ce560c](https://github.com/obsidian-confluence/obsidian-confluence/commit/0ce560c3fb2c60edd4509d31ed99f52f500e2f13))
+
+
+### Bug Fixes
+
+* Force rename mdToADF to MdToADF ([9d0d483](https://github.com/obsidian-confluence/obsidian-confluence/commit/9d0d4839b8540b423d794ab3d93d4ba071ede6dd))
+* Rename `MainSettingTab` to `ConfluenceSettingTab` ([29ef8f2](https://github.com/obsidian-confluence/obsidian-confluence/commit/29ef8f256305a13d520fc65c7a49064ed90aa296))
+* Rename `MyPlugin` to `ConfluencePlugin` ([2298e27](https://github.com/obsidian-confluence/obsidian-confluence/commit/2298e2787b29c5ca9ce030cbd3bee7b8698326a6))
+* Rename `MyPluginSettings` to `ConfluenceSettings` ([25bdb97](https://github.com/obsidian-confluence/obsidian-confluence/commit/25bdb97c85e79284c42bf89bd5b3a0cff1ebc10a))
+* **test:** Extend test timeout ([ee38491](https://github.com/obsidian-confluence/obsidian-confluence/commit/ee38491e4bb3073890cf6d7650356c31bab03063))
+
+
+### Documentation
+
+* Add BRAT installation instructions ([a46cd23](https://github.com/obsidian-confluence/obsidian-confluence/commit/a46cd23023426153405aef6e9d7c413a9c4bda01))
+* Add brat to readme.md ([9d8efb0](https://github.com/obsidian-confluence/obsidian-confluence/commit/9d8efb076b3dc43c787c684456559f8347c71c66))
+* Add Installation BRAT to side nav ([5d87192](https://github.com/obsidian-confluence/obsidian-confluence/commit/5d871924fa93eceffc8be6817c61b42f70f9404f))
+* Add reference to https://github.com/LostPaul/obsidian-folder-notes/tree/main ([d783f1b](https://github.com/obsidian-confluence/obsidian-confluence/commit/d783f1b0b60f0864f07bac7a8eaeeafbac7e6101))
+* Add Wikilinks example ([92a979f](https://github.com/obsidian-confluence/obsidian-confluence/commit/92a979ffd496e1993d36be26422bf341c0a58b72))
+* Fix book.toml ([985561a](https://github.com/obsidian-confluence/obsidian-confluence/commit/985561a25f9a801f6570c368941792fb24abfc64))
+* Minor documentation changes from jvsteiner ([f2d3b47](https://github.com/obsidian-confluence/obsidian-confluence/commit/f2d3b474474d80bd05ff589a3654e4400e05265d))
+
 ## [2.1.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/2.1.0...2.1.1) (2023-04-14)
 
 
