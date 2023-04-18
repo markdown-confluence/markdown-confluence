@@ -1,6 +1,7 @@
 {
-    "name": "obsidian-confluence",
+    "name": "obsidian-confluence-root",
     "private": true,
+    "version": "3.0.4",
     "type": "module",
     "scripts": {
       "prepare": "husky install",

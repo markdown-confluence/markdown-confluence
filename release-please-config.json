@@ -22,8 +22,6 @@
       "packages/lib": {},
       "packages/mermaid-electron-renderer": {},
       ".": {
-        "component": "root",
-        "release-type": "simple",
         "extra-files": [
             {
                 "type": "json",
