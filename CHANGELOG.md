@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.1.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.0.2...obsidian-confluence-root-v3.1.0) (2023-04-18)
+
+
+### Features
+
+* Create manual release to align with Obsidian requirements ([a9b90e5](https://github.com/obsidian-confluence/obsidian-confluence/commit/a9b90e5cb1ad61fe56d33c5e8a6c0288c7f111a6))
+
+
+### Bug Fixes
+
+* Add manual component names ([9514e2f](https://github.com/obsidian-confluence/obsidian-confluence/commit/9514e2f9344dbf9cea866902226a85aab339a4d2))
+* Bump version ([a798554](https://github.com/obsidian-confluence/obsidian-confluence/commit/a798554d470e880ab53f689412b0c6aeab269d2c))
+
 ## [3.0.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.0.1...obsidian-confluence-root-v3.0.2) (2023-04-18)
 
 
