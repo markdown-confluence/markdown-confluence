@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.0.0...obsidian-confluence-root-v3.0.1) (2023-04-18)
+
+
+### Bug Fixes
+
+* noEmit for Obsidian package ([7a36a92](https://github.com/obsidian-confluence/obsidian-confluence/commit/7a36a924f8bd8b97b53d6bdaf8132e8f36191192))
+
 ## [3.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.0.4...obsidian-confluence-root-v3.0.0) (2023-04-18)
 
 
