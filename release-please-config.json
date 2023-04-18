@@ -1,5 +1,5 @@
 {
-  "include-v-in-tag": false,
+      "include-v-in-tag": false,
       "include-component-in-tag": false,
       "release-type": "node",
       
@@ -17,7 +17,6 @@
         {"type": "build", "section": "Build System", "hidden": true},
         {"type": "ci", "section": "Continuous Integration", "hidden": true}
       ],
-      "group-pull-request-title-pattern": "chore: release ${component} ${version}",
     "packages": {
       "packages/obsidian": {},
       "packages/lib": {},
@@ -37,12 +36,7 @@
   "plugins": [
     {
       "type": "node-workspace",
-      "merge": false
-    },
-    {
-      "type": "linked-versions",
-      "groupName": "all packages",
-      "components": [""]
+      "merge": true
     }
   ]
 }
