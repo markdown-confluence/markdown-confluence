@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.4](https://github.com/obsidian-confluence/obsidian-confluence/compare/3.0.3...3.0.4) (2023-04-18)
+
+
+### Bug Fixes
+
+* Enable merge due to not having `linked-versions` ([8850884](https://github.com/obsidian-confluence/obsidian-confluence/commit/8850884803b8168de9031de1d09cb56da2e6c11e))
+
 ## [3.0.3](https://github.com/obsidian-confluence/obsidian-confluence/compare/3.0.2...3.0.3) (2023-04-18)
 
 
