@@ -20,6 +20,7 @@
       "group-pull-request-title-pattern": "chore: release ${version}",
     "packages": {
       ".": {
+        "component": "root",
         "release-type": "simple",
         "extra-files": [
             {
@@ -42,7 +43,7 @@
     "type": "linked-versions",
     "group-name": "all packages",
     "components": [
-      "obsidian-confluence", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer"
+      "root", "obsidian-confluence", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer"
     ]
   }]
 }
