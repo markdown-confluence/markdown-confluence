@@ -20,7 +20,7 @@ Mermaid.js diagrams are supported through the plugin's Mermaid diagram feature, 
 
 ### Images (Image Upload Supported)
 
-Image embedding and uploading are supported through the Image Upload feature. Images included in a page will be uploaded as attachments in Confluence.
+Image embedding and uploading are supported through the Image Upload feature. Images included in a page will be uploaded as attachments in Confluence. This includes support for transcluded images.
 
 ### Linking
 
@@ -51,5 +51,4 @@ Tables can be created using Markdown syntax with pipes (`|`) and hyphens (`-`) t
 ### Callouts
 
 Callouts can be created using the [Callouts](./callouts.md) feature. This allows you to create custom, styled callout boxes in Confluence.
-
 
