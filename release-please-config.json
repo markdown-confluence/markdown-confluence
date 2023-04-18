@@ -37,10 +37,8 @@
   "plugins": [
     {
       "type": "linked-versions",
-      "group-name": "all packages",
-      "components": [
-        "root", "obsidian-confluence", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer"
-      ]
+      "groupName": "all packages",
+      "components": ["root", "obsidian-confluence", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer"]
     },
     {
       "type": "node-workspace",
