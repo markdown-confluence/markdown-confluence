@@ -69,7 +69,8 @@
         "react-intl-next": "npm:react-intl@^5.18.1",
         "sort-any": "^4.0.5",
         "spark-md5": "^3.0.2",
-        "uuid": "^9.0.0"
+        "uuid": "^9.0.0",
+        "@markdown-confluence/lib": "*"
     },
     "resolutions": {
         "prosemirror-model": "1.14.3"
