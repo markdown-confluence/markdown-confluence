@@ -153,7 +153,7 @@ async function ensurePageExists(
 	}
 
 	const searchParams = {
-		type: "page",
+		type: file.contentType,
 		spaceKey,
 		title: file.pageTitle,
 		expand: ["version", "body.atlas_doc_format", "ancestors"],
@@ -166,6 +166,7 @@ async function ensurePageExists(
 		const currentPage = contentByTitle.results[0];
 
 		if (
+			file.contentType === "page" &&
 			!currentPage.ancestors?.some((ancestor) => ancestor.id == topPageId)
 		) {
 			throw new Error(
@@ -189,9 +190,11 @@ async function ensurePageExists(
 	} else {
 		const creatingBlankPageRequest = {
 			space: { key: spaceKey },
-			ancestors: [{ id: parentPageId }],
+			...(file.contentType === "page"
+				? { ancestors: [{ id: parentPageId }] }
+				: {}),
 			title: file.pageTitle,
-			type: "page",
+			type: file.contentType,
 			body: {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				atlas_doc_format: {
@@ -199,6 +202,7 @@ async function ensurePageExists(
 					representation: "atlas_doc_format",
 				},
 			},
+			expand: ["version", "body.atlas_doc_format", "ancestors"],
 		};
 		const pageDetails = await confluenceClient.content.createContent(
 			creatingBlankPageRequest

@@ -12,6 +12,6 @@
     "packages/*"
   ],
   "lint-staged": {
-    "packages/**/*": "npm run fmt -ws --if-present"
+    "packages/**/*.ts": "prettier --write"
   }
 }

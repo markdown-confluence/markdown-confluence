@@ -153,12 +153,6 @@ export class MyBaseClient implements Client {
 
 			const response = await requestUrl(modifiedRequestConfig);
 
-			console.log({
-				response,
-				request: modifiedRequestConfig,
-				requestConfig,
-			});
-
 			const callbackResponseHandler =
 				callback && ((data: T): void => callback(null, data));
 			const defaultResponseHandler = (data: T): T => data;
@@ -171,7 +165,7 @@ export class MyBaseClient implements Client {
 			return responseHandler(response.json);
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (e: any) {
-			console.log({ httpError: e, requestConfig });
+			console.warn({ httpError: e, requestConfig });
 			const err =
 				this.config.newErrorHandling && e.isAxiosError
 					? e.response.data

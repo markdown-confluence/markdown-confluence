@@ -3,6 +3,8 @@
 exports[`parses blockquotes.md 1`] = `
 {
   "absoluteFilePath": "/path/to/blockquotes.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -50,9 +52,106 @@ exports[`parses blockquotes.md 1`] = `
 }
 `;
 
+exports[`parses blog.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/blog.md",
+  "blogPostDate": "2022-01-01",
+  "contentType": "blogpost",
+  "contents": {
+    "content": [
+      {
+        "attrs": {
+          "level": 1,
+        },
+        "content": [
+          {
+            "text": "Header 1",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 2,
+        },
+        "content": [
+          {
+            "text": "Header 2",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 3,
+        },
+        "content": [
+          {
+            "text": "Header 3",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 4,
+        },
+        "content": [
+          {
+            "text": "Header 4",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 5,
+        },
+        "content": [
+          {
+            "text": "Header 5",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+      {
+        "attrs": {
+          "level": 6,
+        },
+        "content": [
+          {
+            "text": "Header 6",
+            "type": "text",
+          },
+        ],
+        "type": "heading",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "blog.md",
+  "folderName": "blog",
+  "frontmatter": {
+    "connie-blog-post-date": "2022-01-01",
+  },
+  "pageId": undefined,
+  "pageTitle": "Blog",
+  "tags": [],
+}
+`;
+
 exports[`parses code.md 1`] = `
 {
   "absoluteFilePath": "/path/to/code.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -106,6 +205,8 @@ exports[`parses code.md 1`] = `
 exports[`parses emphasis.md 1`] = `
 {
   "absoluteFilePath": "/path/to/emphasis.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -218,6 +319,8 @@ exports[`parses emphasis.md 1`] = `
 exports[`parses escaping.md 1`] = `
 {
   "absoluteFilePath": "/path/to/escaping.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -258,6 +361,8 @@ exports[`parses escaping.md 1`] = `
 exports[`parses file1.md 1`] = `
 {
   "absoluteFilePath": "/path/to/folder1/file1.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -464,6 +569,8 @@ exports[`parses file1.md 1`] = `
 exports[`parses file2.md 1`] = `
 {
   "absoluteFilePath": "/path/to/folder2/file2.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -620,6 +727,8 @@ exports[`parses file2.md 1`] = `
 exports[`parses file3.md 1`] = `
 {
   "absoluteFilePath": "/path/to/folder3/file3.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -727,6 +836,8 @@ exports[`parses file3.md 1`] = `
 exports[`parses headers.md 1`] = `
 {
   "absoluteFilePath": "/path/to/headers.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -821,6 +932,8 @@ exports[`parses headers.md 1`] = `
 exports[`parses horizontal_rules.md 1`] = `
 {
   "absoluteFilePath": "/path/to/horizontal_rules.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -852,6 +965,8 @@ exports[`parses horizontal_rules.md 1`] = `
 exports[`parses images.md 1`] = `
 {
   "absoluteFilePath": "/path/to/images.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -904,6 +1019,8 @@ exports[`parses images.md 1`] = `
 exports[`parses inline_html.md 1`] = `
 {
   "absoluteFilePath": "/path/to/inline_html.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -935,6 +1052,8 @@ exports[`parses inline_html.md 1`] = `
 exports[`parses links.md 1`] = `
 {
   "absoluteFilePath": "/path/to/links.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -991,6 +1110,8 @@ exports[`parses links.md 1`] = `
 exports[`parses lists.md 1`] = `
 {
   "absoluteFilePath": "/path/to/lists.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
@@ -1082,6 +1203,8 @@ exports[`parses lists.md 1`] = `
 exports[`parses tables.md 1`] = `
 {
   "absoluteFilePath": "/path/to/tables.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
   "contents": {
     "content": [
       {
