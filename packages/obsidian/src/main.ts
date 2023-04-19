@@ -6,13 +6,22 @@ import {
 	WorkspaceLeaf,
 	Workspace,
 } from "obsidian";
-import { ConfluenceUploadSettings, Publisher } from "@markdown-confluence/lib";
+import {
+	ConfluenceUploadSettings,
+	Publisher,
+	ConfluencePageConfig,
+} from "@markdown-confluence/lib";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
 import ObsidianAdaptor from "./adaptors/obsidian";
 import { CompletedModal } from "./CompletedModal";
 import { CustomConfluenceClient } from "./MyBaseClient";
 import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
+import {
+	ConfluencePerPageForm,
+	ConfluencePerPageUIValues,
+	mapFrontmatterToConfluencePerPageUIValues,
+} from "./ConfluencePerPageForm";
 
 export default class ConfluencePlugin extends Plugin {
 	settings: ConfluenceUploadSettings.ConfluenceSettings;
@@ -305,6 +314,51 @@ export default class ConfluencePlugin extends Plugin {
 						}
 					}
 				);
+			},
+		});
+
+		this.addCommand({
+			id: "page-settings",
+			name: "Update Confluence Page Settings",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				const frontMatter = this.app.metadataCache.getCache(
+					view.file.path
+				)?.frontmatter;
+
+				const file = view.file;
+
+				new ConfluencePerPageForm(this.app, {
+					config: ConfluencePageConfig.conniePerPageConfig,
+					initialValues:
+						mapFrontmatterToConfluencePerPageUIValues(frontMatter),
+					onSubmit: (values, close) => {
+						const valuesToSet: Partial<ConfluencePageConfig.ConfluencePerPageAllValues> =
+							{};
+						for (const propertyKey in values) {
+							if (
+								Object.prototype.hasOwnProperty.call(
+									values,
+									propertyKey
+								)
+							) {
+								const element =
+									values[
+										propertyKey as keyof ConfluencePerPageUIValues
+									];
+								if (element.isSet) {
+									valuesToSet[
+										propertyKey as keyof ConfluencePerPageUIValues
+									] = element.value as never;
+								}
+							}
+						}
+						this.adaptor.updateMarkdownValues(
+							file.path,
+							valuesToSet
+						);
+						close();
+					},
+				}).open();
 			},
 		});
 
