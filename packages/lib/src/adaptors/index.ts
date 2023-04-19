@@ -1,4 +1,5 @@
 import { Api } from "confluence.js";
+import { ConfluencePerPageAllValues } from "../ConniePageConfig";
 export type FilesToUpload = Array<MarkdownFile>;
 
 export interface MarkdownFile {
@@ -20,7 +21,10 @@ export interface BinaryFile {
 }
 
 export interface LoaderAdaptor {
-	updateMarkdownPageId(absoluteFilePath: string, id: string): Promise<void>;
+	updateMarkdownValues(
+		absoluteFilePath: string,
+		values: Partial<ConfluencePerPageAllValues>
+	): Promise<void>;
 	loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile>;
 	getMarkdownFilesToUpload(): Promise<FilesToUpload>;
 	readBinary(

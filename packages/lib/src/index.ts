@@ -3,3 +3,4 @@ export * from "./MdToADF";
 export * from "./adaptors";
 export * as ConfluenceUploadSettings from "./Settings";
 export * from "./mermaid_renderers";
+export * as ConfluencePageConfig from "./ConniePageConfig";

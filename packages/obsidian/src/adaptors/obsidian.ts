@@ -5,6 +5,7 @@ import {
 	FilesToUpload,
 	LoaderAdaptor,
 	MarkdownFile,
+	ConfluencePageConfig,
 } from "@markdown-confluence/lib";
 import { lookup } from "mime-types";
 
@@ -114,15 +115,31 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 
 		return false;
 	}
-
-	async updateMarkdownPageId(
+	async updateMarkdownValues(
 		absoluteFilePath: string,
-		pageId: string
+		values: Partial<ConfluencePageConfig.ConfluencePerPageAllValues>
 	): Promise<void> {
+		const config = ConfluencePageConfig.conniePerPageConfig;
 		const file = this.app.vault.getAbstractFileByPath(absoluteFilePath);
 		if (file instanceof TFile) {
 			this.app.fileManager.processFrontMatter(file, (fm) => {
-				fm["connie-page-id"] = pageId;
+				for (const propertyKey in config) {
+					if (!config.hasOwnProperty(propertyKey)) {
+						continue;
+					}
+
+					const { key } =
+						config[
+							propertyKey as keyof ConfluencePageConfig.ConfluencePerPageConfig
+						];
+					const value =
+						values[
+							propertyKey as keyof ConfluencePageConfig.ConfluencePerPageAllValues
+						];
+					if (propertyKey in values) {
+						fm[key] = value;
+					}
+				}
 			});
 		}
 	}

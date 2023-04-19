@@ -9,6 +9,7 @@ import {
 	MarkdownFile,
 } from "./adaptors";
 import { orderMarks } from "./AdfEqual";
+import { ConfluencePerPageAllValues } from "./ConniePageConfig";
 import { ChartData, MermaidRenderer } from "./mermaid_renderers";
 import { Publisher } from "./Publisher";
 import { ConfluenceSettings } from "./Settings";
@@ -224,11 +225,11 @@ class InMemoryAdaptor implements LoaderAdaptor {
 	constructor(inMemoryFiles: MarkdownFile[]) {
 		this.inMemoryFiles = inMemoryFiles;
 	}
-
-	async updateMarkdownPageId(
+	async updateMarkdownValues(
 		absoluteFilePath: string,
-		id: string
+		values: Partial<ConfluencePerPageAllValues>
 	): Promise<void> {}
+
 	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return this.inMemoryFiles.find(

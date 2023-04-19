@@ -141,6 +141,11 @@ async function ensurePageExists(
 			throw new Error("Missing Space Key");
 		}
 
+		await adaptor.updateMarkdownValues(file.absoluteFilePath, {
+			publish: true,
+			pageId: contentById.id,
+		});
+
 		return {
 			id: contentById.id,
 			title: file.pageTitle,
@@ -174,10 +179,10 @@ async function ensurePageExists(
 			);
 		}
 
-		await adaptor.updateMarkdownPageId(
-			file.absoluteFilePath,
-			currentPage.id
-		);
+		await adaptor.updateMarkdownValues(file.absoluteFilePath, {
+			publish: true,
+			pageId: currentPage.id,
+		});
 		return {
 			id: currentPage.id,
 			title: file.pageTitle,
@@ -208,10 +213,10 @@ async function ensurePageExists(
 			creatingBlankPageRequest
 		);
 
-		await adaptor.updateMarkdownPageId(
-			file.absoluteFilePath,
-			pageDetails.id
-		);
+		await adaptor.updateMarkdownValues(file.absoluteFilePath, {
+			publish: true,
+			pageId: pageDetails.id,
+		});
 		return {
 			id: pageDetails.id,
 			title: file.pageTitle,

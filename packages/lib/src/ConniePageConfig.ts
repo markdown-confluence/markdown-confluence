@@ -2,28 +2,50 @@ import { MarkdownFile } from "./adaptors";
 
 export type PageContentType = "page" | "blogpost";
 
-type ConfluencePerPageConfig = {
-	pageTitle: FrontmatterConfig<string>;
-	frontmatterToPublish: FrontmatterConfig<undefined>;
-	tags: FrontmatterConfig<string[]>;
-	pageId: FrontmatterConfig<string | undefined>;
-	dontChangeParentPageId: FrontmatterConfig<boolean>;
-	blogPostDate: FrontmatterConfig<string | undefined>;
-	contentType: FrontmatterConfig<PageContentType>;
+export type ConfluencePerPageConfig = {
+	publish: FrontmatterConfig<boolean, "boolean">;
+	pageTitle: FrontmatterConfig<string, "text">;
+	frontmatterToPublish: FrontmatterConfig<string[], "array-text">;
+	tags: FrontmatterConfig<string[], "array-text">;
+	pageId: FrontmatterConfig<string | undefined, "text">;
+	dontChangeParentPageId: FrontmatterConfig<boolean, "boolean">;
+	blogPostDate: FrontmatterConfig<string | undefined, "text">;
+	contentType: FrontmatterConfig<PageContentType, "options">;
 };
 
-interface FrontmatterConfig<OUT> {
+export type InputType = "text" | "array-text" | "boolean" | "options";
+export type InputValidator<IN> = (value: IN) => {
+	valid: boolean;
+	errors: Error[];
+};
+
+interface FrontmatterConfigBase<OUT> {
 	key: string;
 	default: OUT;
 	alwaysProcess?: boolean;
 	process: ProcessFunction<unknown, OUT>;
+	inputType: InputType;
+	inputValidator: InputValidator<unknown>;
 }
+
+type FrontmatterConfigOptions<OUT, T extends InputType> = T extends "options"
+	? { selectOptions: OUT[] }
+	: unknown;
+
+export type FrontmatterConfig<
+	OUT,
+	T extends InputType
+> = FrontmatterConfigBase<OUT> & FrontmatterConfigOptions<OUT, T>;
 
 type ProcessFunction<IN, OUT> = (
 	value: IN,
 	markdownFile: MarkdownFile,
 	alreadyParsed: Partial<ConfluencePerPageValues>
 ) => OUT | Error;
+
+export type ConfluencePerPageAllValues = {
+	[K in keyof ConfluencePerPageConfig]: ConfluencePerPageConfig[K]["default"]; // TODO: Accumlate Errors
+};
 
 type excludedProperties = "frontmatterToPublish";
 
@@ -33,6 +55,239 @@ export type ConfluencePerPageValues = Omit<
 	},
 	excludedProperties
 >;
+
+export const conniePerPageConfig: ConfluencePerPageConfig = {
+	publish: {
+		key: "connie-publish",
+		default: false,
+		inputType: "boolean",
+		inputValidator: (value) => {
+			switch (typeof value) {
+				case "boolean":
+					return { valid: true, errors: [] };
+				default:
+					return {
+						valid: false,
+						errors: [new Error("Publish should be a boolean.")],
+					};
+			}
+		},
+		process: (publish) => (typeof publish === "boolean" ? publish : false),
+	},
+	pageTitle: {
+		key: "connie-title",
+		default: "",
+		alwaysProcess: true,
+		inputType: "text",
+		inputValidator: (value) => {
+			switch (typeof value) {
+				case "string":
+					return {
+						valid: true,
+						errors: [],
+					};
+				default:
+					return {
+						valid: false,
+						errors: [new Error("Title needs to be a string.")],
+					};
+			}
+		},
+		process: (yamlValue, markdownFile) => {
+			return typeof yamlValue === "string"
+				? yamlValue
+				: markdownFile.pageTitle;
+		},
+	},
+	frontmatterToPublish: {
+		key: "connie-frontmatter-to-publish",
+		default: [],
+		inputType: "array-text",
+		inputValidator: (value) => {
+			return {
+				valid: true,
+				errors: [],
+			};
+		},
+		process: (yamlValue, markdownFile) => {
+			if (yamlValue && Array.isArray(yamlValue)) {
+				let frontmatterHeader =
+					"| Key | Value | \n | ----- | ----- |\n";
+				for (const key of yamlValue) {
+					if (markdownFile.frontmatter[key]) {
+						const keyString = key.toString();
+						const valueString = JSON.stringify(
+							markdownFile.frontmatter[key]
+						);
+						frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
+					}
+				}
+				markdownFile.contents =
+					frontmatterHeader + markdownFile.contents;
+			}
+			return [];
+		},
+	},
+	tags: {
+		key: "tags",
+		default: [],
+		inputType: "array-text",
+		inputValidator: (value) => {
+			return {
+				valid: true,
+				errors: [],
+			};
+		},
+		process: (yamlValue, markdownFile) => {
+			const tags: string[] = [];
+			if (Array.isArray(yamlValue)) {
+				for (const label of yamlValue) {
+					if (typeof label === "string") {
+						tags.push(label);
+					}
+				}
+			}
+			return tags;
+		},
+	},
+	pageId: {
+		key: "connie-page-id",
+		default: undefined,
+		inputType: "text",
+		inputValidator: (value) => {
+			const digitRegex = /^\d+$/;
+			if (typeof value === "string" && digitRegex.test(value)) {
+				return { valid: true, errors: [] };
+			}
+			return {
+				valid: false,
+				errors: [
+					new Error(
+						"Page ID needs to be a string and only can contain numbers"
+					),
+				],
+			};
+		},
+		process: (yamlValue, markdownFile) => {
+			let pageId: string | undefined;
+			switch (typeof yamlValue) {
+				case "string":
+				case "number":
+					pageId = yamlValue.toString();
+					break;
+				default:
+					pageId = undefined;
+			}
+			return pageId;
+		},
+	},
+	dontChangeParentPageId: {
+		key: "connie-dont-change-parent-page",
+		default: false,
+		inputType: "boolean",
+		inputValidator: (value) => {
+			return {
+				valid: true,
+				errors: [],
+			};
+		},
+		process: (dontChangeParentPageId) =>
+			typeof dontChangeParentPageId === "boolean"
+				? dontChangeParentPageId
+				: false,
+	},
+	blogPostDate: {
+		key: "connie-blog-post-date",
+		default: undefined,
+		inputType: "text",
+		inputValidator: (yamlValue) => {
+			if (typeof yamlValue !== "string") {
+				return {
+					valid: false,
+					errors: [
+						new Error(
+							`Blog post date needs to be a string in the format of "YYYY-MM-DD".`
+						),
+					],
+				};
+			}
+			const blogPostDateValidation = validateDate(yamlValue);
+			if (blogPostDateValidation.valid) {
+				return { valid: true, errors: [] };
+			} else {
+				return {
+					valid: false,
+					errors: [
+						new Error(
+							`Blog post date error. ${blogPostDateValidation.reasons?.join()}`
+						),
+					],
+				};
+			}
+		},
+		process: (yamlValue: string) => {
+			const blogPostDateValidation = validateDate(yamlValue);
+			if (blogPostDateValidation.valid) {
+				return yamlValue;
+			} else {
+				return new Error(
+					`Blog post date error. ${blogPostDateValidation.reasons?.join()}`
+				);
+			}
+		},
+	},
+	contentType: {
+		key: "connie-content-type",
+		default: "page",
+		alwaysProcess: true,
+		inputType: "options",
+		selectOptions: ["page", "blogpost"],
+		inputValidator: (value) => {
+			return {
+				valid: true,
+				errors: [],
+			};
+		},
+		process: (yamlValue, markdownFile, alreadyParsed) => {
+			if (yamlValue !== undefined && typeof yamlValue !== "string") {
+				return Error(`Provided "connie-content-type" isn't a string.`);
+			}
+
+			if (
+				typeof yamlValue === "string" &&
+				!["page", "blogpost"].includes(yamlValue)
+			) {
+				return Error(
+					`Provided "connie-content-type" isn't "page" or "blogpost".`
+				);
+			}
+
+			let contentType: PageContentType = "page";
+
+			if (alreadyParsed.blogPostDate) {
+				contentType = "blogpost";
+
+				if (
+					typeof yamlValue === "string" &&
+					yamlValue !== contentType
+				) {
+					return Error(
+						`When "connie-blog-post-date" is specified "connie-content-type" must be "blogpost" or not specified.`
+					);
+				}
+			}
+
+			if (
+				yamlValue !== undefined &&
+				["page", "blogpost"].includes(yamlValue)
+			) {
+				contentType = yamlValue as PageContentType;
+			}
+
+			return contentType;
+		},
+	},
+};
 
 export function processConniePerPageConfig(
 	markdownFile: MarkdownFile
@@ -59,6 +314,7 @@ export function processConniePerPageConfig(
 				defaultValue as never;
 		}
 	}
+
 	return preventOverspreading(result, "frontmatterToPublish");
 }
 
@@ -122,134 +378,3 @@ function validateDate(dateString: string): ValidationResult {
 		return { valid: true };
 	}
 }
-
-export const conniePerPageConfig: ConfluencePerPageConfig = {
-	pageTitle: {
-		key: "connie-title",
-		default: "",
-		alwaysProcess: true,
-		process: (yamlValue, markdownFile) => {
-			return typeof yamlValue === "string"
-				? yamlValue
-				: markdownFile.pageTitle;
-		},
-	},
-	frontmatterToPublish: {
-		key: "connie-frontmatter-to-publish",
-		default: undefined,
-		process: (yamlValue, markdownFile) => {
-			if (yamlValue && Array.isArray(yamlValue)) {
-				let frontmatterHeader =
-					"| Key | Value | \n | ----- | ----- |\n";
-				for (const key of yamlValue) {
-					if (markdownFile.frontmatter[key]) {
-						const keyString = key.toString();
-						const valueString = JSON.stringify(
-							markdownFile.frontmatter[key]
-						);
-						frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
-					}
-				}
-				markdownFile.contents =
-					frontmatterHeader + markdownFile.contents;
-			}
-			return undefined;
-		},
-	},
-	tags: {
-		key: "tags",
-		default: [],
-		process: (yamlValue, markdownFile) => {
-			const tags: string[] = [];
-			if (Array.isArray(yamlValue)) {
-				for (const label of yamlValue) {
-					if (typeof label === "string") {
-						tags.push(label);
-					}
-				}
-			}
-			return tags;
-		},
-	},
-	pageId: {
-		key: "connie-page-id",
-		default: undefined,
-		process: (yamlValue, markdownFile) => {
-			let pageId: string | undefined;
-			switch (typeof yamlValue) {
-				case "string":
-				case "number":
-					pageId = yamlValue.toString();
-					break;
-				default:
-					pageId = undefined;
-			}
-			return pageId;
-		},
-	},
-	dontChangeParentPageId: {
-		key: "connie-dont-change-parent-page",
-		default: false,
-		process: (dontChangeParentPageId) =>
-			typeof dontChangeParentPageId === "boolean"
-				? dontChangeParentPageId
-				: false,
-	},
-	blogPostDate: {
-		key: "connie-blog-post-date",
-		default: undefined,
-		process: (yamlValue: string) => {
-			const blogPostDateValidation = validateDate(yamlValue);
-			if (blogPostDateValidation.valid) {
-				return yamlValue;
-			} else {
-				return new Error(
-					`Blog post date error. ${blogPostDateValidation.reasons?.join()}`
-				);
-			}
-		},
-	},
-	contentType: {
-		key: "connie-content-type",
-		default: "page",
-		alwaysProcess: true,
-		process: (yamlValue, markdownFile, alreadyParsed) => {
-			if (yamlValue !== undefined && typeof yamlValue !== "string") {
-				return Error(`Provided "connie-content-type" isn't a string.`);
-			}
-
-			if (
-				typeof yamlValue === "string" &&
-				!["page", "blogpost"].includes(yamlValue)
-			) {
-				return Error(
-					`Provided "connie-content-type" isn't "page" or "blogpost".`
-				);
-			}
-
-			let contentType: PageContentType = "page";
-
-			if (alreadyParsed.blogPostDate) {
-				contentType = "blogpost";
-
-				if (
-					typeof yamlValue === "string" &&
-					yamlValue !== contentType
-				) {
-					return Error(
-						`When "connie-blog-post-date" is specified "connie-content-type" must be "blogpost" or not specified.`
-					);
-				}
-			}
-
-			if (
-				yamlValue !== undefined &&
-				["page", "blogpost"].includes(yamlValue)
-			) {
-				contentType = yamlValue as PageContentType;
-			}
-
-			return contentType;
-		},
-	},
-};

@@ -48,6 +48,7 @@ exports[`parses blockquotes.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Blockquotes",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -143,6 +144,7 @@ exports[`parses blog.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Blog",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -198,6 +200,7 @@ exports[`parses code.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Code",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -312,6 +315,7 @@ exports[`parses emphasis.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Emphasis",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -354,6 +358,7 @@ exports[`parses escaping.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Escaping",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -559,6 +564,7 @@ exports[`parses file1.md 1`] = `
   },
   "pageId": "12345",
   "pageTitle": "Custom Title",
+  "publish": false,
   "tags": [
     "test",
     "example",
@@ -718,6 +724,7 @@ exports[`parses file2.md 1`] = `
   },
   "pageId": "67890",
   "pageTitle": "Another Custom Title",
+  "publish": false,
   "tags": [
     "demo",
   ],
@@ -826,6 +833,7 @@ exports[`parses file3.md 1`] = `
   },
   "pageId": "qwerty",
   "pageTitle": "Third Test Page",
+  "publish": false,
   "tags": [
     "sample",
     "test",
@@ -925,6 +933,7 @@ exports[`parses headers.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Headers",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -958,6 +967,7 @@ exports[`parses horizontal_rules.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Horizontal Rules",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -1012,6 +1022,7 @@ exports[`parses images.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Images",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -1045,6 +1056,7 @@ exports[`parses inline_html.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Inline HTML",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -1103,6 +1115,7 @@ exports[`parses links.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Links",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -1196,6 +1209,7 @@ exports[`parses lists.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Lists",
+  "publish": false,
   "tags": [],
 }
 `;
@@ -1322,6 +1336,7 @@ exports[`parses tables.md 1`] = `
   },
   "pageId": undefined,
   "pageTitle": "Tables",
+  "publish": false,
   "tags": [],
 }
 `;
