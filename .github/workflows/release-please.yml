@@ -6,6 +6,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 name: release-please
 
@@ -28,6 +29,10 @@ jobs:
         with:
           node-version: "16.x"
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Latest NPM
+        if: ${{ steps.release-please.outputs.release_created }}
+        run: npm install -g npm@latest
 
       - name: Upload release assets
         if: ${{ steps.release-please.outputs.release_created }}
