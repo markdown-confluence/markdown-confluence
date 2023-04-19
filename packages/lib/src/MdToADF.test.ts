@@ -185,6 +185,17 @@ const markdownTestCases: MarkdownFile[] = [
 			"connie-dont-change-parent-page": "invalid",
 		},
 	},
+	{
+		folderName: "blog",
+		absoluteFilePath: "/path/to/blog.md",
+		fileName: "blog.md",
+		contents:
+			"# Header 1\n\n## Header 2\n\n### Header 3\n\n#### Header 4\n\n##### Header 5\n\n###### Header 6",
+		pageTitle: "Blog",
+		frontmatter: {
+			"connie-blog-post-date": "2022-01-01",
+		},
+	},
 ];
 test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
 	const mdToADF = new MdToADF();

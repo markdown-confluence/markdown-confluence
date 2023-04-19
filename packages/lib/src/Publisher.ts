@@ -12,6 +12,7 @@ import {
 	MermaidRenderer,
 	ChartData,
 } from "./mermaid_renderers";
+import { PageContentType } from "./ConniePageConfig";
 
 export interface FailedFile {
 	fileName: string;
@@ -46,8 +47,10 @@ export interface LocalAdfFile {
 		[key: string]: unknown;
 	};
 	tags: string[];
-	pageId: string | undefined;
+	pageId?: string;
 	dontChangeParentPageId: boolean;
+	contentType: PageContentType;
+	blogPostDate?: string;
 }
 
 export interface ConfluenceAdfFile {
@@ -64,6 +67,9 @@ export interface ConfluenceAdfFile {
 
 	pageId: string;
 	spaceKey: string;
+
+	contentType: PageContentType;
+	blogPostDate?: string;
 }
 
 export interface ConfluenceNode {
@@ -248,12 +254,13 @@ export class Publisher {
 
 			const updateContentDetails = {
 				id: adfFile.pageId,
-				...(adfFile.dontChangeParentPageId
+				...(adfFile.contentType === "blogpost" ||
+				adfFile.dontChangeParentPageId
 					? {}
 					: { ancestors: [{ id: parentPageId }] }),
 				version: { number: pageVersionNumber + 1 },
 				title: adfFile.pageTitle,
-				type: "page",
+				type: adfFile.contentType,
 				body: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
 					atlas_doc_format: {

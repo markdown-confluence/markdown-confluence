@@ -85,6 +85,8 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 				tags: [],
 				pageId: undefined,
 				dontChangeParentPageId: false,
+				contentType: "page",
+				blogPostDate: undefined,
 			};
 		}
 	}

@@ -6,6 +6,7 @@ import { MarkdownTransformer } from "./MarkdownTransformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { MarkdownFile } from "./adaptors";
 import { LocalAdfFile } from "./Publisher";
+import { processConniePerPageConfig } from "./ConniePageConfig";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 
@@ -83,75 +84,16 @@ export class MdToADF {
 	}
 
 	convertMDtoADF(file: MarkdownFile): LocalAdfFile {
-		let markdown = file.contents.replace(frontmatterRegex, "");
+		file.contents = file.contents.replace(frontmatterRegex, "");
 
-		file.pageTitle =
-			file.frontmatter["connie-title"] &&
-			typeof file.frontmatter["connie-title"] === "string"
-				? file.frontmatter["connie-title"]
-				: file.pageTitle;
+		const results = processConniePerPageConfig(file);
 
-		if (
-			file.frontmatter["connie-frontmatter-to-publish"] &&
-			Array.isArray(file.frontmatter["connie-frontmatter-to-publish"])
-		) {
-			let frontmatterHeader = "| Key | Value | \n | ----- | ----- |\n";
-			for (const key of file.frontmatter[
-				"connie-frontmatter-to-publish"
-			]) {
-				if (file.frontmatter[key]) {
-					const keyString = key.toString();
-					const valueString = JSON.stringify(file.frontmatter[key]);
-					frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
-				}
-			}
-			markdown = frontmatterHeader + markdown;
-		}
-
-		const tags: string[] = [];
-		if (
-			file.frontmatter["tags"] &&
-			Array.isArray(file.frontmatter["tags"])
-		) {
-			for (const label of file.frontmatter["tags"]) {
-				if (typeof label === "string") {
-					tags.push(label);
-				}
-			}
-		}
-
-		let pageId: string | undefined;
-		if (file.frontmatter["connie-page-id"]) {
-			switch (typeof file.frontmatter["connie-page-id"]) {
-				case "string":
-				case "number":
-					pageId = file.frontmatter["connie-page-id"].toString();
-					break;
-				default:
-					pageId = undefined;
-			}
-		}
-
-		let dontChangeParentPageId = false;
-		if (file.frontmatter["connie-dont-change-parent-page"]) {
-			switch (typeof file.frontmatter["connie-dont-change-parent-page"]) {
-				case "boolean":
-					dontChangeParentPageId =
-						file.frontmatter["connie-dont-change-parent-page"];
-					break;
-				default:
-					dontChangeParentPageId = false;
-			}
-		}
-
-		const adrobj = this.parse(markdown);
+		const adrobj = this.parse(file.contents);
 
 		return {
 			...file,
+			...results,
 			contents: adrobj,
-			tags,
-			pageId,
-			dontChangeParentPageId,
 		};
 	}
 }
