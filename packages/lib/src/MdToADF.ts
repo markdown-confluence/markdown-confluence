@@ -7,6 +7,7 @@ import { traverse } from "@atlaskit/adf-utils/traverse";
 import { MarkdownFile } from "./adaptors";
 import { LocalAdfFile } from "./Publisher";
 import { processConniePerPageConfig } from "./ConniePageConfig";
+import { p } from "@atlaskit/adf-utils/builders";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 
@@ -70,6 +71,24 @@ export class MdToADF {
 			codeBlock: (node, _parent) => {
 				if (node.attrs && Object.keys(node.attrs).length === 0) {
 					delete node.attrs;
+				}
+
+				if ((node.attrs || {})?.language === "adf") {
+					if (!node?.content?.at(0)?.text) {
+						return node;
+					}
+					try {
+						const parsedAdf = JSON.parse(
+							node?.content?.at(0)?.text ??
+								JSON.stringify(
+									p("ADF missing from ADF Code Block.")
+								)
+						);
+						node = parsedAdf;
+						return node;
+					} catch (e) {
+						return node;
+					}
 				}
 
 				return node;
