@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.4.0...@markdown-confluence/lib-v3.4.1) (2023-04-20)
+
+
+### Bug Fixes
+
+* Add repository information for providence ([362e025](https://github.com/obsidian-confluence/obsidian-confluence/commit/362e0252bd24440f6311286e2b4446ffcf458dc4))
+
 ## [3.4.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.3.0...@markdown-confluence/lib-v3.4.0) (2023-04-20)
 
 
