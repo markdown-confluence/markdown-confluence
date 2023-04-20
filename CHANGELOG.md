@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.4.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.3.0...obsidian-confluence-root-v3.4.0) (2023-04-20)
+
+
+### Features
+
+* Add npm provenance ([ee76005](https://github.com/obsidian-confluence/obsidian-confluence/commit/ee760054c80d9e385f559c18111b379f30fd3da0))
+* **blog:** Blog support. ([e0bdc24](https://github.com/obsidian-confluence/obsidian-confluence/commit/e0bdc248c9845f4a609f7d9f9c7de388ea183b12))
+* Update Confluence Page Settings Command ([a7d395e](https://github.com/obsidian-confluence/obsidian-confluence/commit/a7d395e5a2ddc9323a683bc9c877f8878740422a))
+* Write `connie-publish: true` to all files that have been published to ensure even if you move the files they still will be published. ([a7d395e](https://github.com/obsidian-confluence/obsidian-confluence/commit/a7d395e5a2ddc9323a683bc9c877f8878740422a))
+
+
+### Dependencies
+
+* Clean up mermaid-electron-renderer package.json ([8137934](https://github.com/obsidian-confluence/obsidian-confluence/commit/81379341178e28046174ceadcb74f271ac0dd10b))
+
 ## [3.3.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.2.0...obsidian-confluence-root-v3.3.0) (2023-04-18)
 
 
