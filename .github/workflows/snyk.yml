@@ -32,7 +32,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: sbom
+          command: code test
           args: --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --sarif-file-output=snyk-code.sarif
         
       - name: Upload result to GitHub Code Scanning
