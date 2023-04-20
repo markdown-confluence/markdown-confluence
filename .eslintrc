@@ -25,7 +25,6 @@
         "selector": "property",
         "format": ["strictCamelCase"],
         "filter": {
-          // you can expand this regex to add more allowed names
           "regex": "^(code_block|list_item|bullet_list|ordered_list|code_inline|media_single|User-Agent|Accept|Authorization|Content-Type)$",
           "match": false
         }
