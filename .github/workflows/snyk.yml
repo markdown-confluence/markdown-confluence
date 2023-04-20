@@ -24,7 +24,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --sarif-file-output=snyk.sarif --all-projects --dev --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a
+          args: --sarif-file-output=snyk.sarif --all-projects --dev --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --prune-repeated-subdependencies
 
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v2
@@ -44,6 +44,15 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: snyk-code.sarif
+        
+      - name: Run Snyk to check for vulnerabilities (monitor)
+        uses: snyk/actions/node@master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --all-projects --dev --print-deps --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --prune-repeated-subdependencies
     
       - name: Run Snyk to create SBOM
         uses: snyk/actions/node@master
