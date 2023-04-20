@@ -1,6 +1,9 @@
 # Obsidian Confluence Integration Plugin
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/obsidian-confluence/obsidian-confluence/badge)](https://api.securityscorecards.dev/projects/github.com/obsidian-confluence/obsidian-confluence)
+
 Copyright (c) 2022 Atlassian Pty Ltd
+
 Copyright (c) 2022 Atlassian US, Inc.
 
 `Obsidian Confluence Integration Plugin` is an open-source plugin for [Obsidian.md](https://obsidian.md/) that allows you to publish markdown content from Obsidian to [Atlassian Confluence](https://www.atlassian.com/software/confluence). It supports [Obsidian markdown extensions](https://help.obsidian.md/How+to/Format+your+notes) for richer content and includes a CLI for pushing markdown files from the command line. Currently, the plugin only supports Atlassian Cloud instances.
