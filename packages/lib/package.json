@@ -79,6 +79,11 @@
         "access": "public",
         "registry": "https://registry.npmjs.org/",
         "provenance": true
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/obsidian-confluence/obsidian-confluence",
+        "directory": "packages/lib"
     }
 }
   
