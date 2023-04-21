@@ -24,4 +24,4 @@ gh release create $TAG -t $TAG --generate-notes --latest --target $SHA ./dist/*
 echo $FILES
 
 cd $ORIGINAL_PATH
-./.build/sign-release $TAG
+./.build/sign-release.sh $TAG
