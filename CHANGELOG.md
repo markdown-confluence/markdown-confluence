@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.6.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.5.0...obsidian-confluence-root-v3.6.0) (2023-04-21)
+
+
+### Features
+
+* Add step-security/harden-runner to GHA ([f49c627](https://github.com/obsidian-confluence/obsidian-confluence/commit/f49c6273b984120ad53f8b32b28f47cc5cd65a73))
+
+
+### Bug Fixes
+
+* Upload release assets ([95b5c61](https://github.com/obsidian-confluence/obsidian-confluence/commit/95b5c61bf197441b556df630f3fc0837e9952ed4))
+
 ## [3.5.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.4.1...obsidian-confluence-root-v3.5.0) (2023-04-21)
 
 
