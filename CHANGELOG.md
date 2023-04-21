@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.5.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.4.1...obsidian-confluence-root-v3.5.0) (2023-04-21)
+
+
+### Features
+
+* Add OSSF Badge to README.md ([b6f5bf2](https://github.com/obsidian-confluence/obsidian-confluence/commit/b6f5bf25295befee11e04362fd18d23a0d1350a5))
+* Add OSSF Scorecard Scan ([f29c630](https://github.com/obsidian-confluence/obsidian-confluence/commit/f29c630fc361718ef02d675feb79be73cc034057))
+* Add snyk monitor ([e829018](https://github.com/obsidian-confluence/obsidian-confluence/commit/e829018c728dbdaf68206a9292ee42c2ea689fa0))
+* Custom ADF via Codeblock and adf language ([8e91630](https://github.com/obsidian-confluence/obsidian-confluence/commit/8e916307b14654da4bc54bc71579e2a0283b365f))
+* Scan code with snyk ([#128](https://github.com/obsidian-confluence/obsidian-confluence/issues/128)) ([118e46a](https://github.com/obsidian-confluence/obsidian-confluence/commit/118e46ad413c9819d6c9f0f2076f9915a6667c80))
+* Sign releases ([06ddd88](https://github.com/obsidian-confluence/obsidian-confluence/commit/06ddd887e493d00d7e009252334d194e9a6527fb))
+
+
+### Bug Fixes
+
+* Add GHA Perms ([#130](https://github.com/obsidian-confluence/obsidian-confluence/issues/130)) ([2e35b30](https://github.com/obsidian-confluence/obsidian-confluence/commit/2e35b30689b6b329585b0102ee4ddf1eafcd49dd))
+* Add missing homepage and bugs to package.json ([c920345](https://github.com/obsidian-confluence/obsidian-confluence/commit/c92034563ce2f8d11a40ed2c68b104807eace3be))
+* Add permissions to root of all workflows ([a430221](https://github.com/obsidian-confluence/obsidian-confluence/commit/a430221f89fb4af5290e5a54264375f59065dfb5))
+* Fix .eslintrc to resolve CodeQL error ([f27dd85](https://github.com/obsidian-confluence/obsidian-confluence/commit/f27dd854e13a0af9b087fe6801bf070158141a96))
+* Remove wrong switch ([6528836](https://github.com/obsidian-confluence/obsidian-confluence/commit/65288361aad87f1bd941fec58c227be49eb9dfd7))
+* Run snyk on Dependabot PRs ([b16e2b1](https://github.com/obsidian-confluence/obsidian-confluence/commit/b16e2b1aeb28310b5ca0d15e260518eda7f3ff38))
+
 ## [3.4.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.4.0...obsidian-confluence-root-v3.4.1) (2023-04-20)
 
 

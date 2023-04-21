@@ -6,6 +6,20 @@
   * dependencies
     * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
 
+## [3.5.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v3.4.1...@markdown-confluence/mermaid-electron-renderer-v3.5.0) (2023-04-21)
+
+
+### Bug Fixes
+
+* Add missing homepage and bugs to package.json ([c920345](https://github.com/obsidian-confluence/obsidian-confluence/commit/c92034563ce2f8d11a40ed2c68b104807eace3be))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 3.4.1 to 3.5.0
+
 ## [3.4.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v3.4.0...@markdown-confluence/mermaid-electron-renderer-v3.4.1) (2023-04-20)
 
 
