@@ -27,5 +27,5 @@
           "@markdown-confluence/*": ["packages/*/"]
        }
     },
-    "exclude": ["node_modules", ".build", "esbuild.config.mjs"],
+    "exclude": ["node_modules", ".build", "esbuild.config.mjs"]
 }

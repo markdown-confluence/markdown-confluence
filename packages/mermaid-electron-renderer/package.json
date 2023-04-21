@@ -44,5 +44,9 @@
         "type": "git",
         "url": "https://github.com/obsidian-confluence/obsidian-confluence",
         "directory": "packages/mermaid-electron-renderer"
+    },
+    "homepage": "https://github.com/obsidian-confluence/obsidian-confluence/tree/main/packages/lib",
+    "bugs": {
+        "url" : "https://github.com/obsidian-confluence/obsidian-confluence/issues"
     }
 }
