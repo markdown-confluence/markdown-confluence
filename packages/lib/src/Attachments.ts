@@ -1,10 +1,16 @@
 import SparkMD5 from "spark-md5";
 import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors";
+import sizeOf from "image-size";
+
+export type ConfluenceImageStatus = "existing" | "uploaded";
 
 export interface UploadedImageData {
 	filename: string;
 	id: string;
 	collection: string;
+	width: number;
+	height: number;
+	status: ConfluenceImageStatus;
 }
 
 export async function uploadBuffer(
@@ -19,6 +25,7 @@ export async function uploadBuffer(
 ): Promise<UploadedImageData | null> {
 	const spark = new SparkMD5.ArrayBuffer();
 	const currentFileMd5 = spark.append(fileBuffer).end();
+	const imageSize = await sizeOf(fileBuffer);
 
 	if (
 		!!currentAttachments[uploadFilename] &&
@@ -28,6 +35,9 @@ export async function uploadBuffer(
 			filename: uploadFilename,
 			id: currentAttachments[uploadFilename].attachmentId,
 			collection: currentAttachments[uploadFilename].collectionName,
+			width: imageSize.width ?? 0,
+			height: imageSize.height ?? 0,
+			status: "existing",
 		};
 	}
 
@@ -53,6 +63,9 @@ export async function uploadBuffer(
 		filename: uploadFilename,
 		id: attachmentResponse.results[0].extensions.fileId,
 		collection: `contentId-${attachmentResponse.results[0].container.id}`,
+		width: imageSize.width ?? 0,
+		height: imageSize.height ?? 0,
+		status: "uploaded",
 	};
 }
 
@@ -73,6 +86,8 @@ export async function uploadFile(
 		const currentFileMd5 = spark.append(testing.contents).end();
 		const pathMd5 = SparkMD5.hash(testing.filePath);
 		const uploadFilename = `${pathMd5}-${testing.filename}`;
+		const imageBuffer = Buffer.from(testing.contents);
+		const imageSize = await sizeOf(imageBuffer);
 
 		if (
 			!!currentAttachments[uploadFilename] &&
@@ -82,6 +97,9 @@ export async function uploadFile(
 				filename: fileNameToUpload,
 				id: currentAttachments[uploadFilename].attachmentId,
 				collection: currentAttachments[uploadFilename].collectionName,
+				width: imageSize.width ?? 0,
+				height: imageSize.height ?? 0,
+				status: "existing",
 			};
 		}
 
@@ -89,7 +107,7 @@ export async function uploadFile(
 			id: pageId,
 			attachments: [
 				{
-					file: Buffer.from(testing.contents),
+					file: imageBuffer,
 					filename: uploadFilename,
 					minorEdit: false,
 					comment: currentFileMd5,
@@ -106,6 +124,9 @@ export async function uploadFile(
 			filename: fileNameToUpload,
 			id: attachmentResponse.results[0].extensions.fileId,
 			collection: `contentId-${attachmentResponse.results[0].container.id}`,
+			width: imageSize.width ?? 0,
+			height: imageSize.height ?? 0,
+			status: "uploaded",
 		};
 	}
 

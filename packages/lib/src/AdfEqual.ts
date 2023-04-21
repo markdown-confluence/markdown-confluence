@@ -2,7 +2,8 @@ import sortAny from "sort-any";
 import { mapValues } from "lodash";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import deepEqual from "deep-equal";
+import { ADFEntityMark } from "@atlaskit/adf-utils/types";
+import { isEqual } from "./isEqual";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sortDeep = (object: unknown): any => {
@@ -29,12 +30,23 @@ export function orderMarks(adf: JSONDocNode) {
 		any: (node, __parent) => {
 			if (node.marks) {
 				node.marks = sortDeep(node.marks);
-				return node;
 			}
+			return node;
 		},
 	});
 }
 
 export function adfEqual(first: JSONDocNode, second: JSONDocNode): boolean {
-	return deepEqual(orderMarks(first), orderMarks(second));
+	return isEqual(orderMarks(first), orderMarks(second));
+}
+
+export function marksEqual(
+	first: ADFEntityMark[] | undefined,
+	second: ADFEntityMark[] | undefined
+) {
+	if (first === second) {
+		return true;
+	}
+
+	return isEqual(sortDeep(first), sortDeep(second));
 }
