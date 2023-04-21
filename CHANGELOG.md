@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.6.0...obsidian-confluence-root-v3.6.1) (2023-04-21)
+
+
+### Bug Fixes
+
+* Upload the right signed file ([ef7b176](https://github.com/obsidian-confluence/obsidian-confluence/commit/ef7b17638f40c52e8cb23c4e09d538d2285ca1f3))
+
 ## [3.6.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.5.0...obsidian-confluence-root-v3.6.0) (2023-04-21)
 
 
