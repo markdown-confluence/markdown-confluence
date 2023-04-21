@@ -40,7 +40,7 @@ for prefix in "${prefixes[@]}"; do
   # Sign the tar.gz file
   gpg --armor --detach-sign "$file_name"
 
-  gh release upload $tag $file_name
+  gh release upload $tag "$file_name.asc"
 
   echo "Signature for $tag uploaded to to https://github.com/obsidian-confluence/obsidian-confluence/releases/tag/$tag"
 done
