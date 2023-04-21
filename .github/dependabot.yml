@@ -13,3 +13,24 @@ updates:
       prefix: "deps"
       prefix-development: "deps-dev"
       include: "scope"
+
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /packages/lib
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /packages/mermaid-electron-renderer
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /packages/obsidian
+    schedule:
+      interval: daily

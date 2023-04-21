@@ -17,10 +17,15 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -28,12 +33,12 @@ jobs:
           args: --sarif-file-output=snyk.sarif --all-projects --dev --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --prune-repeated-subdependencies
 
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@7df0ce34898d659f95c0c4a09eaa8d4e32ee64db # v2.2.12
         with:
           sarif_file: snyk.sarif
           
       - name: Run Snyk to scan for bad code
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -42,12 +47,12 @@ jobs:
           args: --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --sarif-file-output=snyk-code.sarif
         
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@7df0ce34898d659f95c0c4a09eaa8d4e32ee64db # v2.2.12
         with:
           sarif_file: snyk-code.sarif
         
       - name: Run Snyk to check for vulnerabilities (monitor)
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -56,7 +61,7 @@ jobs:
           args: --all-projects --dev --print-deps --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --prune-repeated-subdependencies
     
       - name: Run Snyk to create SBOM
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
