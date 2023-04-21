@@ -8,6 +8,8 @@ import { MarkdownFile } from "./adaptors";
 import { LocalAdfFile } from "./Publisher";
 import { processConniePerPageConfig } from "./ConniePageConfig";
 import { p } from "@atlaskit/adf-utils/builders";
+import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap";
+import { isSafeUrl } from "@atlaskit/adf-schema";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
 
@@ -30,18 +32,28 @@ export class MdToADF {
 		const olivia = traverse(adf, {
 			text: (node, _parent) => {
 				if (
-					node.marks &&
-					node.marks[0].type === "link" &&
-					node.marks[0].attrs
+					!(
+						node.marks &&
+						node.marks[0].type === "link" &&
+						node.marks[0].attrs &&
+						node.marks[0].attrs.href
+					)
 				) {
-					if (node.marks[0].attrs.href === node.text) {
-						node.type = "inlineCard";
-						node.attrs = { url: node.marks[0].attrs.href };
-						delete node.marks;
-						delete node.text;
-						return node;
-					}
+					return;
 				}
+
+				if (!isSafeUrl(node.marks[0].attrs.href)) {
+					node.marks[0].attrs.href = "#";
+				}
+
+				if (node.marks[0].attrs.href === node.text) {
+					node.type = "inlineCard";
+					node.attrs = { url: node.marks[0].attrs.href };
+					delete node.marks;
+					delete node.text;
+				}
+
+				return node;
 			},
 			table: (node, _parent) => {
 				if (
@@ -69,11 +81,28 @@ export class MdToADF {
 				return node;
 			},
 			codeBlock: (node, _parent) => {
-				if (node.attrs && Object.keys(node.attrs).length === 0) {
-					delete node.attrs;
+				if (!node || !node.attrs) {
+					return;
 				}
 
-				if ((node.attrs || {})?.language === "adf") {
+				if (Object.keys(node.attrs).length === 0) {
+					delete node.attrs;
+					return node;
+				}
+
+				const codeBlockLanguage = (node.attrs || {})?.language;
+
+				if (
+					codeBlockLanguage in
+					MarkdownToConfluenceCodeBlockLanguageMap
+				) {
+					node.attrs.language =
+						MarkdownToConfluenceCodeBlockLanguageMap[
+							codeBlockLanguage
+						];
+				}
+
+				if (codeBlockLanguage === "adf") {
 					if (!node?.content?.at(0)?.text) {
 						return node;
 					}

@@ -13,6 +13,8 @@ import {
 	ChartData,
 } from "./mermaid_renderers";
 import { PageContentType } from "./ConniePageConfig";
+import { p } from "@atlaskit/adf-utils/builders";
+import { ADFEntity } from "@atlaskit/adf-utils/dist/types/types";
 
 export interface FailedFile {
 	fileName: string;
@@ -234,23 +236,44 @@ export class Publisher {
 			imageResult: "same",
 			labelResult: "same",
 		};
-		const updatedAdf = await this.uploadFiles(
+		const uploadResult = await this.uploadFiles(
 			adfFile.pageId,
 			adfFile.absoluteFilePath,
 			adfFile.contents
 		);
 
-		if (!adfEqual(adfFile.contents, updatedAdf)) {
-			result.imageResult = "updated";
+		const imageResult = Object.keys(uploadResult.imageMap).reduce(
+			(prev, curr) => {
+				const value = uploadResult.imageMap[curr];
+				if (value === null) {
+					return prev;
+				}
+				const status = value.status;
+				return {
+					...prev,
+					[status]: prev[status] + 1,
+				};
+			},
+			{
+				existing: 0,
+				uploaded: 0,
+			} as Record<string, number>
+		);
+
+		if (!adfEqual(adfFile.contents, uploadResult.adf)) {
+			result.imageResult =
+				imageResult["uploaded"] > 0 ? "updated" : "same";
 		}
 
-		const adr = JSON.stringify(updatedAdf);
-
-		if (!adfEqual(JSON.parse(currentContents), updatedAdf)) {
+		if (!adfEqual(JSON.parse(currentContents), uploadResult.adf)) {
 			result.contentResult = "updated";
-			console.log("TESTING DIFF");
-			console.log(currentContents);
-			console.log(adr);
+			console.log(`TESTING DIFF - ${adfFile.absoluteFilePath}`);
+
+			const replacer = (key: unknown, value: unknown) =>
+				typeof value === "undefined" ? null : value;
+
+			console.log(JSON.stringify(JSON.parse(currentContents), replacer));
+			console.log(JSON.stringify(uploadResult.adf, replacer));
 
 			const updateContentDetails = {
 				id: adfFile.pageId,
@@ -264,7 +287,7 @@ export class Publisher {
 				body: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
 					atlas_doc_format: {
-						value: adr,
+						value: JSON.stringify(uploadResult.adf),
 						representation: "atlas_doc_format",
 					},
 				},
@@ -323,7 +346,12 @@ export class Publisher {
 		pageId: string,
 		pageFilePath: string,
 		adr: JSONDocNode
-	): Promise<JSONDocNode> {
+	): Promise<{
+		adf: JSONDocNode;
+		imageMap: Record<string, UploadedImageData | null>;
+	}> {
+		let imageMap: Record<string, UploadedImageData | null> = {};
+
 		const mediaNodes = filter(
 			adr,
 			(node) =>
@@ -359,7 +387,7 @@ export class Publisher {
 		);
 
 		if (imagesToUpload.size === 0 && mermaidChartsAsImages.size === 0) {
-			return adr;
+			return { adf: adr, imageMap };
 		}
 
 		const currentUploadedAttachments =
@@ -380,8 +408,6 @@ export class Publisher {
 			},
 			{}
 		);
-
-		let imageMap: Record<string, UploadedImageData | null> = {};
 
 		for (const imageUrl of imagesToUpload.values()) {
 			const filename = imageUrl.split("://")[1];
@@ -415,60 +441,88 @@ export class Publisher {
 			};
 		}
 
-		const afterAdf = traverse(adr, {
-			media: (node, _parent) => {
-				if (node?.attrs?.type === "file") {
-					if (!imageMap[node?.attrs?.url]) {
-						return;
-					}
-					const mappedImage = imageMap[node.attrs.url];
-					if (mappedImage !== null) {
-						node.attrs.collection = mappedImage.collection;
-						node.attrs.id = mappedImage.id;
-						delete node.attrs.url;
-						return node;
-					}
-				}
-			},
-			codeBlock: (node, _parent) => {
-				if (node?.attrs?.language === "mermaid") {
-					const mermaidContent = node?.content?.at(0)?.text;
-					if (!mermaidContent) {
-						return;
-					}
-					const mermaidFilename = getMermaidFileName(mermaidContent);
+		console.log({ imageMap });
 
-					if (!imageMap[mermaidFilename.uploadFilename]) {
+		let afterAdf = adr as ADFEntity;
+
+		afterAdf =
+			traverse(adr, {
+				media: (node, _parent) => {
+					if (node?.attrs?.type === "file") {
+						if (!imageMap[node?.attrs?.url]) {
+							return;
+						}
+						const mappedImage = imageMap[node.attrs.url];
+						if (mappedImage !== null) {
+							node.attrs.collection = mappedImage.collection;
+							node.attrs.id = mappedImage.id;
+							node.attrs.width = mappedImage.width;
+							node.attrs.height = mappedImage.height;
+							delete node.attrs.url;
+							return node;
+						}
+					}
+				},
+				codeBlock: (node, _parent) => {
+					if (node?.attrs?.language === "mermaid") {
+						const mermaidContent = node?.content?.at(0)?.text;
+						if (!mermaidContent) {
+							return;
+						}
+						const mermaidFilename =
+							getMermaidFileName(mermaidContent);
+
+						if (!imageMap[mermaidFilename.uploadFilename]) {
+							return;
+						}
+						const mappedImage =
+							imageMap[mermaidFilename.uploadFilename];
+						if (mappedImage !== null) {
+							node.type = "mediaSingle";
+							node.attrs.layout = "center";
+							if (node.content) {
+								node.content = [
+									{
+										type: "media",
+										attrs: {
+											type: "file",
+											collection: mappedImage.collection,
+											id: mappedImage.id,
+											width: mappedImage.width,
+											height: mappedImage.height,
+										},
+									},
+								];
+							}
+							delete node.attrs.language;
+							return node;
+						}
+					}
+				},
+			}) || afterAdf;
+
+		// Remove bad images. Confluence will do this as well so we do it to make our ADF match theirs.
+		afterAdf =
+			traverse(afterAdf, {
+				mediaSingle: (node, _parent) => {
+					if (!node || !node.content) {
 						return;
 					}
-					const mappedImage =
-						imageMap[mermaidFilename.uploadFilename];
-					if (mappedImage !== null) {
-						node.type = "mediaSingle";
-						node.attrs.layout = "center";
-						if (node.content) {
-							node.content = [
-								{
-									type: "media",
-									attrs: {
-										type: "file",
-										collection: mappedImage.collection,
-										id: mappedImage.id,
-									},
-								},
-							];
-						}
-						delete node.attrs.language;
-						return node;
+					if (
+						node.content.at(0)?.attrs?.url !== undefined &&
+						(node.content.at(0)?.attrs?.url as string).startsWith(
+							"file://"
+						)
+					) {
+						return p("Invalid Image Path");
 					}
-				}
-			},
-		});
+				},
+			}) || afterAdf;
 
 		if (!afterAdf) {
-			return adr;
+			return { adf: adr as JSONDocNode, imageMap };
 		}
 
-		return afterAdf as JSONDocNode;
+		return { adf: afterAdf as JSONDocNode, imageMap };
 	}
 }
