@@ -3,7 +3,8 @@ on:
     branches:
       - main
 
-permissions: read
+permissions:
+  contents: read
 
 name: release-please
 

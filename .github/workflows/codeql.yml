@@ -20,7 +20,8 @@ on:
   schedule:
     - cron: '19 15 * * 6'
 
-permissions: read
+permissions:
+  contents: read
 
 jobs:
   analyze:
