@@ -36,26 +36,7 @@ jobs:
 
       - name: Upload release assets
         if: ${{ steps.release-please.outputs.release_created }}
-        run: |
-          mkdir -p packages/obsidian/dist/
-          cp README.md packages/obsidian/dist/
-          cp manifest.json packages/obsidian/dist/
-          
-          npm ci
-          npm run lint -ws --if-present
-          npm run prettier-check -ws --if-present
-          npm run build -ws --if-present
-
-          ORIGINAL_TAG=${{ steps.release-please.outputs.tag_name }}
-          IFS='-v' read -ra PARTS <<< "$ORIGINAL_TAG"
-          TAG="${PARTS[-1]}"
-
-          cd packages/obsidian
-          zip -r ${{ github.event.repository.name }}-$TAG.zip dist
-
-          FILES=$(echo dist/*)
-          gh release create $TAG -t $TAG --generate-notes --latest --target ${{ steps.release-please.outputs.sha }} ./dist/*
-          echo $FILES
+        run: ./.build/upload-release-assets.sh ${{ steps.release-please.outputs.tag_name }} ${{ steps.release-please.outputs.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish to NPM
