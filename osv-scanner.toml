@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "CVE-2023-26115"
+reason = "Part of eslint"
