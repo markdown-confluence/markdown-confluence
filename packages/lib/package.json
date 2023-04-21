@@ -64,7 +64,7 @@
         "mime-types": "^2.1.35",
         "prosemirror-markdown": "^1.10.1",
         "prosemirror-model": "1.14.3",
-        "punycode": "^1.4.1",
+        "punycode": "^2.3.0",
         "react": "^16.14.0",
         "react-dom": "^16.14.0",
         "react-intl-next": "npm:react-intl@^5.18.1",
