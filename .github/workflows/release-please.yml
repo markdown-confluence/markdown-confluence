@@ -3,16 +3,17 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-  pull-requests: write
-  id-token: write
+permissions: read
 
 name: release-please
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
