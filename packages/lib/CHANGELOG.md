@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.5.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.4.1...@markdown-confluence/lib-v3.5.0) (2023-04-21)
+
+
+### Features
+
+* Custom ADF via Codeblock and adf language ([8e91630](https://github.com/obsidian-confluence/obsidian-confluence/commit/8e916307b14654da4bc54bc71579e2a0283b365f))
+
+
+### Bug Fixes
+
+* Add missing homepage and bugs to package.json ([c920345](https://github.com/obsidian-confluence/obsidian-confluence/commit/c92034563ce2f8d11a40ed2c68b104807eace3be))
+
 ## [3.4.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.4.0...@markdown-confluence/lib-v3.4.1) (2023-04-20)
 
 
