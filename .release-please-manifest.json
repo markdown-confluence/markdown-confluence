@@ -1,6 +1,6 @@
 {
-  ".": "3.5.0",
-  "packages/obsidian": "3.5.0",
-  "packages/lib": "3.5.0",
-  "packages/mermaid-electron-renderer": "3.5.0"
+  ".": "3.6.0",
+  "packages/obsidian": "3.6.0",
+  "packages/lib": "3.6.0",
+  "packages/mermaid-electron-renderer": "3.6.0"
 }
