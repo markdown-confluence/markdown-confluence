@@ -42,7 +42,7 @@
         "ts-jest": "^29.1.0",
         "ts-node": "^10.9.1",
         "tslib": "2.5.0",
-        "typescript": "4.7.4"
+        "typescript": "5.0.4"
     },
     "dependencies": {
         "@atlaskit/adf-utils": "^17.1.4",
