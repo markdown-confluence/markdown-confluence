@@ -5,7 +5,7 @@ import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { createFolderStructure as createLocalAdfTree } from "./TreeLocal";
 import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
 import { uploadBuffer, UploadedImageData, uploadFile } from "./Attachments";
-import { prepareAdf } from "./AdfPostProcess";
+import { prepareAdfToUpload, removeInlineComments } from "./AdfProcessing";
 import { adfEqual } from "./AdfEqual";
 import {
 	getMermaidFileName,
@@ -144,7 +144,7 @@ export class Publisher {
 			parentPage.id
 		);
 
-		prepareAdf(confluencePagesToPublish, this.settings);
+		prepareAdfToUpload(confluencePagesToPublish, this.settings);
 
 		if (publishFilter) {
 			confluencePagesToPublish = confluencePagesToPublish.filter(
@@ -265,14 +265,17 @@ export class Publisher {
 				imageResult["uploaded"] > 0 ? "updated" : "same";
 		}
 
-		if (!adfEqual(JSON.parse(currentContents), uploadResult.adf)) {
+		const cleanedExistingContents = removeInlineComments(
+			JSON.parse(currentContents)
+		);
+		if (!adfEqual(cleanedExistingContents, uploadResult.adf)) {
 			result.contentResult = "updated";
 			console.log(`TESTING DIFF - ${adfFile.absoluteFilePath}`);
 
 			const replacer = (key: unknown, value: unknown) =>
 				typeof value === "undefined" ? null : value;
 
-			console.log(JSON.stringify(JSON.parse(currentContents), replacer));
+			console.log(JSON.stringify(cleanedExistingContents, replacer));
 			console.log(JSON.stringify(uploadResult.adf, replacer));
 
 			const updateContentDetails = {
@@ -440,8 +443,6 @@ export class Publisher {
 				[mermaidImage[0]]: uploadedContent,
 			};
 		}
-
-		console.log({ imageMap });
 
 		let afterAdf = adr as ADFEntity;
 
