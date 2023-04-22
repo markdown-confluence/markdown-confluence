@@ -36,13 +36,19 @@ export class MdToADF {
 						node.marks &&
 						node.marks[0].type === "link" &&
 						node.marks[0].attrs &&
-						node.marks[0].attrs.href
+						"href" in node.marks[0].attrs
 					)
 				) {
 					return;
 				}
 
-				if (!isSafeUrl(node.marks[0].attrs.href)) {
+				if (
+					node.marks[0].attrs.href === "" ||
+					(!isSafeUrl(node.marks[0].attrs.href) &&
+						!(node.marks[0].attrs.href as string).startsWith(
+							"wikilink"
+						))
+				) {
 					node.marks[0].attrs.href = "#";
 				}
 
