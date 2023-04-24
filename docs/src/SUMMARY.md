@@ -6,6 +6,7 @@
 	- [Installation](./getting-started/installation.md)
 	- [Installation - BRAT](./getting-started/installation-brat.md)
 - [Supported Features](./features/index.md)
+    - [Comments](./features/comment-handling.md)
 	- [Supported Markdown](./features/supported-markdown.md)
 	- [Folder Note](./features/folder-note.md)
 	- [Folder Structure](./features/folder-structure.md)
@@ -15,3 +16,4 @@
 	- [Callouts](./features/callouts.md)
 	- [Wikilinks](./features/wikilinks.md)
 - [Thanks](thanks.md)
+- [Changelog](CHANGELOG.md)

@@ -15,7 +15,7 @@ import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-r
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
 import ObsidianAdaptor from "./adaptors/obsidian";
 import { CompletedModal } from "./CompletedModal";
-import { CustomConfluenceClient } from "./MyBaseClient";
+import { ObsidianConfluenceClient } from "./MyBaseClient";
 import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
 import {
 	ConfluencePerPageForm,
@@ -77,7 +77,7 @@ export default class ConfluencePlugin extends Plugin {
 			this.app
 		);
 		const mermaidRenderer = new ElectronMermaidRenderer();
-		const confluenceClient = new CustomConfluenceClient({
+		const confluenceClient = new ObsidianConfluenceClient({
 			host: this.settings.confluenceBaseUrl,
 			authentication: {
 				basic: {
