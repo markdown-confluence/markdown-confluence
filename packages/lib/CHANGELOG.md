@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.7.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.6.1...@markdown-confluence/lib-v3.7.0) (2023-04-24)
+
+
+### Features
+
+* Ignore comments when comparing pages to see if page has changed ([8cedbed](https://github.com/obsidian-confluence/obsidian-confluence/commit/8cedbedeaac229a2ceec31a11d7494c35845064b))
+* Make ADF the same as what Confluence returns. ([a223c72](https://github.com/obsidian-confluence/obsidian-confluence/commit/a223c72057fe154f3a47916fb97e1c92830bdf7c))
+* Map Inline Comments with best effort ([b1d8db3](https://github.com/obsidian-confluence/obsidian-confluence/commit/b1d8db3eb1d68ebc06c614052ea41693f47842e2))
+
+
+### Bug Fixes
+
+* Add category when uploading Sarif file ([3fb888b](https://github.com/obsidian-confluence/obsidian-confluence/commit/3fb888b9600aea095892c50dc210779df709c240))
+
 ## [3.6.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.6.0...@markdown-confluence/lib-v3.6.1) (2023-04-21)
 
 

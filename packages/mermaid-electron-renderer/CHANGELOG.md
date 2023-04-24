@@ -6,6 +6,20 @@
   * dependencies
     * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
 
+## [3.7.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v3.6.1...@markdown-confluence/mermaid-electron-renderer-v3.7.0) (2023-04-24)
+
+
+### Features
+
+* Make ADF the same as what Confluence returns. ([a223c72](https://github.com/obsidian-confluence/obsidian-confluence/commit/a223c72057fe154f3a47916fb97e1c92830bdf7c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 3.6.1 to 3.7.0
+
 ## [3.6.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v3.6.0...@markdown-confluence/mermaid-electron-renderer-v3.6.1) (2023-04-21)
 
 
