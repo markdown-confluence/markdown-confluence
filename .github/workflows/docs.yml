@@ -1,4 +1,4 @@
-name: Deploy
+name: Docs
 on:
   push:
     branches:
@@ -34,11 +34,14 @@ jobs:
         mkdir mdbook
         curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.27/mdbook-v0.4.27-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook
         echo `pwd`/mdbook >> $GITHUB_PATH
+        cargo install mdbook-mermaid
     - name: Deploy GitHub Pages
       run: |
         # This assumes your book is in the root of your repository.
         # Just add a `cd` here if you need to change to another directory.
+        cp CHANGELOG.md docs/src/CHANGELOG.md
         cd docs
+        mdbook-mermaid install .
         mdbook build
     - name: Setup Pages
       uses: actions/configure-pages@f156874f8191504dae5b037505266ed5dda6c382 # v3.0.6

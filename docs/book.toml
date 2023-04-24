@@ -6,10 +6,12 @@ src = "src"
 title = "Obsidian Confluence Integration"
 create-missing = false
 
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
 
 [output.html]
 git-repository-url = "https://github.com/obsidian-confluence/obsidian-confluence"
 git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/obsidian-confluence/obsidian-confluence/edit/main/docs/{path}"
 cname = "obsidian-confluence.com"
-
+additional-js = ["mermaid.min.js", "mermaid-init.js"]

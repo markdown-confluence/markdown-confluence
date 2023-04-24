@@ -1,11 +1,10 @@
 import { ConfluenceSettings } from "./Settings";
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
-import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors";
+import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { createFolderStructure as createLocalAdfTree } from "./TreeLocal";
 import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
 import { uploadBuffer, UploadedImageData, uploadFile } from "./Attachments";
-import { prepareAdfToUpload, removeInlineComments } from "./AdfProcessing";
 import { adfEqual } from "./AdfEqual";
 import {
 	getMermaidFileName,
@@ -78,14 +77,14 @@ export interface ConfluenceNode {
 	file: ConfluenceAdfFile;
 	version: number;
 	lastUpdatedBy: string;
-	existingAdf: string;
+	existingAdf: JSONDocNode;
 	parentPageId: string;
 }
 export interface ConfluenceTreeNode {
 	file: ConfluenceAdfFile;
 	version: number;
 	lastUpdatedBy: string;
-	existingAdf: string;
+	existingAdf: JSONDocNode;
 	children: ConfluenceTreeNode[];
 }
 
@@ -97,7 +96,7 @@ export interface UploadAdfFileResult {
 }
 
 export class Publisher {
-	confluenceClient: CustomConfluenceClient;
+	confluenceClient: RequiredConfluenceClient;
 	adaptor: LoaderAdaptor;
 	settings: ConfluenceSettings;
 	mermaidRenderer: MermaidRenderer;
@@ -106,7 +105,7 @@ export class Publisher {
 	constructor(
 		adaptor: LoaderAdaptor,
 		settings: ConfluenceSettings,
-		confluenceClient: CustomConfluenceClient,
+		confluenceClient: RequiredConfluenceClient,
 		mermaidRenderer: MermaidRenderer
 	) {
 		this.adaptor = adaptor;
@@ -141,10 +140,9 @@ export class Publisher {
 			folderTree,
 			spaceToPublishTo.key,
 			parentPage.id,
-			parentPage.id
+			parentPage.id,
+			this.settings
 		);
-
-		prepareAdfToUpload(confluencePagesToPublish, this.settings);
 
 		if (publishFilter) {
 			confluencePagesToPublish = confluencePagesToPublish.filter(
@@ -220,7 +218,7 @@ export class Publisher {
 	private async updatePageContent(
 		parentPageId: string,
 		pageVersionNumber: number,
-		currentContents: string,
+		currentContents: JSONDocNode,
 		adfFile: ConfluenceAdfFile,
 		lastUpdatedBy: string
 	): Promise<UploadAdfFileResult> {
@@ -236,15 +234,15 @@ export class Publisher {
 			imageResult: "same",
 			labelResult: "same",
 		};
-		const uploadResult = await this.uploadFiles(
+		const imageUploadResult = await this.uploadFiles(
 			adfFile.pageId,
 			adfFile.absoluteFilePath,
 			adfFile.contents
 		);
 
-		const imageResult = Object.keys(uploadResult.imageMap).reduce(
+		const imageResult = Object.keys(imageUploadResult.imageMap).reduce(
 			(prev, curr) => {
-				const value = uploadResult.imageMap[curr];
+				const value = imageUploadResult.imageMap[curr];
 				if (value === null) {
 					return prev;
 				}
@@ -260,23 +258,20 @@ export class Publisher {
 			} as Record<string, number>
 		);
 
-		if (!adfEqual(adfFile.contents, uploadResult.adf)) {
+		if (!adfEqual(adfFile.contents, imageUploadResult.adf)) {
 			result.imageResult =
 				imageResult["uploaded"] > 0 ? "updated" : "same";
 		}
 
-		const cleanedExistingContents = removeInlineComments(
-			JSON.parse(currentContents)
-		);
-		if (!adfEqual(cleanedExistingContents, uploadResult.adf)) {
+		if (!adfEqual(currentContents, imageUploadResult.adf)) {
 			result.contentResult = "updated";
 			console.log(`TESTING DIFF - ${adfFile.absoluteFilePath}`);
 
 			const replacer = (key: unknown, value: unknown) =>
 				typeof value === "undefined" ? null : value;
 
-			console.log(JSON.stringify(cleanedExistingContents, replacer));
-			console.log(JSON.stringify(uploadResult.adf, replacer));
+			console.log(JSON.stringify(currentContents, replacer));
+			console.log(JSON.stringify(imageUploadResult.adf, replacer));
 
 			const updateContentDetails = {
 				id: adfFile.pageId,
@@ -290,7 +285,7 @@ export class Publisher {
 				body: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
 					atlas_doc_format: {
-						value: JSON.stringify(uploadResult.adf),
+						value: JSON.stringify(imageUploadResult.adf),
 						representation: "atlas_doc_format",
 					},
 				},

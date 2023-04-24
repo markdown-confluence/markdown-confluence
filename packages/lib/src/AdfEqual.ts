@@ -1,8 +1,7 @@
 import sortAny from "sort-any";
 import { mapValues } from "lodash";
 import { traverse } from "@atlaskit/adf-utils/traverse";
-import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { ADFEntityMark } from "@atlaskit/adf-utils/types";
+import { ADFEntity, ADFEntityMark } from "@atlaskit/adf-utils/types";
 import { isEqual } from "./isEqual";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +24,7 @@ const sortDeep = (object: unknown): any => {
 	return sortAny(object.map(sortDeep));
 };
 
-export function orderMarks(adf: JSONDocNode) {
+export function orderMarks(adf: ADFEntity) {
 	return traverse(adf, {
 		any: (node, __parent) => {
 			if (node.marks) {
@@ -36,7 +35,7 @@ export function orderMarks(adf: JSONDocNode) {
 	});
 }
 
-export function adfEqual(first: JSONDocNode, second: JSONDocNode): boolean {
+export function adfEqual(first: ADFEntity, second: ADFEntity): boolean {
 	return isEqual(orderMarks(first), orderMarks(second));
 }
 

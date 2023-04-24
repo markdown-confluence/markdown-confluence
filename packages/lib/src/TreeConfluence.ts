@@ -6,7 +6,10 @@ import {
 	LocalAdfFileTreeNode,
 } from "./Publisher";
 import { doc, p } from "@atlaskit/adf-utils/builders";
-import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors";
+import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
+import { JSONDocNode } from "@atlaskit/editor-json-transformer";
+import { prepareAdfToUpload } from "./AdfProcessing";
+import { ConfluenceSettings } from "./Settings";
 
 const blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
 
@@ -37,12 +40,13 @@ function flattenTree(
 }
 
 export async function ensureAllFilesExistInConfluence(
-	confluenceClient: CustomConfluenceClient,
+	confluenceClient: RequiredConfluenceClient,
 	adaptor: LoaderAdaptor,
 	node: LocalAdfFileTreeNode,
 	spaceKey: string,
 	parentPageId: string,
-	topPageId: string
+	topPageId: string,
+	settings: ConfluenceSettings
 ): Promise<ConfluenceNode[]> {
 	const confluenceNode = await createFileStructureInConfluence(
 		confluenceClient,
@@ -56,11 +60,13 @@ export async function ensureAllFilesExistInConfluence(
 
 	const pages = flattenTree(confluenceNode);
 
+	prepareAdfToUpload(pages, settings);
+
 	return pages;
 }
 
 async function createFileStructureInConfluence(
-	confluenceClient: CustomConfluenceClient,
+	confluenceClient: RequiredConfluenceClient,
 	adaptor: LoaderAdaptor,
 	node: LocalAdfFileTreeNode,
 	spaceKey: string,
@@ -73,7 +79,7 @@ async function createFileStructureInConfluence(
 	}
 
 	let version: number;
-	let existingAdf: string | undefined;
+	let existingAdf: JSONDocNode | undefined;
 	let lastUpdatedBy: string | undefined;
 	const file: ConfluenceAdfFile = {
 		...node.file,
@@ -93,11 +99,13 @@ async function createFileStructureInConfluence(
 		file.pageId = pageDetails.id;
 		file.spaceKey = pageDetails.spaceKey;
 		version = pageDetails.version;
-		existingAdf = pageDetails.existingAdf;
+		existingAdf = JSON.parse(
+			pageDetails.existingAdf ?? "{}"
+		) as JSONDocNode;
 		lastUpdatedBy = pageDetails.lastUpdatedBy;
 	} else {
 		version = 0;
-		existingAdf = "";
+		existingAdf = doc(p());
 	}
 
 	const childDetailsTasks = node.children.map((childNode) => {
@@ -118,13 +126,13 @@ async function createFileStructureInConfluence(
 		file: file,
 		version,
 		lastUpdatedBy: lastUpdatedBy ?? "",
-		existingAdf: existingAdf ?? "",
+		existingAdf,
 		children: childDetails,
 	};
 }
 
 async function ensurePageExists(
-	confluenceClient: CustomConfluenceClient,
+	confluenceClient: RequiredConfluenceClient,
 	adaptor: LoaderAdaptor,
 	file: LocalAdfFile,
 	spaceKey: string,

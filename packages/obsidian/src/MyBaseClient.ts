@@ -7,6 +7,7 @@ import {
 	AuthenticationService,
 } from "confluence.js";
 import { requestUrl } from "obsidian";
+import { RequiredConfluenceClient } from "@markdown-confluence/lib";
 
 const ATLASSIAN_TOKEN_CHECK_FLAG = "X-Atlassian-Token";
 const ATLASSIAN_TOKEN_CHECK_NOCHECK_VALUE = "no-check";
@@ -186,7 +187,10 @@ export class MyBaseClient implements Client {
 	}
 }
 
-export class CustomConfluenceClient extends MyBaseClient {
+export class ObsidianConfluenceClient
+	extends MyBaseClient
+	implements RequiredConfluenceClient
+{
 	content = new Api.Content(this);
 	space = new Api.Space(this);
 	contentAttachments = new Api.ContentAttachments(this);

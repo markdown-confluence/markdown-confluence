@@ -1,5 +1,5 @@
 import SparkMD5 from "spark-md5";
-import { CustomConfluenceClient, LoaderAdaptor } from "./adaptors";
+import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
 import sizeOf from "image-size";
 
 export type ConfluenceImageStatus = "existing" | "uploaded";
@@ -14,7 +14,7 @@ export interface UploadedImageData {
 }
 
 export async function uploadBuffer(
-	confluenceClient: CustomConfluenceClient,
+	confluenceClient: RequiredConfluenceClient,
 	pageId: string,
 	uploadFilename: string,
 	fileBuffer: Buffer,
@@ -70,7 +70,7 @@ export async function uploadBuffer(
 }
 
 export async function uploadFile(
-	confluenceClient: CustomConfluenceClient,
+	confluenceClient: RequiredConfluenceClient,
 	adaptor: LoaderAdaptor,
 	pageId: string,
 	pageFilePath: string,
