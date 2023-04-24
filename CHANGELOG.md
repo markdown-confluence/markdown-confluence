@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.7.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.6.1...obsidian-confluence-root-v3.7.0) (2023-04-24)
+
+
+### Features
+
+* [StepSecurity] Apply security best practices ([#136](https://github.com/obsidian-confluence/obsidian-confluence/issues/136)) ([b7b38a4](https://github.com/obsidian-confluence/obsidian-confluence/commit/b7b38a42b2c21f91725f44f97ec1e98473e724a0))
+* Add PAT for Branch Protection Check ([b44a52e](https://github.com/obsidian-confluence/obsidian-confluence/commit/b44a52e2ce41dc1c826957f9bad52b55a31d0ea0))
+* Create CODEOWNERS ([a507ff9](https://github.com/obsidian-confluence/obsidian-confluence/commit/a507ff96284384720d826fbf2446e359517aedf6))
+* Create SECURITY.md ([06f8ba7](https://github.com/obsidian-confluence/obsidian-confluence/commit/06f8ba7b9cdbc0938fd312609ed6e82877f108a4))
+* Dependancy review comment with summary ([76597ac](https://github.com/obsidian-confluence/obsidian-confluence/commit/76597acd6bd883eec1dee87b9d490b0b462de095))
+* Ignore comments when comparing pages to see if page has changed ([8cedbed](https://github.com/obsidian-confluence/obsidian-confluence/commit/8cedbedeaac229a2ceec31a11d7494c35845064b))
+* Make ADF the same as what Confluence returns. ([a223c72](https://github.com/obsidian-confluence/obsidian-confluence/commit/a223c72057fe154f3a47916fb97e1c92830bdf7c))
+* Map Inline Comments with best effort ([b1d8db3](https://github.com/obsidian-confluence/obsidian-confluence/commit/b1d8db3eb1d68ebc06c614052ea41693f47842e2))
+
+
+### Bug Fixes
+
+* Add category when uploading Sarif file ([3fb888b](https://github.com/obsidian-confluence/obsidian-confluence/commit/3fb888b9600aea095892c50dc210779df709c240))
+* dependabot config to be consistent ([4933c62](https://github.com/obsidian-confluence/obsidian-confluence/commit/4933c6246e1db4c2996419ff3a1c8988667c9570))
+* Fix permissions syntax ([b7e585b](https://github.com/obsidian-confluence/obsidian-confluence/commit/b7e585b5a46bb9bf8b2ca7af0bccdf1dff95063a))
+* Ignore error under eslint due to not being an issue ([e784c6c](https://github.com/obsidian-confluence/obsidian-confluence/commit/e784c6ca1d2a6e2cae19c695cf8488ee60ce7056))
+* Ignore vuln not being used ([619daca](https://github.com/obsidian-confluence/obsidian-confluence/commit/619daca0e1adb8c24f5768abf9f3c412757f6c8a))
+* Root permissions all read as per https://github.com/ossf/scorecard/blob/376f465c111c39c6a5ad7408e8896cd790cb5219/docs/checks.md#token-permissions ([4560446](https://github.com/obsidian-confluence/obsidian-confluence/commit/45604462575d96e9ac085c15eb45c9207fd1c232))
+
 ## [3.6.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.6.0...obsidian-confluence-root-v3.6.1) (2023-04-21)
 
 
