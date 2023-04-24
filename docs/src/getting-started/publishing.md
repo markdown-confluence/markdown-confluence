@@ -32,7 +32,7 @@ If you need to move a page or a folder within Confluence, follow these steps:
    ---
    ```
 
-5. If you are moving an entire folder, ensure you have a [Folder Note](./folder-note.md) for the folder and add the `connie-dont-change-parent-page` property to the Folder Note as well.
+5. If you are moving an entire folder, ensure you have a [Folder Note](../features/folder-note.md) for the folder and add the `connie-dont-change-parent-page` property to the Folder Note as well.
 
 6. Run the publish command in Obsidian to update the pages with the new frontmatter settings.
 
