@@ -1,0 +1,41 @@
+{
+    "name": "@markdown-confluence/cli",
+    "version": "3.7.0",
+    "description": "This CLI allows you to publish your notes to Confluence",
+    "bin": "dist/index.js",
+    "scripts": {
+        "dev": "node esbuild.config.mjs",
+        "clidev": "npm run build && node ./dist/index.js",
+        "build": "tsc && node esbuild.config.mjs production",
+        "fmt": "npx prettier --write src/",
+        "lint": "eslint --ignore-path ../../.eslintignore --ext .js,.ts src/",
+        "prettier-check": "npx prettier --check src/"
+    },
+    "keywords": [],
+    "author": "andymac4182",
+    "license": "Apache 2.0",
+    "devDependencies": {
+    },
+    "dependencies": {
+        "confluence.js": "^1.6.3",
+        "boxen": "7.0.2",
+        "chalk": "5.2.0",
+        "yargs": "17.7.1",
+        "@markdown-confluence/lib": "3.7.0",
+        "@markdown-confluence/mermaid-puppeteer-renderer": "*"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/",
+        "provenance": true
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/obsidian-confluence/obsidian-confluence",
+        "directory": "packages/cli"
+    },
+    "homepage": "https://github.com/obsidian-confluence/obsidian-confluence/tree/main/packages/cli",
+    "bugs": {
+        "url": "https://github.com/obsidian-confluence/obsidian-confluence/issues"
+    }
+}

@@ -87,9 +87,11 @@ export default class ConfluencePlugin extends Plugin {
 			},
 		});
 
+		const settingsLoader =
+			new ConfluenceUploadSettings.StaticSettingsLoader(this.settings);
 		this.publisher = new Publisher(
 			this.adaptor,
-			this.settings,
+			settingsLoader,
 			confluenceClient,
 			mermaidRenderer
 		);

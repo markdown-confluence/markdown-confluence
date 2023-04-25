@@ -12,15 +12,15 @@ import { orderMarks } from "./AdfEqual";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
 import { ChartData, MermaidRenderer } from "./mermaid_renderers";
 import { Publisher } from "./Publisher";
-import { ConfluenceSettings } from "./Settings";
+import {
+	AutoSettingsLoader,
+	DefaultSettingsLoader,
+	EnvironmentVariableSettingsLoader,
+	StaticSettingsLoader,
+} from "./Settings";
 
-const settings: ConfluenceSettings = {
-	confluenceBaseUrl: process.env.ATLASSIAN_SITE_URL ?? "MISSING SITE",
-	confluenceParentId: "",
-	atlassianUserName: process.env.ATLASSIAN_USERNAME ?? "NO EMAIL",
-	atlassianApiToken: process.env.ATLASSIAN_API_TOKEN ?? "NO TOKEN",
-	folderToPublish: "Confluence Files",
-};
+const settingsLoader = new AutoSettingsLoader();
+const settings = settingsLoader.load();
 
 const markdownTestCases: MarkdownFile[] = [
 	{
@@ -273,9 +273,18 @@ test("Upload to Confluence", async () => {
 
 	settings.confluenceParentId = contentByTitle.results[0].id;
 
+	const settingLoaders = [
+		new EnvironmentVariableSettingsLoader(),
+		new StaticSettingsLoader({
+			confluenceParentId: contentByTitle.results[0].id,
+		}),
+		new DefaultSettingsLoader(),
+	];
+	const publisherSettingsLoader = new AutoSettingsLoader(settingLoaders);
+
 	const publisher = new Publisher(
 		filesystemAdaptor,
-		settings,
+		publisherSettingsLoader,
 		confluenceClient,
 		mermaidRenderer
 	);

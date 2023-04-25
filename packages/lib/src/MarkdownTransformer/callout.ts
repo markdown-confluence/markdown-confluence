@@ -1,5 +1,6 @@
 import type MarkdownIt from "markdown-it/lib";
 import type StateCore from "markdown-it/lib/rules_core/state_core";
+import Token from "markdown-it/lib/token";
 
 const panelRegex =
 	/\[!(?<calloutType>.*)](?<collapseType>[+-])*[ \t]*(?<title>.*)*/;
@@ -174,7 +175,7 @@ export function panel(state: StateCore): boolean {
 
 			return [...previousTokens, tokenToReturn];
 		},
-		[]
+		[] as Token[]
 	);
 
 	state.tokens = newTokens;
