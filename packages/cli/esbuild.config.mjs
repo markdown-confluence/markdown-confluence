@@ -1,7 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import { writeFileSync } from 'fs';
-import { glob } from 'glob'
+import builtins from 'builtin-modules'
+import { copy } from 'esbuild-plugin-copy';
 
 
 
@@ -14,26 +15,37 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === 'production');
 
-const tsFiles = await glob('src/**/*.ts', { ignore: ['node_modules/**', 'src/**/*.test.ts'] })
-
-
 const buildConfig = {
 	banner: {
 		js: banner,
 	},
-	entryPoints: [...tsFiles],
-	bundle: false,
-	format: 'esm',
+	entryPoints: ['src/index.ts'],
+	bundle: true,
+	format: 'cjs',
 	target: 'node16',
 	platform: 'node',
 	logLevel: "info",
 	sourcemap: true,
-	treeShaking: false,
+	treeShaking: true,
 	outdir: 'dist',
 	mainFields: ['module', 'main'],
-	minify: false,
+	minify: true,
 	metafile: true,
-
+	external: [
+		...builtins
+	],
+	plugins: [
+		copy({
+		  // this is equal to process.cwd(), which means we use cwd path as base path to resolve `to` path
+		  // if not specified, this plugin uses ESBuild.build outdir/outfile options as base path.
+		  resolveFrom: 'cwd',
+		  assets: {
+			from: ['../mermaid-puppeteer-renderer/dist/mermaid_renderer.html'],
+			to: ['./dist/mermaid_renderer.html'],
+		  },
+		  watch: true,
+		}),
+	  ],
 };
 
 if (prod) {
@@ -41,5 +53,5 @@ if (prod) {
 	writeFileSync("./dist/meta.json", JSON.stringify(buildResult.metafile));
 } else {
 	const context = await esbuild.context(buildConfig);
-	await context.watch();
+	await context.watch();	
 }

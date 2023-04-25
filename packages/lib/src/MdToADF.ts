@@ -11,7 +11,7 @@ import { p } from "@atlaskit/adf-utils/builders";
 import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap";
 import { isSafeUrl } from "@atlaskit/adf-schema";
 
-const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---/g;
+const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 
 export class MdToADF {
 	private transformer: MarkdownTransformer;

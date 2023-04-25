@@ -51,5 +51,7 @@ jobs:
         run: |
           npm publish -w @markdown-confluence/lib
           npm publish -w @markdown-confluence/mermaid-electron-renderer
+          npm publish -w @markdown-confluence/mermaid-puppeteer-renderer
+          npm publish -w @markdown-confluence/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

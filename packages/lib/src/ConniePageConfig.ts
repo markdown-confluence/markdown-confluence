@@ -225,15 +225,18 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 				};
 			}
 		},
-		process: (yamlValue: string) => {
-			const blogPostDateValidation = validateDate(yamlValue);
-			if (blogPostDateValidation.valid) {
-				return yamlValue;
-			} else {
-				return new Error(
-					`Blog post date error. ${blogPostDateValidation.reasons?.join()}`
-				);
+		process: (yamlValue) => {
+			if (typeof yamlValue === "string") {
+				const blogPostDateValidation = validateDate(yamlValue);
+				if (blogPostDateValidation.valid) {
+					return yamlValue;
+				} else {
+					return new Error(
+						`Blog post date error. ${blogPostDateValidation.reasons?.join()}`
+					);
+				}
 			}
+			return new Error(`"connie-blog-post-date" needs to be a string.`);
 		},
 	},
 	contentType: {

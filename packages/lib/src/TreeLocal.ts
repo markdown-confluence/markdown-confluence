@@ -1,7 +1,7 @@
 import path from "path";
 import { MarkdownFile } from "./adaptors";
 import { MdToADF } from "./MdToADF";
-import FolderFile from "./FolderFile.json";
+import { folderFile } from "./FolderFile";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { LocalAdfFileTreeNode } from "./Publisher";
 
@@ -79,7 +79,7 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 				folderName: node.name,
 				absoluteFilePath: path.join(commonPath, node.name),
 				fileName: `${node.name}.md`,
-				contents: FolderFile as JSONDocNode,
+				contents: folderFile as JSONDocNode,
 				pageTitle: node.name,
 				frontmatter: {},
 				tags: [],

@@ -40,3 +40,5 @@ export interface RequiredConfluenceClient {
 	contentLabels: Api.ContentLabels;
 	users: Api.Users;
 }
+
+export * from "./filesystem";

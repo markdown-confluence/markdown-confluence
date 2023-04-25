@@ -1,4 +1,4 @@
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, SettingsLoader } from "./Settings";
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
 import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
@@ -104,12 +104,12 @@ export class Publisher {
 
 	constructor(
 		adaptor: LoaderAdaptor,
-		settings: ConfluenceSettings,
+		settingsLoader: SettingsLoader,
 		confluenceClient: RequiredConfluenceClient,
 		mermaidRenderer: MermaidRenderer
 	) {
 		this.adaptor = adaptor;
-		this.settings = settings;
+		this.settings = settingsLoader.load();
 		this.mermaidRenderer = mermaidRenderer;
 
 		this.confluenceClient = confluenceClient;
