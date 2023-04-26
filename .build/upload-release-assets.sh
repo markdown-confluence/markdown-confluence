@@ -8,7 +8,7 @@ git config --global user.email "andrew.mcclenaghan@gmail.com"
 cp manifest.json ./.release-repo/manifest.json
 cp -r ./packages/obsidian ./.release-repo
 cd ./.release-repo
-git add manifest.json
+git add .
 git commit -m "Update manifest for $TAG release."
 commit_sha=$(git rev-parse HEAD)
 git push
