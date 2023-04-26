@@ -21,8 +21,16 @@ echo "CurrentVersion=$TAG" >> "$GITHUB_OUTPUT"
 cd packages/obsidian
 
 FILES=$(echo dist/*)
-gh release create $TAG -t $TAG --generate-notes --latest --target $SHA ./dist/*
+gh release create $TAG -R markdown-confluence/obsidian-integration -t $TAG --generate-notes --latest --target $SHA ./dist/*
 echo $FILES
 
 cd $ORIGINAL_PATH
-./.build/sign-release.sh $TAG
+
+git config user.name github-actions[bot]
+git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+cp manifest.json ./.release-repo/manifest.json
+cd ./.release-repo
+git add manifest.json
+git commit -m "Update manifest for $TAG release."
+git push

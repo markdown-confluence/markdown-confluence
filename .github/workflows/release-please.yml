@@ -48,12 +48,20 @@ jobs:
         if: ${{ steps.release-please.outputs.release_created }}
         run: npm install -g npm@latest
 
+      - name: Checkout source repository
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          repository: markdown-confluence/obsidian-integration
+          token: ${{ secrets.RELEASE_PLEASE_PAT }}
+          path: ./.release-repo
+
       - name: Upload release assets
         id: releaseassets
         if: ${{ steps.release-please.outputs.release_created }}
         run: ./.build/upload-release-assets.sh ${{ steps.release-please.outputs.tag_name }} ${{ steps.release-please.outputs.sha }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_PAT }}
+
       - name: Publish to NPM
         if: ${{ steps.release-please.outputs.release_created }}
         run: |
