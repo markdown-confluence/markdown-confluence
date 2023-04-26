@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.2](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.0.1...obsidian-confluence-root-v4.0.2) (2023-04-26)
+
+
+### Bug Fixes
+
+* Missing components ([f495464](https://github.com/obsidian-confluence/obsidian-confluence/commit/f4954649b6e770940076e9c390e1c78e8e6a0083))
+
 ## [4.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.0.0...obsidian-confluence-root-v4.0.1) (2023-04-26)
 
 

@@ -1,6 +1,6 @@
 {
     "name": "@markdown-confluence/cli",
-    "version": "3.7.0",
+    "version": "4.0.2",
     "description": "This CLI allows you to publish your notes to Confluence",
     "bin": "dist/index.js",
     "scripts": {
@@ -15,15 +15,14 @@
     "keywords": [],
     "author": "andymac4182",
     "license": "Apache 2.0",
-    "devDependencies": {
-    },
+    "devDependencies": {},
     "dependencies": {
         "confluence.js": "^1.6.3",
         "boxen": "7.0.2",
         "chalk": "5.2.0",
         "yargs": "17.7.1",
-        "@markdown-confluence/lib": "3.7.0",
-        "@markdown-confluence/mermaid-puppeteer-renderer": "*"
+        "@markdown-confluence/lib": "4.0.2",
+        "@markdown-confluence/mermaid-puppeteer-renderer": "4.0.2"
     },
     "publishConfig": {
         "access": "public",
