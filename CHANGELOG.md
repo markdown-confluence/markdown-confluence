@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.1](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.0...obsidian-confluence-root-v4.2.1) (2023-04-26)
+
+
+### Bug Fixes
+
+* Add new manifest.json to allow new commit for release to be tagged against ([f35d0a4](https://github.com/markdown-confluence/markdown-confluence/commit/f35d0a445531c413f52f40f7c57d2db80dd7c455))
+
+
+### Dependencies
+
+* **deps:** bump puppeteer from 19.11.0 to 19.11.1 ([2be4945](https://github.com/markdown-confluence/markdown-confluence/commit/2be4945c2682109f5742fdb8b8d5d3b32c7b0edc))
+
 ## [4.2.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.1.1...obsidian-confluence-root-v4.2.0) (2023-04-26)
 
 
