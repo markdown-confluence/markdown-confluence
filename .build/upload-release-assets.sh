@@ -16,6 +16,7 @@ npm run build -ws --if-present
 
 IFS='-v' read -ra PARTS <<< "$ORIGINAL_TAG"
 TAG="${PARTS[-1]}"
+echo "CurrentVersion=$TAG" >> "$GITHUB_OUTPUT"
 
 cd packages/obsidian
 

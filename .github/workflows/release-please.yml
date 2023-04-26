@@ -10,11 +10,13 @@ name: release-please
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: "markdown-confluence/markdown-confluence"
+  IMAGE_NAME: "markdown-confluence/publish"
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      CurrentVersion: ${{ steps.releaseassets.outputs.CurrentVersion }}
     permissions:
       contents: write
       pull-requests: write
@@ -47,6 +49,7 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Upload release assets
+        name: releaseassets
         if: ${{ steps.release-please.outputs.release_created }}
         run: ./.build/upload-release-assets.sh ${{ steps.release-please.outputs.tag_name }} ${{ steps.release-please.outputs.sha }}
         env:
@@ -75,6 +78,9 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,pattern={{version}},value=v${{ steps.releaseassets.outputs.CurrentVersion }}
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         if: ${{ steps.release-please.outputs.release_created }}
