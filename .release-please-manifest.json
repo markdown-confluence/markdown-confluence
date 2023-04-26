@@ -1,8 +1,8 @@
 {
-  ".": "4.2.3",
-  "packages/obsidian": "4.2.3",
-  "packages/lib": "4.2.3",
-  "packages/mermaid-electron-renderer": "4.2.3",
-  "packages/cli": "4.2.3",
-  "packages/mermaid-puppeteer-renderer": "4.2.3"
+  ".": "4.2.4",
+  "packages/obsidian": "4.2.4",
+  "packages/lib": "4.2.4",
+  "packages/mermaid-electron-renderer": "4.2.4",
+  "packages/cli": "4.2.4",
+  "packages/mermaid-puppeteer-renderer": "4.2.4"
 }
