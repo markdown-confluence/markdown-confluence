@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.5](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.4...obsidian-confluence-root-v4.2.5) (2023-04-26)
+
+
+### Bug Fixes
+
+* git add for all files ([614f13c](https://github.com/markdown-confluence/markdown-confluence/commit/614f13c0a74b750d76cd1f2a7b8374e84251b835))
+
 ## [4.2.4](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.3...obsidian-confluence-root-v4.2.4) (2023-04-26)
 
 
