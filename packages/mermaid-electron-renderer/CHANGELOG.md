@@ -6,6 +6,20 @@
   * dependencies
     * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
 
+## [4.2.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v4.2.1...@markdown-confluence/mermaid-electron-renderer-v4.2.2) (2023-04-26)
+
+
+### Bug Fixes
+
+* Rename links to align with repo rename ([742e98c](https://github.com/markdown-confluence/markdown-confluence/commit/742e98c3b6d29caab074e7a09d744120069b2d99))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.2.1 to 4.2.2
+
 ## [4.2.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v4.2.0...@markdown-confluence/mermaid-electron-renderer-v4.2.1) (2023-04-26)
 
 
