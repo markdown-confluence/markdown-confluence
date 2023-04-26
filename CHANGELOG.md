@@ -1,5 +1,32 @@
 # Changelog
 
+## [4.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.7.0...obsidian-confluence-root-v4.0.0) (2023-04-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* No longer bundling the lib package to help with tree shaking and code navigation
+
+### Features
+
+* Add docker CLI ([e8f930f](https://github.com/obsidian-confluence/obsidian-confluence/commit/e8f930fbeb612152cf19f5b387fb322b4c82bc5e))
+* Initial CLI version ([85b4aff](https://github.com/obsidian-confluence/obsidian-confluence/commit/85b4aff13921accf6dd376e18929f3a19087757e))
+
+
+### Bug Fixes
+
+* Path in docs ([486bc74](https://github.com/obsidian-confluence/obsidian-confluence/commit/486bc74e11a0f1a1292933e0684a22288906d57d))
+
+
+### Documentation
+
+* Fix links on Thanks page ([96c4953](https://github.com/obsidian-confluence/obsidian-confluence/commit/96c4953f0251595ff17ec92f950bded255b0b0a1))
+
+
+### Dependencies
+
+* **deps:** bump github/codeql-action from 2.2.12 to 2.3.0 ([2c4d081](https://github.com/obsidian-confluence/obsidian-confluence/commit/2c4d081a3733ff527b993663662698cace53887f))
+
 ## [3.7.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.6.1...obsidian-confluence-root-v3.7.0) (2023-04-24)
 
 

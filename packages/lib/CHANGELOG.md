@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.7.0...@markdown-confluence/lib-v4.0.0) (2023-04-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* No longer bundling the lib package to help with tree shaking and code navigation
+
+### Features
+
+* Initial CLI version ([85b4aff](https://github.com/obsidian-confluence/obsidian-confluence/commit/85b4aff13921accf6dd376e18929f3a19087757e))
+
 ## [3.7.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/@markdown-confluence/lib-v3.6.1...@markdown-confluence/lib-v3.7.0) (2023-04-24)
 
 
