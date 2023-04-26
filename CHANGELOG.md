@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.0.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.0.0...obsidian-confluence-root-v4.0.1) (2023-04-26)
+
+
+### Bug Fixes
+
+* Only build and release docker when release is created ([fe26002](https://github.com/obsidian-confluence/obsidian-confluence/commit/fe260026267fa1974b712bd425238c9e1b347766))
+* package-lock.json out of date ([1468cb1](https://github.com/obsidian-confluence/obsidian-confluence/commit/1468cb1a28050808def376531a26c8fd9968ca9c))
+
 ## [4.0.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v3.7.0...obsidian-confluence-root-v4.0.0) (2023-04-26)
 
 
