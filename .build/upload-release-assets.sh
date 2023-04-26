@@ -13,6 +13,7 @@ cp LICENSE ./.release-repo/LICENSE
 cp manifest.json ./.release-repo/manifest.json
 cp -r ./packages/obsidian/. ./.release-repo
 
+cd ./.release-repo
 git add .
 git commit -m "Update manifest for $TAG release."
 commit_sha=$(git rev-parse HEAD)
