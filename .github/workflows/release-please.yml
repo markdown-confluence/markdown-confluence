@@ -79,8 +79,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.release.outputs.major }}
-            type=raw,value=${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}
+            type=raw,value=${{ steps.release-please.outputs.major }}
+            type=raw,value=${{ steps.release-please.outputs.major }}.${{ steps.release-please.outputs.minor }}
             type=raw,pattern={{version}},value=v${{ steps.releaseassets.outputs.CurrentVersion }}
             type=raw,value=latest,enable={{is_default_branch}}
 
