@@ -31,11 +31,11 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/obsidian-confluence/obsidian-confluence",
+        "url": "https://github.com/markdown-confluence/markdown-confluence",
         "directory": "packages/cli"
     },
-    "homepage": "https://github.com/obsidian-confluence/obsidian-confluence/tree/main/packages/cli",
+    "homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/cli",
     "bugs": {
-        "url": "https://github.com/obsidian-confluence/obsidian-confluence/issues"
+        "url": "https://github.com/markdown-confluence/markdown-confluence/issues"
     }
 }

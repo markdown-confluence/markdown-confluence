@@ -30,7 +30,7 @@ Due to Confluence restrictions, nested callouts are not supported.
 ## Supported Features
 
 - Title
-- Types: Refer to the [supported types](https://github.com/obsidian-confluence/obsidian-confluence/blob/main/src/MarkdownTransformer/callout.ts#L8-L70)
+- Types: Refer to the [supported types](https://github.com/markdown-confluence/markdown-confluence/blob/main/src/MarkdownTransformer/callout.ts#L8-L70)
 - Foldable
 
 For more information on Obsidian callouts, visit the [Obsidian documentation](https://help.obsidian.md/Editing+and+formatting/Callouts).

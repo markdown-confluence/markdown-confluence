@@ -10,8 +10,8 @@ create-missing = false
 command = "mdbook-mermaid"
 
 [output.html]
-git-repository-url = "https://github.com/obsidian-confluence/obsidian-confluence"
+git-repository-url = "https://github.com/markdown-confluence/markdown-confluence"
 git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/obsidian-confluence/obsidian-confluence/edit/main/docs/{path}"
+edit-url-template = "https://github.com/markdown-confluence/markdown-confluence/edit/main/docs/{path}"
 cname = "obsidian-confluence.com"
 additional-js = ["mermaid.min.js", "mermaid-init.js"]
