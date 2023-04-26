@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.7](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.6...obsidian-confluence-root-v4.2.7) (2023-04-26)
+
+
+### Bug Fixes
+
+* Clean out obsidian-integration repo before copying in latest files ([02b3887](https://github.com/markdown-confluence/markdown-confluence/commit/02b38872133ddb685e804901b97adbaa20d4283f))
+
 ## [4.2.6](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.5...obsidian-confluence-root-v4.2.6) (2023-04-26)
 
 
