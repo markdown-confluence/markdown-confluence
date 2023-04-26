@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.2.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v4.2.0...@markdown-confluence/mermaid-puppeteer-renderer-v4.2.1) (2023-04-26)
+
+
+### Dependencies
+
+* **deps:** bump puppeteer from 19.11.0 to 19.11.1 ([2be4945](https://github.com/markdown-confluence/markdown-confluence/commit/2be4945c2682109f5742fdb8b8d5d3b32c7b0edc))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.2.0 to 4.2.1
+
 ## [4.2.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v4.1.1...@markdown-confluence/mermaid-puppeteer-renderer-v4.2.0) (2023-04-26)
 
 
