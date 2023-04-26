@@ -5,9 +5,14 @@ ORIGINAL_PATH=$PWD
 git config --global user.name "andymac4182"
 git config --global user.email "andrew.mcclenaghan@gmail.com"
 
-cp manifest.json ./.release-repo/manifest.json
-cp -r ./packages/obsidian/ ./.release-repo
 cd ./.release-repo
+find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} \;
+cd $ORIGINAL_PATH
+
+cp LICENSE ./.release-repo/LICENSE
+cp manifest.json ./.release-repo/manifest.json
+cp -r ./packages/obsidian/. ./.release-repo
+
 git add .
 git commit -m "Update manifest for $TAG release."
 commit_sha=$(git rev-parse HEAD)
