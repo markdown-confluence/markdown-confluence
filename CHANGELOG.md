@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.0.4](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.0.3...obsidian-confluence-root-v4.0.4) (2023-04-26)
+
+
+### Bug Fixes
+
+* id not name ([b7d5797](https://github.com/obsidian-confluence/obsidian-confluence/commit/b7d579712f22ffecf9a634313823cd7f8659878c))
+* Tag docker with correct version ([bb47286](https://github.com/obsidian-confluence/obsidian-confluence/commit/bb4728631adaf9196da793a7e8c23f658154cb90))
+
 ## [4.0.3](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.0.2...obsidian-confluence-root-v4.0.3) (2023-04-26)
 
 
