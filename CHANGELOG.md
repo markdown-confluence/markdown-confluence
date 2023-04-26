@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.1.0...obsidian-confluence-root-v4.1.1) (2023-04-26)
+
+
+### Bug Fixes
+
+* Correct step name ([6721f30](https://github.com/obsidian-confluence/obsidian-confluence/commit/6721f30ebd1ea168642a88d5eb880cce25ff36a8))
+
 ## [4.1.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.0.4...obsidian-confluence-root-v4.1.0) (2023-04-26)
 
 
