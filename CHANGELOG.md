@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.3](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.2...obsidian-confluence-root-v4.2.3) (2023-04-26)
+
+
+### Bug Fixes
+
+* Bump version ([f22975a](https://github.com/markdown-confluence/markdown-confluence/commit/f22975a0899fa895b06f6ec3be6046d7958e08d5))
+
 ## [4.2.2](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.1...obsidian-confluence-root-v4.2.2) (2023-04-26)
 
 
