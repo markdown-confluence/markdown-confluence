@@ -19,7 +19,7 @@
     "dependencies": {
         "@markdown-confluence/lib": "4.1.1",
         "mermaid": "10.1.0",
-        "puppeteer": "19.11.0"
+        "puppeteer": "19.11.1"
     },
     "publishConfig": {
         "access": "public",
