@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.1.1...obsidian-confluence-root-v4.2.0) (2023-04-26)
+
+
+### Features
+
+* Update to publish to obsidian-integration repo ([c1b7b98](https://github.com/markdown-confluence/markdown-confluence/commit/c1b7b983c6aeb7773d2e5b2ff77857682b250a1b))
+
 ## [4.1.1](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.1.0...obsidian-confluence-root-v4.1.1) (2023-04-26)
 
 
