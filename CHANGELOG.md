@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.8](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.7...obsidian-confluence-root-v4.2.8) (2023-04-26)
+
+
+### Bug Fixes
+
+* Commit to the right repo ([1cf7b40](https://github.com/markdown-confluence/markdown-confluence/commit/1cf7b405a97156c611f00298e268994f677f75d2))
+
 ## [4.2.7](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.6...obsidian-confluence-root-v4.2.7) (2023-04-26)
 
 

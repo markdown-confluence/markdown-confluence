@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.8](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.2.7...@markdown-confluence/lib-v4.2.8) (2023-04-26)
+
+
+### Miscellaneous Chores
+
+* **@markdown-confluence/lib:** Synchronize obsidian packages versions
+
 ## [4.2.7](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.2.6...@markdown-confluence/lib-v4.2.7) (2023-04-26)
 
 
