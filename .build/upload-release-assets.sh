@@ -1,9 +1,25 @@
 #!/bin/bash
 
+ORIGINAL_PATH=$PWD
+
+git config user.name "andymac4182"
+git config user.email "andrew.mcclenaghan@gmail.com"
+
+cp manifest.json ./.release-repo/manifest.json
+cd ./.release-repo
+git add manifest.json
+git commit -m "Update manifest for $TAG release."
+commit_sha=$(git rev-parse HEAD)
+git push
+
+cd $ORIGINAL_PATH
+
 ORIGINAL_TAG="$1"
 SHA="$2"
 
-ORIGINAL_PATH=$PWD
+IFS='-v' read -ra PARTS <<< "$ORIGINAL_TAG"
+TAG="${PARTS[-1]}"
+echo "CurrentVersion=$TAG" >> "$GITHUB_OUTPUT"
 
 mkdir -p packages/obsidian/dist/
 cp README.md packages/obsidian/dist/
@@ -14,23 +30,11 @@ npm run lint -ws --if-present
 npm run prettier-check -ws --if-present
 npm run build -ws --if-present
 
-IFS='-v' read -ra PARTS <<< "$ORIGINAL_TAG"
-TAG="${PARTS[-1]}"
-echo "CurrentVersion=$TAG" >> "$GITHUB_OUTPUT"
-
 cd packages/obsidian
 
 FILES=$(echo dist/*)
-gh release create $TAG -R markdown-confluence/obsidian-integration -t $TAG --generate-notes --latest --target $SHA ./dist/*
+gh release create $TAG -R markdown-confluence/obsidian-integration -t $TAG --generate-notes --latest --target $commit_sha ./dist/*
 echo $FILES
 
 cd $ORIGINAL_PATH
 
-git config user.name github-actions[bot]
-git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-
-cp manifest.json ./.release-repo/manifest.json
-cd ./.release-repo
-git add manifest.json
-git commit -m "Update manifest for $TAG release."
-git push
