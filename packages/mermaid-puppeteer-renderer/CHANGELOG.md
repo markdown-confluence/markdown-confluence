@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.2.7](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v4.2.6...@markdown-confluence/mermaid-puppeteer-renderer-v4.2.7) (2023-04-26)
+
+
+### Miscellaneous Chores
+
+* **@markdown-confluence/mermaid-puppeteer-renderer:** Synchronize obsidian packages versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.2.6 to 4.2.7
+
 ## [4.2.6](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v4.2.5...@markdown-confluence/mermaid-puppeteer-renderer-v4.2.6) (2023-04-26)
 
 
