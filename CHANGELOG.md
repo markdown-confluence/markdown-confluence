@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.6](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.5...obsidian-confluence-root-v4.2.6) (2023-04-26)
+
+
+### Bug Fixes
+
+* Copy contents of obsidian folder not the folder as well ([abb3618](https://github.com/markdown-confluence/markdown-confluence/commit/abb361873c0793ff515837044a2e079be855f4b8))
+
 ## [4.2.5](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.4...obsidian-confluence-root-v4.2.5) (2023-04-26)
 
 
