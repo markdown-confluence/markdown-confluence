@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.0.4...obsidian-confluence-root-v4.1.0) (2023-04-26)
+
+
+### Features
+
+* Tag docker with extra tags for Major and Major.Minor ([6ef7b65](https://github.com/obsidian-confluence/obsidian-confluence/commit/6ef7b652105cc609d6023f8fa4243dade8d863a2))
+
 ## [4.0.4](https://github.com/obsidian-confluence/obsidian-confluence/compare/obsidian-confluence-root-v4.0.3...obsidian-confluence-root-v4.0.4) (2023-04-26)
 
 
