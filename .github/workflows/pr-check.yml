@@ -19,6 +19,7 @@ jobs:
       prettier_status: ${{ steps.prettier.outcome }}
       tests_status: ${{ steps.tests.outcome }}
       build_status: ${{ steps.build.outcome }}
+      builddocker_status: ${{ steps.builddocker.outcome }}
 
     steps:
     - name: Harden Runner
@@ -62,6 +63,11 @@ jobs:
       continue-on-error: true
       run: npm run build -ws --if-present
 
+    - name: Run docker build
+      id: builddocker
+      continue-on-error: true
+      run: npm run build:docker -ws --if-present
+
     - name: Report Errors
       if: ${{ always() }}
       run: |
@@ -69,9 +75,12 @@ jobs:
         echo "Prettier status: ${{ steps.prettier.outcome }}"
         echo "Tests status: ${{ steps.tests.outcome }}"
         echo "Build status: ${{ steps.build.outcome }}"
+        echo "Build Docker status: ${{ steps.builddocker.outcome }}"
         if [[ ${{ steps.eslint.outcome }} == 'failure' ]] \
         || [[ ${{ steps.prettier.outcome }} == 'failure' ]] \
         || [[ ${{ steps.tests.outcome }} == 'failure' ]] \
-        || [[ ${{ steps.build.outcome }} == 'failure' ]]; then
+        || [[ ${{ steps.build.outcome }} == 'failure' ]] \
+        || [[ ${{ steps.builddocker.outcome }} == 'failure' ]] \
+        ; then
           exit 1
         fi
