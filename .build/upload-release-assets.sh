@@ -2,8 +2,8 @@
 
 ORIGINAL_PATH=$PWD
 
-git config user.name "andymac4182"
-git config user.email "andrew.mcclenaghan@gmail.com"
+git config --global user.name "andymac4182"
+git config --global user.email "andrew.mcclenaghan@gmail.com"
 
 cp manifest.json ./.release-repo/manifest.json
 cd ./.release-repo
