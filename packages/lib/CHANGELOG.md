@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.4.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.3.0...@markdown-confluence/lib-v4.4.0) (2023-04-27)
+
+
+### Features
+
+* Allow ConfigFile path to be provided as env var "CONFLUENCE_CONFIG_FILE" ([1311a93](https://github.com/markdown-confluence/markdown-confluence/commit/1311a930c09963f932146e482d444ea9df8bd553))
+
 ## [4.3.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.2.8...@markdown-confluence/lib-v4.3.0) (2023-04-27)
 
 
