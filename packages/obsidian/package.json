@@ -24,7 +24,7 @@
         "obsidian": "1.1.1"
     },
     "dependencies": {
-        "@atlaskit/adf-utils": "^17.1.4",
+        "@atlaskit/adf-utils": "^18.1.1",
         "@atlaskit/editor-json-transformer": "^8.8.4",
         "@atlaskit/renderer": "^107.3.3",
         "confluence.js": "^1.6.3",
