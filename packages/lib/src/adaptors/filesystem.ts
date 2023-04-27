@@ -12,11 +12,9 @@ import {
 
 export class FileSystemAdaptor implements LoaderAdaptor {
 	settings: ConfluenceSettings;
-	folderPath: string;
 
-	constructor(settings: ConfluenceSettings, folderPath: string) {
+	constructor(settings: ConfluenceSettings) {
 		this.settings = settings;
-		this.folderPath = folderPath;
 	}
 
 	async getFileContent(absoluteFilePath: string) {
@@ -100,7 +98,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 	}
 
 	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
-		const files = await this.loadMarkdownFiles(this.folderPath);
+		const files = await this.loadMarkdownFiles(this.settings.contentRoot);
 		const filesToPublish = [];
 		for (const file of files) {
 			try {
@@ -141,7 +139,10 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 				"application/octet-stream";
 			return {
 				contents: fileContents,
-				filePath: absoluteFilePath.replace(this.folderPath, ""),
+				filePath: absoluteFilePath.replace(
+					this.settings.contentRoot,
+					""
+				),
 				filename: path.basename(absoluteFilePath),
 				mimeType: mimeType,
 			};
@@ -177,7 +178,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 					matchingFiles.push(fullPath);
 				} else if (
 					entry.isDirectory() &&
-					fullPath.startsWith(this.folderPath)
+					fullPath.startsWith(this.settings.contentRoot)
 				) {
 					directoriesToSearch.push(fullPath);
 				}

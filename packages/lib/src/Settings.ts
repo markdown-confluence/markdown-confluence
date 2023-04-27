@@ -2,21 +2,39 @@ import fs from "fs";
 import path from "path";
 import yargs from "yargs";
 
-export interface ConfluenceSettings {
+export class ConfluenceSettings {
 	confluenceBaseUrl: string;
 	confluenceParentId: string;
 	atlassianUserName: string;
 	atlassianApiToken: string;
 	folderToPublish: string;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	private _contentRoot: string;
+
+	public get contentRoot(): string {
+		return this._contentRoot;
+	}
+	public set contentRoot(path: string) {
+		if (!fs.existsSync(path)) {
+			fs.mkdirSync(path);
+		}
+		if (!fs.lstatSync(path).isDirectory()) {
+			throw new Error(`'${path}' is not a directory.`);
+		}
+		if (!path.endsWith("/")) {
+			path += "/";
+		}
+		this._contentRoot = path;
+	}
 }
 
-export const DEFAULT_SETTINGS: ConfluenceSettings = {
-	confluenceBaseUrl: "",
-	confluenceParentId: "",
-	atlassianUserName: "",
-	atlassianApiToken: "",
-	folderToPublish: "Confluence Pages",
-};
+export const DEFAULT_SETTINGS = new ConfluenceSettings();
+DEFAULT_SETTINGS.confluenceBaseUrl = "";
+DEFAULT_SETTINGS.confluenceParentId = "";
+DEFAULT_SETTINGS.atlassianUserName = "";
+DEFAULT_SETTINGS.atlassianApiToken = "";
+DEFAULT_SETTINGS.folderToPublish = "Confluence Pages";
+DEFAULT_SETTINGS.contentRoot = process.cwd();
 
 export abstract class SettingsLoader {
 	abstract loadPartial(): Partial<ConfluenceSettings>;
@@ -47,6 +65,10 @@ export abstract class SettingsLoader {
 
 		if (!settings.folderToPublish) {
 			throw new Error("Folder to publish is required");
+		}
+
+		if (!settings.contentRoot) {
+			throw new Error("Content root is required");
 		}
 
 		return settings as ConfluenceSettings;
@@ -89,6 +111,7 @@ export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 			atlassianUserName: process.env.ATLASSIAN_USERNAME,
 			atlassianApiToken: process.env.ATLASSIAN_API_TOKEN,
 			folderToPublish: process.env.FOLDER_TO_PUBLISH,
+			contentRoot: process.env.CONFLUENCE_CONTENT_ROOT,
 		};
 	}
 }
@@ -181,11 +204,19 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 				type: "string",
 				demandOption: false,
 			})
-			.option("folder", {
+			.option("enableFolder", {
 				alias: "f",
-				describe: "Folder to publish",
+				describe: "Folder enable to publish",
 				type: "string",
 				demandOption: false,
+			})
+			.option("contentRoot", {
+				alias: "cr",
+				describe:
+					"Root to search for files to publish. All files must be part of this directory.",
+				type: "string",
+				demandOption: false,
+				default: process.cwd(),
 			})
 			.parseSync();
 
@@ -194,7 +225,7 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 			confluenceParentId: options.parentId,
 			atlassianUserName: options.userName,
 			atlassianApiToken: options.apiToken,
-			folderToPublish: options.folder,
+			folderToPublish: options.enableFolder,
 		};
 	}
 }

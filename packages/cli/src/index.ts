@@ -17,10 +17,7 @@ async function main() {
 	const settingLoader = new ConfluenceUploadSettings.AutoSettingsLoader();
 	const settings = settingLoader.load();
 
-	const adaptor = new FileSystemAdaptor(
-		settings,
-		"/Users/andrewmcclenaghan/dev/obsidian-confluence/obsidian-confluence/dev-vault/"
-	); // Make sure this is identical as possible between Obsidian and CLI
+	const adaptor = new FileSystemAdaptor(settings); // Make sure this is identical as possible between Obsidian and CLI
 	const mermaidRenderer = new PuppeteerMermaidRenderer();
 	const confluenceClient = new ConfluenceClient({
 		host: settings.confluenceBaseUrl,
