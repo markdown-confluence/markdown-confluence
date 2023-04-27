@@ -1,5 +1,27 @@
 # Changelog
 
+## [4.3.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v4.2.8...@markdown-confluence/cli-v4.3.0) (2023-04-27)
+
+
+### Features
+
+* Allow setting content root for FilesystemAdaptor ([d008f29](https://github.com/markdown-confluence/markdown-confluence/commit/d008f294170561cec8ebfc7aa54352fb34c8cc44))
+
+
+### Bug Fixes
+
+* Pin puppeteer Docker container ([d9d5f11](https://github.com/markdown-confluence/markdown-confluence/commit/d9d5f11516582ec80a51cf0f137ba30d0a15ef8e))
+* Trim and add back the contentRoot ([c48a9c0](https://github.com/markdown-confluence/markdown-confluence/commit/c48a9c0171bf34655ac5b3826ae0b35fdb4085f1))
+
+
+### Dependencies
+
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([07eeca7](https://github.com/markdown-confluence/markdown-confluence/commit/07eeca733ab5104397afcbe620015da91b13dfff))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.2.8 to 4.3.0
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 4.2.8 to 4.3.0
+
 ## [4.2.8](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v4.2.7...@markdown-confluence/cli-v4.2.8) (2023-04-26)
 
 

@@ -7,6 +7,19 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [4.3.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.2.8...obsidian-confluence-v4.3.0) (2023-04-27)
+
+
+### Dependencies
+
+* adf-utils for Obsidian ([3784f95](https://github.com/markdown-confluence/markdown-confluence/commit/3784f9536f642092330ca12f67fdf8047c7c88d3))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.8.3 to 8.8.4 ([b9a4496](https://github.com/markdown-confluence/markdown-confluence/commit/b9a4496c9963b8da44dc89a602865077fa912028))
+* **deps:** bump @atlaskit/renderer from 107.3.2 to 107.3.3 ([252f911](https://github.com/markdown-confluence/markdown-confluence/commit/252f911d42bcdeee1febadfbd6e90e226416b990))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.2.8 to 4.3.0
+    * @markdown-confluence/mermaid-electron-renderer bumped from 4.2.8 to 4.3.0
+
 ## [4.2.8](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.2.7...obsidian-confluence-v4.2.8) (2023-04-26)
 
 

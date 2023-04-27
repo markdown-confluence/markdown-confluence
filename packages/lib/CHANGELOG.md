@@ -1,5 +1,24 @@
 # Changelog
 
+## [4.3.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.2.8...@markdown-confluence/lib-v4.3.0) (2023-04-27)
+
+
+### Features
+
+* Allow setting content root for FilesystemAdaptor ([d008f29](https://github.com/markdown-confluence/markdown-confluence/commit/d008f294170561cec8ebfc7aa54352fb34c8cc44))
+
+
+### Bug Fixes
+
+* If environment variable is empty or "" then don't use. ([b0b7684](https://github.com/markdown-confluence/markdown-confluence/commit/b0b7684f42906710929833f5883aab31fefc8e10))
+* Trim and add back the contentRoot ([c48a9c0](https://github.com/markdown-confluence/markdown-confluence/commit/c48a9c0171bf34655ac5b3826ae0b35fdb4085f1))
+
+
+### Dependencies
+
+* **deps:** bump @atlaskit/adf-utils in /packages/lib ([3b5ae81](https://github.com/markdown-confluence/markdown-confluence/commit/3b5ae81d740f9519581e42b7e56896ad874bf7f2))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.8.3 to 8.8.4 ([b9a4496](https://github.com/markdown-confluence/markdown-confluence/commit/b9a4496c9963b8da44dc89a602865077fa912028))
+
 ## [4.2.8](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.2.7...@markdown-confluence/lib-v4.2.8) (2023-04-26)
 
 
