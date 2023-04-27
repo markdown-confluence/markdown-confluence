@@ -14,7 +14,6 @@ updates:
       prefix-development: "deps-dev"
       include: "scope"
 
-
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -32,9 +31,36 @@ updates:
       prefix: "deps"
       prefix-development: "deps-dev"
       include: "scope"
+  
+  - package-ecosystem: docker
+    directory: /packages/cli
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+
+  - package-ecosystem: npm
+    directory: /packages/cli
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
 
   - package-ecosystem: npm
     directory: /packages/mermaid-electron-renderer
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    
+  - package-ecosystem: npm
+    directory: /packages/mermaid-puppeteer-renderer
     schedule:
       interval: weekly
     commit-message:
