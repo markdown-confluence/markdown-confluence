@@ -108,29 +108,37 @@ export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 }
 
 export class ConfigFileSettingsLoader extends SettingsLoader {
-	private configPath: string;
+	private configPath: string = path.join(
+		process.env.HOME ?? "",
+		".markdown-confluence.json"
+	);
 
 	constructor(configPath?: string) {
 		super();
 
-		if (!configPath) {
-			const options = yargs(process.argv)
-				.option("config", {
-					alias: "c",
-					describe: "Path to the config file",
-					type: "string",
-					default: path.join(
-						process.env.HOME ?? "",
-						".markdown-confluence.json"
-					),
-					demandOption: false,
-				})
-				.parseSync();
-
-			this.configPath = options.config;
-		} else {
+		if (configPath) {
 			this.configPath = configPath;
+			return;
 		}
+
+		if (
+			"CONFLUENCE_CONFIG_FILE" in process.env &&
+			process.env.CONFLUENCE_CONFIG_FILE
+		) {
+			this.configPath = process.env.CONFLUENCE_CONFIG_FILE;
+		}
+
+		const options = yargs(process.argv)
+			.option("config", {
+				alias: "c",
+				describe: "Path to the config file",
+				type: "string",
+				default: this.configPath,
+				demandOption: false,
+			})
+			.parseSync();
+
+		this.configPath = options.config;
 	}
 
 	loadPartial(): Partial<ConfluenceSettings> {
