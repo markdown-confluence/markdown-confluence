@@ -1,5 +1,42 @@
 # Changelog
 
+## [4.3.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.8...obsidian-confluence-root-v4.3.0) (2023-04-27)
+
+
+### Features
+
+* Allow setting content root for FilesystemAdaptor ([d008f29](https://github.com/markdown-confluence/markdown-confluence/commit/d008f294170561cec8ebfc7aa54352fb34c8cc44))
+
+
+### Bug Fixes
+
+* Add new projects to dependabot ([1d63186](https://github.com/markdown-confluence/markdown-confluence/commit/1d63186fb5de78b129fec7bc9b02b2ccdbc959ee))
+* If environment variable is empty or "" then don't use. ([b0b7684](https://github.com/markdown-confluence/markdown-confluence/commit/b0b7684f42906710929833f5883aab31fefc8e10))
+* Pin puppeteer Docker container ([d9d5f11](https://github.com/markdown-confluence/markdown-confluence/commit/d9d5f11516582ec80a51cf0f137ba30d0a15ef8e))
+* Trim and add back the contentRoot ([c48a9c0](https://github.com/markdown-confluence/markdown-confluence/commit/c48a9c0171bf34655ac5b3826ae0b35fdb4085f1))
+
+
+### Dependencies
+
+* adf-utils for Obsidian ([3784f95](https://github.com/markdown-confluence/markdown-confluence/commit/3784f9536f642092330ca12f67fdf8047c7c88d3))
+* **deps:** bump @atlaskit/adf-utils in /packages/lib ([3b5ae81](https://github.com/markdown-confluence/markdown-confluence/commit/3b5ae81d740f9519581e42b7e56896ad874bf7f2))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.8.3 to 8.8.4 ([b9a4496](https://github.com/markdown-confluence/markdown-confluence/commit/b9a4496c9963b8da44dc89a602865077fa912028))
+* **deps:** bump @atlaskit/renderer from 107.3.2 to 107.3.3 ([252f911](https://github.com/markdown-confluence/markdown-confluence/commit/252f911d42bcdeee1febadfbd6e90e226416b990))
+* **deps:** bump docker/build-push-action ([5c99424](https://github.com/markdown-confluence/markdown-confluence/commit/5c99424d647625c7ea5f6d16147b87584faa315b))
+* **deps:** bump docker/login-action ([c7fde60](https://github.com/markdown-confluence/markdown-confluence/commit/c7fde60cd2ec87561cff55c155eb03789734ddf3))
+* **deps:** bump docker/metadata-action ([289e598](https://github.com/markdown-confluence/markdown-confluence/commit/289e59832bfc2429a105f5ab23384cd54b294d3b))
+* **deps:** bump github/codeql-action from 2.3.0 to 2.3.1 ([378c2b7](https://github.com/markdown-confluence/markdown-confluence/commit/378c2b74bc41794ab263d00fcef5f4a45d82908a))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([07eeca7](https://github.com/markdown-confluence/markdown-confluence/commit/07eeca733ab5104397afcbe620015da91b13dfff))
+* Update lint-staged to resolve vuln ([4ba7926](https://github.com/markdown-confluence/markdown-confluence/commit/4ba7926a1d8a8a3334eeabafcf6dac43ed39c37d))
+
+
+### Documentation
+
+* Add link direct to Report a vuln ([61ce80a](https://github.com/markdown-confluence/markdown-confluence/commit/61ce80a43356d5353b8a7705bd5bc6f026abc79d))
+* Add Snyk badge ([15f8382](https://github.com/markdown-confluence/markdown-confluence/commit/15f8382e62c5bbfaccf51afc30ba76d3f5c1e758))
+* Docs moved to https://github.com/markdown-confluence/docs-obsidian-confluence ([442d353](https://github.com/markdown-confluence/markdown-confluence/commit/442d3534b63c538c5a9ab2e8ab1a82e81717995d))
+* Fix OpenSSF Scorecard Link ([16ca266](https://github.com/markdown-confluence/markdown-confluence/commit/16ca266abacc64dbb3eb33c716dcf33f1a65d4d1))
+
 ## [4.2.8](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.2.7...obsidian-confluence-root-v4.2.8) (2023-04-26)
 
 
