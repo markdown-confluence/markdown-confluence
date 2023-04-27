@@ -105,7 +105,7 @@ export class StaticSettingsLoader extends SettingsLoader {
 
 export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 	loadPartial(): Partial<ConfluenceSettings> {
-		return {
+		const initial = {
 			confluenceBaseUrl: process.env.CONFLUENCE_BASE_URL,
 			confluenceParentId: process.env.CONFLUENCE_PARENT_ID,
 			atlassianUserName: process.env.ATLASSIAN_USERNAME,
@@ -113,6 +113,18 @@ export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 			folderToPublish: process.env.FOLDER_TO_PUBLISH,
 			contentRoot: process.env.CONFLUENCE_CONTENT_ROOT,
 		};
+
+		const result: Partial<ConfluenceSettings> = {};
+		for (const key in result) {
+			if (Object.prototype.hasOwnProperty.call(result, key)) {
+				const element = initial[key as keyof ConfluenceSettings];
+				if (element) {
+					result[key as keyof ConfluenceSettings] = element;
+				}
+			}
+		}
+
+		return result;
 	}
 }
 
