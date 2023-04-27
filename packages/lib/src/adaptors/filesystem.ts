@@ -1,6 +1,7 @@
 import { ConfluenceSettings } from "src/Settings";
 import { BinaryFile, FilesToUpload, LoaderAdaptor, MarkdownFile } from ".";
 import { lookup } from "mime-types";
+import { existsSync, lstatSync } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
 import matter, { stringify } from "gray-matter";
@@ -15,6 +16,13 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 	constructor(settings: ConfluenceSettings) {
 		this.settings = settings;
+
+		if (!existsSync(settings.contentRoot)) {
+			throw new Error(`'${settings.contentRoot}' doesn't exist.`);
+		}
+		if (!lstatSync(settings.contentRoot).isDirectory()) {
+			throw new Error(`'${settings.contentRoot}' is not a directory.`);
+		}
 	}
 
 	async getFileContent(absoluteFilePath: string) {
@@ -27,11 +35,15 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 		absoluteFilePath: string,
 		values: Partial<ConfluencePerPageAllValues>
 	): Promise<void> {
-		if (!(await fs.stat(absoluteFilePath)).isFile()) {
+		const actualAbsoluteFilePath = path.join(
+			this.settings.contentRoot,
+			absoluteFilePath
+		);
+		if (!(await fs.stat(actualAbsoluteFilePath)).isFile()) {
 			return;
 		}
 
-		const fileContent = await this.getFileContent(absoluteFilePath);
+		const fileContent = await this.getFileContent(actualAbsoluteFilePath);
 
 		const config = conniePerPageConfig;
 
@@ -51,7 +63,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 		}
 
 		const updatedData = stringify(fileContent, fm);
-		await fs.writeFile(absoluteFilePath, updatedData);
+		await fs.writeFile(actualAbsoluteFilePath, updatedData);
 	}
 
 	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
@@ -67,7 +79,10 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 		return {
 			folderName,
-			absoluteFilePath,
+			absoluteFilePath: absoluteFilePath.replace(
+				this.settings.contentRoot,
+				""
+			),
 			fileName,
 			pageTitle,
 			contents,
@@ -128,7 +143,9 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 	): Promise<BinaryFile | false> {
 		const absoluteFilePath = await this.findClosestFile(
 			searchPath,
-			path.dirname(referencedFromFilePath)
+			path.dirname(
+				path.join(this.settings.contentRoot, referencedFromFilePath)
+			)
 		);
 
 		if (absoluteFilePath) {
