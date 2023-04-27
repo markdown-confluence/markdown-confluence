@@ -29,7 +29,7 @@
         "@atlaskit/renderer": "^107.3.2",
         "confluence.js": "^1.6.3",
         "mime-types": "^2.1.35",
-        "react": "^16.14.0",
+        "react": "^18.2.0",
         "react-dom": "^16.14.0",
         "react-intl-next": "npm:react-intl@^5.18.1",
         "@markdown-confluence/lib": "4.2.8",
