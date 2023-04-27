@@ -8,24 +8,7 @@ export class ConfluenceSettings {
 	atlassianUserName: string;
 	atlassianApiToken: string;
 	folderToPublish: string;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	private _contentRoot: string;
-
-	public get contentRoot(): string {
-		return this._contentRoot;
-	}
-	public set contentRoot(path: string) {
-		if (!fs.existsSync(path)) {
-			fs.mkdirSync(path);
-		}
-		if (!fs.lstatSync(path).isDirectory()) {
-			throw new Error(`'${path}' is not a directory.`);
-		}
-		if (!path.endsWith("/")) {
-			path += "/";
-		}
-		this._contentRoot = path;
-	}
+	contentRoot: string;
 }
 
 export const DEFAULT_SETTINGS = new ConfluenceSettings();
@@ -40,8 +23,9 @@ export abstract class SettingsLoader {
 	abstract loadPartial(): Partial<ConfluenceSettings>;
 
 	load(): ConfluenceSettings {
-		const settings = this.loadPartial();
-		return this.validateSettings(settings);
+		const initialSettings = this.loadPartial();
+		const settings = this.validateSettings(initialSettings);
+		return settings;
 	}
 
 	protected validateSettings(
@@ -69,6 +53,10 @@ export abstract class SettingsLoader {
 
 		if (!settings.contentRoot) {
 			throw new Error("Content root is required");
+		} else {
+			if (!settings.contentRoot.endsWith("/")) {
+				settings.contentRoot += "/";
+			}
 		}
 
 		return settings as ConfluenceSettings;
@@ -80,7 +68,10 @@ export class DefaultSettingsLoader extends SettingsLoader {
 		const result: Partial<ConfluenceSettings> = {};
 
 		for (const key in DEFAULT_SETTINGS) {
-			if (Object.prototype.hasOwnProperty.call(DEFAULT_SETTINGS, key)) {
+			if (
+				Object.prototype.hasOwnProperty.call(DEFAULT_SETTINGS, key) ||
+				Object.getOwnPropertyDescriptor(DEFAULT_SETTINGS, key)
+			) {
 				const element =
 					DEFAULT_SETTINGS[key as keyof ConfluenceSettings];
 				if (element && element !== "") {
@@ -105,7 +96,7 @@ export class StaticSettingsLoader extends SettingsLoader {
 
 export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 	loadPartial(): Partial<ConfluenceSettings> {
-		const initial = {
+		return {
 			confluenceBaseUrl: process.env.CONFLUENCE_BASE_URL,
 			confluenceParentId: process.env.CONFLUENCE_PARENT_ID,
 			atlassianUserName: process.env.ATLASSIAN_USERNAME,
@@ -113,18 +104,6 @@ export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 			folderToPublish: process.env.FOLDER_TO_PUBLISH,
 			contentRoot: process.env.CONFLUENCE_CONTENT_ROOT,
 		};
-
-		const result: Partial<ConfluenceSettings> = {};
-		for (const key in result) {
-			if (Object.prototype.hasOwnProperty.call(result, key)) {
-				const element = initial[key as keyof ConfluenceSettings];
-				if (element) {
-					result[key as keyof ConfluenceSettings] = element;
-				}
-			}
-		}
-
-		return result;
 	}
 }
 
@@ -142,7 +121,7 @@ export class ConfigFileSettingsLoader extends SettingsLoader {
 					type: "string",
 					default: path.join(
 						process.env.HOME ?? "",
-						".mermaid-confluence.json"
+						".markdown-confluence.json"
 					),
 					demandOption: false,
 				})
@@ -280,10 +259,5 @@ export class AutoSettingsLoader extends SettingsLoader {
 
 	loadPartial(): Partial<ConfluenceSettings> {
 		return this.combineSettings();
-	}
-
-	load(): ConfluenceSettings {
-		const settings = this.combineSettings();
-		return this.validateSettings(settings);
 	}
 }
