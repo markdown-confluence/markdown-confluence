@@ -34,7 +34,7 @@
         "@atlaskit/adf-schema": "^25.5.0",
         "@atlaskit/adf-utils": "^17.1.4",
         "@atlaskit/editor-common": "^72.4.0",
-        "@atlaskit/editor-json-transformer": "^8.8.3",
+        "@atlaskit/editor-json-transformer": "^8.8.4",
         "confluence.js": "^1.6.3",
         "formdata-node": "^5.0.0",
         "glob": "^10.2.2",
