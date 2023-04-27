@@ -1,6 +1,7 @@
 # Obsidian Confluence Integration Plugin
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/markdown-confluence/markdown-confluence/badge)](https://api.securityscorecards.dev/projects/github.com/markdown-confluence/markdown-confluence)
+[![Known Vulnerabilities](https://snyk.io/test/github/markdown-confluence/markdown-confluence/badge.svg)](https://snyk.io/test/github/markdown-confluence/markdown-confluence)
 
 Copyright (c) 2022 Atlassian Pty Ltd
 
