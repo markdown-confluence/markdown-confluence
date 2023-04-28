@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.1](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.7.0...obsidian-confluence-root-v4.7.1) (2023-04-28)
+
+
+### Bug Fixes
+
+* Update the common path to include parent ([076effd](https://github.com/markdown-confluence/markdown-confluence/commit/076effdab718709df8c0a57faca917d3d152a41b))
+
 ## [4.7.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.6.4...obsidian-confluence-root-v4.7.0) (2023-04-28)
 
 
