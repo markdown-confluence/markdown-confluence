@@ -39,7 +39,32 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 			this.settings.contentRoot,
 			absoluteFilePath
 		);
-		if (!(await fs.stat(actualAbsoluteFilePath)).isFile()) {
+		try {
+			if (!(await fs.stat(actualAbsoluteFilePath)).isFile()) {
+				return;
+			}
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				console.warn(
+					"updateMarkdownValues",
+					JSON.stringify({
+						actualAbsoluteFilePath,
+						absoluteFilePath,
+						contentRoot: this.settings.contentRoot,
+						errorMessage: error.message,
+					})
+				);
+			} else {
+				console.warn(
+					"updateMarkdownValues:",
+					JSON.stringify({
+						actualAbsoluteFilePath,
+						contentRoot: this.settings.contentRoot,
+						absoluteFilePath,
+						error,
+					})
+				);
+			}
 			return;
 		}
 
