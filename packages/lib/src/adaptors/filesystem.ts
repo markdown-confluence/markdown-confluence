@@ -114,6 +114,15 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
 		const files = await this.loadMarkdownFiles(this.settings.contentRoot);
+		files.forEach((file) =>
+			console.log("RAW FILES", file.absoluteFilePath)
+		);
+		if (files.length === 0) {
+			console.warn(
+				"DIDN'T FIND FILES AT ALL IN",
+				this.settings.contentRoot
+			);
+		}
 		const filesToPublish = [];
 		for (const file of files) {
 			try {
