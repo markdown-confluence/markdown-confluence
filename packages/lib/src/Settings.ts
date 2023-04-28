@@ -225,6 +225,7 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 			atlassianUserName: options.userName,
 			atlassianApiToken: options.apiToken,
 			folderToPublish: options.enableFolder,
+			contentRoot: options.contentRoot,
 		};
 	}
 }
