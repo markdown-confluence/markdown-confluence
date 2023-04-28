@@ -2,4 +2,6 @@ FROM ghcr.io/puppeteer/puppeteer:19.11.1@sha256:1055a530495260018e13e192cb66f80e
 
 COPY ./dist /app
 
+ENV NODE_OPTIONS=--enable-source-maps
+
 CMD ["node", "/app/index.js"]
