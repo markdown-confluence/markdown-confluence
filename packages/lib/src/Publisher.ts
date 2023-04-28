@@ -68,6 +68,7 @@ export interface ConfluenceAdfFile {
 
 	pageId: string;
 	spaceKey: string;
+	pageUrl: string;
 
 	contentType: PageContentType;
 	blogPostDate?: string;

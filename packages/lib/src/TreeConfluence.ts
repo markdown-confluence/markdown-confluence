@@ -49,6 +49,7 @@ export async function ensureAllFilesExistInConfluence(
 	settings: ConfluenceSettings
 ): Promise<ConfluenceNode[]> {
 	const confluenceNode = await createFileStructureInConfluence(
+		settings,
 		confluenceClient,
 		adaptor,
 		node,
@@ -66,6 +67,7 @@ export async function ensureAllFilesExistInConfluence(
 }
 
 async function createFileStructureInConfluence(
+	settings: ConfluenceSettings,
 	confluenceClient: RequiredConfluenceClient,
 	adaptor: LoaderAdaptor,
 	node: LocalAdfFileTreeNode,
@@ -85,6 +87,7 @@ async function createFileStructureInConfluence(
 		...node.file,
 		pageId: parentPageId,
 		spaceKey,
+		pageUrl: "",
 	};
 
 	if (createPage) {
@@ -110,6 +113,7 @@ async function createFileStructureInConfluence(
 
 	const childDetailsTasks = node.children.map((childNode) => {
 		return createFileStructureInConfluence(
+			settings,
 			confluenceClient,
 			adaptor,
 			childNode,
@@ -122,8 +126,9 @@ async function createFileStructureInConfluence(
 
 	const childDetails = await Promise.all(childDetailsTasks);
 
+	const pageUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${spaceKey}/pages/${file.pageId}/`;
 	return {
-		file: file,
+		file: { ...file, pageUrl },
 		version,
 		lastUpdatedBy: lastUpdatedBy ?? "",
 		existingAdf,

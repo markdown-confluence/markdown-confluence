@@ -38,7 +38,7 @@ const CompletedView: React.FC<UploadResultsProps> = ({ uploadResults }) => {
 		return filesUploadResult
 			.filter((result) => result[`${type}Result`] === "updated")
 			.map((result, index) => (
-				<li key={index}>{result.adfFile.absoluteFilePath}</li>
+				<li key={index}><a href={result.adfFile.pageUrl}>{result.adfFile.absoluteFilePath}</a></li>
 			));
 	};
 
