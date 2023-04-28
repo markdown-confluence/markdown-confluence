@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.6.1...@markdown-confluence/lib-v4.6.2) (2023-04-28)
+
+
+### Bug Fixes
+
+* More debugging ([215ff9b](https://github.com/markdown-confluence/markdown-confluence/commit/215ff9b619fa2adc2669a76c67a40ddb4f71fd93))
+
 ## [4.6.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.6.0...@markdown-confluence/lib-v4.6.1) (2023-04-28)
 
 
