@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.5.0...@markdown-confluence/lib-v4.6.0) (2023-04-28)
+
+
+### Features
+
+* Add "." option to folderToPublish to allow publishing whole contentRoot ([54c53ac](https://github.com/markdown-confluence/markdown-confluence/commit/54c53ac6860b06a3d3f8e8e278b01be5d3ea333c))
+
 ## [4.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.4.0...@markdown-confluence/lib-v4.5.0) (2023-04-28)
 
 
