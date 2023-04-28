@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.6.0...@markdown-confluence/lib-v4.6.1) (2023-04-28)
+
+
+### Bug Fixes
+
+* Temp hack to show all files to be published ([d3539e9](https://github.com/markdown-confluence/markdown-confluence/commit/d3539e9e503d16dd8277847f28214d8a7552d51f))
+
 ## [4.6.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.5.0...@markdown-confluence/lib-v4.6.0) (2023-04-28)
 
 
