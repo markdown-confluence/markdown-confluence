@@ -7,6 +7,31 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [4.7.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.6.4...obsidian-confluence-v4.7.0) (2023-04-28)
+
+
+### Features
+
+* Add links to updated pages on Completed Dialog ([65c1a42](https://github.com/markdown-confluence/markdown-confluence/commit/65c1a42b7b039512d5582b055f8adfb4f25333c8))
+
+
+### Bug Fixes
+
+* fmt ([91ff4e9](https://github.com/markdown-confluence/markdown-confluence/commit/91ff4e99135b90709ab3f185873b98ce94eb7242))
+
+
+### Documentation
+
+* Update repo and org names to match new names ([404a85b](https://github.com/markdown-confluence/markdown-confluence/commit/404a85b206704873d57c233131ba4f564c4ccd86))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.6.4 to 4.7.0
+    * @markdown-confluence/mermaid-electron-renderer bumped from 4.6.4 to 4.7.0
+
 ## [4.6.4](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.6.3...obsidian-confluence-v4.6.4) (2023-04-28)
 
 
