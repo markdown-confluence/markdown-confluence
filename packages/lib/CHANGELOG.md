@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.7.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.6.4...@markdown-confluence/lib-v4.7.0) (2023-04-28)
+
+
+### Features
+
+* Add links to updated pages on Completed Dialog ([65c1a42](https://github.com/markdown-confluence/markdown-confluence/commit/65c1a42b7b039512d5582b055f8adfb4f25333c8))
+
+
+### Bug Fixes
+
+* Replace spaces with `-` to match what confluence uses. ([92b9d2d](https://github.com/markdown-confluence/markdown-confluence/commit/92b9d2d9266ac777cc8ae4cbcd665f591a17b636))
+* Wrap check for file in try catch to report the errors better ([3fabce0](https://github.com/markdown-confluence/markdown-confluence/commit/3fabce0fb09573106552a37586bc1caf3883da6a))
+
 ## [4.6.4](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.6.3...@markdown-confluence/lib-v4.6.4) (2023-04-28)
 
 
