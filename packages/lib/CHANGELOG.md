@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.7.1...@markdown-confluence/lib-v4.7.2) (2023-04-28)
+
+
+### Bug Fixes
+
+* Don't specify default for contentRoot on CommandLineArgumentSettingsLoader. ([ec8c338](https://github.com/markdown-confluence/markdown-confluence/commit/ec8c3387dc4d324acf49853917f5ee8c95442e7e))
+
 ## [4.7.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.7.0...@markdown-confluence/lib-v4.7.1) (2023-04-28)
 
 
