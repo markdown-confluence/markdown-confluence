@@ -120,9 +120,10 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 				const frontMatter = file.frontmatter;
 
 				if (
-					(file.absoluteFilePath.startsWith(
+					((file.absoluteFilePath.startsWith(
 						this.settings.folderToPublish
-					) &&
+					) ||
+						this.settings.folderToPublish === ".") &&
 						(!frontMatter ||
 							frontMatter["connie-publish"] !== false)) ||
 					(frontMatter && frontMatter["connie-publish"] === true)
