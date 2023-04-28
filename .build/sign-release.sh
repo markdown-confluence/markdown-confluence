@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set variables
-repo_owner="obsidian-confluence"
-repo_name="obsidian-confluence"
+repo_owner="markdown-confluence"
+repo_name="markdown-confluence"
 version="$1"
 
 if [ -z "$version" ]; then
@@ -42,5 +42,5 @@ for prefix in "${prefixes[@]}"; do
 
   gh release upload $tag "$file_name.asc"
 
-  echo "Signature for $tag uploaded to to https://github.com/obsidian-confluence/obsidian-confluence/releases/tag/$tag"
+  echo "Signature for $tag uploaded to to https://github.com/markdown-confluence/markdown-confluence/releases/tag/$tag"
 done

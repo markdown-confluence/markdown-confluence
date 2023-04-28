@@ -24,7 +24,7 @@ Copyright (c) 2022 Atlassian US, Inc.
 > If you would like to use the plugin currently you will need to use [Alternative Installation](https://obsidian-confluence.com/getting-started/installation-brat.html) instructions.
 
 
-1. Install the `obsidian-confluence` plugin from Obsidian's community plugins browser.
+1. Install the `confluence-integration` plugin from Obsidian's community plugins browser.
 2. Open the plugin settings and configure the following fields:
 
 - `Confluence Base URL`: The base URL of your Atlassian Confluence instance (e.g., `https://your-domain.atlassian.net`)
@@ -61,7 +61,7 @@ connie-publish: true
 ```
 
 ### Example Workflow
-1. Install and configure the obsidian-confluence plugin.
+1. Install and configure the `confluence-integration` plugin.
 2. Create a folder in your Obsidian vault named "Confluence Pages" (or the folder name you specified in the settings).
 3. Add notes to this folder or add the connie-publish frontmatter to other notes.
 4. Click the cloud icon in the ribbon or use the "Publish All to Confluence" command to publish your notes to Confluence.
