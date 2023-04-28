@@ -65,22 +65,7 @@ export abstract class SettingsLoader {
 
 export class DefaultSettingsLoader extends SettingsLoader {
 	loadPartial(): Partial<ConfluenceSettings> {
-		const result: Partial<ConfluenceSettings> = {};
-
-		for (const key in DEFAULT_SETTINGS) {
-			if (
-				Object.prototype.hasOwnProperty.call(DEFAULT_SETTINGS, key) ||
-				Object.getOwnPropertyDescriptor(DEFAULT_SETTINGS, key)
-			) {
-				const element =
-					DEFAULT_SETTINGS[key as keyof ConfluenceSettings];
-				if (element && element !== "") {
-					result[key as keyof ConfluenceSettings] = element;
-				}
-			}
-		}
-
-		return result;
+		return DEFAULT_SETTINGS;
 	}
 }
 
@@ -215,7 +200,6 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 					"Root to search for files to publish. All files must be part of this directory.",
 				type: "string",
 				demandOption: false,
-				default: process.cwd(),
 			})
 			.parseSync();
 
