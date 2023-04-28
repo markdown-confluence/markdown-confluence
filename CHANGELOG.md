@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.6.4](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.6.3...obsidian-confluence-root-v4.6.4) (2023-04-28)
+
+
+### Bug Fixes
+
+* Don't load settings when first initialising Publisher. Fixes issue when no settings available in set up situation. ([ceb21e7](https://github.com/markdown-confluence/markdown-confluence/commit/ceb21e7c193752394003545438d583323c0bccc6))
+* My bad ([1acc9b8](https://github.com/markdown-confluence/markdown-confluence/commit/1acc9b8303948da962b0da614d74f8daf67eabff))
+* Remove debug console.logs ([f89e617](https://github.com/markdown-confluence/markdown-confluence/commit/f89e6178f63e42a85c0e25bfe180fea270b82bba))
+
 ## [4.6.3](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.6.2...obsidian-confluence-root-v4.6.3) (2023-04-28)
 
 
