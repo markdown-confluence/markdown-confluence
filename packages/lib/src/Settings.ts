@@ -234,10 +234,10 @@ export class AutoSettingsLoader extends SettingsLoader {
 		super();
 
 		if (loaders.length === 0) {
+			this.loaders.push(new DefaultSettingsLoader());
 			this.loaders.push(new ConfigFileSettingsLoader());
 			this.loaders.push(new EnvironmentVariableSettingsLoader());
 			this.loaders.push(new CommandLineArgumentSettingsLoader());
-			this.loaders.push(new DefaultSettingsLoader());
 		}
 	}
 
