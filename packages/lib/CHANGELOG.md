@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.3](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.6.2...@markdown-confluence/lib-v4.6.3) (2023-04-28)
+
+
+### Bug Fixes
+
+* Wrong Ordering of AutoSettingsLoader Loaders ([4b1dc22](https://github.com/markdown-confluence/markdown-confluence/commit/4b1dc22895001646b638997536706053bda7cbf2))
+
 ## [4.6.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.6.1...@markdown-confluence/lib-v4.6.2) (2023-04-28)
 
 
