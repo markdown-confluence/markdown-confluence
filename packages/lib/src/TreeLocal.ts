@@ -91,7 +91,13 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 		}
 	}
 
-	node.children.forEach((childNode) => processNode(commonPath, childNode));
+	const childCommonPath = path.parse(
+		node?.file?.absoluteFilePath ?? commonPath
+	).dir;
+
+	node.children.forEach((childNode) =>
+		processNode(childCommonPath, childNode)
+	);
 };
 
 export const createFolderStructure = (
