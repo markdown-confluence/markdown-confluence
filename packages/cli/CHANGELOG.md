@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.6.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v4.6.1...@markdown-confluence/cli-v4.6.2) (2023-04-28)
+
+
+### Miscellaneous Chores
+
+* **@markdown-confluence/cli:** Synchronize obsidian packages versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.6.1 to 4.6.2
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 4.6.1 to 4.6.2
+
 ## [4.6.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v4.6.0...@markdown-confluence/cli-v4.6.1) (2023-04-28)
 
 
