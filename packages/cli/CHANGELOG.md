@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v4.4.0...@markdown-confluence/cli-v4.5.0) (2023-04-28)
+
+
+### Features
+
+* Enable SourceMaps in Docker ([5f13f52](https://github.com/markdown-confluence/markdown-confluence/commit/5f13f526ec1dc3326d3517a6080139d047c6e9ca))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.4.0 to 4.5.0
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 4.4.0 to 4.5.0
+
 ## [4.4.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v4.3.0...@markdown-confluence/cli-v4.4.0) (2023-04-27)
 
 
