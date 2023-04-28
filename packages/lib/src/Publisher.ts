@@ -101,6 +101,7 @@ export class Publisher {
 	settings: ConfluenceSettings;
 	mermaidRenderer: MermaidRenderer;
 	myAccountId: string | undefined;
+	settingsLoader: SettingsLoader;
 
 	constructor(
 		adaptor: LoaderAdaptor,
@@ -109,13 +110,15 @@ export class Publisher {
 		mermaidRenderer: MermaidRenderer
 	) {
 		this.adaptor = adaptor;
-		this.settings = settingsLoader.load();
+		this.settingsLoader = settingsLoader;
 		this.mermaidRenderer = mermaidRenderer;
 
 		this.confluenceClient = confluenceClient;
 	}
 
 	async publish(publishFilter?: string) {
+		this.settings = this.settingsLoader.load();
+
 		if (!this.myAccountId) {
 			const currentUser =
 				await this.confluenceClient.users.getCurrentUser();
