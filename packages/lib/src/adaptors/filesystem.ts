@@ -113,6 +113,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 	}
 
 	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
+		const files = await this.loadMarkdownFiles(this.settings.contentRoot);
 		const filesToPublish = [];
 		for (const file of files) {
 			try {
