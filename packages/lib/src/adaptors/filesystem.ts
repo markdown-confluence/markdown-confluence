@@ -135,6 +135,10 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 			}
 		}
 
+		filesToPublish.forEach((file) => console.log(file.absoluteFilePath));
+		if (filesToPublish.length === 0) {
+			console.warn("DIDN'T FIND FILES TO PUBLISH");
+		}
 		return filesToPublish;
 	}
 
