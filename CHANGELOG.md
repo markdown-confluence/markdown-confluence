@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.4](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.7.3...obsidian-confluence-root-v4.7.4) (2023-04-29)
+
+
+### Bug Fixes
+
+* Check for duplicate page titles not file names. ([540b1f9](https://github.com/markdown-confluence/markdown-confluence/commit/540b1f93cd20784f9c7c8f14895221667fe5f3f5))
+
 ## [4.7.3](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.7.2...obsidian-confluence-root-v4.7.3) (2023-04-29)
 
 
