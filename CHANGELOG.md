@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.3](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.7.2...obsidian-confluence-root-v4.7.3) (2023-04-29)
+
+
+### Bug Fixes
+
+* Replace spaces in hashFragment not linkToPage ([ed446e8](https://github.com/markdown-confluence/markdown-confluence/commit/ed446e87a1a12d7014efeff37ae39e161b558e0c))
+
 ## [4.7.2](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.7.1...obsidian-confluence-root-v4.7.2) (2023-04-28)
 
 
