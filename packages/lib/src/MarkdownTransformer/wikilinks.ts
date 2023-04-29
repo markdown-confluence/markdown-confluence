@@ -34,8 +34,7 @@ export function wikilinks(state: StateInline): boolean {
 		headerStart > 0 ? headerStart : wikiLinkEnd,
 		aliasStart > 0 ? aliasStart - 1 : wikiLinkEnd
 	);
-	let linkToPage = state.src.slice(pageNameStart, pageNameEnd);
-	linkToPage = linkToPage.replace(/\s+/g, "-");
+	const linkToPage = state.src.slice(pageNameStart, pageNameEnd);
 
 	if (alias) {
 		state.pos = aliasStart;
@@ -131,6 +130,7 @@ function findLinkToHeader(
 	// restore old state
 	state.pos = oldPos;
 
+	hashFragment = hashFragment?.replace(/\s+/g, "-");
 	return { hashFragment, headerStart, headerEnd };
 }
 
