@@ -4,4 +4,6 @@ COPY ./dist /app
 
 ENV NODE_OPTIONS=--enable-source-maps
 
+WORKDIR "/content"
+
 CMD ["node", "/app/index.js"]

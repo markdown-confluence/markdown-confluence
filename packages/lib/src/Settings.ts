@@ -94,7 +94,7 @@ export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 
 export class ConfigFileSettingsLoader extends SettingsLoader {
 	private configPath: string = path.join(
-		process.env.HOME ?? "",
+		process.cwd() ?? "",
 		".markdown-confluence.json"
 	);
 

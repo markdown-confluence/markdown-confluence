@@ -32,18 +32,11 @@ const createTreeNode = (name: string): LocalAdfFileTreeNode => ({
 const addFileToTree = (
 	treeNode: LocalAdfFileTreeNode,
 	file: MarkdownFile,
-	relativePath: string,
-	fileNames: Set<string>
+	relativePath: string
 ) => {
 	const [folderName, ...remainingPath] = relativePath.split(path.sep);
 
 	if (remainingPath.length === 0) {
-		if (fileNames.has(file.fileName)) {
-			throw new Error(
-				`File name "${file.fileName}" is not unique across all folders.`
-			);
-		}
-		fileNames.add(file.fileName);
 		const adfFile = mdToADFConverter.convertMDtoADF(file);
 		treeNode.children.push({
 			...createTreeNode(folderName),
@@ -59,7 +52,7 @@ const addFileToTree = (
 			treeNode.children.push(childNode);
 		}
 
-		addFileToTree(childNode, file, remainingPath.join(path.sep), fileNames);
+		addFileToTree(childNode, file, remainingPath.join(path.sep));
 	}
 };
 
@@ -107,14 +100,32 @@ export const createFolderStructure = (
 		markdownFiles.map((file) => file.absoluteFilePath)
 	);
 	const rootNode = createTreeNode(commonPath);
-	const fileNames = new Set<string>();
 
 	markdownFiles.forEach((file) => {
 		const relativePath = path.relative(commonPath, file.absoluteFilePath);
-		addFileToTree(rootNode, file, relativePath, fileNames);
+		addFileToTree(rootNode, file, relativePath);
 	});
 
 	processNode(commonPath, rootNode);
 
+	checkUniquePageTitle(rootNode);
+
 	return rootNode;
 };
+
+function checkUniquePageTitle(
+	rootNode: LocalAdfFileTreeNode,
+	pageTitles: Set<string> = new Set<string>()
+) {
+	const currentPageTitle = rootNode.file?.pageTitle ?? "";
+
+	if (pageTitles.has(currentPageTitle)) {
+		throw new Error(
+			`Page title "${currentPageTitle}" is not unique across all files.`
+		);
+	}
+	pageTitles.add(currentPageTitle);
+	rootNode.children.forEach((child) =>
+		checkUniquePageTitle(child, pageTitles)
+	);
+}
