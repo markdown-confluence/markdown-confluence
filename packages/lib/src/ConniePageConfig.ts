@@ -1,3 +1,5 @@
+import { JSONDocNode } from "@atlaskit/editor-json-transformer";
+import { ConfluenceSettings } from "./Settings";
 import { MarkdownFile } from "./adaptors";
 
 export type PageContentType = "page" | "blogpost";
@@ -40,7 +42,9 @@ export type FrontmatterConfig<
 type ProcessFunction<IN, OUT> = (
 	value: IN,
 	markdownFile: MarkdownFile,
-	alreadyParsed: Partial<ConfluencePerPageValues>
+	alreadyParsed: Partial<ConfluencePerPageValues>,
+	settings: ConfluenceSettings,
+	adfContent: JSONDocNode
 ) => OUT | Error;
 
 export type ConfluencePerPageAllValues = {
@@ -93,10 +97,29 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 					};
 			}
 		},
-		process: (yamlValue, markdownFile) => {
-			return typeof yamlValue === "string"
-				? yamlValue
-				: markdownFile.pageTitle;
+		process: (
+			yamlValue,
+			markdownFile,
+			_alreadyParsed,
+			settings,
+			adfContent
+		) => {
+			if (typeof yamlValue === "string") {
+				return yamlValue;
+			}
+			if (
+				settings.firstHeadingPageTitle &&
+				adfContent.content.at(0)?.type === "heading" &&
+				adfContent.content.at(0)?.content?.at(0)?.type === "text" &&
+				typeof adfContent.content.at(0)?.content?.at(0)?.text ===
+					"string"
+			) {
+				return (
+					adfContent.content.at(0)?.content?.at(0)?.text ??
+					markdownFile.pageTitle
+				);
+			}
+			return markdownFile.pageTitle;
 		},
 	},
 	frontmatterToPublish: {
@@ -293,7 +316,9 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 };
 
 export function processConniePerPageConfig(
-	markdownFile: MarkdownFile
+	markdownFile: MarkdownFile,
+	settings: ConfluenceSettings,
+	adfContent: JSONDocNode
 ): ConfluencePerPageValues {
 	const result: Partial<ConfluencePerPageValues> = {};
 	const config = conniePerPageConfig;
@@ -310,7 +335,9 @@ export function processConniePerPageConfig(
 			result[propertyKey as keyof ConfluencePerPageValues] = process(
 				frontmatterValue as never,
 				markdownFile,
-				result
+				result,
+				settings,
+				adfContent
 			) as never;
 		} else {
 			result[propertyKey as keyof ConfluencePerPageValues] =

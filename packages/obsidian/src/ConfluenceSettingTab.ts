@@ -84,5 +84,17 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName("First Header Page Name")
+			.setDesc("First header replaces file name as page title")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.firstHeadingPageTitle)
+					.onChange(async (value) => {
+						this.plugin.settings.firstHeadingPageTitle = value;
+						await this.plugin.saveSettings();
+					})
+			);
 	}
 }

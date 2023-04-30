@@ -137,7 +137,7 @@ export class Publisher {
 		const spaceToPublishTo = parentPage.space;
 
 		const files = await this.adaptor.getMarkdownFilesToUpload();
-		const folderTree = createLocalAdfTree(files);
+		const folderTree = createLocalAdfTree(files, this.settings);
 		let confluencePagesToPublish = await ensureAllFilesExistInConfluence(
 			this.confluenceClient,
 			this.adaptor,

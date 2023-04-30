@@ -4,6 +4,7 @@ import { MdToADF } from "./MdToADF";
 import { folderFile } from "./FolderFile";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { LocalAdfFileTreeNode } from "./Publisher";
+import { ConfluenceSettings } from "./Settings";
 
 const mdToADFConverter = new MdToADF();
 
@@ -32,12 +33,13 @@ const createTreeNode = (name: string): LocalAdfFileTreeNode => ({
 const addFileToTree = (
 	treeNode: LocalAdfFileTreeNode,
 	file: MarkdownFile,
-	relativePath: string
+	relativePath: string,
+	settings: ConfluenceSettings
 ) => {
 	const [folderName, ...remainingPath] = relativePath.split(path.sep);
 
 	if (remainingPath.length === 0) {
-		const adfFile = mdToADFConverter.convertMDtoADF(file);
+		const adfFile = mdToADFConverter.convertMDtoADF(file, settings);
 		treeNode.children.push({
 			...createTreeNode(folderName),
 			file: adfFile,
@@ -52,7 +54,7 @@ const addFileToTree = (
 			treeNode.children.push(childNode);
 		}
 
-		addFileToTree(childNode, file, remainingPath.join(path.sep));
+		addFileToTree(childNode, file, remainingPath.join(path.sep), settings);
 	}
 };
 
@@ -94,7 +96,8 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 };
 
 export const createFolderStructure = (
-	markdownFiles: MarkdownFile[]
+	markdownFiles: MarkdownFile[],
+	settings: ConfluenceSettings
 ): LocalAdfFileTreeNode => {
 	const commonPath = findCommonPath(
 		markdownFiles.map((file) => file.absoluteFilePath)
@@ -103,7 +106,7 @@ export const createFolderStructure = (
 
 	markdownFiles.forEach((file) => {
 		const relativePath = path.relative(commonPath, file.absoluteFilePath);
-		addFileToTree(rootNode, file, relativePath);
+		addFileToTree(rootNode, file, relativePath, settings);
 	});
 
 	processNode(commonPath, rootNode);

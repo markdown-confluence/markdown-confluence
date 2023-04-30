@@ -664,7 +664,6 @@ function processWikilinkToActualLink(
 					const linkPage = fileToPageIdMap[pagename];
 
 					if (linkPage) {
-						console.log({ wikilinkUrl });
 						const confluenceUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
 						node.marks[0].attrs.href = confluenceUrl;
 						if (

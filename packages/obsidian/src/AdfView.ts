@@ -66,7 +66,7 @@ export default class AdfView extends ItemView {
 		}
 
 		const md = await this.adaptor.loadMarkdownFile(this.filePath);
-		const adf = this.mdToAdf.convertMDtoADF(md).contents;
+		const adf = this.mdToAdf.convertMDtoADF(md, this.settings).contents;
 		const renderADF = this.convertMediaFilesToLocalPath(adf);
 
 		const locale = "en";

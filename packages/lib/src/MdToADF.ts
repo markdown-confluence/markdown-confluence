@@ -10,6 +10,7 @@ import { processConniePerPageConfig } from "./ConniePageConfig";
 import { p } from "@atlaskit/adf-utils/builders";
 import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap";
 import { isSafeUrl } from "@atlaskit/adf-schema";
+import { ConfluenceSettings } from "./Settings";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 
@@ -137,17 +138,20 @@ export class MdToADF {
 		return olivia as JSONDocNode;
 	}
 
-	convertMDtoADF(file: MarkdownFile): LocalAdfFile {
+	convertMDtoADF(
+		file: MarkdownFile,
+		settings: ConfluenceSettings
+	): LocalAdfFile {
 		file.contents = file.contents.replace(frontmatterRegex, "");
 
-		const results = processConniePerPageConfig(file);
+		const adfContent = this.parse(file.contents);
 
-		const adrobj = this.parse(file.contents);
+		const results = processConniePerPageConfig(file, settings, adfContent);
 
 		return {
 			...file,
 			...results,
-			contents: adrobj,
+			contents: adfContent,
 		};
 	}
 }

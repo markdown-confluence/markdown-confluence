@@ -9,6 +9,7 @@ export class ConfluenceSettings {
 	atlassianApiToken: string;
 	folderToPublish: string;
 	contentRoot: string;
+	firstHeadingPageTitle: boolean;
 }
 
 export const DEFAULT_SETTINGS = new ConfluenceSettings();
@@ -18,6 +19,7 @@ DEFAULT_SETTINGS.atlassianUserName = "";
 DEFAULT_SETTINGS.atlassianApiToken = "";
 DEFAULT_SETTINGS.folderToPublish = "Confluence Pages";
 DEFAULT_SETTINGS.contentRoot = process.cwd();
+DEFAULT_SETTINGS.firstHeadingPageTitle = false;
 
 export abstract class SettingsLoader {
 	abstract loadPartial(): Partial<ConfluenceSettings>;
@@ -59,6 +61,10 @@ export abstract class SettingsLoader {
 			}
 		}
 
+		if (!("firstHeadingPageTitle" in settings)) {
+			settings.firstHeadingPageTitle = false;
+		}
+
 		return settings as ConfluenceSettings;
 	}
 }
@@ -88,6 +94,9 @@ export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 			atlassianApiToken: process.env.ATLASSIAN_API_TOKEN,
 			folderToPublish: process.env.FOLDER_TO_PUBLISH,
 			contentRoot: process.env.CONFLUENCE_CONTENT_ROOT,
+			firstHeadingPageTitle:
+				(process.env.CONFLUENCE_FIRST_HEADING_PAGE_TITLE ?? "false") ===
+				"true",
 		};
 	}
 }
@@ -137,9 +146,10 @@ export class ConfigFileSettingsLoader extends SettingsLoader {
 
 			for (const key in DEFAULT_SETTINGS) {
 				if (Object.prototype.hasOwnProperty.call(config, key)) {
-					const element = config[key as keyof ConfluenceSettings];
+					const propertyKey = key as keyof ConfluenceSettings;
+					const element = config[propertyKey];
 					if (element) {
-						result[key as keyof ConfluenceSettings] = element;
+						result[propertyKey] = element;
 					}
 				}
 			}
@@ -201,6 +211,13 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 				type: "string",
 				demandOption: false,
 			})
+			.option("firstHeaderPageTitle", {
+				alias: "fh",
+				describe:
+					"Replace page title with first header element when 'connie-title' isn't specified.",
+				type: "boolean",
+				demandOption: false,
+			})
 			.parseSync();
 
 		return {
@@ -210,6 +227,7 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 			atlassianApiToken: options.apiToken,
 			folderToPublish: options.enableFolder,
 			contentRoot: options.contentRoot,
+			firstHeadingPageTitle: options.firstHeaderPageTitle,
 		};
 	}
 }
@@ -232,15 +250,21 @@ export class AutoSettingsLoader extends SettingsLoader {
 		for (const loader of this.loaders) {
 			const partialSettings = loader.loadPartial();
 			for (const key in partialSettings) {
+				const propertyKey = key as keyof ConfluenceSettings;
 				if (
-					Object.prototype.hasOwnProperty.call(partialSettings, key)
+					Object.prototype.hasOwnProperty.call(
+						partialSettings,
+						propertyKey
+					)
 				) {
-					const element =
-						partialSettings[key as keyof ConfluenceSettings];
-					if (element) {
+					const element = partialSettings[propertyKey];
+					if (
+						element &&
+						typeof element === typeof DEFAULT_SETTINGS[propertyKey]
+					) {
 						settings = {
 							...settings,
-							[key as keyof ConfluenceSettings]: element,
+							[propertyKey]: element,
 						};
 					}
 				}
