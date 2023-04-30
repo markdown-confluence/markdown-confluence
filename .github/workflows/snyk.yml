@@ -96,6 +96,15 @@ jobs:
           npm run build -ws --if-present
           npm run build:docker -ws --if-present
 
+      - name: Run Snyk to check for vulnerabilities (monitor)
+        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: container monitor
+          args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --file=packages/cli/Dockerfile markdown-confluence/markdown-confluence
+
       - name: Run Snyk to check Docker image for vulnerabilities
         continue-on-error: true
         uses: snyk/actions/docker@806182742461562b67788a64410098c9d9b96adb
