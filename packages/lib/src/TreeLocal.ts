@@ -60,9 +60,15 @@ const addFileToTree = (
 
 const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 	if (!node.file) {
-		const indexFile = node.children.find(
+		let indexFile = node.children.find(
 			(child) => path.parse(child.name).name === node.name
 		);
+		if (!indexFile) {
+			// Support FolderFile with a file name of "index.md"
+			indexFile = node.children.find(
+				(child) => path.parse(child.name).name === "index"
+			);
+		}
 
 		if (indexFile) {
 			node.file = indexFile.file;
