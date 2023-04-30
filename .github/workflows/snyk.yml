@@ -103,12 +103,12 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: markdown-confluence/markdown-confluence
-          args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --file=packages/cli/Dockerfile --sarif-file-output=snyk-docker.sarif
+          args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --file=packages/cli/Dockerfile
 
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: snyk-docker.sarif
+          sarif_file: snyk.sarif
 
   sbom:
     runs-on: ubuntu-latest
