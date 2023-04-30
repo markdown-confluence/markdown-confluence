@@ -38,6 +38,15 @@ jobs:
         with:
           sarif_file: snyk.sarif
           category: "Snyk Open Source"
+
+      - name: Run Snyk to check for vulnerabilities (monitor)
+        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --all-projects --dev --print-deps --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --prune-repeated-subdependencies
   
   code:
     runs-on: ubuntu-latest
@@ -67,15 +76,6 @@ jobs:
         with:
           sarif_file: snyk-code.sarif
           category: "Snyk Code"
-
-      - name: Run Snyk to check for vulnerabilities (monitor)
-        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
-        continue-on-error: true # To make sure that SARIF upload gets called
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor
-          args: --all-projects --dev --print-deps --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --prune-repeated-subdependencies
   
   container:
     runs-on: ubuntu-latest
