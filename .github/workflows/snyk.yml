@@ -103,7 +103,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: container monitor
-          args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --file=packages/cli/Dockerfile markdown-confluence/markdown-confluence
+          args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --file=packages/cli/Dockerfile markdown-confluence/markdown-confluence:latest
 
       - name: Run Snyk to check Docker image for vulnerabilities
         continue-on-error: true
