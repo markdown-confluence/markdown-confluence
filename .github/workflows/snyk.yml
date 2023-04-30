@@ -31,7 +31,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --sarif-file-output=snyk.sarif --all-projects --dev --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --prune-repeated-subdependencies
+          args: --sarif-file-output=snyk.sarif --all-projects --dev --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --prune-repeated-subdependencies
 
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@8662eabe0e9f338a07350b7fd050732745f93848 # v2.3.1
@@ -60,7 +60,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: code test
-          args: --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --sarif-file-output=snyk-code.sarif
+          args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --sarif-file-output=snyk-code.sarif
         
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@8662eabe0e9f338a07350b7fd050732745f93848 # v2.3.1
@@ -75,7 +75,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: monitor
-          args: --all-projects --dev --print-deps --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --prune-repeated-subdependencies
+          args: --all-projects --dev --print-deps --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --prune-repeated-subdependencies
   
   container:
     runs-on: ubuntu-latest
@@ -102,7 +102,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: markdown-confluence/markdown-confluence
-          args: --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --file=packages/cli/Dockerfile --sarif-file-output=snyk-docker.sarif
+          args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --file=packages/cli/Dockerfile --sarif-file-output=snyk-docker.sarif
 
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v2
@@ -129,7 +129,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: sbom
-          args: --format=cyclonedx1.4+json --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a
+          args: --format=cyclonedx1.4+json --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5
   
   check_jobs:
     runs-on: ubuntu-latest
