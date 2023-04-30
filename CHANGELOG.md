@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.9.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.8.0...obsidian-confluence-root-v4.9.0) (2023-04-30)
+
+
+### Features
+
+* Add support for "index.md" as a folder file ([f598074](https://github.com/markdown-confluence/markdown-confluence/commit/f5980740cb99f0fa04cd0c66c6f5dba6ea78c288))
+
+
+### Bug Fixes
+
+* Bash to shell language map ([28ae75e](https://github.com/markdown-confluence/markdown-confluence/commit/28ae75ed118d86841a00797d6f1bd12225551cc3))
+
 ## [4.8.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.7.5...obsidian-confluence-root-v4.8.0) (2023-04-30)
 
 
