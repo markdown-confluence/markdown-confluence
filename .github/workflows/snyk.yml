@@ -102,6 +102,7 @@ jobs:
       actions: read
       contents: read
       security-events: write
+    steps:
       - name: Run Snyk to create SBOM
         uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
         continue-on-error: true # To make sure that SARIF upload gets called
