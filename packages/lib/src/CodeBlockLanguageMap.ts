@@ -3,7 +3,7 @@ export const MarkdownToConfluenceCodeBlockLanguageMap: {
 	[key: string]: string;
 } = {
 	js: "javascript",
-	bash: "bash",
+	bash: "shell",
 	abap: "abap",
 	actionscript: "actionscript",
 	ada: "ada",
