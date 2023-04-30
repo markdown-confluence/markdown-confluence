@@ -17,11 +17,21 @@ export function wikilinks(state: StateInline): boolean {
 		return false;
 	}
 
-	const { hashFragment, headerStart } = findLinkToHeader(
+	const { hashFragment, headerStart, headerEnd } = findLinkToHeader(
 		state,
 		state.pos,
 		wikiLinkEnd
 	);
+
+	if (hashFragment) {
+		state.src = replaceBetween(
+			state.src,
+			headerStart,
+			headerEnd,
+			hashFragment
+		);
+	}
+
 	const { alias, aliasStart, aliasEnd } = findAlias(
 		state,
 		state.pos,
@@ -54,6 +64,15 @@ export function wikilinks(state: StateInline): boolean {
 	state.pos = wikiLinkEnd + 3;
 	state.posMax = max;
 	return true;
+}
+
+function replaceBetween(
+	original: string,
+	start: number,
+	end: number,
+	replacement: string
+) {
+	return original.substring(0, start) + replacement + original.substring(end);
 }
 
 function findLinkEnd(state: StateInline, start: number) {
@@ -101,7 +120,7 @@ function findLinkToHeader(
 
 	state.pos = start + 2;
 
-	while (state.pos < max) {
+	while (state.pos <= max) {
 		if (state.src.charCodeAt(state.pos) === 0x23 /* # */) {
 			foundStart = true;
 			headerStart = state.pos;
@@ -130,8 +149,8 @@ function findLinkToHeader(
 	// restore old state
 	state.pos = oldPos;
 
-	hashFragment = hashFragment?.replace(/\s+/g, "-");
-	return { hashFragment, headerStart, headerEnd };
+	const cleanHashFragment = hashFragment?.replace(" ", "-");
+	return { hashFragment: cleanHashFragment, headerStart, headerEnd };
 }
 
 function findAlias(

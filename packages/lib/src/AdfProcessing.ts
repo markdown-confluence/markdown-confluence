@@ -47,7 +47,12 @@ export function prepareAdfToUpload(
 			result.content = [p()];
 		}
 
-		result = processWikilinkToActualLink(result, fileToPageIdMap, settings);
+		result = processWikilinkToActualLink(
+			confluenceNode.file.fileName,
+			result,
+			fileToPageIdMap,
+			settings
+		);
 
 		result = mergeTextNodes(result);
 
@@ -634,6 +639,7 @@ function extractInlineComments(adf: JSONDocNode) {
 }
 
 function processWikilinkToActualLink(
+	currentFileName: string,
 	adf: JSONDocNode,
 	fileToPageIdMap: Record<string, ConfluenceAdfFile>,
 	settings: ConfluenceSettings
@@ -650,13 +656,21 @@ function processWikilinkToActualLink(
 					node.marks[0].attrs.href.startsWith("wikilink")
 				) {
 					const wikilinkUrl = new URL(node.marks[0].attrs.href);
-					const pagename = `${wikilinkUrl.pathname}.md`;
 
+					const pagename =
+						wikilinkUrl.pathname !== ""
+							? `${wikilinkUrl.pathname}.md`
+							: currentFileName;
 					const linkPage = fileToPageIdMap[pagename];
+
 					if (linkPage) {
+						console.log({ wikilinkUrl });
 						const confluenceUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
 						node.marks[0].attrs.href = confluenceUrl;
-						if (node.text === wikilinkUrl.pathname) {
+						if (
+							node.text ===
+							`${wikilinkUrl.pathname}${wikilinkUrl.hash}`
+						) {
 							node.type = "inlineCard";
 							node.attrs = {
 								url: node.marks[0].attrs.href,

@@ -40,7 +40,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 				if (!fileFM) {
 					throw new Error("Missing File in Metadata Cache");
 				}
-				const frontMatter = fileFM.frontmatter; //TODO: How to handle this better??
+				const frontMatter = fileFM.frontmatter;
 
 				if (
 					(file.path.startsWith(this.settings.folderToPublish) &&

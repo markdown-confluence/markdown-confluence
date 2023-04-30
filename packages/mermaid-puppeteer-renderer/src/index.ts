@@ -32,7 +32,7 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 					"..",
 					"dist",
 					"mermaid_renderer.html"
-				); // TODO: Make sure this is copied with CLI
+				);
 				const pathToLoad = url.pathToFileURL(mermaidHTMLPath).href;
 				await page.goto(pathToLoad);
 
