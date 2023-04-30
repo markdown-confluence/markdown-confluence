@@ -7,6 +7,21 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [4.7.5](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.7.4...obsidian-confluence-v4.7.5) (2023-04-30)
+
+
+### Bug Fixes
+
+* Handle #hash links better for names that have spaces and handle internal links ([7ad345a](https://github.com/markdown-confluence/markdown-confluence/commit/7ad345af210e346517535faa7a08d801b1660ded))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.7.4 to 4.7.5
+    * @markdown-confluence/mermaid-electron-renderer bumped from 4.7.4 to 4.7.5
+
 ## [4.7.4](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.7.3...obsidian-confluence-v4.7.4) (2023-04-29)
 
 
