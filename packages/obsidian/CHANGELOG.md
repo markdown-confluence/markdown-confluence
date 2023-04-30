@@ -7,6 +7,21 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [4.8.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.7.5...obsidian-confluence-v4.8.0) (2023-04-30)
+
+
+### Features
+
+* Add new setting to allow you to use the first heading as the page title. ([ec4e426](https://github.com/markdown-confluence/markdown-confluence/commit/ec4e426700d241c29f84ac25b28893f28f20a555))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.7.5 to 4.8.0
+    * @markdown-confluence/mermaid-electron-renderer bumped from 4.7.5 to 4.8.0
+
 ## [4.7.5](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.7.4...obsidian-confluence-v4.7.5) (2023-04-30)
 
 
