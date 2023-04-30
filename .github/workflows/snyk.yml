@@ -11,7 +11,7 @@ permissions:
   contents: read
   
 jobs:
-  security:
+  oss:
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -38,7 +38,14 @@ jobs:
         with:
           sarif_file: snyk.sarif
           category: "Snyk Open Source"
-          
+  
+  code:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
       - name: Run Snyk to scan for bad code
         uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
         continue-on-error: true # To make sure that SARIF upload gets called
@@ -53,7 +60,7 @@ jobs:
         with:
           sarif_file: snyk-code.sarif
           category: "Snyk Code"
-        
+
       - name: Run Snyk to check for vulnerabilities (monitor)
         uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
         continue-on-error: true # To make sure that SARIF upload gets called
@@ -62,7 +69,39 @@ jobs:
         with:
           command: monitor
           args: --all-projects --dev --print-deps --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --prune-repeated-subdependencies
-    
+  
+  container:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Build a Docker image
+        run: |
+          npm run build -ws --if-present
+          npm run build:docker -ws --if-present
+
+      - name: Run Snyk to check Docker image for vulnerabilities
+        continue-on-error: true
+        uses: snyk/actions/docker@806182742461562b67788a64410098c9d9b96adb
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: markdown-confluence/markdown-confluence
+          args: --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a --file=packages/cli/Dockerfile --sarif-file-output=snyk-docker.sarif
+
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: snyk-docker.sarif
+
+  sbom:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
       - name: Run Snyk to create SBOM
         uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
         continue-on-error: true # To make sure that SARIF upload gets called
@@ -71,3 +110,10 @@ jobs:
         with:
           command: sbom
           args: --format=cyclonedx1.4+json --org=7b4599c0-e96e-435d-bfb9-081294c3aa4a
+  
+  check_jobs:
+    runs-on: ubuntu-latest
+    needs: [oss, code, container, sbom]
+    steps:
+      - name: Check if any previous jobs failed
+        run: echo "All previous jobs succeeded."
