@@ -2,6 +2,7 @@
 import { expect, test } from "@jest/globals";
 import { MarkdownFile } from "./adaptors";
 import { MdToADF } from "./MdToADF";
+import { ConfluenceSettings } from "./Settings";
 
 const markdownTestCases: MarkdownFile[] = [
 	{
@@ -199,6 +200,15 @@ const markdownTestCases: MarkdownFile[] = [
 ];
 test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
 	const mdToADF = new MdToADF();
-	const adfFile = mdToADF.convertMDtoADF(markdown);
+	const settings: ConfluenceSettings = {
+		confluenceBaseUrl: "",
+		confluenceParentId: "",
+		atlassianUserName: "",
+		atlassianApiToken: "",
+		folderToPublish: "",
+		contentRoot: "",
+		firstHeadingPageTitle: false,
+	};
+	const adfFile = mdToADF.convertMDtoADF(markdown, settings);
 	expect(adfFile).toMatchSnapshot();
 });
