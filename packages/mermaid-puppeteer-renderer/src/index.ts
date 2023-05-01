@@ -3,19 +3,6 @@ import path from "path";
 import puppeteer from "puppeteer";
 import url from "url";
 
-async function renderMermaidChart(
-	mermaidData: string,
-	mermaidConfig: unknown
-): Promise<{
-	width: number;
-	height: number;
-}> {
-	return {
-		width: 0,
-		height: 0,
-	};
-}
-
 export class PuppeteerMermaidRenderer implements MermaidRenderer {
 	async captureMermaidCharts(
 		charts: ChartData[]
@@ -59,7 +46,10 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 
 				const result = await page.evaluate(
 					(mermaidData, mermaidConfig) => {
-						return renderMermaidChart(mermaidData, mermaidConfig);
+						return window.renderMermaidChart(
+							mermaidData,
+							mermaidConfig
+						);
 					},
 					chart.data,
 					mermaidConfig
