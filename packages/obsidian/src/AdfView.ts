@@ -7,7 +7,7 @@ import {
 } from "obsidian";
 import {
 	ConfluenceUploadSettings,
-	MdToADF,
+	convertMDtoADF,
 	LoaderAdaptor,
 } from "@markdown-confluence/lib";
 import React from "react";
@@ -26,7 +26,6 @@ export default class AdfView extends ItemView {
 	fileName: string;
 	vault: Vault;
 	workspace: Workspace;
-	mdToAdf: MdToADF;
 	adaptor: LoaderAdaptor;
 
 	getViewType(): string {
@@ -52,7 +51,6 @@ export default class AdfView extends ItemView {
 		this.fileName = initialFileInfo.basename;
 		this.vault = this.app.vault;
 		this.workspace = this.app.workspace;
-		this.mdToAdf = new MdToADF();
 		this.adaptor = adaptor;
 	}
 
@@ -66,7 +64,7 @@ export default class AdfView extends ItemView {
 		}
 
 		const md = await this.adaptor.loadMarkdownFile(this.filePath);
-		const adf = this.mdToAdf.convertMDtoADF(md, this.settings).contents;
+		const adf = convertMDtoADF(md, this.settings).contents;
 		const renderADF = this.convertMediaFilesToLocalPath(adf);
 
 		const locale = "en";

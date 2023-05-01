@@ -1,12 +1,10 @@
 import path from "path";
 import { MarkdownFile } from "./adaptors";
-import { MdToADF } from "./MdToADF";
+import { convertMDtoADF } from "./MdToADF";
 import { folderFile } from "./FolderFile";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { LocalAdfFileTreeNode } from "./Publisher";
 import { ConfluenceSettings } from "./Settings";
-
-const mdToADFConverter = new MdToADF();
 
 const findCommonPath = (paths: string[]): string => {
 	const [firstPath, ...rest] = paths;
@@ -39,7 +37,7 @@ const addFileToTree = (
 	const [folderName, ...remainingPath] = relativePath.split(path.sep);
 
 	if (remainingPath.length === 0) {
-		const adfFile = mdToADFConverter.convertMDtoADF(file, settings);
+		const adfFile = convertMDtoADF(file, settings);
 		treeNode.children.push({
 			...createTreeNode(folderName),
 			file: adfFile,

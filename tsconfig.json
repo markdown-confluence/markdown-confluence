@@ -18,6 +18,7 @@
       "noUnusedParameters": false,
       "noImplicitReturns": false /* Report error when not all code paths in function return a value. */,
       "noFallthroughCasesInSwitch": false /* Report errors for fallthrough cases in switch statement. */,
+      "noImplicitThis": true,
        "allowSyntheticDefaultImports":true,
        "esModuleInterop":true,
        "declaration": true,

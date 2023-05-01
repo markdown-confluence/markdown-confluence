@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { expect, test } from "@jest/globals";
 import { MarkdownFile } from "./adaptors";
-import { MdToADF } from "./MdToADF";
+import { convertMDtoADF } from "./MdToADF";
 import { ConfluenceSettings } from "./Settings";
 
 const markdownTestCases: MarkdownFile[] = [
@@ -199,16 +199,15 @@ const markdownTestCases: MarkdownFile[] = [
 	},
 ];
 test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
-	const mdToADF = new MdToADF();
 	const settings: ConfluenceSettings = {
-		confluenceBaseUrl: "",
-		confluenceParentId: "",
-		atlassianUserName: "",
-		atlassianApiToken: "",
-		folderToPublish: "",
-		contentRoot: "",
+		confluenceBaseUrl: "https://example.com",
+		confluenceParentId: "asdf",
+		atlassianUserName: "asdf@asdf.com",
+		atlassianApiToken: "asdfasdf",
+		folderToPublish: ".",
+		contentRoot: "./",
 		firstHeadingPageTitle: false,
 	};
-	const adfFile = mdToADF.convertMDtoADF(markdown, settings);
+	const adfFile = convertMDtoADF(markdown, settings);
 	expect(adfFile).toMatchSnapshot();
 });

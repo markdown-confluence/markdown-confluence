@@ -1,6 +1,7 @@
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { ConfluenceSettings } from "./Settings";
 import { MarkdownFile } from "./adaptors";
+import { parseMarkdownToADF } from "./MdToADF";
 
 export type PageContentType = "page" | "blogpost";
 
@@ -132,7 +133,13 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 				errors: [],
 			};
 		},
-		process: (yamlValue, markdownFile) => {
+		process: (
+			yamlValue,
+			markdownFile,
+			_alreadyParsed,
+			_settings,
+			adfContent
+		) => {
 			if (yamlValue && Array.isArray(yamlValue)) {
 				let frontmatterHeader =
 					"| Key | Value | \n | ----- | ----- |\n";
@@ -145,8 +152,10 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 						frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
 					}
 				}
-				markdownFile.contents =
-					frontmatterHeader + markdownFile.contents;
+
+				const newADF = parseMarkdownToADF(frontmatterHeader);
+
+				adfContent.content = [...newADF.content, ...adfContent.content];
 			}
 			return [];
 		},
