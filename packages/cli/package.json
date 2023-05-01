@@ -20,7 +20,7 @@
         "confluence.js": "^1.6.3",
         "boxen": "7.0.2",
         "chalk": "5.2.0",
-        "yargs": "17.7.1",
+        "yargs": "17.7.2",
         "@markdown-confluence/lib": "4.9.0",
         "@markdown-confluence/mermaid-puppeteer-renderer": "4.9.0"
     },
