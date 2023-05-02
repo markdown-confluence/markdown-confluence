@@ -1,7 +1,10 @@
 import mermaid from "mermaid";
 
 window.renderMermaidChart = async (chartData, mermaidConfig) => {
-	mermaid.initialize({ ...mermaidConfig, startOnLoad: false });
+	const {themeVariables, ...rest} = mermaidConfig;
+	
+	mermaid.initialize({ ...rest, startOnLoad: false });
+	mermaid.mermaidAPI.updateSiteConfig({themeVariables});
 
 	const { svg } = await mermaid.render("graphDiv2", chartData);
 	const chartElement = document.querySelector("#graphDiv");

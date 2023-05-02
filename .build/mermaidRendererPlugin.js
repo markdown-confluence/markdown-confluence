@@ -31,8 +31,9 @@ export const mermaidRendererPlugin = {
   <head>
     <meta charset="UTF-8" />
     <title>Mermaid Chart</title>
+	<link href="app://obsidian.md/app.css" type="text/css" rel="stylesheet"/>
   </head>
-  <body>
+  <body class="theme-dark">
   	<div id="graphDiv"></div>
     <script type="text/javascript">
 	${result.outputFiles[0].text}

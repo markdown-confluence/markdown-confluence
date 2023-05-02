@@ -16,13 +16,15 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 			const chartWindow = new BrowserWindow({
 				width: 800,
 				height: 600,
-				show: false,
-				frame: false,
+				show: true,
+				frame: true,
 			});
+
+			chartWindow.webContents.openDevTools();
 
 			await chartWindow.loadURL(mermaidRenderHtml);
 
-			const mermaidConfig = {
+			let mermaidConfig = {
 				theme: "base",
 				themeVariables: {
 					background: "#ffffff",
@@ -43,6 +45,9 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 				},
 			};
 
+			// @ts-ignore
+			mermaidConfig = window.mermaid.mermaidAPI.getConfig();
+
 			// Render the chart and get the dimensions
 			const dimensions = await chartWindow.webContents.executeJavaScript(`
 			renderMermaidChart(\`${chart.data}\`, ${JSON.stringify(mermaidConfig)});
@@ -60,15 +65,11 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 				);
 				// Convert the NativeImage to a PNG buffer
 				const imageBuffer = image.toPNG();
-				// Clean up the window
-				chartWindow.close();
 				// Add the buffer to the capturedCharts map
 				capturedCharts.set(chart.name, imageBuffer);
 				// Resolve the promise
-			} catch (error) {
-				// Handle errors and clean up
-				chartWindow.close();
-				throw error;
+			} finally {
+				// chartWindow.close();
 			}
 		});
 
