@@ -2,14 +2,18 @@ import { BrowserWindow } from "@electron/remote";
 import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
 import MermaidRendererClient from "mermaid_renderer.esbuild";
 
-const mermaidRenderHtml = URL.createObjectURL(
-	new Blob([MermaidRendererClient], { type: "text/html" })
-);
+let mermaidRenderHtml: string;
 
 export class ElectronMermaidRenderer implements MermaidRenderer {
 	async captureMermaidCharts(
 		charts: ChartData[]
 	): Promise<Map<string, Buffer>> {
+		if (!mermaidRenderHtml) {
+			mermaidRenderHtml = URL.createObjectURL(
+				new Blob([MermaidRendererClient], { type: "text/html" })
+			);
+		}
+
 		const capturedCharts = new Map<string, Buffer>();
 
 		const promises = charts.map(async (chart) => {
