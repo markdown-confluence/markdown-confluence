@@ -18,8 +18,8 @@
       "noUnusedParameters":true,
       "noPropertyAccessFromIndexSignature":true,
       "noUncheckedIndexedAccess":true,
-      "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-      "noFallthroughCasesInSwitch":true, /* Report errors for fallthrough cases in switch statement. */
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch":true,
       "noImplicitThis":true,
       "strictBindCallApply":true,
       "strictFunctionTypes":true,
