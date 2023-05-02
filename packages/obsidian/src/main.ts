@@ -1,10 +1,4 @@
-import {
-	Plugin,
-	Notice,
-	MarkdownView,
-	WorkspaceLeaf,
-	Workspace,
-} from "obsidian";
+import { Plugin, Notice, MarkdownView, Workspace } from "obsidian";
 import {
 	ConfluenceUploadSettings,
 	Publisher,
@@ -15,7 +9,6 @@ import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
 import ObsidianAdaptor from "./adaptors/obsidian";
 import { CompletedModal } from "./CompletedModal";
 import { ObsidianConfluenceClient } from "./MyBaseClient";
-import AdfView, { ADF_VIEW_TYPE } from "./AdfView";
 import {
 	ConfluencePerPageForm,
 	ConfluencePerPageUIValues,
@@ -31,37 +24,6 @@ export default class ConfluencePlugin extends Plugin {
 
 	activeLeafPath(workspace: Workspace) {
 		return workspace.getActiveViewOfType(MarkdownView)?.file.path;
-	}
-
-	activeLeafName(workspace: Workspace) {
-		return (
-			workspace.getActiveViewOfType(MarkdownView)?.getDisplayText() ?? ""
-		);
-	}
-
-	adfPreview() {
-		const fileInfo = {
-			path: this.activeLeafPath(this.workspace),
-			basename: this.activeLeafName(this.workspace),
-		};
-		this.initPreview(fileInfo);
-	}
-
-	async initPreview(fileInfo: {
-		path: string | undefined;
-		basename: string;
-	}) {
-		if (this.app.workspace.getLeavesOfType(ADF_VIEW_TYPE).length > 0) {
-			return;
-		}
-		const preview = this.app.workspace.getLeaf("split");
-		const mmPreview = new AdfView(
-			this.settings,
-			preview,
-			fileInfo,
-			this.adaptor
-		);
-		preview.open(mmPreview);
 	}
 
 	async init() {
@@ -97,27 +59,6 @@ export default class ConfluencePlugin extends Plugin {
 
 	override async onload() {
 		await this.init();
-
-		this.registerView(
-			ADF_VIEW_TYPE,
-			(leaf: WorkspaceLeaf) =>
-				new AdfView(
-					this.settings,
-					leaf,
-					{
-						path: this.activeLeafPath(this.workspace),
-						basename: this.activeLeafName(this.workspace),
-					},
-					this.adaptor
-				)
-		);
-
-		this.addCommand({
-			id: "adf-preview",
-			name: "Preview the current note rendered to ADF",
-			callback: () => this.adfPreview(),
-			hotkeys: [],
-		});
 
 		this.addRibbonIcon("cloud", "Publish to Confluence", async () => {
 			if (this.isSyncing) {
