@@ -1,7 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
 import { writeFileSync } from 'fs';
-import { mermaidRendererPlugin } from '../../.build/mermaidRendererPlugin.js'
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 
 
@@ -28,7 +27,7 @@ const buildConfig = {
 	treeShaking: false,
 	outdir: 'dist',
 	mainFields: ['module', 'main'],
-	plugins: [mermaidRendererPlugin, nodeExternalsPlugin()],
+	plugins: [nodeExternalsPlugin()],
 	minify: false,
 	metafile: true,
 
