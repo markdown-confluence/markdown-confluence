@@ -46,7 +46,7 @@ jobs:
 
       - name: Latest NPM
         if: ${{ steps.release-please.outputs.release_created }}
-        run: npm install -g npm@latest
+        run: npm install -g npm@9.6.5
 
       - name: Checkout source repository
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
