@@ -4,7 +4,8 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/markdown-confluence/markdown-confluence/badge.svg)](https://snyk.io/test/github/markdown-confluence/markdown-confluence)
 ![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/markdown-confluence/markdown-confluence/release-please.yml)
 ![Lines of code](https://img.shields.io/tokei/lines/github/markdown-confluence/markdown-confluence)
-![GitHub manifest version](https://img.shields.io/github/manifest-json/v/markdown-confluence/obsidian-integration)
+![GitHub manifest version](https://img.shields.io/github/manifest-json/v/markdown-confluence/obsidian-integration)  
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 Obsidian Downloads: ![GitHub all releases](https://img.shields.io/github/downloads/markdown-confluence/obsidian-integration/total)
 
