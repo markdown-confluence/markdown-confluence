@@ -30,6 +30,7 @@ function processADF(adf: JSONDocNode): JSONDocNode {
 			if (
 				!(
 					node.marks &&
+					node.marks[0] &&
 					node.marks[0].type === "link" &&
 					node.marks[0].attrs &&
 					"href" in node.marks[0].attrs
@@ -39,18 +40,18 @@ function processADF(adf: JSONDocNode): JSONDocNode {
 			}
 
 			if (
-				node.marks[0].attrs.href === "" ||
-				(!isSafeUrl(node.marks[0].attrs.href) &&
-					!(node.marks[0].attrs.href as string).startsWith(
+				node.marks[0].attrs["href"] === "" ||
+				(!isSafeUrl(node.marks[0].attrs["href"]) &&
+					!(node.marks[0].attrs["href"] as string).startsWith(
 						"wikilink"
 					))
 			) {
-				node.marks[0].attrs.href = "#";
+				node.marks[0].attrs["href"] = "#";
 			}
 
-			if (node.marks[0].attrs.href === node.text) {
+			if (node.marks[0].attrs["href"] === node.text) {
 				node.type = "inlineCard";
-				node.attrs = { url: node.marks[0].attrs.href };
+				node.attrs = { url: node.marks[0].attrs["href"] };
 				delete node.marks;
 				delete node.text;
 			}
@@ -92,10 +93,10 @@ function processADF(adf: JSONDocNode): JSONDocNode {
 				return node;
 			}
 
-			const codeBlockLanguage = (node.attrs || {})?.language;
+			const codeBlockLanguage = (node.attrs || {})?.["language"];
 
 			if (codeBlockLanguage in MarkdownToConfluenceCodeBlockLanguageMap) {
-				node.attrs.language =
+				node.attrs["language"] =
 					MarkdownToConfluenceCodeBlockLanguageMap[codeBlockLanguage];
 			}
 

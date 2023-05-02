@@ -20,7 +20,6 @@ import { IntlProvider } from "react-intl-next";
 export const ADF_VIEW_TYPE = "AtlassianDocumentFormatView";
 
 export default class AdfView extends ItemView {
-	displayText: string;
 	settings: ConfluenceUploadSettings.ConfluenceSettings;
 	filePath: string | undefined;
 	fileName: string;
@@ -31,11 +30,12 @@ export default class AdfView extends ItemView {
 	getViewType(): string {
 		return ADF_VIEW_TYPE;
 	}
+
 	getDisplayText(): string {
-		return this.displayText ?? "ADF Preview";
+		return "ADF Preview";
 	}
 
-	getIcon() {
+	override getIcon() {
 		return "dot-network";
 	}
 
@@ -54,7 +54,7 @@ export default class AdfView extends ItemView {
 		this.adaptor = adaptor;
 	}
 
-	async onOpen() {
+	override async onOpen() {
 		const container = this.containerEl.children[1] as HTMLElement;
 		container.style.backgroundColor = "#FFFFFF";
 
@@ -87,9 +87,9 @@ export default class AdfView extends ItemView {
 
 	convertMediaFilesToLocalPath(adf: JSONDocNode): JSONDocNode {
 		return traverse(adf, {
-			media: (node, parent) => {
-				if (node?.attrs?.type === "file") {
-					const currentUrl = node?.attrs?.url as string;
+			media: (node) => {
+				if (node?.attrs?.["type"] === "file") {
+					const currentUrl = node?.attrs?.["url"] as string;
 					const test = this.app.vault.adapter as FileSystemAdapter;
 					const vaultPath =
 						this.app.metadataCache.getFirstLinkpathDest(
@@ -100,10 +100,11 @@ export default class AdfView extends ItemView {
 						return false;
 					}
 					const path = test.getResourcePath(vaultPath.path);
-					node.attrs.type = "external";
-					node.attrs.url = path;
+					node.attrs["type"] = "external";
+					node.attrs["url"] = path;
 					return node;
 				}
+				return;
 			},
 		}) as JSONDocNode;
 	}
@@ -116,7 +117,7 @@ export default class AdfView extends ItemView {
 		throw new Error("No Path???");
 	}
 
-	async onClose() {
+	override async onClose() {
 		// Nothing to clean up.
 	}
 }

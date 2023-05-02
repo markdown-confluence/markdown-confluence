@@ -180,9 +180,9 @@ async function ensurePageExists(
 		searchParams
 	);
 
-	if (contentByTitle.size > 0) {
-		const currentPage = contentByTitle.results[0];
+	const currentPage = contentByTitle.results[0];
 
+	if (currentPage) {
 		if (
 			file.contentType === "page" &&
 			!currentPage.ancestors?.some((ancestor) => ancestor.id == topPageId)

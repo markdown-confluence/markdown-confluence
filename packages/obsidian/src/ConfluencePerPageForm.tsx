@@ -6,7 +6,9 @@ import { Property } from "csstype";
 
 export type ConfluencePerPageUIValues = {
 	[K in keyof ConfluencePageConfig.ConfluencePerPageConfig]: {
-		value?: ConfluencePageConfig.ConfluencePerPageConfig[K]["default"];
+		value:
+			| ConfluencePageConfig.ConfluencePerPageConfig[K]["default"]
+			| undefined;
 		isSet: boolean;
 	};
 };
@@ -155,10 +157,10 @@ const renderTextInput = (
 			</td>
 		</tr>
 		<tr key={`${key}-errors`}>
-			{errors[key]?.length > 0 && (
+			{(errors[key]?.length ?? 0) > 0 && (
 				<td colSpan={3}>
 					<div className="error" style={styles.errorTd}>
-						{errors[key].map((error) => (
+						{(errors[key] ?? []).map((error) => (
 							<p key={error.message}>{error.message}</p>
 						))}
 					</div>
@@ -251,10 +253,10 @@ const renderArrayText = (
 			</td>
 		</tr>
 		<tr key={`${key}-errors`}>
-			{errors[key]?.length > 0 && (
+			{(errors[key]?.length ?? 0) > 0 && (
 				<td colSpan={3}>
 					<div className="error" style={styles.errorTd}>
-						{errors[key].map((error) => (
+						{(errors[key] ?? []).map((error) => (
 							<p key={error.message}>{error.message}</p>
 						))}
 					</div>
@@ -319,10 +321,10 @@ const renderBoolean = (
 			</td>
 		</tr>
 		<tr key={`${key}-errors`}>
-			{errors[key]?.length > 0 && (
+			{(errors[key]?.length ?? 0) > 0 && (
 				<td colSpan={3}>
 					<div className="error" style={styles.errorTd}>
-						{errors[key].map((error) => (
+						{(errors[key] ?? []).map((error) => (
 							<p key={error.message}>{error.message}</p>
 						))}
 					</div>
@@ -395,10 +397,10 @@ const renderOptions = (
 			</td>
 		</tr>
 		<tr key={`${key}-errors`}>
-			{errors[key]?.length > 0 && (
+			{(errors[key]?.length ?? 0) > 0 && (
 				<td colSpan={3}>
 					<div className="error" style={styles.errorTd}>
-						{errors[key].map((error) => (
+						{(errors[key] ?? []).map((error) => (
 							<p key={error.message}>{error.message}</p>
 						))}
 					</div>
@@ -503,7 +505,7 @@ export class ConfluencePerPageForm extends Modal {
 		this.modalProps = modalProps;
 	}
 
-	onOpen() {
+	override onOpen() {
 		const { contentEl } = this;
 		const test: FormProps = {
 			...this.modalProps,
@@ -515,7 +517,7 @@ export class ConfluencePerPageForm extends Modal {
 		ReactDOM.render(React.createElement(ConfluenceForm, test), contentEl);
 	}
 
-	onClose() {
+	override onClose() {
 		const { contentEl } = this;
 		ReactDOM.unmountComponentAtNode(contentEl);
 		contentEl.empty();

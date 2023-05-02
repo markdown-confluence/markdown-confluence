@@ -1,7 +1,6 @@
 import {
 	Plugin,
 	Notice,
-	Editor,
 	MarkdownView,
 	WorkspaceLeaf,
 	Workspace,
@@ -24,12 +23,11 @@ import {
 } from "./ConfluencePerPageForm";
 
 export default class ConfluencePlugin extends Plugin {
-	settings: ConfluenceUploadSettings.ConfluenceSettings;
+	settings!: ConfluenceUploadSettings.ConfluenceSettings;
 	private isSyncing = false;
-	adfView: AdfView;
-	workspace: Workspace;
-	publisher: Publisher;
-	adaptor: ObsidianAdaptor;
+	workspace!: Workspace;
+	publisher!: Publisher;
+	adaptor!: ObsidianAdaptor;
 
 	activeLeafPath(workspace: Workspace) {
 		return workspace.getActiveViewOfType(MarkdownView)?.file.path;
@@ -97,7 +95,7 @@ export default class ConfluencePlugin extends Plugin {
 		);
 	}
 
-	async onload() {
+	override async onload() {
 		await this.init();
 
 		this.registerView(
@@ -121,43 +119,39 @@ export default class ConfluencePlugin extends Plugin {
 			hotkeys: [],
 		});
 
-		this.addRibbonIcon(
-			"cloud",
-			"Publish to Confluence",
-			async (evt: MouseEvent) => {
-				if (this.isSyncing) {
-					new Notice("Syncing already on going");
-					return;
-				}
-				this.isSyncing = true;
-				try {
-					const stats = await this.publisher.doPublish();
-					new CompletedModal(this.app, {
-						uploadResults: stats,
-					}).open();
-				} catch (error) {
-					if (error instanceof Error) {
-						new CompletedModal(this.app, {
-							uploadResults: {
-								errorMessage: error.message,
-								failedFiles: [],
-								filesUploadResult: [],
-							},
-						}).open();
-					} else {
-						new CompletedModal(this.app, {
-							uploadResults: {
-								errorMessage: JSON.stringify(error),
-								failedFiles: [],
-								filesUploadResult: [],
-							},
-						}).open();
-					}
-				} finally {
-					this.isSyncing = false;
-				}
+		this.addRibbonIcon("cloud", "Publish to Confluence", async () => {
+			if (this.isSyncing) {
+				new Notice("Syncing already on going");
+				return;
 			}
-		);
+			this.isSyncing = true;
+			try {
+				const stats = await this.publisher.doPublish();
+				new CompletedModal(this.app, {
+					uploadResults: stats,
+				}).open();
+			} catch (error) {
+				if (error instanceof Error) {
+					new CompletedModal(this.app, {
+						uploadResults: {
+							errorMessage: error.message,
+							failedFiles: [],
+							filesUploadResult: [],
+						},
+					}).open();
+				} else {
+					new CompletedModal(this.app, {
+						uploadResults: {
+							errorMessage: JSON.stringify(error),
+							failedFiles: [],
+							filesUploadResult: [],
+						},
+					}).open();
+				}
+			} finally {
+				this.isSyncing = false;
+			}
+		});
 
 		this.addCommand({
 			id: "publish-current",
@@ -198,6 +192,7 @@ export default class ConfluencePlugin extends Plugin {
 					}
 					return true;
 				}
+				return true;
 			},
 		});
 
@@ -238,19 +233,19 @@ export default class ConfluencePlugin extends Plugin {
 								this.isSyncing = false;
 							});
 					}
-					return true;
 				}
+				return true;
 			},
 		});
 
 		this.addCommand({
 			id: "enable-publishing",
 			name: "Enable publishing to Confluence",
-			editorCheckCallback: (
-				checking: boolean,
-				editor: Editor,
-				view: MarkdownView
-			) => {
+			editorCheckCallback: (checking, _editor, view) => {
+				if (!view.file) {
+					return false;
+				}
+
 				if (checking) {
 					const frontMatter = this.app.metadataCache.getCache(
 						view.file.path
@@ -268,6 +263,7 @@ export default class ConfluencePlugin extends Plugin {
 					view.file,
 					(frontmatter) => {
 						if (
+							view.file &&
 							view.file.path.startsWith(
 								this.settings.folderToPublish
 							)
@@ -278,17 +274,18 @@ export default class ConfluencePlugin extends Plugin {
 						}
 					}
 				);
+				return true;
 			},
 		});
 
 		this.addCommand({
 			id: "disable-publishing",
 			name: "Disable publishing to Confluence",
-			editorCheckCallback: (
-				checking: boolean,
-				editor: Editor,
-				view: MarkdownView
-			) => {
+			editorCheckCallback: (checking, _editor, view) => {
+				if (!view.file) {
+					return false;
+				}
+
 				if (checking) {
 					const frontMatter = this.app.metadataCache.getCache(
 						view.file.path
@@ -306,6 +303,7 @@ export default class ConfluencePlugin extends Plugin {
 					view.file,
 					(frontmatter) => {
 						if (
+							view.file &&
 							view.file.path.startsWith(
 								this.settings.folderToPublish
 							)
@@ -316,13 +314,18 @@ export default class ConfluencePlugin extends Plugin {
 						}
 					}
 				);
+				return true;
 			},
 		});
 
 		this.addCommand({
 			id: "page-settings",
 			name: "Update Confluence Page Settings",
-			editorCallback: (editor: Editor, view: MarkdownView) => {
+			editorCallback: (_editor, view) => {
+				if (!view.file) {
+					return false;
+				}
+
 				const frontMatter = this.app.metadataCache.getCache(
 					view.file.path
 				)?.frontmatter;
@@ -361,13 +364,14 @@ export default class ConfluencePlugin extends Plugin {
 						close();
 					},
 				}).open();
+				return true;
 			},
 		});
 
 		this.addSettingTab(new ConfluenceSettingTab(this.app, this));
 	}
 
-	async onunload() {}
+	override async onunload() {}
 
 	async loadSettings() {
 		this.settings = Object.assign(

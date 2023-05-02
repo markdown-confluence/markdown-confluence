@@ -1,4 +1,4 @@
-import { ConfluenceSettings, SettingsLoader } from "./Settings";
+import { SettingsLoader } from "./Settings";
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
 import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
@@ -48,10 +48,10 @@ export interface LocalAdfFile {
 		[key: string]: unknown;
 	};
 	tags: string[];
-	pageId?: string;
+	pageId: string | undefined;
 	dontChangeParentPageId: boolean;
 	contentType: PageContentType;
-	blogPostDate?: string;
+	blogPostDate: string | undefined;
 }
 
 export interface ConfluenceAdfFile {
@@ -71,7 +71,7 @@ export interface ConfluenceAdfFile {
 	pageUrl: string;
 
 	contentType: PageContentType;
-	blogPostDate?: string;
+	blogPostDate: string | undefined;
 }
 
 export interface ConfluenceNode {
@@ -99,7 +99,6 @@ export interface UploadAdfFileResult {
 export class Publisher {
 	confluenceClient: RequiredConfluenceClient;
 	adaptor: LoaderAdaptor;
-	settings: ConfluenceSettings;
 	mermaidRenderer: MermaidRenderer;
 	myAccountId: string | undefined;
 	settingsLoader: SettingsLoader;
@@ -118,7 +117,7 @@ export class Publisher {
 	}
 
 	async publish(publishFilter?: string) {
-		this.settings = this.settingsLoader.load();
+		const settings = this.settingsLoader.load();
 
 		if (!this.myAccountId) {
 			const currentUser =
@@ -127,7 +126,7 @@ export class Publisher {
 		}
 
 		const parentPage = await this.confluenceClient.content.getContentById({
-			id: this.settings.confluenceParentId,
+			id: settings.confluenceParentId,
 			expand: ["body.atlas_doc_format", "space"],
 		});
 		if (!parentPage.space) {
@@ -137,7 +136,7 @@ export class Publisher {
 		const spaceToPublishTo = parentPage.space;
 
 		const files = await this.adaptor.getMarkdownFilesToUpload();
-		const folderTree = createLocalAdfTree(files, this.settings);
+		const folderTree = createLocalAdfTree(files, settings);
 		let confluencePagesToPublish = await ensureAllFilesExistInConfluence(
 			this.confluenceClient,
 			this.adaptor,
@@ -145,7 +144,7 @@ export class Publisher {
 			spaceToPublishTo.key,
 			parentPage.id,
 			parentPage.id,
-			this.settings
+			settings
 		);
 
 		if (publishFilter) {
@@ -247,13 +246,13 @@ export class Publisher {
 		const imageResult = Object.keys(imageUploadResult.imageMap).reduce(
 			(prev, curr) => {
 				const value = imageUploadResult.imageMap[curr];
-				if (value === null) {
+				if (!value) {
 					return prev;
 				}
 				const status = value.status;
 				return {
 					...prev,
-					[status]: prev[status] + 1,
+					[status]: (prev[status] ?? 0) + 1,
 				};
 			},
 			{
@@ -264,14 +263,14 @@ export class Publisher {
 
 		if (!adfEqual(adfFile.contents, imageUploadResult.adf)) {
 			result.imageResult =
-				imageResult["uploaded"] > 0 ? "updated" : "same";
+				(imageResult["uploaded"] ?? 0) > 0 ? "updated" : "same";
 		}
 
 		if (!adfEqual(currentContents, imageUploadResult.adf)) {
 			result.contentResult = "updated";
 			console.log(`TESTING DIFF - ${adfFile.absoluteFilePath}`);
 
-			const replacer = (key: unknown, value: unknown) =>
+			const replacer = (_key: unknown, value: unknown) =>
 				typeof value === "undefined" ? null : value;
 
 			console.log(JSON.stringify(currentContents, replacer));
@@ -357,14 +356,14 @@ export class Publisher {
 		const mediaNodes = filter(
 			adr,
 			(node) =>
-				node.type === "media" && (node.attrs || {})?.type === "file"
+				node.type === "media" && (node.attrs || {})?.["type"] === "file"
 		);
 
 		const mermaidNodes = filter(
 			adr,
 			(node) =>
 				node.type == "codeBlock" &&
-				(node.attrs || {})?.language === "mermaid"
+				(node.attrs || {})?.["language"] === "mermaid"
 		);
 
 		const mermaidNodesToUpload = new Set(
@@ -385,7 +384,7 @@ export class Publisher {
 			]);
 
 		const imagesToUpload = new Set(
-			mediaNodes.map((node) => node?.attrs?.url)
+			mediaNodes.map((node) => node?.attrs?.["url"])
 		);
 
 		if (imagesToUpload.size === 0 && mermaidChartsAsImages.size === 0) {
@@ -448,23 +447,24 @@ export class Publisher {
 		afterAdf =
 			traverse(adr, {
 				media: (node, _parent) => {
-					if (node?.attrs?.type === "file") {
-						if (!imageMap[node?.attrs?.url]) {
+					if (node?.attrs?.["type"] === "file") {
+						if (!imageMap[node?.attrs?.["url"]]) {
 							return;
 						}
-						const mappedImage = imageMap[node.attrs.url];
-						if (mappedImage !== null) {
-							node.attrs.collection = mappedImage.collection;
-							node.attrs.id = mappedImage.id;
-							node.attrs.width = mappedImage.width;
-							node.attrs.height = mappedImage.height;
-							delete node.attrs.url;
+						const mappedImage = imageMap[node.attrs["url"]];
+						if (mappedImage) {
+							node.attrs["collection"] = mappedImage.collection;
+							node.attrs["id"] = mappedImage.id;
+							node.attrs["width"] = mappedImage.width;
+							node.attrs["height"] = mappedImage.height;
+							delete node.attrs["url"];
 							return node;
 						}
 					}
+					return;
 				},
 				codeBlock: (node, _parent) => {
-					if (node?.attrs?.language === "mermaid") {
+					if (node?.attrs?.["language"] === "mermaid") {
 						const mermaidContent = node?.content?.at(0)?.text;
 						if (!mermaidContent) {
 							return;
@@ -477,9 +477,9 @@ export class Publisher {
 						}
 						const mappedImage =
 							imageMap[mermaidFilename.uploadFilename];
-						if (mappedImage !== null) {
+						if (mappedImage) {
 							node.type = "mediaSingle";
-							node.attrs.layout = "center";
+							node.attrs["layout"] = "center";
 							if (node.content) {
 								node.content = [
 									{
@@ -494,10 +494,11 @@ export class Publisher {
 									},
 								];
 							}
-							delete node.attrs.language;
+							delete node.attrs["language"];
 							return node;
 						}
 					}
+					return;
 				},
 			}) || afterAdf;
 
@@ -509,13 +510,14 @@ export class Publisher {
 						return;
 					}
 					if (
-						node.content.at(0)?.attrs?.url !== undefined &&
-						(node.content.at(0)?.attrs?.url as string).startsWith(
-							"file://"
-						)
+						node.content.at(0)?.attrs?.["url"] !== undefined &&
+						(
+							node.content.at(0)?.attrs?.["url"] as string
+						).startsWith("file://")
 					) {
 						return p("Invalid Image Path");
 					}
+					return;
 				},
 			}) || afterAdf;
 

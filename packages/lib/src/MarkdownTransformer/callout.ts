@@ -70,12 +70,14 @@ const panelTypeToAttributesMap: Record<string, [string, string][]> = {
 	],
 };
 
-function getPanelAttributes(calloutType: string) {
+function getPanelAttributes(calloutType: string): [string, string][] {
 	const calloutTypeCheck = calloutType.toLowerCase();
-	if (Object.keys(panelTypeToAttributesMap).includes(calloutTypeCheck)) {
-		return panelTypeToAttributesMap[calloutTypeCheck];
+	const toReturn = panelTypeToAttributesMap[calloutTypeCheck];
+	if (toReturn) {
+		return toReturn;
 	}
 
+	// @ts-expect-error
 	return panelTypeToAttributesMap["info"];
 }
 
@@ -102,6 +104,9 @@ export function panel(state: StateCore): boolean {
 				while (true) {
 					const tokenToCheck = allTokens[currentCheck];
 					currentCheck = currentCheck + 1;
+					if (!tokenToCheck) {
+						continue;
+					}
 					if (tokenToCheck.type === "blockquote_close") {
 						break;
 					}
@@ -119,7 +124,7 @@ export function panel(state: StateCore): boolean {
 						continue;
 					}
 
-					const calloutType = check.groups["calloutType"];
+					const calloutType = check.groups["calloutType"] ?? "info";
 					const collapseType = check.groups["collapseType"];
 					const title = check.groups["title"];
 					calloutStartIndex = currentCheck - 1;
@@ -161,7 +166,7 @@ export function panel(state: StateCore): boolean {
 					if (token.children) {
 						for (let i = 0; i < token.children.length; i++) {
 							const child = token.children[i];
-							if (child.content.includes(check[0])) {
+							if (child && child.content.includes(check[0])) {
 								child.content = child.content.replace(
 									check[0],
 									calloutTitle

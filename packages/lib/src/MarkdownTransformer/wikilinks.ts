@@ -110,7 +110,11 @@ function findLinkToHeader(
 	state: StateInline,
 	start: number,
 	max: number
-): { hashFragment?: string; headerStart: number; headerEnd: number } {
+): {
+	hashFragment: string | undefined;
+	headerStart: number;
+	headerEnd: number;
+} {
 	let headerStart = -1,
 		headerEnd = -1,
 		found = false,

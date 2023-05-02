@@ -27,14 +27,12 @@ export async function uploadBuffer(
 	const currentFileMd5 = spark.append(fileBuffer).end();
 	const imageSize = await sizeOf(fileBuffer);
 
-	if (
-		!!currentAttachments[uploadFilename] &&
-		currentAttachments[uploadFilename].filehash === currentFileMd5
-	) {
+	const fileInCurrentAttachments = currentAttachments[uploadFilename];
+	if (fileInCurrentAttachments?.filehash === currentFileMd5) {
 		return {
 			filename: uploadFilename,
-			id: currentAttachments[uploadFilename].attachmentId,
-			collection: currentAttachments[uploadFilename].collectionName,
+			id: fileInCurrentAttachments.attachmentId,
+			collection: fileInCurrentAttachments.collectionName,
 			width: imageSize.width ?? 0,
 			height: imageSize.height ?? 0,
 			status: "existing",
@@ -59,10 +57,15 @@ export async function uploadBuffer(
 			attachmentDetails
 		);
 
+	const attachmentUploadResponse = attachmentResponse.results[0];
+	if (!attachmentUploadResponse) {
+		throw new Error("Issue uploading buffer");
+	}
+
 	return {
 		filename: uploadFilename,
-		id: attachmentResponse.results[0].extensions.fileId,
-		collection: `contentId-${attachmentResponse.results[0].container.id}`,
+		id: attachmentUploadResponse.extensions.fileId,
+		collection: `contentId-${attachmentUploadResponse.container.id}`,
 		width: imageSize.width ?? 0,
 		height: imageSize.height ?? 0,
 		status: "uploaded",
@@ -89,14 +92,12 @@ export async function uploadFile(
 		const imageBuffer = Buffer.from(testing.contents);
 		const imageSize = await sizeOf(imageBuffer);
 
-		if (
-			!!currentAttachments[uploadFilename] &&
-			currentAttachments[uploadFilename].filehash === currentFileMd5
-		) {
+		const fileInCurrentAttachments = currentAttachments[uploadFilename];
+		if (fileInCurrentAttachments?.filehash === currentFileMd5) {
 			return {
 				filename: fileNameToUpload,
-				id: currentAttachments[uploadFilename].attachmentId,
-				collection: currentAttachments[uploadFilename].collectionName,
+				id: fileInCurrentAttachments.attachmentId,
+				collection: fileInCurrentAttachments.collectionName,
 				width: imageSize.width ?? 0,
 				height: imageSize.height ?? 0,
 				status: "existing",
@@ -120,10 +121,15 @@ export async function uploadFile(
 				attachmentDetails
 			);
 
+		const attachmentUploadResponse = attachmentResponse.results[0];
+		if (!attachmentUploadResponse) {
+			throw new Error("Issue uploading image");
+		}
+
 		return {
 			filename: fileNameToUpload,
-			id: attachmentResponse.results[0].extensions.fileId,
-			collection: `contentId-${attachmentResponse.results[0].container.id}`,
+			id: attachmentUploadResponse.extensions.fileId,
+			collection: `contentId-${attachmentUploadResponse.container.id}`,
 			width: imageSize.width ?? 0,
 			height: imageSize.height ?? 0,
 			status: "uploaded",

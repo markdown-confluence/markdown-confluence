@@ -201,7 +201,9 @@ function applyInlineComments(
 
 							newContent.push({
 								...child,
-								text: comment.textForComment,
+								...(comment.textForComment
+									? { text: comment.textForComment }
+									: undefined),
 								marks: [
 									...(child.marks ? child.marks : []),
 									{
@@ -312,6 +314,9 @@ function pickBestMatchForComment(
 		index++
 	) {
 		const possibleSpot = possibleMatchsForInlineComment[index];
+		if (!possibleSpot) {
+			continue;
+		}
 
 		const beforeText =
 			possibleSpot.beforeTextOutsideMyNode +
@@ -385,6 +390,9 @@ function pickBestMatchForComment(
 		index++
 	) {
 		const possibleSpot = possibleMatchsForInlineComment[index];
+		if (!possibleSpot) {
+			continue;
+		}
 
 		const beforeText =
 			possibleSpot.beforeTextOutsideMyNode +
@@ -575,14 +583,19 @@ function levenshteinDistance(a: string, b: string): number {
 	for (let i = 1; i <= a.length; i++) {
 		for (let j = 1; j <= b.length; j++) {
 			const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+			// @ts-expect-error
 			matrix[i][j] = Math.min(
+				// @ts-expect-error
 				matrix[i - 1][j] + 1,
+				// @ts-expect-error
 				matrix[i][j - 1] + 1,
+				// @ts-expect-error
 				matrix[i - 1][j - 1] + cost
 			);
 		}
 	}
 
+	// @ts-expect-error
 	return matrix[a.length][b.length];
 }
 
@@ -596,13 +609,13 @@ function extractInlineComments(adf: JSONDocNode) {
 				node.marks.some(
 					(mark) =>
 						mark.type === "annotation" &&
-						mark.attrs?.annotationType === "inlineComment"
+						mark.attrs?.["annotationType"] === "inlineComment"
 				)
 			) {
 				const inlineCommentMark = node.marks?.find(
 					(mark) =>
 						mark.type === "annotation" &&
-						mark.attrs?.annotationType === "inlineComment"
+						mark.attrs?.["annotationType"] === "inlineComment"
 				);
 				const beforeNodes: (ADFEntity | undefined)[] = [],
 					afterNodes: (ADFEntity | undefined)[] = [];
@@ -615,17 +628,17 @@ function extractInlineComments(adf: JSONDocNode) {
 					}
 				});
 
-				const beforeText = beforeNodes.reduce((prev, curr, index) => {
+				const beforeText = beforeNodes.reduce((prev, curr) => {
 					return prev + curr?.text;
 				}, "");
 
-				const afterText = afterNodes.reduce((prev, curr, index) => {
+				const afterText = afterNodes.reduce((prev, curr) => {
 					return prev + curr?.text;
 				}, "");
 
 				const extract: ExtractedInlineComment = {
 					pluginInternalId: uuidv4(),
-					inlineCommentId: inlineCommentMark?.attrs?.id,
+					inlineCommentId: inlineCommentMark?.attrs?.["id"],
 					textForComment: node.text,
 					beforeText,
 					afterText,
@@ -648,14 +661,15 @@ function processWikilinkToActualLink(
 		text: (node, _parent) => {
 			if (
 				node.marks &&
+				node.marks[0] &&
 				node.marks[0].type === "link" &&
 				node.marks[0].attrs
 			) {
 				if (
-					typeof node.marks[0].attrs.href === "string" &&
-					node.marks[0].attrs.href.startsWith("wikilink")
+					typeof node.marks[0].attrs["href"] === "string" &&
+					node.marks[0].attrs["href"].startsWith("wikilink")
 				) {
-					const wikilinkUrl = new URL(node.marks[0].attrs.href);
+					const wikilinkUrl = new URL(node.marks[0].attrs["href"]);
 
 					const pagename =
 						wikilinkUrl.pathname !== ""
@@ -665,14 +679,14 @@ function processWikilinkToActualLink(
 
 					if (linkPage) {
 						const confluenceUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
-						node.marks[0].attrs.href = confluenceUrl;
+						node.marks[0].attrs["href"] = confluenceUrl;
 						if (
 							node.text ===
 							`${wikilinkUrl.pathname}${wikilinkUrl.hash}`
 						) {
 							node.type = "inlineCard";
 							node.attrs = {
-								url: node.marks[0].attrs.href,
+								url: node.marks[0].attrs["href"],
 							};
 							delete node.marks;
 							delete node.text;
@@ -684,6 +698,7 @@ function processWikilinkToActualLink(
 					return node;
 				}
 			}
+			return;
 		},
 	}) as JSONDocNode;
 }

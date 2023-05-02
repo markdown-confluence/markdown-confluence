@@ -8,6 +8,9 @@ import { ConfluenceSettings } from "./Settings";
 
 const findCommonPath = (paths: string[]): string => {
 	const [firstPath, ...rest] = paths;
+	if (!firstPath) {
+		throw new Error("No Paths Provided");
+	}
 	const commonPathParts = firstPath.split(path.sep);
 
 	rest.forEach((filePath) => {
@@ -35,6 +38,9 @@ const addFileToTree = (
 	settings: ConfluenceSettings
 ) => {
 	const [folderName, ...remainingPath] = relativePath.split(path.sep);
+	if (folderName === undefined) {
+		throw new Error("Unable to get folder name");
+	}
 
 	if (remainingPath.length === 0) {
 		const adfFile = convertMDtoADF(file, settings);
@@ -68,7 +74,7 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 			);
 		}
 
-		if (indexFile) {
+		if (indexFile && indexFile.file) {
 			node.file = indexFile.file;
 			node.children = node.children.filter(
 				(child) => child !== indexFile

@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import yargs from "yargs";
 
-export class ConfluenceSettings {
+export type ConfluenceSettings = {
 	confluenceBaseUrl: string;
 	confluenceParentId: string;
 	atlassianUserName: string;
@@ -10,16 +10,17 @@ export class ConfluenceSettings {
 	folderToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
-}
+};
 
-export const DEFAULT_SETTINGS = new ConfluenceSettings();
-DEFAULT_SETTINGS.confluenceBaseUrl = "";
-DEFAULT_SETTINGS.confluenceParentId = "";
-DEFAULT_SETTINGS.atlassianUserName = "";
-DEFAULT_SETTINGS.atlassianApiToken = "";
-DEFAULT_SETTINGS.folderToPublish = "Confluence Pages";
-DEFAULT_SETTINGS.contentRoot = process.cwd();
-DEFAULT_SETTINGS.firstHeadingPageTitle = false;
+export const DEFAULT_SETTINGS: ConfluenceSettings = {
+	confluenceBaseUrl: "",
+	confluenceParentId: "",
+	atlassianUserName: "",
+	atlassianApiToken: "",
+	folderToPublish: "Confluence Pages",
+	contentRoot: process.cwd(),
+	firstHeadingPageTitle: false,
+};
 
 export abstract class SettingsLoader {
 	abstract loadPartial(): Partial<ConfluenceSettings>;
@@ -86,17 +87,25 @@ export class StaticSettingsLoader extends SettingsLoader {
 }
 
 export class EnvironmentVariableSettingsLoader extends SettingsLoader {
+	getValue<T extends keyof ConfluenceSettings>(
+		propertyKey: T,
+		envVar: string
+	): Partial<ConfluenceSettings> {
+		const value = process.env[envVar];
+		return value ? { [propertyKey]: value } : {};
+	}
+
 	loadPartial(): Partial<ConfluenceSettings> {
 		return {
-			confluenceBaseUrl: process.env.CONFLUENCE_BASE_URL,
-			confluenceParentId: process.env.CONFLUENCE_PARENT_ID,
-			atlassianUserName: process.env.ATLASSIAN_USERNAME,
-			atlassianApiToken: process.env.ATLASSIAN_API_TOKEN,
-			folderToPublish: process.env.FOLDER_TO_PUBLISH,
-			contentRoot: process.env.CONFLUENCE_CONTENT_ROOT,
+			...this.getValue("confluenceBaseUrl", "CONFLUENCE_BASE_URL"),
+			...this.getValue("confluenceParentId", "CONFLUENCE_PARENT_ID"),
+			...this.getValue("atlassianUserName", "ATLASSIAN_USERNAME"),
+			...this.getValue("atlassianApiToken", "ATLASSIAN_API_TOKEN"),
+			...this.getValue("folderToPublish", "FOLDER_TO_PUBLISH"),
+			...this.getValue("contentRoot", "CONFLUENCE_CONTENT_ROOT"),
 			firstHeadingPageTitle:
-				(process.env.CONFLUENCE_FIRST_HEADING_PAGE_TITLE ?? "false") ===
-				"true",
+				(process.env["CONFLUENCE_FIRST_HEADING_PAGE_TITLE"] ??
+					"false") === "true",
 		};
 	}
 }
@@ -117,9 +126,9 @@ export class ConfigFileSettingsLoader extends SettingsLoader {
 
 		if (
 			"CONFLUENCE_CONFIG_FILE" in process.env &&
-			process.env.CONFLUENCE_CONFIG_FILE
+			process.env["CONFLUENCE_CONFIG_FILE"]
 		) {
-			this.configPath = process.env.CONFLUENCE_CONFIG_FILE;
+			this.configPath = process.env["CONFLUENCE_CONFIG_FILE"];
 		}
 
 		const options = yargs(process.argv)
@@ -162,6 +171,14 @@ export class ConfigFileSettingsLoader extends SettingsLoader {
 }
 
 export class CommandLineArgumentSettingsLoader extends SettingsLoader {
+	getValue<T extends keyof ConfluenceSettings>(
+		propertyKey: T,
+		envVar: string
+	): Partial<ConfluenceSettings> {
+		const value = process.env[envVar];
+		return value ? { [propertyKey]: value } : {};
+	}
+
 	loadPartial(): Partial<ConfluenceSettings> {
 		const options = yargs(process.argv)
 			.usage("Usage: $0 [options]")
@@ -170,7 +187,7 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 				describe: "Path to the config file",
 				type: "string",
 				default: path.join(
-					process.env.HOME ?? "",
+					process.env["HOME"] ?? "",
 					".mermaid-confluence.json"
 				),
 				demandOption: false,
@@ -221,13 +238,27 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 			.parseSync();
 
 		return {
-			confluenceBaseUrl: options.baseUrl,
-			confluenceParentId: options.parentId,
-			atlassianUserName: options.userName,
-			atlassianApiToken: options.apiToken,
-			folderToPublish: options.enableFolder,
-			contentRoot: options.contentRoot,
-			firstHeadingPageTitle: options.firstHeaderPageTitle,
+			...(options.baseUrl
+				? { confluenceBaseUrl: options.baseUrl }
+				: undefined),
+			...(options.parentId
+				? { confluenceParentId: options.parentId }
+				: undefined),
+			...(options.userName
+				? { atlassianUserName: options.userName }
+				: undefined),
+			...(options.apiToken
+				? { atlassianApiToken: options.apiToken }
+				: undefined),
+			...(options.enableFolder
+				? { folderToPublish: options.enableFolder }
+				: undefined),
+			...(options.contentRoot
+				? { contentRoot: options.contentRoot }
+				: undefined),
+			...(options.firstHeaderPageTitle
+				? { firstHeadingPageTitle: options.firstHeaderPageTitle }
+				: undefined),
 		};
 	}
 }

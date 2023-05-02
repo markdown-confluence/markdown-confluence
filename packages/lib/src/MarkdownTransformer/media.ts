@@ -136,7 +136,10 @@ function createRule() {
 						previousToken = arr[cursor];
 					}
 
-					if (validParentTokens.indexOf(previousToken.type) === -1) {
+					if (
+						previousToken &&
+						validParentTokens.indexOf(previousToken.type) === -1
+					) {
 						openingTokens.unshift(previousToken);
 					} else {
 						cursor++;

@@ -94,31 +94,28 @@ export class MyBaseClient implements Client {
 		callback: Callback<T> | never
 	): Promise<void | T> {
 		try {
-			if (requestConfig?.headers?.hasOwnProperty("content-type")) {
-				requestConfig.headers["Content-Type"] =
-					requestConfig?.headers["content-type"].toString();
+			const contentType = (requestConfig.headers ?? {})[
+				"content-type"
+			]?.toString();
+			if (requestConfig.headers && contentType) {
+				requestConfig.headers["Content-Type"] = contentType;
 				delete requestConfig?.headers["content-type"];
 			}
 
 			const params = this.paramSerializer(requestConfig.params);
 
 			const requestContentType =
-				requestConfig?.headers?.hasOwnProperty("Content-Type") &&
-				requestConfig?.headers["Content-Type"]
-					.toString()
-					.startsWith("multipart/form-data")
-					? requestConfig?.headers["Content-Type"].toString()
-					: "application/json";
-			const requestBody =
-				requestConfig?.headers?.hasOwnProperty("Content-Type") &&
-				requestConfig?.headers["Content-Type"]
-					.toString()
-					.startsWith("multipart/form-data")
-					? [
-							requestConfig.data.getHeaders(),
-							requestConfig.data.getBuffer().buffer,
-					  ]
-					: [{}, JSON.stringify(requestConfig.data)];
+				(requestConfig.headers ?? {})["Content-Type"]?.toString() ??
+				"application/json";
+
+			const requestBody = requestContentType.startsWith(
+				"multipart/form-data"
+			)
+				? [
+						requestConfig.data.getHeaders(),
+						requestConfig.data.getBuffer().buffer,
+				  ]
+				: [{}, JSON.stringify(requestConfig.data)];
 
 			const modifiedRequestConfig = {
 				...requestConfig,
@@ -146,7 +143,7 @@ export class MyBaseClient implements Client {
 				}),
 				url: `${this.config.host}${this.urlSuffix}${requestConfig.url}?${params}`,
 				body: requestBody[1],
-				method: requestConfig.method?.toUpperCase(),
+				method: requestConfig.method?.toUpperCase() ?? "GET",
 				contentType: requestContentType,
 				throw: true,
 			};

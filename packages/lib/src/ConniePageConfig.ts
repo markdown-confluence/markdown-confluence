@@ -127,7 +127,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 		key: "connie-frontmatter-to-publish",
 		default: [],
 		inputType: "array-text",
-		inputValidator: (value) => {
+		inputValidator: () => {
 			return {
 				valid: true,
 				errors: [],
@@ -164,13 +164,13 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 		key: "tags",
 		default: [],
 		inputType: "array-text",
-		inputValidator: (value) => {
+		inputValidator: () => {
 			return {
 				valid: true,
 				errors: [],
 			};
 		},
-		process: (yamlValue, markdownFile) => {
+		process: (yamlValue) => {
 			const tags: string[] = [];
 			if (Array.isArray(yamlValue)) {
 				for (const label of yamlValue) {
@@ -200,7 +200,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 				],
 			};
 		},
-		process: (yamlValue, markdownFile) => {
+		process: (yamlValue) => {
 			let pageId: string | undefined;
 			switch (typeof yamlValue) {
 				case "string":
@@ -217,7 +217,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 		key: "connie-dont-change-parent-page",
 		default: false,
 		inputType: "boolean",
-		inputValidator: (value) => {
+		inputValidator: () => {
 			return {
 				valid: true,
 				errors: [],
@@ -277,13 +277,13 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 		alwaysProcess: true,
 		inputType: "options",
 		selectOptions: ["page", "blogpost"],
-		inputValidator: (value) => {
+		inputValidator: () => {
 			return {
 				valid: true,
 				errors: [],
 			};
 		},
-		process: (yamlValue, markdownFile, alreadyParsed) => {
+		process: (yamlValue, _markdownFile, alreadyParsed) => {
 			if (yamlValue !== undefined && typeof yamlValue !== "string") {
 				return Error(`Provided "connie-content-type" isn't a string.`);
 			}
@@ -388,9 +388,9 @@ function validateDate(dateString: string): ValidationResult {
 		reasons.push("Invalid format");
 	} else {
 		const parts = dateString.split("-");
-		const year = parseInt(parts[0], 10);
-		const month = parseInt(parts[1], 10) - 1; // Date months are 0-based
-		const day = parseInt(parts[2], 10);
+		const year = parseInt(parts[0] ?? "", 10);
+		const month = parseInt(parts[1] ?? "", 10) - 1; // Date months are 0-based
+		const day = parseInt(parts[2] ?? "", 10);
 
 		if (year < 0 || year > 9999) {
 			reasons.push("Invalid year");

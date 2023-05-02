@@ -151,7 +151,7 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 	private markdownParser: MarkdownParser;
 	constructor(schema: Schema = defaultSchema, tokenizer: MarkdownIt = md) {
 		// Enable markdown plugins based on schema
-		if (schema.nodes.panel) {
+		if (schema.nodes["panel"]) {
 			tokenizer.use(myTokenizer);
 		}
 
@@ -159,17 +159,18 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 
 		(["nodes", "marks"] as (keyof SchemaMapping)[]).forEach((key) => {
 			for (const idx in pmSchemaToMdMapping[key]) {
-				if (schema[key][idx]) {
-					tokenizer.enable(pmSchemaToMdMapping[key][idx]);
+				const toEnable = pmSchemaToMdMapping[key][idx];
+				if (schema[key][idx] && toEnable) {
+					tokenizer.enable(toEnable);
 				}
 			}
 		});
 
-		if (schema.nodes.table) {
+		if (schema.nodes["table"]) {
 			tokenizer.use(markdownItTable);
 		}
 
-		if (schema.nodes.media && schema.nodes.mediaSingle) {
+		if (schema.nodes["media"] && schema.nodes["mediaSingle"]) {
 			tokenizer.use(markdownItMedia);
 		}
 

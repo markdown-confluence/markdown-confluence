@@ -144,7 +144,7 @@ export class CompletedModal extends Modal {
 		this.uploadResults = uploadResults;
 	}
 
-	onOpen() {
+	override onOpen() {
 		const { contentEl } = this;
 		ReactDOM.render(
 			React.createElement(CompletedView, this.uploadResults),
@@ -152,7 +152,7 @@ export class CompletedModal extends Modal {
 		);
 	}
 
-	onClose() {
+	override onClose() {
 		const { contentEl } = this;
 		ReactDOM.unmountComponentAtNode(contentEl);
 		contentEl.empty();

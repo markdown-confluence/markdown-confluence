@@ -227,8 +227,9 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 			}
 		}
 
-		if (matchingFiles.length > 0) {
-			return matchingFiles[0];
+		const firstMatchedFile = matchingFiles[0];
+		if (firstMatchedFile) {
+			return firstMatchedFile;
 		}
 
 		const parentDirectory = path.dirname(startingDirectory);
