@@ -212,7 +212,7 @@ const markdownTestCases: MarkdownFile[] = [
 
 class TestMermaidRenderer implements MermaidRenderer {
 	async captureMermaidCharts(
-		charts: ChartData[]
+		_charts: ChartData[]
 	): Promise<Map<string, Buffer>> {
 		const capturedCharts = new Map<string, Buffer>();
 		return capturedCharts;
@@ -226,8 +226,8 @@ class InMemoryAdaptor implements LoaderAdaptor {
 		this.inMemoryFiles = inMemoryFiles;
 	}
 	async updateMarkdownValues(
-		absoluteFilePath: string,
-		values: Partial<ConfluencePerPageAllValues>
+		_absoluteFilePath: string,
+		_values: Partial<ConfluencePerPageAllValues>
 	): Promise<void> {}
 
 	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
@@ -241,8 +241,8 @@ class InMemoryAdaptor implements LoaderAdaptor {
 	}
 
 	async readBinary(
-		path: string,
-		referencedFromFilePath: string
+		_path: string,
+		_referencedFromFilePath: string
 	): Promise<false | BinaryFile> {
 		throw new Error("Method not implemented.");
 	}
@@ -271,12 +271,16 @@ test("Upload to Confluence", async () => {
 		searchParams
 	);
 
-	settings.confluenceParentId = contentByTitle.results[0].id;
+	const pageResult = contentByTitle.results[0];
+	if (!pageResult) {
+		throw new Error("Missing Parent Page");
+	}
+	settings.confluenceParentId = pageResult.id;
 
 	const settingLoaders = [
 		new EnvironmentVariableSettingsLoader(),
 		new StaticSettingsLoader({
-			confluenceParentId: contentByTitle.results[0].id,
+			confluenceParentId: pageResult.id,
 		}),
 		new DefaultSettingsLoader(),
 	];
