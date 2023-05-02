@@ -2,7 +2,6 @@ import esbuild from "esbuild";
 import process from "process";
 import { writeFileSync } from 'fs';
 import { writeFile } from 'fs/promises';
-// import { mermaidRendererPlugin } from '../../.build/mermaidRendererPlugin.js'
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 
 const mermaidRendererPlugin = {

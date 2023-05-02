@@ -1,6 +1,8 @@
 import { BrowserWindow } from "@electron/remote";
 import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
-import MermaidRendererClient from "mermaid_renderer.esbuild";
+import mermaid from "mermaid";
+import { v4 as uuidv4 } from "uuid";
+import { getFileContentBlob } from "./receiver";
 
 let mermaidRenderHtml: string;
 
@@ -9,9 +11,7 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 		charts: ChartData[]
 	): Promise<Map<string, Buffer>> {
 		if (!mermaidRenderHtml) {
-			mermaidRenderHtml = URL.createObjectURL(
-				new Blob([MermaidRendererClient], { type: "text/html" })
-			);
+			mermaidRenderHtml = URL.createObjectURL(getFileContentBlob());
 		}
 
 		const capturedCharts = new Map<string, Buffer>();
@@ -47,10 +47,15 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 				},
 			};
 
+			mermaid.initialize({ ...mermaidConfig, startOnLoad: false });
+
+			const id = "mm" + uuidv4().replace(/-/g, "");
+			const { svg } = await mermaid.render(id, chart.data);
+
 			// Render the chart and get the dimensions
-			const dimensions = await chartWindow.webContents.executeJavaScript(`
-			renderMermaidChart(\`${chart.data}\`, ${JSON.stringify(mermaidConfig)});
-		`);
+			const dimensions = await chartWindow.webContents.executeJavaScript(
+				`renderSvg(\`${JSON.stringify(svg)}\`);`
+			);
 
 			// Resize the window to fit the chart dimensions
 			const { width, height } = dimensions;
