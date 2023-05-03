@@ -302,7 +302,6 @@ export class Publisher {
 				  }),
 		};
 
-		console.log({ existingPageDetails, newPageDetails });
 		if (
 			!adfEqual(existingPageData.adfContent, imageUploadResult.adf) ||
 			!isEqual(existingPageDetails, newPageDetails)
