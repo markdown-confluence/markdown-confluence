@@ -15,8 +15,7 @@
     "keywords": [],
     "author": "andymac4182",
     "license": "Apache 2.0",
-    "devDependencies": {},
-    "dependencies": {
+    "devDependencies": {
         "confluence.js": "^1.6.3",
         "boxen": "7.0.2",
         "chalk": "5.2.0",
@@ -24,6 +23,8 @@
         "@markdown-confluence/lib": "4.9.0",
         "@markdown-confluence/mermaid-puppeteer-renderer": "4.9.0"
     },
+    "dependencies": {},
+    "bundleDependencies": true,
     "publishConfig": {
         "access": "public",
         "registry": "https://registry.npmjs.org/",
