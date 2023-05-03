@@ -5,7 +5,10 @@
    "type": "module",
    "scripts": {
       "prepare": "husky install",
-      "devall": "npm run dev --workspace=@markdown-confluence/lib & npm run dev --workspace=@markdown-confluence/mermaid-electron-renderer & npm run dev --workspace=obsidian-confluence"
+      "dev-obsidian": "npm run dev --workspace=@markdown-confluence/lib & npm run dev --workspace=@markdown-confluence/mermaid-electron-renderer & npm run dev --workspace=obsidian-confluence",
+      "build": "npm run build -ws --if-present",
+      "fmt": "npm run fmt -ws --if-present",
+      "test": "npm test -ws --if-present"
    },
    "devDependencies": {
       "@types/node": "^16.11.6",
