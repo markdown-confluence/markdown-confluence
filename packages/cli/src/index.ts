@@ -5,7 +5,7 @@ process.setMaxListeners(Infinity);
 import chalk from "chalk";
 import boxen from "boxen";
 import {
-	ConfluenceUploadSettings,
+	AutoSettingsLoader,
 	FileSystemAdaptor,
 	Publisher,
 } from "@markdown-confluence/lib";
@@ -14,7 +14,7 @@ import { ConfluenceClient } from "confluence.js";
 
 // Define the main function
 async function main() {
-	const settingLoader = new ConfluenceUploadSettings.AutoSettingsLoader();
+	const settingLoader = new AutoSettingsLoader();
 	const settings = settingLoader.load();
 
 	const adaptor = new FileSystemAdaptor(settings); // Make sure this is identical as possible between Obsidian and CLI

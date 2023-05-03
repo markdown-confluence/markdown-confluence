@@ -1,4 +1,4 @@
-import { SettingsLoader } from "./Settings";
+import { SettingsLoader } from "./SettingsLoader";
 import { traverse, filter } from "@atlaskit/adf-utils/traverse";
 import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";

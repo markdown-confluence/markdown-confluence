@@ -3,6 +3,7 @@ import {
 	ConfluenceUploadSettings,
 	Publisher,
 	ConfluencePageConfig,
+	StaticSettingsLoader,
 } from "@markdown-confluence/lib";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
@@ -67,8 +68,7 @@ export default class ConfluencePlugin extends Plugin {
 			},
 		});
 
-		const settingsLoader =
-			new ConfluenceUploadSettings.StaticSettingsLoader(this.settings);
+		const settingsLoader = new StaticSettingsLoader(this.settings);
 		this.publisher = new Publisher(
 			this.adaptor,
 			settingsLoader,
