@@ -15,6 +15,9 @@ Copyright (c) 2022 Atlassian US, Inc.
 - CLI for pushing markdown files from disk
 - Commands and ribbon icon for easy access
 
+## Issues
+Please log issues to https://github.com/markdown-confluence/markdown-confluence/issues as this is where the code is being developed. 
+
 ## Getting Started
 
 ## Alternative Installation
