@@ -5,6 +5,7 @@
    "type": "module",
    "scripts": {
       "prepare": "husky install",
+      "predev-obsidian": "npm run build",
       "dev-obsidian": "npm run dev --workspace=@markdown-confluence/lib & npm run dev --workspace=@markdown-confluence/mermaid-electron-renderer & npm run dev --workspace=obsidian-confluence",
       "build": "npm run build -ws --if-present",
       "fmt": "npm run fmt -ws --if-present",

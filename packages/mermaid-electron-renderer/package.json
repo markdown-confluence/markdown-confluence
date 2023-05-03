@@ -6,6 +6,7 @@
     "module": "dist/index.js",
     "types": "dist/index.d.ts",
     "type": "module",
+    "sideEffects": false,
     "scripts": {
         "dev": "node esbuild.config.mjs",
         "build": "tsc && node esbuild.config.mjs production",
