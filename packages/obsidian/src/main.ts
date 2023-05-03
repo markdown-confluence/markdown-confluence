@@ -1,4 +1,4 @@
-import { Plugin, Notice, MarkdownView, Workspace } from "obsidian";
+import { Plugin, Notice, MarkdownView, Workspace, loadMermaid } from "obsidian";
 import {
 	ConfluenceUploadSettings,
 	Publisher,
@@ -14,9 +14,22 @@ import {
 	ConfluencePerPageUIValues,
 	mapFrontmatterToConfluencePerPageUIValues,
 } from "./ConfluencePerPageForm";
+import { Mermaid } from "mermaid";
+
+export interface ObsidianPluginSettings
+	extends ConfluenceUploadSettings.ConfluenceSettings {
+	mermaidTheme:
+		| "match-obsidian"
+		| "light-obsidian"
+		| "dark-obsidian"
+		| "default"
+		| "neutral"
+		| "dark"
+		| "forest";
+}
 
 export default class ConfluencePlugin extends Plugin {
-	settings!: ConfluenceUploadSettings.ConfluenceSettings;
+	settings!: ObsidianPluginSettings;
 	private isSyncing = false;
 	workspace!: Workspace;
 	publisher!: Publisher;
@@ -36,7 +49,14 @@ export default class ConfluencePlugin extends Plugin {
 			this.settings,
 			this.app
 		);
-		const mermaidRenderer = new ElectronMermaidRenderer();
+
+		const mermaidItems = await this.getMermaidItems();
+		const mermaidRenderer = new ElectronMermaidRenderer(
+			mermaidItems.extraStyleSheets,
+			mermaidItems.extraStyles,
+			mermaidItems.mermaidConfig,
+			mermaidItems.bodyStyles
+		);
 		const confluenceClient = new ObsidianConfluenceClient({
 			host: this.settings.confluenceBaseUrl,
 			authentication: {
@@ -55,6 +75,67 @@ export default class ConfluencePlugin extends Plugin {
 			confluenceClient,
 			mermaidRenderer
 		);
+	}
+
+	async getMermaidItems() {
+		const extraStyles: string[] = [];
+		const extraStyleSheets: string[] = [];
+		let bodyStyles = "";
+		const body = document.querySelector("body") as HTMLBodyElement;
+
+		switch (this.settings.mermaidTheme) {
+			case "default":
+			case "neutral":
+			case "dark":
+			case "forest":
+				return {
+					extraStyleSheets,
+					extraStyles,
+					mermaidConfig: { theme: this.settings.mermaidTheme },
+					bodyStyles,
+				};
+			case "match-obsidian":
+				bodyStyles = body.className;
+				break;
+			case "dark-obsidian":
+				bodyStyles = "theme-dark";
+				break;
+			case "light-obsidian":
+				bodyStyles = "theme-dark";
+				break;
+			default:
+				throw new Error("Missing theme");
+		}
+
+		extraStyleSheets.push("app://obsidian.md/app.css");
+
+		// @ts-expect-error
+		const cssTheme = this.app.vault?.getConfig("cssTheme") as string;
+		if (cssTheme) {
+			const themeCss = await this.app.vault.adapter.read(
+				`.obsidian/themes/${cssTheme}/theme.css`
+			);
+			extraStyles.push(themeCss);
+		}
+
+		const cssSnippets =
+			// @ts-expect-error
+			(this.app.vault?.getConfig("enabledCssSnippets") as string[]) ?? [];
+		for (const snippet of cssSnippets) {
+			const themeCss = await this.app.vault.adapter.read(
+				`.obsidian/snippets/${snippet}.css`
+			);
+			extraStyles.push(themeCss);
+		}
+
+		return {
+			extraStyleSheets,
+			extraStyles,
+			mermaidConfig: (
+				(await loadMermaid()) as Mermaid
+			).mermaidAPI.getConfig(),
+			bodyStyles,
+		};
 	}
 
 	override async onload() {
@@ -318,6 +399,7 @@ export default class ConfluencePlugin extends Plugin {
 		this.settings = Object.assign(
 			{},
 			ConfluenceUploadSettings.DEFAULT_SETTINGS,
+			{ mermaidTheme: "match-obsidian" },
 			await this.loadData()
 		);
 	}
