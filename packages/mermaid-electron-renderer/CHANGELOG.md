@@ -6,6 +6,32 @@
   * dependencies
     * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
 
+## [5.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v4.9.0...@markdown-confluence/mermaid-electron-renderer-v5.0.0) (2023-05-03)
+
+
+### Features
+
+* Apply themes from Obsidian to Mermaid ([b599336](https://github.com/markdown-confluence/markdown-confluence/commit/b5993369e03cdcc0bdbdd6c83f0b6a18dd8effaa))
+* Make mermaid in electron simpler due to being ran in renderer already ([5668e02](https://github.com/markdown-confluence/markdown-confluence/commit/5668e025299d46820ae50b25c1a542ced28097ec))
+
+
+### Bug Fixes
+
+* Improve plugin initial load time. Don't create the createObjectURL till first publishing time. ([2c11c8e](https://github.com/markdown-confluence/markdown-confluence/commit/2c11c8e0057a4708b76f7ad93e07aa6d15b7548b))
+* Run npm build before dev-obsidian to ensure all built ([da1fe60](https://github.com/markdown-confluence/markdown-confluence/commit/da1fe60f75973165979e9632a35f33ab9146ebbf))
+
+
+### Documentation
+
+* Add README.md files to all NPM Packages ([75c4781](https://github.com/markdown-confluence/markdown-confluence/commit/75c47816b7895fd26d50382c316f83d6993cc56c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.9.0 to 5.0.0
+
 ## [4.9.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v4.8.0...@markdown-confluence/mermaid-electron-renderer-v4.9.0) (2023-04-30)
 
 

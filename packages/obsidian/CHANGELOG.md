@@ -7,6 +7,38 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [5.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.9.0...obsidian-confluence-v5.0.0) (2023-05-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove ADFView. It adds a lot of complexity and size to Obsidian Plugin. If you need it log an issue and I will create a separate plugin for that feature.
+
+### Features
+
+* Apply themes from Obsidian to Mermaid ([b599336](https://github.com/markdown-confluence/markdown-confluence/commit/b5993369e03cdcc0bdbdd6c83f0b6a18dd8effaa))
+* Enable and fix all strict type checks ([c16ee2d](https://github.com/markdown-confluence/markdown-confluence/commit/c16ee2d83b6e30065f8c607afda652c4c21af6b3))
+* Remove ADFView. It adds a lot of complexity and size to Obsidian Plugin ([74c8436](https://github.com/markdown-confluence/markdown-confluence/commit/74c84360bf0fe2afeafd4d769f11b41a5f9d6e03))
+
+
+### Bug Fixes
+
+* frontmatterHeader adds content direct to ADF instead of Markdown now ([1230878](https://github.com/markdown-confluence/markdown-confluence/commit/12308783ae23fbb2fbcd9f39871bf4429c47e18b))
+* Remove ADFView from main.ts ([a21abbd](https://github.com/markdown-confluence/markdown-confluence/commit/a21abbd28c8a63cc09989b0cf9ad7d43fc5e56ae))
+
+
+### Documentation
+
+* amended the broken readme image paths for obsidian package ([97876cf](https://github.com/markdown-confluence/markdown-confluence/commit/97876cf7c55e3ac4de89d85a70dfd4ba4e8b3f15))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.9.0 to 5.0.0
+    * @markdown-confluence/mermaid-electron-renderer bumped from 4.9.0 to 5.0.0
+
 ## [4.9.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.8.0...obsidian-confluence-v4.9.0) (2023-04-30)
 
 

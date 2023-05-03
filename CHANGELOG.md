@@ -1,5 +1,65 @@
 # Changelog
 
+## [5.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.9.0...obsidian-confluence-root-v5.0.0) (2023-05-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove ADFView. It adds a lot of complexity and size to Obsidian Plugin. If you need it log an issue and I will create a separate plugin for that feature.
+
+### Features
+
+* Apply themes from Obsidian to Mermaid ([b599336](https://github.com/markdown-confluence/markdown-confluence/commit/b5993369e03cdcc0bdbdd6c83f0b6a18dd8effaa))
+* Enable and fix all strict type checks ([c16ee2d](https://github.com/markdown-confluence/markdown-confluence/commit/c16ee2d83b6e30065f8c607afda652c4c21af6b3))
+* Make mermaid in electron simpler due to being ran in renderer already ([5668e02](https://github.com/markdown-confluence/markdown-confluence/commit/5668e025299d46820ae50b25c1a542ced28097ec))
+* Mark lib as sideEffects: false to help treeshaking ([1a622e3](https://github.com/markdown-confluence/markdown-confluence/commit/1a622e39cf5a84a86bcc7cbfd61eebd690a2ebfb))
+* Remove ADFView. It adds a lot of complexity and size to Obsidian Plugin ([74c8436](https://github.com/markdown-confluence/markdown-confluence/commit/74c84360bf0fe2afeafd4d769f11b41a5f9d6e03))
+* Snyk container scanning ([710a4a0](https://github.com/markdown-confluence/markdown-confluence/commit/710a4a0c6d544835c74bbfa31939745d7e4a7b0d))
+
+
+### Bug Fixes
+
+* Add better npm scripts ([6c227c7](https://github.com/markdown-confluence/markdown-confluence/commit/6c227c77a7a6e01bfa062396b9d69231202527ea))
+* Add missing steps ([d65c90b](https://github.com/markdown-confluence/markdown-confluence/commit/d65c90b2fd00f9a2594d2b3008259d6a0652635a))
+* Add monitor for snyk containers to push to snyk for alerts ([284f016](https://github.com/markdown-confluence/markdown-confluence/commit/284f016672e4e7cf97959c824a1ae98830ffa666))
+* Add settings to MdToADF Tests ([2c58c51](https://github.com/markdown-confluence/markdown-confluence/commit/2c58c51795e1efe0a2abc99c8b4774954466a222))
+* Call method on window in browser. ([38706d1](https://github.com/markdown-confluence/markdown-confluence/commit/38706d13119ede06ed4e10c1e2db3ed9817920c1))
+* docker build ordering ([0110108](https://github.com/markdown-confluence/markdown-confluence/commit/0110108ed9e68a864f5d425d7e3a0547b058b39d))
+* Don't publish with dependancies for the CLI since they are bundled. ([52b3396](https://github.com/markdown-confluence/markdown-confluence/commit/52b33969f58ea97ec25ed5b830929e231895ab43))
+* frontmatterHeader adds content direct to ADF instead of Markdown now ([1230878](https://github.com/markdown-confluence/markdown-confluence/commit/12308783ae23fbb2fbcd9f39871bf4429c47e18b))
+* Improve plugin initial load time. Don't create the createObjectURL till first publishing time. ([2c11c8e](https://github.com/markdown-confluence/markdown-confluence/commit/2c11c8e0057a4708b76f7ad93e07aa6d15b7548b))
+* Missed steps ([2487fe3](https://github.com/markdown-confluence/markdown-confluence/commit/2487fe3891ec23082281bb66735729edeee517cb))
+* Missed updating package-lock.json ([6bc63b9](https://github.com/markdown-confluence/markdown-confluence/commit/6bc63b96ccc5e0f817b2c302a2701d7c6b3683b2))
+* Move monitor to the right place ([fefccd5](https://github.com/markdown-confluence/markdown-confluence/commit/fefccd5069ee0c3b002e5d8761b79a45a5d4e24b))
+* Pin dependancy in snyk.yml ([0498425](https://github.com/markdown-confluence/markdown-confluence/commit/0498425f1f7d281e1d624f426eb4b6f6e41e5a5f))
+* Pin npm in release-please.yml ([03da715](https://github.com/markdown-confluence/markdown-confluence/commit/03da715085396a0af3b750cf12838f2ad7e11911))
+* Remove ADFView from main.ts ([a21abbd](https://github.com/markdown-confluence/markdown-confluence/commit/a21abbd28c8a63cc09989b0cf9ad7d43fc5e56ae))
+* Remove comments ([78520de](https://github.com/markdown-confluence/markdown-confluence/commit/78520de8ec5b8bf6b3ec88dc8bb27c60ff420fbf))
+* Run `npm ci` to install dependancies ([58e894c](https://github.com/markdown-confluence/markdown-confluence/commit/58e894cf4f9da903f847ed359099c0ea19543081))
+* run monitor in docker action ([7fc1b91](https://github.com/markdown-confluence/markdown-confluence/commit/7fc1b911d2194e835b6fefa3384e3e34cae90be2))
+* Run npm build before dev-obsidian to ensure all built ([da1fe60](https://github.com/markdown-confluence/markdown-confluence/commit/da1fe60f75973165979e9632a35f33ab9146ebbf))
+* Sarif output ([cfb277d](https://github.com/markdown-confluence/markdown-confluence/commit/cfb277de330060c17cd8603b2d4d8386793a7862))
+* ts errors in tests ([21f640e](https://github.com/markdown-confluence/markdown-confluence/commit/21f640e96ea5bbc6ccdc9049679c3be95bafdaab))
+* Update snyk org id ([945f87c](https://github.com/markdown-confluence/markdown-confluence/commit/945f87c42d3c8245776452e4cf6c400498017ca0))
+* use latest tag ([b7458ab](https://github.com/markdown-confluence/markdown-confluence/commit/b7458ab9a1b771b3073b3fc39c0febb0b97808b0))
+
+
+### Documentation
+
+* Add badges to README.md ([53d2bf3](https://github.com/markdown-confluence/markdown-confluence/commit/53d2bf330d341ed13296784339d1e7849cf9fe39))
+* Add Conventional Commits ([f7b0696](https://github.com/markdown-confluence/markdown-confluence/commit/f7b0696e2437c299a6cda22475212654a83b8e73))
+* Add Discord link ([9c093f6](https://github.com/markdown-confluence/markdown-confluence/commit/9c093f67c523a677c34c6e99d79be799b2c9e46f))
+* Add README.md files to all NPM Packages ([75c4781](https://github.com/markdown-confluence/markdown-confluence/commit/75c47816b7895fd26d50382c316f83d6993cc56c))
+* amended the broken readme image paths for obsidian package ([97876cf](https://github.com/markdown-confluence/markdown-confluence/commit/97876cf7c55e3ac4de89d85a70dfd4ba4e8b3f15))
+
+
+### Dependencies
+
+* **deps:** bump github/codeql-action from 2.3.1 to 2.3.2 ([f960fb3](https://github.com/markdown-confluence/markdown-confluence/commit/f960fb3b24ea42e081b9dff9bafc4aa032a834d4))
+* **deps:** bump puppeteer from 19.11.1 to 20.0.0 ([def42aa](https://github.com/markdown-confluence/markdown-confluence/commit/def42aa36725493bdafda9eb9809526ab7821aa5))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([69768b1](https://github.com/markdown-confluence/markdown-confluence/commit/69768b1186d62b43be2db72ef270596e57c9cbd8))
+* **deps:** bump yargs from 17.7.1 to 17.7.2 ([a91eabd](https://github.com/markdown-confluence/markdown-confluence/commit/a91eabda6a6dab803b7eeab3b98d0457e4aef873))
+
 ## [4.9.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.8.0...obsidian-confluence-root-v4.9.0) (2023-04-30)
 
 
