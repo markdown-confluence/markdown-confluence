@@ -1,5 +1,33 @@
 # Changelog
 
+## [5.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v4.9.0...@markdown-confluence/cli-v5.0.0) (2023-05-03)
+
+
+### Features
+
+* Snyk container scanning ([710a4a0](https://github.com/markdown-confluence/markdown-confluence/commit/710a4a0c6d544835c74bbfa31939745d7e4a7b0d))
+
+
+### Bug Fixes
+
+* docker build ordering ([0110108](https://github.com/markdown-confluence/markdown-confluence/commit/0110108ed9e68a864f5d425d7e3a0547b058b39d))
+* Don't publish with dependancies for the CLI since they are bundled. ([52b3396](https://github.com/markdown-confluence/markdown-confluence/commit/52b33969f58ea97ec25ed5b830929e231895ab43))
+
+
+### Documentation
+
+* Add README.md files to all NPM Packages ([75c4781](https://github.com/markdown-confluence/markdown-confluence/commit/75c47816b7895fd26d50382c316f83d6993cc56c))
+
+
+### Dependencies
+
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([69768b1](https://github.com/markdown-confluence/markdown-confluence/commit/69768b1186d62b43be2db72ef270596e57c9cbd8))
+* **deps:** bump yargs from 17.7.1 to 17.7.2 ([a91eabd](https://github.com/markdown-confluence/markdown-confluence/commit/a91eabda6a6dab803b7eeab3b98d0457e4aef873))
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped from 4.9.0 to 5.0.0
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 4.9.0 to 5.0.0
+
 ## [4.9.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v4.8.0...@markdown-confluence/cli-v4.9.0) (2023-04-30)
 
 

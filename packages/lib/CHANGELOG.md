@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.9.0...@markdown-confluence/lib-v5.0.0) (2023-05-03)
+
+
+### Features
+
+* Enable and fix all strict type checks ([c16ee2d](https://github.com/markdown-confluence/markdown-confluence/commit/c16ee2d83b6e30065f8c607afda652c4c21af6b3))
+* Mark lib as sideEffects: false to help treeshaking ([1a622e3](https://github.com/markdown-confluence/markdown-confluence/commit/1a622e39cf5a84a86bcc7cbfd61eebd690a2ebfb))
+
+
+### Bug Fixes
+
+* Add settings to MdToADF Tests ([2c58c51](https://github.com/markdown-confluence/markdown-confluence/commit/2c58c51795e1efe0a2abc99c8b4774954466a222))
+* frontmatterHeader adds content direct to ADF instead of Markdown now ([1230878](https://github.com/markdown-confluence/markdown-confluence/commit/12308783ae23fbb2fbcd9f39871bf4429c47e18b))
+* ts errors in tests ([21f640e](https://github.com/markdown-confluence/markdown-confluence/commit/21f640e96ea5bbc6ccdc9049679c3be95bafdaab))
+
+
+### Documentation
+
+* Add README.md files to all NPM Packages ([75c4781](https://github.com/markdown-confluence/markdown-confluence/commit/75c47816b7895fd26d50382c316f83d6993cc56c))
+
 ## [4.9.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v4.8.0...@markdown-confluence/lib-v4.9.0) (2023-04-30)
 
 

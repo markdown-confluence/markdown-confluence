@@ -1,5 +1,31 @@
 # Changelog
 
+## [5.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v4.9.0...@markdown-confluence/mermaid-puppeteer-renderer-v5.0.0) (2023-05-03)
+
+
+### Features
+
+* Make mermaid in electron simpler due to being ran in renderer already ([5668e02](https://github.com/markdown-confluence/markdown-confluence/commit/5668e025299d46820ae50b25c1a542ced28097ec))
+
+
+### Bug Fixes
+
+* Call method on window in browser. ([38706d1](https://github.com/markdown-confluence/markdown-confluence/commit/38706d13119ede06ed4e10c1e2db3ed9817920c1))
+* Run npm build before dev-obsidian to ensure all built ([da1fe60](https://github.com/markdown-confluence/markdown-confluence/commit/da1fe60f75973165979e9632a35f33ab9146ebbf))
+
+
+### Documentation
+
+* Add README.md files to all NPM Packages ([75c4781](https://github.com/markdown-confluence/markdown-confluence/commit/75c47816b7895fd26d50382c316f83d6993cc56c))
+
+
+### Dependencies
+
+* **deps:** bump puppeteer from 19.11.1 to 20.0.0 ([def42aa](https://github.com/markdown-confluence/markdown-confluence/commit/def42aa36725493bdafda9eb9809526ab7821aa5))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 4.9.0 to 5.0.0
+
 ## [4.9.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v4.8.0...@markdown-confluence/mermaid-puppeteer-renderer-v4.9.0) (2023-04-30)
 
 
