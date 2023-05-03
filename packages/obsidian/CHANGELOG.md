@@ -7,6 +7,22 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [5.0.1](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.0.0...obsidian-confluence-v5.0.1) (2023-05-03)
+
+
+### Documentation
+
+* Add note about logging issues to mono repo ([19992f6](https://github.com/markdown-confluence/markdown-confluence/commit/19992f6705e0882025a1f8100b4ef42903df71e8))
+* Fix docs when they are published to obsidian-integration repo ([bb5887b](https://github.com/markdown-confluence/markdown-confluence/commit/bb5887b96fcd27678c52552576defd0fda8dcf19))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.0.0 to 5.0.1
+    * @markdown-confluence/mermaid-electron-renderer bumped from 5.0.0 to 5.0.1
+
 ## [5.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v4.9.0...obsidian-confluence-v5.0.0) (2023-05-03)
 
 

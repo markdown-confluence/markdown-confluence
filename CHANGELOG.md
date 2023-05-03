@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.0.1](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.0.0...obsidian-confluence-root-v5.0.1) (2023-05-03)
+
+
+### Documentation
+
+* Add note about logging issues to mono repo ([19992f6](https://github.com/markdown-confluence/markdown-confluence/commit/19992f6705e0882025a1f8100b4ef42903df71e8))
+* Fix docs when they are published to obsidian-integration repo ([bb5887b](https://github.com/markdown-confluence/markdown-confluence/commit/bb5887b96fcd27678c52552576defd0fda8dcf19))
+
 ## [5.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v4.9.0...obsidian-confluence-root-v5.0.0) (2023-05-03)
 
 
