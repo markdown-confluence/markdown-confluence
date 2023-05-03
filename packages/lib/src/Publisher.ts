@@ -14,6 +14,7 @@ import {
 import { PageContentType } from "./ConniePageConfig";
 import { p } from "@atlaskit/adf-utils/builders";
 import { ADFEntity } from "@atlaskit/adf-utils/dist/types/types";
+import { isEqual } from "./isEqual";
 
 export interface FailedFile {
 	fileName: string;
@@ -74,18 +75,26 @@ export interface ConfluenceAdfFile {
 	blogPostDate: string | undefined;
 }
 
+interface ConfluencePageExistingData {
+	adfContent: JSONDocNode;
+	pageTitle: string;
+	ancestors: { id: string }[];
+	contentType: string;
+}
+
 export interface ConfluenceNode {
 	file: ConfluenceAdfFile;
 	version: number;
 	lastUpdatedBy: string;
-	existingAdf: JSONDocNode;
-	parentPageId: string;
+	existingPageData: ConfluencePageExistingData;
+	ancestors: string[];
 }
+
 export interface ConfluenceTreeNode {
 	file: ConfluenceAdfFile;
 	version: number;
 	lastUpdatedBy: string;
-	existingAdf: JSONDocNode;
+	existingPageData: ConfluencePageExistingData;
 	children: ConfluenceTreeNode[];
 }
 
@@ -192,9 +201,9 @@ export class Publisher {
 	): Promise<FilePublishResult> {
 		try {
 			const successfulUploadResult = await this.updatePageContent(
-				node.parentPageId,
+				node.ancestors,
 				node.version,
-				node.existingAdf,
+				node.existingPageData,
 				node.file,
 				node.lastUpdatedBy
 			);
@@ -219,15 +228,20 @@ export class Publisher {
 	}
 
 	private async updatePageContent(
-		parentPageId: string,
+		ancestors: string[],
 		pageVersionNumber: number,
-		currentContents: JSONDocNode,
+		existingPageData: ConfluencePageExistingData,
 		adfFile: ConfluenceAdfFile,
 		lastUpdatedBy: string
 	): Promise<UploadAdfFileResult> {
 		if (lastUpdatedBy !== this.myAccountId) {
 			throw new Error(
 				`Page last updated by another user. Won't publish over their changes. MyAccountId: ${this.myAccountId}, Last Updated By: ${lastUpdatedBy}`
+			);
+		}
+		if (existingPageData.contentType !== adfFile.contentType) {
+			throw new Error(
+				`Cannot convert between content types. From ${existingPageData.contentType} to ${adfFile.contentType}`
 			);
 		}
 
@@ -266,25 +280,46 @@ export class Publisher {
 				(imageResult["uploaded"] ?? 0) > 0 ? "updated" : "same";
 		}
 
-		if (!adfEqual(currentContents, imageUploadResult.adf)) {
+		const existingPageDetails = {
+			title: existingPageData.pageTitle,
+			type: existingPageData.contentType,
+			...(adfFile.contentType === "blogpost" ||
+			adfFile.dontChangeParentPageId
+				? {}
+				: { ancestors: existingPageData.ancestors }),
+		};
+
+		const newPageDetails = {
+			title: adfFile.pageTitle,
+			type: adfFile.contentType,
+			...(adfFile.contentType === "blogpost" ||
+			adfFile.dontChangeParentPageId
+				? {}
+				: {
+						ancestors: ancestors.map((ancestor) => ({
+							id: ancestor,
+						})),
+				  }),
+		};
+
+		console.log({ existingPageDetails, newPageDetails });
+		if (
+			!adfEqual(existingPageData.adfContent, imageUploadResult.adf) ||
+			!isEqual(existingPageDetails, newPageDetails)
+		) {
 			result.contentResult = "updated";
 			console.log(`TESTING DIFF - ${adfFile.absoluteFilePath}`);
 
 			const replacer = (_key: unknown, value: unknown) =>
 				typeof value === "undefined" ? null : value;
 
-			console.log(JSON.stringify(currentContents, replacer));
+			console.log(JSON.stringify(existingPageData.adfContent, replacer));
 			console.log(JSON.stringify(imageUploadResult.adf, replacer));
 
 			const updateContentDetails = {
+				...newPageDetails,
 				id: adfFile.pageId,
-				...(adfFile.contentType === "blogpost" ||
-				adfFile.dontChangeParentPageId
-					? {}
-					: { ancestors: [{ id: parentPageId }] }),
 				version: { number: pageVersionNumber + 1 },
-				title: adfFile.pageTitle,
-				type: adfFile.contentType,
 				body: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
 					atlas_doc_format: {

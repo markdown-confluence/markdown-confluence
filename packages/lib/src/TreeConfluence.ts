@@ -15,24 +15,24 @@ const blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
 
 function flattenTree(
 	node: ConfluenceTreeNode,
-	parentPageId?: string
+	ancestors: string[] = []
 ): ConfluenceNode[] {
 	const nodes: ConfluenceNode[] = [];
-	const { file, version, lastUpdatedBy, existingAdf, children } = node;
+	const { file, version, lastUpdatedBy, existingPageData, children } = node;
 
-	if (parentPageId) {
+	if (ancestors.length > 0) {
 		nodes.push({
 			file,
 			version,
 			lastUpdatedBy,
-			existingAdf,
-			parentPageId: parentPageId,
+			existingPageData,
+			ancestors,
 		});
 	}
 
 	if (children) {
 		children.forEach((child) => {
-			nodes.push(...flattenTree(child, file.pageId));
+			nodes.push(...flattenTree(child, [...ancestors, file.pageId]));
 		});
 	}
 
@@ -81,7 +81,10 @@ async function createFileStructureInConfluence(
 	}
 
 	let version: number;
-	let existingAdf: JSONDocNode | undefined;
+	let adfContent: JSONDocNode | undefined;
+	let pageTitle = "";
+	let contentType = "page";
+	let ancestors: { id: string }[] = [];
 	let lastUpdatedBy: string | undefined;
 	const file: ConfluenceAdfFile = {
 		...node.file,
@@ -102,13 +105,17 @@ async function createFileStructureInConfluence(
 		file.pageId = pageDetails.id;
 		file.spaceKey = pageDetails.spaceKey;
 		version = pageDetails.version;
-		existingAdf = JSON.parse(
-			pageDetails.existingAdf ?? "{}"
-		) as JSONDocNode;
+		adfContent = JSON.parse(pageDetails.existingAdf ?? "{}") as JSONDocNode;
+		pageTitle = pageDetails.pageTitle;
+		ancestors = pageDetails.ancestors;
 		lastUpdatedBy = pageDetails.lastUpdatedBy;
+		contentType = pageDetails.contentType;
 	} else {
 		version = 0;
-		existingAdf = doc(p());
+		adfContent = doc(p());
+		pageTitle = "";
+		ancestors = [];
+		contentType = "page";
 	}
 
 	const childDetailsTasks = node.children.map((childNode) => {
@@ -131,8 +138,13 @@ async function createFileStructureInConfluence(
 		file: { ...file, pageUrl },
 		version,
 		lastUpdatedBy: lastUpdatedBy ?? "",
-		existingAdf,
 		children: childDetails,
+		existingPageData: {
+			adfContent,
+			pageTitle,
+			ancestors,
+			contentType,
+		},
 	};
 }
 
@@ -167,7 +179,13 @@ async function ensurePageExists(
 				contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: contentById?.body?.atlas_doc_format?.value,
 			spaceKey: contentById.space.key,
-		};
+			pageTitle: contentById.title,
+			ancestors:
+				contentById.ancestors?.map((ancestor) => ({
+					id: ancestor.id,
+				})) ?? [],
+			contentType: contentById.type,
+		} as const;
 	}
 
 	const searchParams = {
@@ -199,12 +217,18 @@ async function ensurePageExists(
 		return {
 			id: currentPage.id,
 			title: file.pageTitle,
-			version: currentPage?.version?.number ?? 1,
+			version: currentPage.version?.number ?? 1,
 			lastUpdatedBy:
-				currentPage?.version?.by?.accountId ?? "NO ACCOUNT ID",
-			existingAdf: currentPage?.body?.atlas_doc_format?.value,
+				currentPage.version?.by?.accountId ?? "NO ACCOUNT ID",
+			existingAdf: currentPage.body?.atlas_doc_format?.value,
+			pageTitle: currentPage.title,
 			spaceKey,
-		};
+			ancestors:
+				currentPage.ancestors?.map((ancestor) => ({
+					id: ancestor.id,
+				})) ?? [],
+			contentType: currentPage.type,
+		} as const;
 	} else {
 		const creatingBlankPageRequest = {
 			space: { key: spaceKey },
@@ -233,11 +257,17 @@ async function ensurePageExists(
 		return {
 			id: pageDetails.id,
 			title: file.pageTitle,
-			version: pageDetails?.version?.number ?? 1,
+			version: pageDetails.version?.number ?? 1,
 			lastUpdatedBy:
-				pageDetails?.version?.by?.accountId ?? "NO ACCOUNT ID",
-			existingAdf: pageDetails?.body?.atlas_doc_format?.value,
+				pageDetails.version?.by?.accountId ?? "NO ACCOUNT ID",
+			existingAdf: pageDetails.body?.atlas_doc_format?.value,
+			pageTitle: pageDetails.title,
+			ancestors:
+				pageDetails.ancestors?.map((ancestor) => ({
+					id: ancestor.id,
+				})) ?? [],
 			spaceKey,
-		};
+			contentType: pageDetails.type,
+		} as const;
 	}
 }

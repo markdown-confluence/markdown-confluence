@@ -57,7 +57,7 @@ export function prepareAdfToUpload(
 		result = mergeTextNodes(result);
 
 		const pageInlineComments = extractInlineComments(
-			confluenceNode.existingAdf
+			confluenceNode.existingPageData.adfContent
 		);
 
 		result = applyInlineComments(result, pageInlineComments);
