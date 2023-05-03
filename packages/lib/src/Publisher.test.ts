@@ -17,7 +17,7 @@ import {
 	DefaultSettingsLoader,
 	EnvironmentVariableSettingsLoader,
 	StaticSettingsLoader,
-} from "./Settings";
+} from "./SettingsLoader";
 
 const settingsLoader = new AutoSettingsLoader();
 const settings = settingsLoader.load();
