@@ -701,7 +701,6 @@ function processWikilinkToActualLink(
 					typeof node.marks[0].attrs["href"] === "string" &&
 					node.marks[0].attrs["href"].startsWith("mention:")
 				) {
-					console.log({ node });
 					const mentionUrl = new URL(node.marks[0].attrs["href"]);
 
 					node = {

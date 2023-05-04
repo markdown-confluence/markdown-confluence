@@ -1,5 +1,5 @@
 import sortAny from "sort-any";
-import { mapValues } from "lodash";
+import { mapValues } from "lodash-es";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { ADFEntity, ADFEntityMark } from "@atlaskit/adf-utils/types";
 import { isEqual } from "./isEqual";
