@@ -15,7 +15,18 @@
         "prettier-check": "npx prettier --check src/",
         "test": "jest"
     },
-    "keywords": [],
+    "keywords": [
+        "markdown",
+        "markdown-confluence",
+        "confluence",
+        "adf",
+        "atlassian",
+        "atlassian-document-format",
+        "publish-confluence",
+        "convert-markdown",
+        "obsidian-confluence",
+        "obsidian-plugin"
+    ],
     "author": "andymac4182",
     "license": "Apache 2.0",
     "devDependencies": {
