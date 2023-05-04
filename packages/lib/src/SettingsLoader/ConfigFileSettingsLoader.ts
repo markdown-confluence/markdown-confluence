@@ -1,6 +1,6 @@
 import path from "path";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings";
-import { SettingsLoader } from ".";
+import { SettingsLoader } from "./SettingsLoader";
 import fs from "fs";
 import yargs from "yargs";
 

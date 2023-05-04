@@ -3,7 +3,7 @@ import { DefaultSettingsLoader } from "./DefaultSettingsLoader";
 import { EnvironmentVariableSettingsLoader } from "./EnvironmentVariableSettingsLoader";
 import { ConfigFileSettingsLoader } from "./ConfigFileSettingsLoader";
 import { CommandLineArgumentSettingsLoader } from "./CommandLineArgumentSettingsLoader";
-import { SettingsLoader } from ".";
+import { SettingsLoader } from "./SettingsLoader";
 
 export class AutoSettingsLoader extends SettingsLoader {
 	constructor(private loaders: SettingsLoader[] = []) {

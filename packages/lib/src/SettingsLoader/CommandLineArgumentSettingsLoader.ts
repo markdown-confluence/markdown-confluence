@@ -1,6 +1,6 @@
 import path from "path";
 import { ConfluenceSettings } from "../Settings";
-import { SettingsLoader } from ".";
+import { SettingsLoader } from "./SettingsLoader";
 import yargs from "yargs";
 
 export class CommandLineArgumentSettingsLoader extends SettingsLoader {

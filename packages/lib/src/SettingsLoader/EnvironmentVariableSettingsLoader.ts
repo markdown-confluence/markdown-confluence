@@ -1,5 +1,5 @@
 import { ConfluenceSettings } from "../Settings";
-import { SettingsLoader } from ".";
+import { SettingsLoader } from "./SettingsLoader";
 
 export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 	getValue<T extends keyof ConfluenceSettings>(
