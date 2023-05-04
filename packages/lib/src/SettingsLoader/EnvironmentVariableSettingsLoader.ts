@@ -1,4 +1,4 @@
-import { ConfluenceSettings } from "src/Settings";
+import { ConfluenceSettings } from "../Settings";
 import { SettingsLoader } from ".";
 
 export class EnvironmentVariableSettingsLoader extends SettingsLoader {

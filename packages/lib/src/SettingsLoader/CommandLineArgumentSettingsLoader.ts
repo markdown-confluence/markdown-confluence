@@ -1,5 +1,5 @@
 import path from "path";
-import { ConfluenceSettings } from "src/Settings";
+import { ConfluenceSettings } from "../Settings";
 import { SettingsLoader } from ".";
 import yargs from "yargs";
 

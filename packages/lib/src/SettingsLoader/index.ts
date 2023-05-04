@@ -1,4 +1,4 @@
-import { ConfluenceSettings } from "src/Settings";
+import { ConfluenceSettings } from "../Settings";
 
 export * from "./AutoSettingsLoader";
 export * from "./CommandLineArgumentSettingsLoader";

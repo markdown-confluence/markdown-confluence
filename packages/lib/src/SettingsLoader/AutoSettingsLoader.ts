@@ -1,4 +1,4 @@
-import { ConfluenceSettings, DEFAULT_SETTINGS } from "src/Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings";
 import { DefaultSettingsLoader } from "./DefaultSettingsLoader";
 import { EnvironmentVariableSettingsLoader } from "./EnvironmentVariableSettingsLoader";
 import { ConfigFileSettingsLoader } from "./ConfigFileSettingsLoader";

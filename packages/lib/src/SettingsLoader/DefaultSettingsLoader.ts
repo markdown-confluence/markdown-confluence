@@ -1,4 +1,4 @@
-import { ConfluenceSettings, DEFAULT_SETTINGS } from "src/Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings";
 import { SettingsLoader } from ".";
 
 export class DefaultSettingsLoader extends SettingsLoader {
