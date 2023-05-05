@@ -43,7 +43,10 @@ function processADF(adf: JSONDocNode): JSONDocNode {
 				node.marks[0].attrs["href"] === "" ||
 				(!isSafeUrl(node.marks[0].attrs["href"]) &&
 					!(node.marks[0].attrs["href"] as string).startsWith(
-						"wikilink"
+						"wikilinks:"
+					) &&
+					!(node.marks[0].attrs["href"] as string).startsWith(
+						"mention:"
 					))
 			) {
 				node.marks[0].attrs["href"] = "#";

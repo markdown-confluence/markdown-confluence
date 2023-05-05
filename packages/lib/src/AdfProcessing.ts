@@ -697,6 +697,23 @@ function processWikilinkToActualLink(
 					}
 					return node;
 				}
+				if (
+					typeof node.marks[0].attrs["href"] === "string" &&
+					node.marks[0].attrs["href"].startsWith("mention:")
+				) {
+					console.log({ node });
+					const mentionUrl = new URL(node.marks[0].attrs["href"]);
+
+					node = {
+						type: "mention",
+						attrs: {
+							id: mentionUrl.pathname,
+							text: node.text,
+						},
+					};
+
+					return node;
+				}
 			}
 			return;
 		},

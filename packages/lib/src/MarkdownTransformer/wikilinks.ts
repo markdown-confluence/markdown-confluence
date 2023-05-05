@@ -54,7 +54,9 @@ export function wikilinks(state: StateInline): boolean {
 		state.posMax = wikiLinkEnd;
 	}
 
-	const href = `wikilinks:${linkToPage}${hashFragment ?? ""}`;
+	const href = linkToPage.startsWith("mention:")
+		? linkToPage
+		: `wikilinks:${linkToPage}${hashFragment ?? ""}`;
 
 	let token = state.push("link_open", "a", 1);
 	token.attrs = [["href", href]];
