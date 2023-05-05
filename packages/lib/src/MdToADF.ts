@@ -11,20 +11,24 @@ import { p } from "@atlaskit/adf-utils/builders";
 import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap";
 import { isSafeUrl } from "@atlaskit/adf-schema";
 import { ConfluenceSettings } from "./Settings";
+import { cleanUpUrlIfConfluence } from "./ConfluenceUrlParser";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 
 const transformer = new MarkdownTransformer();
 const serializer = new JSONTransformer();
 
-export function parseMarkdownToADF(markdown: string) {
+export function parseMarkdownToADF(
+	markdown: string,
+	confluenceBaseUrl: string
+) {
 	const prosenodes = transformer.parse(markdown);
 	const adfNodes = serializer.encode(prosenodes);
-	const nodes = processADF(adfNodes);
+	const nodes = processADF(adfNodes, confluenceBaseUrl);
 	return nodes;
 }
 
-function processADF(adf: JSONDocNode): JSONDocNode {
+function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 	const olivia = traverse(adf, {
 		text: (node, _parent) => {
 			if (
@@ -53,8 +57,12 @@ function processADF(adf: JSONDocNode): JSONDocNode {
 			}
 
 			if (node.marks[0].attrs["href"] === node.text) {
+				const cleanedUrl = cleanUpUrlIfConfluence(
+					node.marks[0].attrs["href"],
+					confluenceBaseUrl
+				);
 				node.type = "inlineCard";
-				node.attrs = { url: node.marks[0].attrs["href"] };
+				node.attrs = { url: cleanedUrl };
 				delete node.marks;
 				delete node.text;
 			}
@@ -138,7 +146,10 @@ export function convertMDtoADF(
 ): LocalAdfFile {
 	file.contents = file.contents.replace(frontmatterRegex, "");
 
-	const adfContent = parseMarkdownToADF(file.contents);
+	const adfContent = parseMarkdownToADF(
+		file.contents,
+		settings.confluenceBaseUrl
+	);
 
 	const results = processConniePerPageConfig(file, settings, adfContent);
 

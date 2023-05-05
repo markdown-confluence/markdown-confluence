@@ -137,7 +137,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 			yamlValue,
 			markdownFile,
 			_alreadyParsed,
-			_settings,
+			settings,
 			adfContent
 		) => {
 			if (yamlValue && Array.isArray(yamlValue)) {
@@ -153,7 +153,10 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 					}
 				}
 
-				const newADF = parseMarkdownToADF(frontmatterHeader);
+				const newADF = parseMarkdownToADF(
+					frontmatterHeader,
+					settings.confluenceBaseUrl
+				);
 
 				adfContent.content = [...newADF.content, ...adfContent.content];
 			}
