@@ -153,7 +153,7 @@ function findLinkToHeader(
 	// restore old state
 	state.pos = oldPos;
 
-	const cleanHashFragment = hashFragment?.replace(" ", "-");
+	const cleanHashFragment = hashFragment?.replace(/ /g, "-");
 	return { hashFragment: cleanHashFragment, headerStart, headerEnd };
 }
 
