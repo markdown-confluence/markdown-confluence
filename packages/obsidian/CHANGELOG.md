@@ -7,6 +7,31 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [5.1.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.0.1...obsidian-confluence-v5.1.0) (2023-05-09)
+
+
+### Features
+
+* ADF To Markdown ([7257893](https://github.com/markdown-confluence/markdown-confluence/commit/725789372481baef6ba20aaf37a82dc5ca126b2e))
+
+
+### Bug Fixes
+
+* Move SettingsLoaders to own files to help with TreeShaking ([f241a11](https://github.com/markdown-confluence/markdown-confluence/commit/f241a11a3967d8a06e827ec100dca15533d38902))
+
+
+### Documentation
+
+* Update Obsidian docs to remove need for BRAT install ([9fc8fc8](https://github.com/markdown-confluence/markdown-confluence/commit/9fc8fc8236c369b53c3d5bdcc63777525f30a0c9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.0.1 to 5.1.0
+    * @markdown-confluence/mermaid-electron-renderer bumped from 5.0.1 to 5.1.0
+
 ## [5.0.1](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.0.0...obsidian-confluence-v5.0.1) (2023-05-03)
 
 
