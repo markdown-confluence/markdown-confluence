@@ -37,7 +37,22 @@ async function main() {
 	);
 
 	const publishFilter = "";
-	publisher.doPublish(publishFilter);
+	const results = await publisher.publish(publishFilter);
+	results.forEach((file) => {
+		if (file.successfulUploadResult) {
+			console.log(
+				chalk.green(
+					`SUCCESS: ${file.node.file.absoluteFilePath} Content: ${file.successfulUploadResult.contentResult}, Images: ${file.successfulUploadResult.imageResult}, Labels: ${file.successfulUploadResult.labelResult}, Page URL: ${file.node.file.pageUrl}`
+				)
+			);
+			return;
+		}
+		console.error(
+			chalk.red(
+				`FAILED:  ${file.node.file.absoluteFilePath} publish failed. Error is: ${file.reason}`
+			)
+		);
+	});
 }
 
 // Call the main function
