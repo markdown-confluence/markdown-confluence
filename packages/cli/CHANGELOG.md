@@ -1,5 +1,20 @@
 # Changelog
 
+## [5.2.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.1.0...@markdown-confluence/cli-v5.2.0) (2023-05-09)
+
+
+### Features
+
+* Basic output from CLI ([46b47bd](https://github.com/markdown-confluence/markdown-confluence/commit/46b47bd1c01de77b7c3de62d76c6ec74388c56c5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped from 5.1.0 to 5.2.0
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 5.1.0 to 5.2.0
+
 ## [5.1.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.0.1...@markdown-confluence/cli-v5.1.0) (2023-05-09)
 
 
