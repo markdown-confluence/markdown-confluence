@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.1.0...obsidian-confluence-root-v5.2.0) (2023-05-09)
+
+
+### Features
+
+* Basic output from CLI ([46b47bd](https://github.com/markdown-confluence/markdown-confluence/commit/46b47bd1c01de77b7c3de62d76c6ec74388c56c5))
+
 ## [5.1.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.0.1...obsidian-confluence-root-v5.1.0) (2023-05-09)
 
 
