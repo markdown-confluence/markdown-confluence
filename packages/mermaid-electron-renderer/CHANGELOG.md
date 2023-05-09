@@ -6,6 +6,20 @@
   * dependencies
     * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
 
+## [5.1.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v5.0.1...@markdown-confluence/mermaid-electron-renderer-v5.1.0) (2023-05-09)
+
+
+### Bug Fixes
+
+* Fix issues with puppeteer rendering ([01824b6](https://github.com/markdown-confluence/markdown-confluence/commit/01824b60a2fc773550683a671d4ce2e4acb52855))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.0.1 to 5.1.0
+
 ## [5.0.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v5.0.0...@markdown-confluence/mermaid-electron-renderer-v5.0.1) (2023-05-03)
 
 

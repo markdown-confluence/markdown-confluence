@@ -1,5 +1,21 @@
 # Changelog
 
+## [5.1.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.0.1...@markdown-confluence/cli-v5.1.0) (2023-05-09)
+
+
+### Bug Fixes
+
+* Move SettingsLoaders to own files to help with TreeShaking ([f241a11](https://github.com/markdown-confluence/markdown-confluence/commit/f241a11a3967d8a06e827ec100dca15533d38902))
+
+
+### Dependencies
+
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([56496e9](https://github.com/markdown-confluence/markdown-confluence/commit/56496e95459b0445b3a813f9343b064f56629ab9))
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped from 5.0.1 to 5.1.0
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 5.0.1 to 5.1.0
+
 ## [5.0.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.0.0...@markdown-confluence/cli-v5.0.1) (2023-05-03)
 
 

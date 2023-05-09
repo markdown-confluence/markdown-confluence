@@ -1,5 +1,27 @@
 # Changelog
 
+## [5.1.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.0.1...@markdown-confluence/lib-v5.1.0) (2023-05-09)
+
+
+### Features
+
+* Add support for mentions ([f17dd84](https://github.com/markdown-confluence/markdown-confluence/commit/f17dd8460c7ee428846f1dc7adb4382ae3f772f2))
+* ADF To Markdown ([7257893](https://github.com/markdown-confluence/markdown-confluence/commit/725789372481baef6ba20aaf37a82dc5ca126b2e))
+* Diff page details to see if they have changed. If so then publish page. ([7e30ca8](https://github.com/markdown-confluence/markdown-confluence/commit/7e30ca80f4feb93b2b86b85a4bec70c0e93edf91))
+* Handle smartcards storing URL without page name on the end ([d489f83](https://github.com/markdown-confluence/markdown-confluence/commit/d489f83b3f565bd986dd7fb801eb762142db8a13))
+
+
+### Bug Fixes
+
+* Add keywords to lib package ([a3043b0](https://github.com/markdown-confluence/markdown-confluence/commit/a3043b0bc87bf613c960b2296e4d6dfbdb7098ff))
+* Circular imports ([4f49798](https://github.com/markdown-confluence/markdown-confluence/commit/4f49798ba17d5df40307aba208e637324ab79902))
+* Fix issues with puppeteer rendering ([01824b6](https://github.com/markdown-confluence/markdown-confluence/commit/01824b60a2fc773550683a671d4ce2e4acb52855))
+* Move SettingsLoaders to own files to help with TreeShaking ([f241a11](https://github.com/markdown-confluence/markdown-confluence/commit/f241a11a3967d8a06e827ec100dca15533d38902))
+* Remove debug console.log ([bb56ed9](https://github.com/markdown-confluence/markdown-confluence/commit/bb56ed9e30de8b70d6ab9be7aaf29d899d50a83d))
+* Replace all spaces not just first one ([c01ae97](https://github.com/markdown-confluence/markdown-confluence/commit/c01ae974445da898d69506fe754592d500b196f8))
+* Settings path ([d1c43e6](https://github.com/markdown-confluence/markdown-confluence/commit/d1c43e66bfe0e3c50a3a79d81e46659e3e3e75ee))
+* Tests ([4f91706](https://github.com/markdown-confluence/markdown-confluence/commit/4f91706e49cef54c53fce4729b155c4799686d1e))
+
 ## [5.0.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.0.0...@markdown-confluence/lib-v5.0.1) (2023-05-03)
 
 
