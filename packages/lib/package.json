@@ -8,8 +8,8 @@
     "type": "module",
     "sideEffects": false,
     "scripts": {
-        "dev": "node esbuild.config.mjs",
-        "build": "tsc && node esbuild.config.mjs production",
+        "dev": "tsc --watch",
+        "build": "tsc",
         "fmt": "npx prettier --write src/",
         "lint": "eslint --ignore-path ../../.eslintignore --ext .js,.ts src/",
         "prettier-check": "npx prettier --check src/",

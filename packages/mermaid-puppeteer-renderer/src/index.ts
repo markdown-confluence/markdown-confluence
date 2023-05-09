@@ -3,6 +3,13 @@ import path from "path";
 import puppeteer from "puppeteer";
 import url from "url";
 
+interface RemoteWindowedCustomFunctions {
+	renderMermaidChart: (
+		mermaidData: string,
+		mermaidConfig: unknown
+	) => Promise<{ width: number; height: number }>;
+}
+
 export class PuppeteerMermaidRenderer implements MermaidRenderer {
 	async captureMermaidCharts(
 		charts: ChartData[]
@@ -46,10 +53,10 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 
 				const result = await page.evaluate(
 					(mermaidData, mermaidConfig) => {
-						return window.renderMermaidChart(
-							mermaidData,
-							mermaidConfig
-						);
+						const { renderMermaidChart } =
+							globalThis as unknown as RemoteWindowedCustomFunctions;
+
+						return renderMermaidChart(mermaidData, mermaidConfig);
 					},
 					chart.data,
 					mermaidConfig

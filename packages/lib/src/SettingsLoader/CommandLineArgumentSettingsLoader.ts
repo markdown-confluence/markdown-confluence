@@ -1,4 +1,3 @@
-import path from "path";
 import { ConfluenceSettings } from "../Settings";
 import { SettingsLoader } from "./SettingsLoader";
 import yargs from "yargs";
@@ -15,16 +14,6 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 	loadPartial(): Partial<ConfluenceSettings> {
 		const options = yargs(process.argv)
 			.usage("Usage: $0 [options]")
-			.option("config", {
-				alias: "c",
-				describe: "Path to the config file",
-				type: "string",
-				default: path.join(
-					process.env["HOME"] ?? "",
-					".mermaid-confluence.json"
-				),
-				demandOption: false,
-			})
 			.option("baseUrl", {
 				alias: "b",
 				describe: "Confluence base URL",
