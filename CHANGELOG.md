@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.5](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.4...obsidian-confluence-root-v5.2.5) (2023-05-10)
+
+
+### Bug Fixes
+
+* Only load CSS that exists for obsidian styles ([c825559](https://github.com/markdown-confluence/markdown-confluence/commit/c825559c4c318d665996d4da0b2488666c44fcaa))
+
 ## [5.2.4](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.3...obsidian-confluence-root-v5.2.4) (2023-05-10)
 
 

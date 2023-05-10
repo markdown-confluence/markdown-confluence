@@ -7,6 +7,21 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [5.2.5](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.2.4...obsidian-confluence-v5.2.5) (2023-05-10)
+
+
+### Bug Fixes
+
+* Only load CSS that exists for obsidian styles ([c825559](https://github.com/markdown-confluence/markdown-confluence/commit/c825559c4c318d665996d4da0b2488666c44fcaa))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.2.4 to 5.2.5
+    * @markdown-confluence/mermaid-electron-renderer bumped from 5.2.4 to 5.2.5
+
 ## [5.2.4](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.2.3...obsidian-confluence-v5.2.4) (2023-05-10)
 
 
