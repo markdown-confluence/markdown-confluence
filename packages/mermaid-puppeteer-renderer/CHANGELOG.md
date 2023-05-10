@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.2.3](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v5.2.2...@markdown-confluence/mermaid-puppeteer-renderer-v5.2.3) (2023-05-10)
+
+
+### Bug Fixes
+
+* HTML should be next to CLI ([9cefae1](https://github.com/markdown-confluence/markdown-confluence/commit/9cefae132f930db5a2b964dd7199434875093e82))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.2.2 to 5.2.3
+
 ## [5.2.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v5.2.1...@markdown-confluence/mermaid-puppeteer-renderer-v5.2.2) (2023-05-10)
 
 
