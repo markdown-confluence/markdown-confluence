@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.4](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.3...obsidian-confluence-root-v5.2.4) (2023-05-10)
+
+
+### Bug Fixes
+
+* Download browser for mermaid if required ([b6e45f0](https://github.com/markdown-confluence/markdown-confluence/commit/b6e45f05cebcc6f8f7ae4f319a9ef166379add0e))
+* Show better CLI error messages ([2120168](https://github.com/markdown-confluence/markdown-confluence/commit/21201681a767c03f87a188b8ddfd8436435f0921))
+
 ## [5.2.3](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.2...obsidian-confluence-root-v5.2.3) (2023-05-10)
 
 
