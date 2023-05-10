@@ -27,6 +27,7 @@ async function main() {
 				apiToken: settings.atlassianApiToken,
 			},
 		},
+		newErrorHandling: true,
 	});
 
 	const publisher = new Publisher(
