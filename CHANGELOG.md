@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.2](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.1...obsidian-confluence-root-v5.2.2) (2023-05-10)
+
+
+### Bug Fixes
+
+* Set puppeteer cache dir ([0643ad3](https://github.com/markdown-confluence/markdown-confluence/commit/0643ad37690e9260ae9bdd649f1df1c5abe6ff65))
+
 ## [5.2.1](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.0...obsidian-confluence-root-v5.2.1) (2023-05-10)
 
 

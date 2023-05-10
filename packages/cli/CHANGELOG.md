@@ -1,5 +1,20 @@
 # Changelog
 
+## [5.2.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.2.1...@markdown-confluence/cli-v5.2.2) (2023-05-10)
+
+
+### Bug Fixes
+
+* Set puppeteer cache dir ([0643ad3](https://github.com/markdown-confluence/markdown-confluence/commit/0643ad37690e9260ae9bdd649f1df1c5abe6ff65))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped from 5.2.1 to 5.2.2
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 5.2.1 to 5.2.2
+
 ## [5.2.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.2.0...@markdown-confluence/cli-v5.2.1) (2023-05-10)
 
 
