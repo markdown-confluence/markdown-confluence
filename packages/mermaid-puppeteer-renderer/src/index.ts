@@ -40,11 +40,10 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 			try {
 				const mermaidHTMLPath = path.join(
 					__dirname,
-					"..",
-					"dist",
 					"mermaid_renderer.html"
 				);
 				const pathToLoad = url.pathToFileURL(mermaidHTMLPath).href;
+
 				await page.goto(pathToLoad);
 
 				const mermaidConfig = {
