@@ -1,6 +1,6 @@
 import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
 import path from "path";
-import puppeteer from "puppeteer";
+import puppeteer, { PuppeteerLaunchOptions } from "puppeteer";
 import url from "url";
 
 interface RemoteWindowedCustomFunctions {
@@ -18,7 +18,24 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 
 		//for (const chart of charts) {
 		const promises = charts.map(async (chart) => {
-			const browser = await puppeteer.launch({ headless: "new" });
+			const puppeteerLaunchConfig = {
+				executablePath: puppeteer.executablePath(),
+				headless: "new",
+				args: [
+					"--ignore-certificate-errors",
+					"--no-sandbox",
+					"--disable-setuid-sandbox",
+					"--disable-accelerated-2d-canvas",
+					"--disable-gpu",
+				],
+			} satisfies PuppeteerLaunchOptions;
+
+			console.log(
+				"LAUNCHING CHROME",
+				JSON.stringify(puppeteerLaunchConfig)
+			);
+			const browser = await puppeteer.launch(puppeteerLaunchConfig);
+
 			const page = await browser.newPage();
 			try {
 				const mermaidHTMLPath = path.join(
