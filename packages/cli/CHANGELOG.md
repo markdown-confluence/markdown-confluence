@@ -1,5 +1,20 @@
 # Changelog
 
+## [5.2.3](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.2.2...@markdown-confluence/cli-v5.2.3) (2023-05-10)
+
+
+### Miscellaneous Chores
+
+* **@markdown-confluence/cli:** Synchronize obsidian packages versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped from 5.2.2 to 5.2.3
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 5.2.2 to 5.2.3
+
 ## [5.2.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.2.1...@markdown-confluence/cli-v5.2.2) (2023-05-10)
 
 
