@@ -2,7 +2,7 @@ FROM ghcr.io/puppeteer/puppeteer:20.1.2@sha256:6b2577355e4cd7453be1a60a1b0ab0030
 
 COPY ./dist /app
 
-ENV NODE_OPTIONS=--enable-source-maps
+ENV NODE_OPTIONS=--enable-source-maps PUPPETEER_CACHE_DIR="/home/pptruser/.cache/puppeteer"
 
 WORKDIR "/content"
 
