@@ -1,6 +1,7 @@
 import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
 import path from "path";
 import puppeteer, { PuppeteerLaunchOptions } from "puppeteer";
+import { downloadBrowser } from "puppeteer/lib/esm/puppeteer/node/install.js";
 import url from "url";
 
 interface RemoteWindowedCustomFunctions {
@@ -16,6 +17,7 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 	): Promise<Map<string, Buffer>> {
 		const capturedCharts = new Map<string, Buffer>();
 
+		await downloadBrowser();
 		//for (const chart of charts) {
 		const promises = charts.map(async (chart) => {
 			const puppeteerLaunchConfig = {
