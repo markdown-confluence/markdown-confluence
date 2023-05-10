@@ -13,6 +13,15 @@ export interface UploadedImageData {
 	status: ConfluenceImageStatus;
 }
 
+export type CurrentAttachments = Record<
+	string,
+	{
+		filehash: string;
+		attachmentId: string;
+		collectionName: string;
+	}
+>;
+
 export async function uploadBuffer(
 	confluenceClient: RequiredConfluenceClient,
 	pageId: string,
@@ -78,10 +87,7 @@ export async function uploadFile(
 	pageId: string,
 	pageFilePath: string,
 	fileNameToUpload: string,
-	currentAttachments: Record<
-		string,
-		{ filehash: string; attachmentId: string; collectionName: string }
-	>
+	currentAttachments: CurrentAttachments
 ): Promise<UploadedImageData | null> {
 	let fileNameForUpload = fileNameToUpload;
 	let testing = await adaptor.readBinary(fileNameForUpload, pageFilePath);
