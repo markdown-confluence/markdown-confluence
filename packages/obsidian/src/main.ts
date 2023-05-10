@@ -113,20 +113,30 @@ export default class ConfluencePlugin extends Plugin {
 		// @ts-expect-error
 		const cssTheme = this.app.vault?.getConfig("cssTheme") as string;
 		if (cssTheme) {
-			const themeCss = await this.app.vault.adapter.read(
+			const fileExists = await this.app.vault.adapter.exists(
 				`.obsidian/themes/${cssTheme}/theme.css`
 			);
-			extraStyles.push(themeCss);
+			if (fileExists) {
+				const themeCss = await this.app.vault.adapter.read(
+					`.obsidian/themes/${cssTheme}/theme.css`
+				);
+				extraStyles.push(themeCss);
+			}
 		}
 
 		const cssSnippets =
 			// @ts-expect-error
 			(this.app.vault?.getConfig("enabledCssSnippets") as string[]) ?? [];
 		for (const snippet of cssSnippets) {
-			const themeCss = await this.app.vault.adapter.read(
+			const fileExists = await this.app.vault.adapter.exists(
 				`.obsidian/snippets/${snippet}.css`
 			);
-			extraStyles.push(themeCss);
+			if (fileExists) {
+				const themeCss = await this.app.vault.adapter.read(
+					`.obsidian/snippets/${snippet}.css`
+				);
+				extraStyles.push(themeCss);
+			}
 		}
 
 		return {
