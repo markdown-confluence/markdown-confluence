@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.2.0...@markdown-confluence/lib-v5.2.1) (2023-05-10)
+
+
+### Miscellaneous Chores
+
+* **@markdown-confluence/lib:** Synchronize obsidian packages versions
+
 ## [5.2.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.1.0...@markdown-confluence/lib-v5.2.0) (2023-05-09)
 
 
