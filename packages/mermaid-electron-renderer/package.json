@@ -1,6 +1,6 @@
 {
     "name": "@markdown-confluence/mermaid-electron-renderer",
-    "version": "5.2.1",
+    "version": "5.2.2",
     "description": "This library allows you to publish your notes to Confluence",
     "main": "dist/index.js",
     "module": "dist/index.js",
@@ -21,7 +21,7 @@
     "dependencies": {
         "@electron/remote": "^2.0.9",
         "mermaid": "^10.1.0",
-        "@markdown-confluence/lib": "5.2.1"
+        "@markdown-confluence/lib": "5.2.2"
     },
     "publishConfig": {
         "access": "public",
