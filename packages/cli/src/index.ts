@@ -8,6 +8,7 @@ import {
 	AutoSettingsLoader,
 	FileSystemAdaptor,
 	Publisher,
+	MermaidRendererPlugin,
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
 import { ConfluenceClient } from "confluence.js";
@@ -18,7 +19,6 @@ async function main() {
 	const settings = settingLoader.load();
 
 	const adaptor = new FileSystemAdaptor(settings); // Make sure this is identical as possible between Obsidian and CLI
-	const mermaidRenderer = new PuppeteerMermaidRenderer();
 	const confluenceClient = new ConfluenceClient({
 		host: settings.confluenceBaseUrl,
 		authentication: {
@@ -30,12 +30,9 @@ async function main() {
 		newErrorHandling: true,
 	});
 
-	const publisher = new Publisher(
-		adaptor,
-		settingLoader,
-		confluenceClient,
-		mermaidRenderer
-	);
+	const publisher = new Publisher(adaptor, settingLoader, confluenceClient, [
+		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),
+	]);
 
 	const publishFilter = "";
 	const results = await publisher.publish(publishFilter);

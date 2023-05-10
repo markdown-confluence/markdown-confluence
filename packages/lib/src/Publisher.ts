@@ -1,31 +1,18 @@
-import { SettingsLoader } from "./SettingsLoader";
-import { traverse, filter } from "@atlaskit/adf-utils/traverse";
-import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { createFolderStructure as createLocalAdfTree } from "./TreeLocal";
-import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
-import { uploadBuffer, UploadedImageData, uploadFile } from "./Attachments";
-import { adfEqual } from "./AdfEqual";
+import { AlwaysADFProcessingPlugins } from "./ADFProcessingPlugins";
 import {
-	getMermaidFileName,
-	MermaidRenderer,
-	ChartData,
-} from "./mermaid_renderers";
+	ADFProcessingPlugin,
+	createPublisherFunctions,
+	executeADFProcessingPipeline,
+} from "./ADFProcessingPlugins/types";
+import { adfEqual } from "./AdfEqual";
+import { CurrentAttachments } from "./Attachments";
 import { PageContentType } from "./ConniePageConfig";
-import { p } from "@atlaskit/adf-utils/builders";
-import { ADFEntity } from "@atlaskit/adf-utils/dist/types/types";
+import { SettingsLoader } from "./SettingsLoader";
+import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
+import { createFolderStructure as createLocalAdfTree } from "./TreeLocal";
+import { LoaderAdaptor, RequiredConfluenceClient } from "./adaptors";
 import { isEqual } from "./isEqual";
-
-export interface FailedFile {
-	fileName: string;
-	reason: string;
-}
-
-export interface UploadResults {
-	errorMessage: string | null;
-	failedFiles: FailedFile[];
-	filesUploadResult: UploadAdfFileResult[];
-}
 
 export interface LocalAdfFileTreeNode {
 	name: string;
@@ -106,23 +93,25 @@ export interface UploadAdfFileResult {
 }
 
 export class Publisher {
-	confluenceClient: RequiredConfluenceClient;
-	adaptor: LoaderAdaptor;
-	mermaidRenderer: MermaidRenderer;
-	myAccountId: string | undefined;
-	settingsLoader: SettingsLoader;
+	private confluenceClient: RequiredConfluenceClient;
+	private adaptor: LoaderAdaptor;
+	private myAccountId: string | undefined;
+	private settingsLoader: SettingsLoader;
+	private adfProcessingPlugins: ADFProcessingPlugin<unknown, unknown>[];
 
 	constructor(
 		adaptor: LoaderAdaptor,
 		settingsLoader: SettingsLoader,
 		confluenceClient: RequiredConfluenceClient,
-		mermaidRenderer: MermaidRenderer
+		adfProcessingPlugins: ADFProcessingPlugin<unknown, unknown>[]
 	) {
 		this.adaptor = adaptor;
 		this.settingsLoader = settingsLoader;
-		this.mermaidRenderer = mermaidRenderer;
 
 		this.confluenceClient = confluenceClient;
+		this.adfProcessingPlugins = adfProcessingPlugins.concat(
+			AlwaysADFProcessingPlugins
+		);
 	}
 
 	async publish(publishFilter?: string) {
@@ -168,32 +157,6 @@ export class Publisher {
 
 		const adrFiles = await Promise.all(adrFileTasks);
 		return adrFiles;
-	}
-
-	async doPublish(publishFilter?: string): Promise<UploadResults> {
-		const adrFiles = await this.publish(publishFilter);
-
-		const returnVal: UploadResults = {
-			errorMessage: null,
-			failedFiles: [],
-			filesUploadResult: [],
-		};
-
-		adrFiles.forEach((element) => {
-			if (element.successfulUploadResult) {
-				returnVal.filesUploadResult.push(
-					element.successfulUploadResult
-				);
-				return;
-			}
-
-			returnVal.failedFiles.push({
-				fileName: element.node.file.absoluteFilePath,
-				reason: element.reason ?? "No Reason Provided",
-			});
-		});
-
-		return returnVal;
 	}
 
 	private async publishFile(
@@ -251,12 +214,38 @@ export class Publisher {
 			imageResult: "same",
 			labelResult: "same",
 		};
-		const imageUploadResult = await this.uploadFiles(
+
+		const currentUploadedAttachments =
+			await this.confluenceClient.contentAttachments.getAttachments({
+				id: adfFile.pageId,
+			});
+
+		const currentAttachments: CurrentAttachments =
+			currentUploadedAttachments.results.reduce((prev, curr) => {
+				return {
+					...prev,
+					[`${curr.title}`]: {
+						filehash: curr.metadata.comment,
+						attachmentId: curr.extensions.fileId,
+						collectionName: curr.extensions.collectionName,
+					},
+				};
+			}, {});
+
+		const supportFunctions = createPublisherFunctions(
+			this.confluenceClient,
+			this.adaptor,
 			adfFile.pageId,
 			adfFile.absoluteFilePath,
-			adfFile.contents
+			currentAttachments
+		);
+		const adfToUpload = await executeADFProcessingPipeline(
+			this.adfProcessingPlugins,
+			adfFile.contents,
+			supportFunctions
 		);
 
+		/*
 		const imageResult = Object.keys(imageUploadResult.imageMap).reduce(
 			(prev, curr) => {
 				const value = imageUploadResult.imageMap[curr];
@@ -274,11 +263,16 @@ export class Publisher {
 				uploaded: 0,
 			} as Record<string, number>
 		);
+		*/
 
+		/*
 		if (!adfEqual(adfFile.contents, imageUploadResult.adf)) {
 			result.imageResult =
 				(imageResult["uploaded"] ?? 0) > 0 ? "updated" : "same";
 		}
+		*/
+
+		result.imageResult = "updated";
 
 		const existingPageDetails = {
 			title: existingPageData.pageTitle,
@@ -303,7 +297,7 @@ export class Publisher {
 		};
 
 		if (
-			!adfEqual(existingPageData.adfContent, imageUploadResult.adf) ||
+			!adfEqual(existingPageData.adfContent, adfToUpload) ||
 			!isEqual(existingPageDetails, newPageDetails)
 		) {
 			result.contentResult = "updated";
@@ -313,7 +307,7 @@ export class Publisher {
 				typeof value === "undefined" ? null : value;
 
 			console.log(JSON.stringify(existingPageData.adfContent, replacer));
-			console.log(JSON.stringify(imageUploadResult.adf, replacer));
+			console.log(JSON.stringify(adfToUpload, replacer));
 
 			const updateContentDetails = {
 				...newPageDetails,
@@ -322,7 +316,7 @@ export class Publisher {
 				body: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
 					atlas_doc_format: {
-						value: JSON.stringify(imageUploadResult.adf),
+						value: JSON.stringify(adfToUpload),
 						representation: "atlas_doc_format",
 					},
 				},
@@ -375,190 +369,5 @@ export class Publisher {
 		}
 
 		return result;
-	}
-
-	private async uploadFiles(
-		pageId: string,
-		pageFilePath: string,
-		adr: JSONDocNode
-	): Promise<{
-		adf: JSONDocNode;
-		imageMap: Record<string, UploadedImageData | null>;
-	}> {
-		let imageMap: Record<string, UploadedImageData | null> = {};
-
-		const mediaNodes = filter(
-			adr,
-			(node) =>
-				node.type === "media" && (node.attrs || {})?.["type"] === "file"
-		);
-
-		const mermaidNodes = filter(
-			adr,
-			(node) =>
-				node.type == "codeBlock" &&
-				(node.attrs || {})?.["language"] === "mermaid"
-		);
-
-		const mermaidNodesToUpload = new Set(
-			mermaidNodes.map((node) => {
-				const mermaidDetails = getMermaidFileName(
-					node?.content?.at(0)?.text
-				);
-				return {
-					name: mermaidDetails.uploadFilename,
-					data: mermaidDetails.mermaidText,
-				} as ChartData;
-			})
-		).values();
-
-		const mermaidChartsAsImages =
-			await this.mermaidRenderer.captureMermaidCharts([
-				...mermaidNodesToUpload,
-			]);
-
-		const imagesToUpload = new Set(
-			mediaNodes.map((node) => node?.attrs?.["url"])
-		);
-
-		if (imagesToUpload.size === 0 && mermaidChartsAsImages.size === 0) {
-			return { adf: adr, imageMap };
-		}
-
-		const currentUploadedAttachments =
-			await this.confluenceClient.contentAttachments.getAttachments({
-				id: pageId,
-			});
-
-		const currentAttachments = currentUploadedAttachments.results.reduce(
-			(prev, curr) => {
-				return {
-					...prev,
-					[`${curr.title}`]: {
-						filehash: curr.metadata.comment,
-						attachmentId: curr.extensions.fileId,
-						collectionName: curr.extensions.collectionName,
-					},
-				};
-			},
-			{}
-		);
-
-		for (const imageUrl of imagesToUpload.values()) {
-			const filename = imageUrl.split("://")[1];
-			const uploadedContent = await uploadFile(
-				this.confluenceClient,
-				this.adaptor,
-				pageId,
-				pageFilePath,
-				filename,
-				currentAttachments
-			);
-
-			imageMap = {
-				...imageMap,
-				[imageUrl]: uploadedContent,
-			};
-		}
-
-		for (const mermaidImage of mermaidChartsAsImages) {
-			const uploadedContent = await uploadBuffer(
-				this.confluenceClient,
-				pageId,
-				mermaidImage[0],
-				mermaidImage[1],
-				currentAttachments
-			);
-
-			imageMap = {
-				...imageMap,
-				[mermaidImage[0]]: uploadedContent,
-			};
-		}
-
-		let afterAdf = adr as ADFEntity;
-
-		afterAdf =
-			traverse(adr, {
-				media: (node, _parent) => {
-					if (node?.attrs?.["type"] === "file") {
-						if (!imageMap[node?.attrs?.["url"]]) {
-							return;
-						}
-						const mappedImage = imageMap[node.attrs["url"]];
-						if (mappedImage) {
-							node.attrs["collection"] = mappedImage.collection;
-							node.attrs["id"] = mappedImage.id;
-							node.attrs["width"] = mappedImage.width;
-							node.attrs["height"] = mappedImage.height;
-							delete node.attrs["url"];
-							return node;
-						}
-					}
-					return;
-				},
-				codeBlock: (node, _parent) => {
-					if (node?.attrs?.["language"] === "mermaid") {
-						const mermaidContent = node?.content?.at(0)?.text;
-						if (!mermaidContent) {
-							return;
-						}
-						const mermaidFilename =
-							getMermaidFileName(mermaidContent);
-
-						if (!imageMap[mermaidFilename.uploadFilename]) {
-							return;
-						}
-						const mappedImage =
-							imageMap[mermaidFilename.uploadFilename];
-						if (mappedImage) {
-							node.type = "mediaSingle";
-							node.attrs["layout"] = "center";
-							if (node.content) {
-								node.content = [
-									{
-										type: "media",
-										attrs: {
-											type: "file",
-											collection: mappedImage.collection,
-											id: mappedImage.id,
-											width: mappedImage.width,
-											height: mappedImage.height,
-										},
-									},
-								];
-							}
-							delete node.attrs["language"];
-							return node;
-						}
-					}
-					return;
-				},
-			}) || afterAdf;
-
-		// Remove bad images. Confluence will do this as well so we do it to make our ADF match theirs.
-		afterAdf =
-			traverse(afterAdf, {
-				mediaSingle: (node, _parent) => {
-					if (!node || !node.content) {
-						return;
-					}
-					if (
-						node.content.at(0)?.attrs?.["url"] !== undefined &&
-						(
-							node.content.at(0)?.attrs?.["url"] as string
-						).startsWith("file://")
-					) {
-						return p("Invalid Image Path");
-					}
-					return;
-				},
-			}) || afterAdf;
-
-		if (!afterAdf) {
-			return { adf: adr as JSONDocNode, imageMap };
-		}
-
-		return { adf: afterAdf as JSONDocNode, imageMap };
 	}
 }

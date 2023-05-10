@@ -33,6 +33,8 @@
       "esModuleInterop":true,
       "declaration":true,
       "declarationMap":true,
+      "forceConsistentCasingInFileNames": true,
+      "newLine": "lf",
       "lib":[
          "DOM",
          "ES5",

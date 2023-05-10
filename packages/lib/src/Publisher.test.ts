@@ -10,7 +10,6 @@ import {
 } from "./adaptors";
 import { orderMarks } from "./AdfEqual";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
-import { ChartData, MermaidRenderer } from "./mermaid_renderers";
 import { Publisher } from "./Publisher";
 import {
 	AutoSettingsLoader,
@@ -18,6 +17,11 @@ import {
 	EnvironmentVariableSettingsLoader,
 	StaticSettingsLoader,
 } from "./SettingsLoader";
+import {
+	ChartData,
+	MermaidRenderer,
+	MermaidRendererPlugin,
+} from "./ADFProcessingPlugins/MermaidRendererPlugin";
 
 const settingsLoader = new AutoSettingsLoader();
 const settings = settingsLoader.load();
@@ -290,7 +294,7 @@ test("Upload to Confluence", async () => {
 		filesystemAdaptor,
 		publisherSettingsLoader,
 		confluenceClient,
-		mermaidRenderer
+		[new MermaidRendererPlugin(mermaidRenderer)]
 	);
 
 	const result = await publisher.publish();

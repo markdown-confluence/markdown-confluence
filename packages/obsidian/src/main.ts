@@ -5,6 +5,8 @@ import {
 	ConfluencePageConfig,
 	StaticSettingsLoader,
 	renderADFDoc,
+	MermaidRendererPlugin,
+	UploadAdfFileResult,
 } from "@markdown-confluence/lib";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
@@ -28,6 +30,17 @@ export interface ObsidianPluginSettings
 		| "neutral"
 		| "dark"
 		| "forest";
+}
+
+interface FailedFile {
+	fileName: string;
+	reason: string;
+}
+
+interface UploadResults {
+	errorMessage: string | null;
+	failedFiles: FailedFile[];
+	filesUploadResult: UploadAdfFileResult[];
 }
 
 export default class ConfluencePlugin extends Plugin {
@@ -74,7 +87,7 @@ export default class ConfluencePlugin extends Plugin {
 			this.adaptor,
 			settingsLoader,
 			confluenceClient,
-			mermaidRenderer
+			[new MermaidRendererPlugin(mermaidRenderer)]
 		);
 	}
 
@@ -149,6 +162,32 @@ export default class ConfluencePlugin extends Plugin {
 		};
 	}
 
+	async doPublish(publishFilter?: string): Promise<UploadResults> {
+		const adrFiles = await this.publisher.publish(publishFilter);
+
+		const returnVal: UploadResults = {
+			errorMessage: null,
+			failedFiles: [],
+			filesUploadResult: [],
+		};
+
+		adrFiles.forEach((element) => {
+			if (element.successfulUploadResult) {
+				returnVal.filesUploadResult.push(
+					element.successfulUploadResult
+				);
+				return;
+			}
+
+			returnVal.failedFiles.push({
+				fileName: element.node.file.absoluteFilePath,
+				reason: element.reason ?? "No Reason Provided",
+			});
+		});
+
+		return returnVal;
+	}
+
 	override async onload() {
 		await this.init();
 
@@ -159,7 +198,7 @@ export default class ConfluencePlugin extends Plugin {
 			}
 			this.isSyncing = true;
 			try {
-				const stats = await this.publisher.doPublish();
+				const stats = await this.doPublish();
 				new CompletedModal(this.app, {
 					uploadResults: stats,
 				}).open();
@@ -225,8 +264,7 @@ export default class ConfluencePlugin extends Plugin {
 				if (!this.isSyncing) {
 					if (!checking) {
 						this.isSyncing = true;
-						this.publisher
-							.doPublish(this.activeLeafPath(this.workspace))
+						this.doPublish(this.activeLeafPath(this.workspace))
 							.then((stats) => {
 								new CompletedModal(this.app, {
 									uploadResults: stats,
@@ -268,8 +306,7 @@ export default class ConfluencePlugin extends Plugin {
 				if (!this.isSyncing) {
 					if (!checking) {
 						this.isSyncing = true;
-						this.publisher
-							.doPublish()
+						this.doPublish()
 							.then((stats) => {
 								new CompletedModal(this.app, {
 									uploadResults: stats,
