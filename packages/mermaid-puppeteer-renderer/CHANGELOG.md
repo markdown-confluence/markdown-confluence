@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.2.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v5.2.0...@markdown-confluence/mermaid-puppeteer-renderer-v5.2.1) (2023-05-10)
+
+
+### Bug Fixes
+
+* Write out puppeteer launch options to see why it can't find the browser ([fb3ca7f](https://github.com/markdown-confluence/markdown-confluence/commit/fb3ca7f0a34e2202cdc62e6dd89f573cd434a0d4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.2.0 to 5.2.1
+
 ## [5.2.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v5.1.0...@markdown-confluence/mermaid-puppeteer-renderer-v5.2.0) (2023-05-09)
 
 
