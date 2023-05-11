@@ -1,4 +1,4 @@
-import { ConfluenceSettings } from "src/Settings";
+import { ConfluenceSettings } from "../Settings";
 import { BinaryFile, FilesToUpload, LoaderAdaptor, MarkdownFile } from ".";
 import { lookup } from "mime-types";
 import { existsSync, lstatSync } from "fs";
@@ -197,6 +197,14 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 		fileName: string,
 		startingDirectory: string
 	): Promise<string | null> {
+		const potentialAbsolutePathForFileName = path.join(
+			startingDirectory,
+			fileName
+		);
+		if (await isFile(potentialAbsolutePathForFileName)) {
+			return potentialAbsolutePathForFileName;
+		}
+
 		const matchingFiles: string[] = [];
 		const directoriesToSearch: string[] = [startingDirectory];
 
@@ -239,5 +247,14 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 		}
 
 		return await this.findClosestFile(fileName, parentDirectory);
+	}
+}
+
+async function isFile(filePath: string): Promise<boolean> {
+	try {
+		const stats = await fs.stat(filePath);
+		return stats.isFile();
+	} catch (error: unknown) {
+		return false; // Just return false instead of rethrowing any other errors.
 	}
 }
