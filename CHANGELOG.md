@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.6](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.5...obsidian-confluence-root-v5.2.6) (2023-05-11)
+
+
+### Bug Fixes
+
+* File test snapshots ([9944c42](https://github.com/markdown-confluence/markdown-confluence/commit/9944c4213fb58e32815ac97a5212eb4af46ea5cf))
+* Handle ![](../image.png) images ([9ee3c8c](https://github.com/markdown-confluence/markdown-confluence/commit/9ee3c8c37024a8dc1db3ac66ebb12aba9cb58140))
+
 ## [5.2.5](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.4...obsidian-confluence-root-v5.2.5) (2023-05-10)
 
 
