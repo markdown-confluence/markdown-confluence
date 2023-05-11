@@ -986,8 +986,10 @@ exports[`parses images.md 1`] = `
         "content": [
           {
             "attrs": {
-              "type": "external",
-              "url": "/path/to/image.jpg",
+              "collection": "",
+              "id": "",
+              "type": "file",
+              "url": "file:///path/to/image.jpg",
             },
             "type": "media",
           },
@@ -1001,8 +1003,10 @@ exports[`parses images.md 1`] = `
         "content": [
           {
             "attrs": {
-              "type": "external",
-              "url": "/path/to/image.jpg",
+              "collection": "",
+              "id": "",
+              "type": "file",
+              "url": "file:///path/to/image.jpg",
             },
             "type": "media",
           },
