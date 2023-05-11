@@ -83,7 +83,12 @@ export async function uploadFile(
 		{ filehash: string; attachmentId: string; collectionName: string }
 	>
 ): Promise<UploadedImageData | null> {
-	const testing = await adaptor.readBinary(fileNameToUpload, pageFilePath);
+	let fileNameForUpload = fileNameToUpload;
+	let testing = await adaptor.readBinary(fileNameForUpload, pageFilePath);
+	if (!testing) {
+		fileNameForUpload = decodeURI(fileNameForUpload);
+		testing = await adaptor.readBinary(fileNameForUpload, pageFilePath);
+	}
 	if (testing) {
 		const spark = new SparkMD5.ArrayBuffer();
 		const currentFileMd5 = spark.append(testing.contents).end();
@@ -95,7 +100,7 @@ export async function uploadFile(
 		const fileInCurrentAttachments = currentAttachments[uploadFilename];
 		if (fileInCurrentAttachments?.filehash === currentFileMd5) {
 			return {
-				filename: fileNameToUpload,
+				filename: fileNameForUpload,
 				id: fileInCurrentAttachments.attachmentId,
 				collection: fileInCurrentAttachments.collectionName,
 				width: imageSize.width ?? 0,
@@ -127,7 +132,7 @@ export async function uploadFile(
 		}
 
 		return {
-			filename: fileNameToUpload,
+			filename: fileNameForUpload,
 			id: attachmentUploadResponse.extensions.fileId,
 			collection: `contentId-${attachmentUploadResponse.container.id}`,
 			width: imageSize.width ?? 0,

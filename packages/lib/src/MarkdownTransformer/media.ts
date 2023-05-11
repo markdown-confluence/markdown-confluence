@@ -52,9 +52,15 @@ function createRule() {
 			if (res.ok) {
 				const href = State.md.normalizeLink(res.str);
 				if (State.md.validateLink(href)) {
+					if (href.startsWith("http")) {
+						return [
+							["url", href],
+							["type", "external"],
+						];
+					}
 					return [
-						["url", href],
-						["type", "external"],
+						["url", `file://${href}`],
+						["type", "file"],
 					];
 				}
 			}
