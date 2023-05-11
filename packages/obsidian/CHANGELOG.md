@@ -7,6 +7,21 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [5.3.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.2.6...obsidian-confluence-v5.3.0) (2023-05-11)
+
+
+### Features
+
+* Move ImageUpload and MermaidRendering to plugins to allow for more plugins easily ([cfae670](https://github.com/markdown-confluence/markdown-confluence/commit/cfae670d3bc94c4a88d02936c94ca9c1ab47ce9e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.2.6 to 5.3.0
+    * @markdown-confluence/mermaid-electron-renderer bumped from 5.2.6 to 5.3.0
+
 ## [5.2.6](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.2.5...obsidian-confluence-v5.2.6) (2023-05-11)
 
 
