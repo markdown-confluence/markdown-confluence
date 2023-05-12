@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.4.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.3.0...obsidian-confluence-root-v5.4.0) (2023-05-12)
+
+
+### Features
+
+* Handle 404 when pageId included in YAML. Set to not publish and remove bad pageId ([33dde01](https://github.com/markdown-confluence/markdown-confluence/commit/33dde014ccc24368f065eec0a92dba3755644fc8))
+
 ## [5.3.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.2.6...obsidian-confluence-root-v5.3.0) (2023-05-11)
 
 
