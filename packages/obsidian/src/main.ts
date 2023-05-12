@@ -80,6 +80,16 @@ export default class ConfluencePlugin extends Plugin {
 					apiToken: this.settings.atlassianApiToken,
 				},
 			},
+			middlewares: {
+				onError(e) {
+					if ("response" in e && "data" in e.response) {
+						e.message =
+							typeof e.response.data === "string"
+								? e.response.data
+								: JSON.stringify(e.response.data);
+					}
+				},
+			},
 		});
 
 		const settingsLoader = new StaticSettingsLoader(this.settings);

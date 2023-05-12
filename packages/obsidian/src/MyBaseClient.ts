@@ -145,11 +145,18 @@ export class MyBaseClient implements Client {
 				body: requestBody[1],
 				method: requestConfig.method?.toUpperCase() ?? "GET",
 				contentType: requestContentType,
-				throw: true,
+				throw: false,
 			};
 			delete modifiedRequestConfig.data;
 
 			const response = await requestUrl(modifiedRequestConfig);
+
+			if (response.status >= 400) {
+				throw new HTTPError(`Received a ${response.status}`, {
+					status: response.status,
+					data: response.text,
+				});
+			}
 
 			const callbackResponseHandler =
 				callback && ((data: T): void => callback(null, data));
@@ -181,6 +188,20 @@ export class MyBaseClient implements Client {
 
 			return errorHandler(err);
 		}
+	}
+}
+
+export interface ErrorData {
+	data: unknown;
+	status: number;
+}
+
+export class HTTPError extends Error {
+	constructor(msg: string, public response: ErrorData) {
+		super(msg);
+
+		// Set the prototype explicitly.
+		Object.setPrototypeOf(this, HTTPError.prototype);
 	}
 }
 

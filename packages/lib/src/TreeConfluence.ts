@@ -157,35 +157,59 @@ async function ensurePageExists(
 	topPageId: string
 ) {
 	if (file.pageId) {
-		const contentById = await confluenceClient.content.getContentById({
-			id: file.pageId,
-			expand: ["version", "body.atlas_doc_format", "ancestors", "space"],
-		});
+		try {
+			const contentById = await confluenceClient.content.getContentById({
+				id: file.pageId,
+				expand: [
+					"version",
+					"body.atlas_doc_format",
+					"ancestors",
+					"space",
+				],
+			});
 
-		if (!contentById.space?.key) {
-			throw new Error("Missing Space Key");
+			if (!contentById.space?.key) {
+				throw new Error("Missing Space Key");
+			}
+
+			await adaptor.updateMarkdownValues(file.absoluteFilePath, {
+				publish: true,
+				pageId: contentById.id,
+			});
+
+			return {
+				id: contentById.id,
+				title: file.pageTitle,
+				version: contentById?.version?.number ?? 1,
+				lastUpdatedBy:
+					contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
+				existingAdf: contentById?.body?.atlas_doc_format?.value,
+				spaceKey: contentById.space.key,
+				pageTitle: contentById.title,
+				ancestors:
+					contentById.ancestors?.map((ancestor) => ({
+						id: ancestor.id,
+					})) ?? [],
+				contentType: contentById.type,
+			} as const;
+		} catch (error: unknown) {
+			if (
+				error instanceof Error &&
+				"response" in error &&
+				typeof error.response === "object" &&
+				error.response &&
+				"status" in error.response &&
+				typeof error.response.status === "number" &&
+				error.response.status === 404
+			) {
+				await adaptor.updateMarkdownValues(file.absoluteFilePath, {
+					publish: false,
+					pageId: undefined,
+				});
+			}
+
+			throw error;
 		}
-
-		await adaptor.updateMarkdownValues(file.absoluteFilePath, {
-			publish: true,
-			pageId: contentById.id,
-		});
-
-		return {
-			id: contentById.id,
-			title: file.pageTitle,
-			version: contentById?.version?.number ?? 1,
-			lastUpdatedBy:
-				contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
-			existingAdf: contentById?.body?.atlas_doc_format?.value,
-			spaceKey: contentById.space.key,
-			pageTitle: contentById.title,
-			ancestors:
-				contentById.ancestors?.map((ancestor) => ({
-					id: ancestor.id,
-				})) ?? [],
-			contentType: contentById.type,
-		} as const;
 	}
 
 	const searchParams = {

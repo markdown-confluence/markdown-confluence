@@ -27,7 +27,16 @@ async function main() {
 				apiToken: settings.atlassianApiToken,
 			},
 		},
-		newErrorHandling: true,
+		middlewares: {
+			onError(e) {
+				if ("response" in e && "data" in e.response) {
+					e.message =
+						typeof e.response.data === "string"
+							? e.response.data
+							: JSON.stringify(e.response.data);
+				}
+			},
+		},
 	});
 
 	const publisher = new Publisher(adaptor, settingLoader, confluenceClient, [

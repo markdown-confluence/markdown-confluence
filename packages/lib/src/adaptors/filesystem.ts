@@ -83,7 +83,13 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 			const value =
 				values[propertyKey as keyof ConfluencePerPageAllValues];
 			if (propertyKey in values) {
-				fm[key] = value;
+				if (value) {
+					fm[key] = value;
+				} else {
+					if (key in fileContent.data) {
+						delete fileContent.data[key];
+					}
+				}
 			}
 		}
 
