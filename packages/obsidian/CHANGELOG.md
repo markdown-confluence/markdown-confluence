@@ -7,6 +7,21 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [5.4.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.3.0...obsidian-confluence-v5.4.0) (2023-05-12)
+
+
+### Features
+
+* Handle 404 when pageId included in YAML. Set to not publish and remove bad pageId ([33dde01](https://github.com/markdown-confluence/markdown-confluence/commit/33dde014ccc24368f065eec0a92dba3755644fc8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.3.0 to 5.4.0
+    * @markdown-confluence/mermaid-electron-renderer bumped from 5.3.0 to 5.4.0
+
 ## [5.3.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.2.6...obsidian-confluence-v5.3.0) (2023-05-11)
 
 
