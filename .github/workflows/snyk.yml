@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
+        uses: snyk/actions/node@b98d498629f1c368650224d6d212bf7dfa89e4bf # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
           category: "Snyk Open Source"
 
       - name: Run Snyk to check for vulnerabilities (monitor)
-        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
+        uses: snyk/actions/node@b98d498629f1c368650224d6d212bf7dfa89e4bf # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
       - name: Run Snyk to scan for bad code
-        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
+        uses: snyk/actions/node@b98d498629f1c368650224d6d212bf7dfa89e4bf # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -97,7 +97,7 @@ jobs:
           npm run build:docker -ws --if-present
 
       - name: Run Snyk to check for vulnerabilities (monitor)
-        uses: snyk/actions/docker@806182742461562b67788a64410098c9d9b96adb # master
+        uses: snyk/actions/docker@b98d498629f1c368650224d6d212bf7dfa89e4bf # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -108,7 +108,7 @@ jobs:
 
       - name: Run Snyk to check Docker image for vulnerabilities
         continue-on-error: true
-        uses: snyk/actions/docker@806182742461562b67788a64410098c9d9b96adb
+        uses: snyk/actions/docker@b98d498629f1c368650224d6d212bf7dfa89e4bf
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -134,7 +134,7 @@ jobs:
 
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Run Snyk to create SBOM
-        uses: snyk/actions/node@806182742461562b67788a64410098c9d9b96adb # master
+        uses: snyk/actions/node@b98d498629f1c368650224d6d212bf7dfa89e4bf # master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
