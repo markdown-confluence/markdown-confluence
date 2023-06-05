@@ -34,7 +34,7 @@ jobs:
           args: --sarif-file-output=snyk.sarif --all-projects --dev --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --prune-repeated-subdependencies
 
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@0225834cc549ee0ca93cb085b92954821a145866 # v2.3.5
+        uses: github/codeql-action/upload-sarif@83f0fe6c4988d98a455712a27f0255212bba9bd4 # v2.3.6
         with:
           sarif_file: snyk.sarif
           category: "Snyk Open Source"
@@ -72,7 +72,7 @@ jobs:
           args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --sarif-file-output=snyk-code.sarif
         
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@0225834cc549ee0ca93cb085b92954821a145866 # v2.3.5
+        uses: github/codeql-action/upload-sarif@83f0fe6c4988d98a455712a27f0255212bba9bd4 # v2.3.6
         with:
           sarif_file: snyk-code.sarif
           category: "Snyk Code"
@@ -116,7 +116,7 @@ jobs:
           args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --file=packages/cli/Dockerfile
 
       - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@0225834cc549ee0ca93cb085b92954821a145866 # v2.3.5
+        uses: github/codeql-action/upload-sarif@83f0fe6c4988d98a455712a27f0255212bba9bd4 # v2.3.6
         with:
           sarif_file: snyk.sarif
 
