@@ -48,7 +48,7 @@
         "@atlaskit/editor-common": "^74.2.1",
         "@atlaskit/editor-json-transformer": "^8.9.3",
         "confluence.js": "^1.6.3",
-        "formdata-node": "^5.0.0",
+        "formdata-node": "^5.0.1",
         "glob": "^10.2.7",
         "gray-matter": "^4.0.3",
         "image-size": "^1.0.2",
