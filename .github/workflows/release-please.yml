@@ -94,7 +94,7 @@ jobs:
 
       - name: Build and push Docker image
         if: ${{ steps.release-please.outputs.release_created }}
-        uses: docker/build-push-action@91df6b874e498451163feb47610c87c4a218c1ee
+        uses: docker/build-push-action@44ea916f6c540f9302d50c2b1e5a8dc071f15cdf
         with:
           context: packages/cli
           push: true
