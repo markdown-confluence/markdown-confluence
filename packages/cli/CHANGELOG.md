@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.4.0...@markdown-confluence/cli-v5.5.0) (2023-06-29)
+
+
+### Bug Fixes
+
+* yargs is a dep of lib not cli ([aca0a8b](https://github.com/markdown-confluence/markdown-confluence/commit/aca0a8bd259703850b6694c9f1bec01ac7d8205f))
+
+
+### Dependencies
+
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([2cd503f](https://github.com/markdown-confluence/markdown-confluence/commit/2cd503f4f41ba04038111c8c305d6d8a7a9cab8c))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([9af5ed9](https://github.com/markdown-confluence/markdown-confluence/commit/9af5ed9d86eb90a19f9445ab22a808b22f9a4733))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([bd8fa02](https://github.com/markdown-confluence/markdown-confluence/commit/bd8fa026d71420520c0d338ff7bc7a88c3dd0547))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([6a6fc35](https://github.com/markdown-confluence/markdown-confluence/commit/6a6fc35a119c98ef6b17990b730ec2a0dc71485f))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([ccb7cc0](https://github.com/markdown-confluence/markdown-confluence/commit/ccb7cc030be9816a4d61b67288fa70d948003e49))
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped from 5.4.0 to 5.5.0
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 5.4.0 to 5.5.0
+
 ## [5.4.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.3.0...@markdown-confluence/cli-v5.4.0) (2023-05-12)
 
 

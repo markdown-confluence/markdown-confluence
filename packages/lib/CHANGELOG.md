@@ -1,5 +1,34 @@
 # Changelog
 
+## [5.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.4.0...@markdown-confluence/lib-v5.5.0) (2023-06-29)
+
+
+### Features
+
+* **FolderNote:** Add README.md and readme.md as options for folder note file names ([81ee277](https://github.com/markdown-confluence/markdown-confluence/commit/81ee277694e742aa4ab0202d7ba8e563a5a67b95))
+
+
+### Bug Fixes
+
+* yargs is a dep of lib not cli ([aca0a8b](https://github.com/markdown-confluence/markdown-confluence/commit/aca0a8bd259703850b6694c9f1bec01ac7d8205f))
+
+
+### Dependencies
+
+* **deps:** bump @atlaskit/adf-schema from 25.6.2 to 25.6.4 ([fa96d3d](https://github.com/markdown-confluence/markdown-confluence/commit/fa96d3da4605f506c99af4d9165c5c5188569e49))
+* **deps:** bump @atlaskit/adf-utils from 18.2.1 to 18.2.3 ([ebc6895](https://github.com/markdown-confluence/markdown-confluence/commit/ebc6895901a1c68f45d9493477ac1aec7b959032))
+* **deps:** bump @atlaskit/adf-utils from 18.4.1 to 18.4.2 ([2d63294](https://github.com/markdown-confluence/markdown-confluence/commit/2d632945a34f5ddc4a733266a320104cb532bf4a))
+* **deps:** bump @atlaskit/editor-common from 72.9.0 to 74.0.1 ([769f692](https://github.com/markdown-confluence/markdown-confluence/commit/769f6920c6982d9b094ab07eeeaa3f9ad2fbd427))
+* **deps:** bump @atlaskit/editor-common from 74.1.1 to 74.2.1 ([366135b](https://github.com/markdown-confluence/markdown-confluence/commit/366135b478f3178b8293767b1c97fa797fabb6ca))
+* **deps:** bump @atlaskit/editor-common from 74.2.1 to 74.7.8 ([6287545](https://github.com/markdown-confluence/markdown-confluence/commit/628754593d35675d607450f59ee5123afc92e5ac))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.8.4 to 8.9.1 ([cc6b4a9](https://github.com/markdown-confluence/markdown-confluence/commit/cc6b4a91881024b224d79bcd8f1082c8b4c681d0))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.9.1 to 8.9.3 ([ce755a7](https://github.com/markdown-confluence/markdown-confluence/commit/ce755a776f88f3b62c3e335d6685b7d769bcf154))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.9.3 to 8.9.4 ([dee45c7](https://github.com/markdown-confluence/markdown-confluence/commit/dee45c7cdfbb48cf56a2582417af677982c87212))
+* **deps:** bump formdata-node from 5.0.0 to 5.0.1 ([16322c8](https://github.com/markdown-confluence/markdown-confluence/commit/16322c8e7e6da247f592fcb1633b80170e7ebe97))
+* **deps:** bump glob from 10.2.2 to 10.2.4 ([94bbf5b](https://github.com/markdown-confluence/markdown-confluence/commit/94bbf5bb29d9f1d2e0b950b5e18a0f8566122e6f))
+* **deps:** bump glob from 10.2.4 to 10.2.7 ([ecb7c77](https://github.com/markdown-confluence/markdown-confluence/commit/ecb7c77327cf699adc5471ac51af397f3b5dadb8))
+* **deps:** bump prosemirror-markdown from 1.10.1 to 1.11.0 ([9d6ac07](https://github.com/markdown-confluence/markdown-confluence/commit/9d6ac07ba8be7b8315e0a9e6e53e6b075f7e1c54))
+
 ## [5.4.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.3.0...@markdown-confluence/lib-v5.4.0) (2023-05-12)
 
 

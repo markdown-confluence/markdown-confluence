@@ -6,6 +6,17 @@
   * dependencies
     * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
 
+## [5.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v5.4.0...@markdown-confluence/mermaid-electron-renderer-v5.5.0) (2023-06-29)
+
+
+### Dependencies
+
+* **deps:** bump mermaid from 10.1.0 to 10.2.0 ([d2b2080](https://github.com/markdown-confluence/markdown-confluence/commit/d2b208067789868d4ac1072e07688183e2faf9f3))
+* **deps:** bump mermaid from 10.2.0 to 10.2.3 ([d04cd97](https://github.com/markdown-confluence/markdown-confluence/commit/d04cd97bbfe123e00f99578b079af7183f1df850))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.4.0 to 5.5.0
+
 ## [5.4.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v5.3.0...@markdown-confluence/mermaid-electron-renderer-v5.4.0) (2023-05-12)
 
 
