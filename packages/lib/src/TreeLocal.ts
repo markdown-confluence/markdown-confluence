@@ -69,8 +69,10 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 		);
 		if (!indexFile) {
 			// Support FolderFile with a file name of "index.md"
-			indexFile = node.children.find(
-				(child) => path.parse(child.name).name === "index"
+			indexFile = node.children.find((child) =>
+				["index", "README", "readme"].includes(
+					path.parse(child.name).name
+				)
 			);
 		}
 
