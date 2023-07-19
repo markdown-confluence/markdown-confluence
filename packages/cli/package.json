@@ -17,7 +17,7 @@
     "license": "Apache 2.0",
     "devDependencies": {
         "confluence.js": "^1.6.3",
-        "boxen": "7.1.0",
+        "boxen": "7.1.1",
         "chalk": "5.3.0",
         "@markdown-confluence/lib": "5.5.0",
         "@markdown-confluence/mermaid-puppeteer-renderer": "5.5.0"
