@@ -39,7 +39,7 @@
         "@types/prosemirror-view": "^1.23.1",
         "@types/spark-md5": "^3.0.2",
         "@types/uuid": "^9.0.2",
-        "jest": "^29.5.0",
+        "jest": "^29.6.1",
         "markdown-it": "^13.0.1"
     },
     "dependencies": {
