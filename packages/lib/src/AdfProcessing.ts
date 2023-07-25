@@ -671,19 +671,17 @@ function processWikilinkToActualLink(
 				) {
 					const wikilinkUrl = new URL(node.marks[0].attrs["href"]);
 
+					const pathName = decodeURI(wikilinkUrl.pathname);
 					const pagename =
 						wikilinkUrl.pathname !== ""
-							? `${wikilinkUrl.pathname}.md`
+							? `${pathName}.md`
 							: currentFileName;
 					const linkPage = fileToPageIdMap[pagename];
 
 					if (linkPage) {
 						const confluenceUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
 						node.marks[0].attrs["href"] = confluenceUrl;
-						if (
-							node.text ===
-							`${wikilinkUrl.pathname}${wikilinkUrl.hash}`
-						) {
+						if (node.text === `${pathName}${wikilinkUrl.hash}`) {
 							node.type = "inlineCard";
 							node.attrs = {
 								url: node.marks[0].attrs["href"],
@@ -706,7 +704,7 @@ function processWikilinkToActualLink(
 					node = {
 						type: "mention",
 						attrs: {
-							id: mentionUrl.pathname,
+							id: decodeURI(mentionUrl.pathname),
 							text: node.text,
 						},
 					};
