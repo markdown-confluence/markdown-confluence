@@ -3,7 +3,7 @@ import type StateCore from "markdown-it/lib/rules_core/state_core";
 import Token from "markdown-it/lib/token";
 
 const panelRegex =
-	/\[!(?<calloutType>.*)](?<collapseType>[+-])*[ \t]*(?<title>.*)*/;
+	/\[!(?<calloutType>.*?)\](?<collapseType>[+-])?[ \t]*(?<title>.*)/;
 
 //panelType Options: "info", "note", "warning", "success", "error", "custom"
 const panelTypeToAttributesMap: Record<string, [string, string][]> = {
