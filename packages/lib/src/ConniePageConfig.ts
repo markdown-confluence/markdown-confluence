@@ -112,13 +112,20 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 				settings.firstHeadingPageTitle &&
 				adfContent.content.at(0)?.type === "heading" &&
 				adfContent.content.at(0)?.content?.at(0)?.type === "text" &&
-				typeof adfContent.content.at(0)?.content?.at(0)?.text ===
-					"string"
+				typeof adfContent.content.at(0)?.content?.at(0)?.text === "string"
 			) {
-				return (
-					adfContent.content.at(0)?.content?.at(0)?.text ??
-					markdownFile.pageTitle
-				);
+				// Get the first heading text content
+				const firstHeadingText = adfContent.content.at(0)?.content?.at(0)?.text;
+
+				// if firstHeadingText is truthy
+				if (firstHeadingText) {
+					// Remove the first heading from the content
+					// as it will be used as the page title
+					// and we don't want it in the body because it will be duplicated
+					adfContent.content = adfContent.content.slice(1);
+					// set the first heading text as the page title (return early)
+					return firstHeadingText;
+				}
 			}
 			return markdownFile.pageTitle;
 		},
