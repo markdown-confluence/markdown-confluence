@@ -45,7 +45,7 @@
     "dependencies": {
         "@atlaskit/adf-schema": "^26.2.1",
         "@atlaskit/adf-utils": "^19.0.0",
-        "@atlaskit/editor-common": "^74.7.8",
+        "@atlaskit/editor-common": "^74.29.0",
         "@atlaskit/editor-json-transformer": "^8.10.3",
         "confluence.js": "^1.6.3",
         "formdata-node": "^5.0.1",
