@@ -53,7 +53,7 @@
         "gray-matter": "^4.0.3",
         "image-size": "^1.0.2",
         "lodash-es": "^4.17.21",
-        "markdown-it-table": "^2.0.4",
+        "markdown-it-table": "^4.1.0",
         "markdown-table": "^3.0.3",
         "prosemirror-markdown": "^1.11.0",
         "prosemirror-model": "1.19.3",
