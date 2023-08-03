@@ -63,7 +63,7 @@ export function wikilinks(state: StateInline): boolean {
 	state.md.inline.tokenize(state);
 	token = state.push("link_close", "a", -1);
 
-	state.pos = wikiLinkEnd + 3;
+	state.pos = wikiLinkEnd + 2;
 	state.posMax = max;
 	return true;
 }
