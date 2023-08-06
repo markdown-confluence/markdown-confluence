@@ -1,7 +1,7 @@
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { ConfluenceSettings } from "./Settings";
-import { MarkdownFile } from "./adaptors";
-import { parseMarkdownToADF } from "./MdToADF";
+import { ConfluenceSettings } from "./Settings.js";
+import { MarkdownFile } from "./adaptors/index.js";
+import { parseMarkdownToADF } from "./MdToADF.js";
 
 export type PageContentType = "page" | "blogpost";
 
@@ -37,7 +37,7 @@ type FrontmatterConfigOptions<OUT, T extends InputType> = T extends "options"
 
 export type FrontmatterConfig<
 	OUT,
-	T extends InputType
+	T extends InputType,
 > = FrontmatterConfigBase<OUT> & FrontmatterConfigOptions<OUT, T>;
 
 type ProcessFunction<IN, OUT> = (
@@ -45,7 +45,7 @@ type ProcessFunction<IN, OUT> = (
 	markdownFile: MarkdownFile,
 	alreadyParsed: Partial<ConfluencePerPageValues>,
 	settings: ConfluenceSettings,
-	adfContent: JSONDocNode
+	adfContent: JSONDocNode,
 ) => OUT | Error;
 
 export type ConfluencePerPageAllValues = {
@@ -103,7 +103,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 			markdownFile,
 			_alreadyParsed,
 			settings,
-			adfContent
+			adfContent,
 		) => {
 			if (typeof yamlValue === "string") {
 				return yamlValue;
@@ -112,10 +112,13 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 				settings.firstHeadingPageTitle &&
 				adfContent.content.at(0)?.type === "heading" &&
 				adfContent.content.at(0)?.content?.at(0)?.type === "text" &&
-				typeof adfContent.content.at(0)?.content?.at(0)?.text === "string"
+				typeof adfContent.content.at(0)?.content?.at(0)?.text ===
+					"string"
 			) {
 				// Get the first heading text content
-				const firstHeadingText = adfContent.content.at(0)?.content?.at(0)?.text;
+				const firstHeadingText = adfContent.content
+					.at(0)
+					?.content?.at(0)?.text;
 
 				// if firstHeadingText is truthy
 				if (firstHeadingText) {
@@ -145,7 +148,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 			markdownFile,
 			_alreadyParsed,
 			settings,
-			adfContent
+			adfContent,
 		) => {
 			if (yamlValue && Array.isArray(yamlValue)) {
 				let frontmatterHeader =
@@ -154,7 +157,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 					if (markdownFile.frontmatter[key]) {
 						const keyString = key.toString();
 						const valueString = JSON.stringify(
-							markdownFile.frontmatter[key]
+							markdownFile.frontmatter[key],
 						);
 						frontmatterHeader += `| ${keyString} | ${valueString} |\n`;
 					}
@@ -162,7 +165,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 
 				const newADF = parseMarkdownToADF(
 					frontmatterHeader,
-					settings.confluenceBaseUrl
+					settings.confluenceBaseUrl,
 				);
 
 				adfContent.content = [...newADF.content, ...adfContent.content];
@@ -205,7 +208,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 				valid: false,
 				errors: [
 					new Error(
-						"Page ID needs to be a string and only can contain numbers"
+						"Page ID needs to be a string and only can contain numbers",
 					),
 				],
 			};
@@ -248,7 +251,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 					valid: false,
 					errors: [
 						new Error(
-							`Blog post date needs to be a string in the format of "YYYY-MM-DD".`
+							`Blog post date needs to be a string in the format of "YYYY-MM-DD".`,
 						),
 					],
 				};
@@ -261,7 +264,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 					valid: false,
 					errors: [
 						new Error(
-							`Blog post date error. ${blogPostDateValidation.reasons?.join()}`
+							`Blog post date error. ${blogPostDateValidation.reasons?.join()}`,
 						),
 					],
 				};
@@ -274,7 +277,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 					return yamlValue;
 				} else {
 					return new Error(
-						`Blog post date error. ${blogPostDateValidation.reasons?.join()}`
+						`Blog post date error. ${blogPostDateValidation.reasons?.join()}`,
 					);
 				}
 			}
@@ -303,7 +306,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 				!["page", "blogpost"].includes(yamlValue)
 			) {
 				return Error(
-					`Provided "connie-content-type" isn't "page" or "blogpost".`
+					`Provided "connie-content-type" isn't "page" or "blogpost".`,
 				);
 			}
 
@@ -317,7 +320,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 					yamlValue !== contentType
 				) {
 					return Error(
-						`When "connie-blog-post-date" is specified "connie-content-type" must be "blogpost" or not specified.`
+						`When "connie-blog-post-date" is specified "connie-content-type" must be "blogpost" or not specified.`,
 					);
 				}
 			}
@@ -337,7 +340,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 export function processConniePerPageConfig(
 	markdownFile: MarkdownFile,
 	settings: ConfluenceSettings,
-	adfContent: JSONDocNode
+	adfContent: JSONDocNode,
 ): ConfluencePerPageValues {
 	const result: Partial<ConfluencePerPageValues> = {};
 	const config = conniePerPageConfig;
@@ -356,7 +359,7 @@ export function processConniePerPageConfig(
 				markdownFile,
 				result,
 				settings,
-				adfContent
+				adfContent,
 			) as never;
 		} else {
 			result[propertyKey as keyof ConfluencePerPageValues] =

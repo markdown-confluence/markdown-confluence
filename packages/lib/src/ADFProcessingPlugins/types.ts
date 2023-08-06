@@ -3,14 +3,14 @@ import {
 	UploadedImageData,
 	uploadBuffer,
 	uploadFile,
-} from "../Attachments";
+} from "../Attachments.js";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { LoaderAdaptor, RequiredConfluenceClient } from "../adaptors";
+import { LoaderAdaptor, RequiredConfluenceClient } from "../adaptors/index.js";
 
 export interface PublisherFunctions {
 	uploadBuffer(
 		uploadFilename: string,
-		fileBuffer: Buffer
+		fileBuffer: Buffer,
 	): Promise<UploadedImageData | null>;
 	uploadFile(fileNameToUpload: string): Promise<UploadedImageData | null>;
 }
@@ -21,7 +21,7 @@ export interface ADFProcessingPlugin<E, T> {
 	load(
 		adf: JSONDocNode,
 		transformedItems: T,
-		supportFunctions: PublisherFunctions
+		supportFunctions: PublisherFunctions,
 	): JSONDocNode;
 }
 
@@ -30,11 +30,11 @@ export function createPublisherFunctions(
 	adaptor: LoaderAdaptor,
 	pageId: string,
 	pageFilePath: string,
-	currentAttachments: CurrentAttachments
+	currentAttachments: CurrentAttachments,
 ): PublisherFunctions {
 	return {
 		uploadFile: async function (
-			fileNameToUpload: string
+			fileNameToUpload: string,
 		): Promise<UploadedImageData | null> {
 			const uploadedContent = await uploadFile(
 				confluenceClient,
@@ -42,21 +42,21 @@ export function createPublisherFunctions(
 				pageId,
 				pageFilePath,
 				fileNameToUpload,
-				currentAttachments
+				currentAttachments,
 			);
 			return uploadedContent;
 		},
 
 		uploadBuffer: async function (
 			uploadFilename: string,
-			fileBuffer: Buffer
+			fileBuffer: Buffer,
 		): Promise<UploadedImageData | null> {
 			const uploadedContent = await uploadBuffer(
 				confluenceClient,
 				pageId,
 				uploadFilename,
 				fileBuffer,
-				currentAttachments
+				currentAttachments,
 			);
 
 			return uploadedContent;
@@ -67,18 +67,18 @@ export function createPublisherFunctions(
 export async function executeADFProcessingPipeline(
 	plugins: ADFProcessingPlugin<unknown, unknown>[],
 	adf: JSONDocNode,
-	supportFunctions: PublisherFunctions
+	supportFunctions: PublisherFunctions,
 ): Promise<JSONDocNode> {
 	// Extract data in parallel
 	const extractedData = plugins.map((plugin) =>
-		plugin.extract(adf, supportFunctions)
+		plugin.extract(adf, supportFunctions),
 	);
 
 	// Transform data in parallel
 	const transformedData = await Promise.all(
 		plugins.map((plugin, index) =>
-			plugin.transform(extractedData[index], supportFunctions)
-		)
+			plugin.transform(extractedData[index], supportFunctions),
+		),
 	);
 
 	// Load transformed data synchronously using reduce

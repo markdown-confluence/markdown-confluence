@@ -148,7 +148,7 @@ export class CompletedModal extends Modal {
 		const { contentEl } = this;
 		ReactDOM.render(
 			React.createElement(CompletedView, this.uploadResults),
-			contentEl
+			contentEl,
 		);
 	}
 

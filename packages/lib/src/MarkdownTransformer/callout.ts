@@ -1,6 +1,6 @@
 import type MarkdownIt from "markdown-it/lib";
-import type StateCore from "markdown-it/lib/rules_core/state_core";
-import Token from "markdown-it/lib/token";
+import type StateCore from "markdown-it/lib/rules_core/state_core.js";
+import Token from "markdown-it/lib/token.js";
 
 const panelRegex =
 	/\[!(?<calloutType>.*?)\](?<collapseType>[+-])?[ \t]*(?<title>.*)/;
@@ -96,7 +96,12 @@ export function panel(state: StateCore): boolean {
 	let calloutStartIndex = 0;
 	let blockTitle = "";
 	const newTokens = state.tokens.reduce(
-		(previousTokens, token, currentIndex: number, allTokens) => {
+		(
+			previousTokens: Token[],
+			token: Token,
+			currentIndex: number,
+			allTokens: Token[],
+		) => {
 			let tokenToReturn = token;
 			if (token.type === "blockquote_open") {
 				let currentCheck = currentIndex + 1; // Start after this token
@@ -161,7 +166,7 @@ export function panel(state: StateCore): boolean {
 				if (check && check.length > 1) {
 					token.content = token.content.replace(
 						check[0],
-						calloutTitle
+						calloutTitle,
 					);
 					if (token.children) {
 						for (let i = 0; i < token.children.length; i++) {
@@ -169,7 +174,7 @@ export function panel(state: StateCore): boolean {
 							if (child && child.content.includes(check[0])) {
 								child.content = child.content.replace(
 									check[0],
-									calloutTitle
+									calloutTitle,
 								);
 								break;
 							}
@@ -180,7 +185,7 @@ export function panel(state: StateCore): boolean {
 
 			return [...previousTokens, tokenToReturn];
 		},
-		[] as Token[]
+		[] as Token[],
 	);
 
 	state.tokens = newTokens;

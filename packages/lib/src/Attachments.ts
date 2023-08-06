@@ -1,6 +1,6 @@
 import SparkMD5 from "spark-md5";
-import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
-import sizeOf from "image-size";
+import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors/index.js";
+import { imageSize } from "image-size";
 
 export type ConfluenceImageStatus = "existing" | "uploaded";
 
@@ -30,11 +30,11 @@ export async function uploadBuffer(
 	currentAttachments: Record<
 		string,
 		{ filehash: string; attachmentId: string; collectionName: string }
-	>
+	>,
 ): Promise<UploadedImageData | null> {
 	const spark = new SparkMD5.ArrayBuffer();
 	const currentFileMd5 = spark.append(fileBuffer).end();
-	const imageSize = await sizeOf(fileBuffer);
+	const imageSizeResult = imageSize(fileBuffer);
 
 	const fileInCurrentAttachments = currentAttachments[uploadFilename];
 	if (fileInCurrentAttachments?.filehash === currentFileMd5) {
@@ -42,8 +42,8 @@ export async function uploadBuffer(
 			filename: uploadFilename,
 			id: fileInCurrentAttachments.attachmentId,
 			collection: fileInCurrentAttachments.collectionName,
-			width: imageSize.width ?? 0,
-			height: imageSize.height ?? 0,
+			width: imageSizeResult.width ?? 0,
+			height: imageSizeResult.height ?? 0,
 			status: "existing",
 		};
 	}
@@ -63,7 +63,7 @@ export async function uploadBuffer(
 
 	const attachmentResponse =
 		await confluenceClient.contentAttachments.createOrUpdateAttachments(
-			attachmentDetails
+			attachmentDetails,
 		);
 
 	const attachmentUploadResponse = attachmentResponse.results[0];
@@ -75,8 +75,8 @@ export async function uploadBuffer(
 		filename: uploadFilename,
 		id: attachmentUploadResponse.extensions.fileId,
 		collection: `contentId-${attachmentUploadResponse.container.id}`,
-		width: imageSize.width ?? 0,
-		height: imageSize.height ?? 0,
+		width: imageSizeResult.width ?? 0,
+		height: imageSizeResult.height ?? 0,
 		status: "uploaded",
 	};
 }
@@ -87,7 +87,7 @@ export async function uploadFile(
 	pageId: string,
 	pageFilePath: string,
 	fileNameToUpload: string,
-	currentAttachments: CurrentAttachments
+	currentAttachments: CurrentAttachments,
 ): Promise<UploadedImageData | null> {
 	let fileNameForUpload = fileNameToUpload;
 	let testing = await adaptor.readBinary(fileNameForUpload, pageFilePath);
@@ -101,7 +101,7 @@ export async function uploadFile(
 		const pathMd5 = SparkMD5.hash(testing.filePath);
 		const uploadFilename = `${pathMd5}-${testing.filename}`;
 		const imageBuffer = Buffer.from(testing.contents);
-		const imageSize = await sizeOf(imageBuffer);
+		const imageSizeResult = await imageSize(imageBuffer);
 
 		const fileInCurrentAttachments = currentAttachments[uploadFilename];
 		if (fileInCurrentAttachments?.filehash === currentFileMd5) {
@@ -109,8 +109,8 @@ export async function uploadFile(
 				filename: fileNameForUpload,
 				id: fileInCurrentAttachments.attachmentId,
 				collection: fileInCurrentAttachments.collectionName,
-				width: imageSize.width ?? 0,
-				height: imageSize.height ?? 0,
+				width: imageSizeResult.width ?? 0,
+				height: imageSizeResult.height ?? 0,
 				status: "existing",
 			};
 		}
@@ -129,7 +129,7 @@ export async function uploadFile(
 
 		const attachmentResponse =
 			await confluenceClient.contentAttachments.createOrUpdateAttachments(
-				attachmentDetails
+				attachmentDetails,
 			);
 
 		const attachmentUploadResponse = attachmentResponse.results[0];
@@ -141,8 +141,8 @@ export async function uploadFile(
 			filename: fileNameForUpload,
 			id: attachmentUploadResponse.extensions.fileId,
 			collection: `contentId-${attachmentUploadResponse.container.id}`,
-			width: imageSize.width ?? 0,
-			height: imageSize.height ?? 0,
+			width: imageSizeResult.width ?? 0,
+			height: imageSizeResult.height ?? 0,
 			status: "uploaded",
 		};
 	}

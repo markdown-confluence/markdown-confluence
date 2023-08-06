@@ -6,9 +6,9 @@ import MarkdownIt from "markdown-it";
 import { markdownItTable } from "markdown-it-table";
 import { MarkdownParser } from "prosemirror-markdown";
 import { Schema, Node as PMNode } from "prosemirror-model";
-import { markdownItMedia } from "./media";
-import myTokenizer from "./callout";
-import wikilinksPlugin from "./wikilinks";
+import { markdownItMedia } from "./media.js";
+import myTokenizer from "./callout.js";
+import wikilinksPlugin from "./wikilinks.js";
 
 function filterMdToPmSchemaMapping(schema: Schema, map: any) {
 	return Object.keys(map).reduce((newMap: any, key: string) => {
@@ -177,7 +177,7 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 		this.markdownParser = new MarkdownParser(
 			schema,
 			tokenizer,
-			filterMdToPmSchemaMapping(schema, mdToPmMapping)
+			filterMdToPmSchemaMapping(schema, mdToPmMapping),
 		);
 	}
 	encode(_node: PMNode): Markdown {

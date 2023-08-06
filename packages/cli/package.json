@@ -3,6 +3,7 @@
     "version": "5.5.0",
     "description": "This CLI allows you to publish your notes to Confluence",
     "bin": "dist/index.js",
+    "type": "module",
     "scripts": {
         "dev": "node esbuild.config.mjs",
         "clidev": "npm run build && node ./dist/index.js",

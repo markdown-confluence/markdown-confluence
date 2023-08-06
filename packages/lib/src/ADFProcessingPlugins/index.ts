@@ -1,6 +1,6 @@
-import { ImageUploaderPlugin } from "./ImageUploaderPlugin";
+import { ImageUploaderPlugin } from "./ImageUploaderPlugin.js";
 
-export * from "./types";
-export * from "./MermaidRendererPlugin";
+export * from "./types.js";
+export * from "./MermaidRendererPlugin.js";
 
 export const AlwaysADFProcessingPlugins = [ImageUploaderPlugin];

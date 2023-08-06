@@ -1,11 +1,11 @@
-import { ConfluenceSettings } from "../Settings";
-import { SettingsLoader } from "./SettingsLoader";
+import { ConfluenceSettings } from "../Settings.js";
+import { SettingsLoader } from "./SettingsLoader.js";
 import yargs from "yargs";
 
 export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 	getValue<T extends keyof ConfluenceSettings>(
 		propertyKey: T,
-		envVar: string
+		envVar: string,
 	): Partial<ConfluenceSettings> {
 		const value = process.env[envVar];
 		return value ? { [propertyKey]: value } : {};

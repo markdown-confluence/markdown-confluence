@@ -1,6 +1,6 @@
 export function cleanUpUrlIfConfluence(
 	input: string,
-	confluenceBaseUrl: string
+	confluenceBaseUrl: string,
 ): string {
 	let url: URL;
 

@@ -1,13 +1,13 @@
 import path from "path";
-import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings";
-import { SettingsLoader } from "./SettingsLoader";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings.js";
+import { SettingsLoader } from "./SettingsLoader.js";
 import fs from "fs";
 import yargs from "yargs";
 
 export class ConfigFileSettingsLoader extends SettingsLoader {
 	private configPath: string = path.join(
 		process.cwd() ?? "",
-		".markdown-confluence.json"
+		".markdown-confluence.json",
 	);
 
 	constructor(configPath?: string) {
