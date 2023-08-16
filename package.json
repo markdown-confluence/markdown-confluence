@@ -14,10 +14,11 @@
    "devDependencies": {
       "@types/node": "^16.11.6",
       "@typescript-eslint/eslint-plugin": "^6.3.0",
-      "@typescript-eslint/parser": "^5.62.0",
+      "@typescript-eslint/parser": "^6.3.0",
       "builtin-modules": "3.3.0",
       "esbuild": "0.18.14",
       "esbuild-node-externals": "^1.8.0",
+      "esbuild-plugin-copy": "^2.1.1",
       "eslint": "^8.46.0",
       "eslint-config-prettier": "^8.9.0",
       "husky": "^8.0.3",
@@ -26,8 +27,7 @@
       "ts-jest": "^29.1.1",
       "ts-node": "^10.9.1",
       "tslib": "2.5.0",
-      "typescript": "5.1.6",
-      "esbuild-plugin-copy": "^2.1.1"
+      "typescript": "^5.1.6"
    },
    "workspaces": [
       "packages/lib",
