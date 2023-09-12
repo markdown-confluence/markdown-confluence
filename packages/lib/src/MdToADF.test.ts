@@ -197,6 +197,24 @@ const markdownTestCases: MarkdownFile[] = [
 			"connie-blog-post-date": "2022-01-01",
 		},
 	},
+	{
+		folderName: "tasks",
+		absoluteFilePath: "/path/to/tasks.md",
+		fileName: "tasks.md",
+		contents: `
+- Regular list item
+- [ ] Unchecked item
+- [x] Checked item
+- [*] Starred item
+- No checkbox [x] in the middle
+
+[x] non list item shouldn't get checkbox
+			`.trim(),
+		pageTitle: "Tasks",
+		frontmatter: {
+			"connie-blog-post-date": "2022-01-01",
+		},
+	},
 ];
 test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
 	const settings: ConfluenceSettings = {
