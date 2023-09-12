@@ -1344,3 +1344,111 @@ exports[`parses tables.md 1`] = `
   "tags": [],
 }
 `;
+
+exports[`parses tasks.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/tasks.md",
+  "blogPostDate": "2022-01-01",
+  "contentType": "blogpost",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "Regular list item",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "🔲 Unchecked item",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "✅ Checked item",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "⭐️ Starred item",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+          {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "No checkbox [x] in the middle",
+                    "type": "text",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          },
+        ],
+        "type": "bulletList",
+      },
+      {
+        "content": [
+          {
+            "text": "[x] non list item shouldn't get checkbox",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "tasks.md",
+  "folderName": "tasks",
+  "frontmatter": {
+    "connie-blog-post-date": "2022-01-01",
+  },
+  "pageId": undefined,
+  "pageTitle": "Tasks",
+  "publish": false,
+  "tags": [],
+}
+`;
