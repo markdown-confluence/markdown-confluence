@@ -7,6 +7,21 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [5.5.1](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.5.0...obsidian-confluence-v5.5.1) (2023-09-24)
+
+
+### Miscellaneous Chores
+
+* **obsidian-confluence:** Synchronize obsidian packages versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped from 5.5.0 to 5.5.1
+    * @markdown-confluence/mermaid-electron-renderer bumped from 5.5.0 to 5.5.1
+
 ## [5.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.4.0...obsidian-confluence-v5.5.0) (2023-06-29)
 
 

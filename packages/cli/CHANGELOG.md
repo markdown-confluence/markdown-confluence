@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.5.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.5.0...@markdown-confluence/cli-v5.5.1) (2023-09-24)
+
+
+### Dependencies
+
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([ca328b5](https://github.com/markdown-confluence/markdown-confluence/commit/ca328b5ee2d7db1f9cd1caddf10505996a414a6e))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([3621e77](https://github.com/markdown-confluence/markdown-confluence/commit/3621e775033111cb74430e8b39a1b1297d2a4f51))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([e603bdd](https://github.com/markdown-confluence/markdown-confluence/commit/e603bdd3d3a8de6aaa84823bd7c7cf820073b9f9))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([912df0e](https://github.com/markdown-confluence/markdown-confluence/commit/912df0e52e29d27292d463f484b873afcb9a967f))
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped from 5.5.0 to 5.5.1
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped from 5.5.0 to 5.5.1
+
 ## [5.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.4.0...@markdown-confluence/cli-v5.5.0) (2023-06-29)
 
 

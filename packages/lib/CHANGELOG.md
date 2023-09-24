@@ -1,5 +1,29 @@
 # Changelog
 
+## [5.5.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.5.0...@markdown-confluence/lib-v5.5.1) (2023-09-24)
+
+
+### Bug Fixes
+
+* bump markdown-it-table to v4.1.1 ([806eabe](https://github.com/markdown-confluence/markdown-confluence/commit/806eabe5e05e7981b0367e1609d3c596830a4cff))
+
+
+### Dependencies
+
+* **deps:** bump @atlaskit/adf-schema from 25.10.1 to 26.2.1 ([6bbf385](https://github.com/markdown-confluence/markdown-confluence/commit/6bbf385b3b9c071d8a86bfce8c33b6adaabb8b75))
+* **deps:** bump @atlaskit/adf-schema from 26.2.1 to 26.3.0 ([6ef97ad](https://github.com/markdown-confluence/markdown-confluence/commit/6ef97ad7c5ec8d0c413d74d1cb29ecf4d3c6f7d9))
+* **deps:** bump @atlaskit/adf-schema from 26.4.1 to 29.2.0 ([db2745c](https://github.com/markdown-confluence/markdown-confluence/commit/db2745c1a66b0b725c779d16215888ec01201598))
+* **deps:** bump @atlaskit/adf-schema in /packages/lib ([b98b6fb](https://github.com/markdown-confluence/markdown-confluence/commit/b98b6fba55316e46a0eee97761be6193eb8bf517))
+* **deps:** bump @atlaskit/adf-utils from 18.4.2 to 19.0.0 ([3a2fae1](https://github.com/markdown-confluence/markdown-confluence/commit/3a2fae187d06483b3e3c6c4944d429479c702c1b))
+* **deps:** bump @atlaskit/editor-common from 74.29.0 to 74.34.4 ([62a82c6](https://github.com/markdown-confluence/markdown-confluence/commit/62a82c6a96dc5cd4bec6d22b4e42954f6743f0c3))
+* **deps:** bump @atlaskit/editor-common from 74.7.8 to 74.29.0 ([c543b7b](https://github.com/markdown-confluence/markdown-confluence/commit/c543b7ba7251b6e70b6916b112de14852bc84993))
+* **deps:** bump @atlaskit/editor-common in /packages/lib ([8f78eaf](https://github.com/markdown-confluence/markdown-confluence/commit/8f78eaf7b5642ab0c84632987580e35da515b707))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.10.3 to 8.10.4 ([1803259](https://github.com/markdown-confluence/markdown-confluence/commit/1803259e34e5c7b47b6d6aa121ec9517ba991e90))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.10.4 to 8.10.9 ([aa3797f](https://github.com/markdown-confluence/markdown-confluence/commit/aa3797f3fd41db939dfc984932393a3397e1b0b7))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.9.4 to 8.10.3 ([76ed649](https://github.com/markdown-confluence/markdown-confluence/commit/76ed649f4421c5a437deeb4198aba46c7a59d86d))
+* **deps:** bump markdown-it-table from 2.0.4 to 4.1.0 ([12d7a43](https://github.com/markdown-confluence/markdown-confluence/commit/12d7a43efc351cc0e3f1cdf04d5bbb610ad74706))
+* **deps:** bump prosemirror-model and @types/prosemirror-model ([37d6299](https://github.com/markdown-confluence/markdown-confluence/commit/37d629962ff38c02f1c955ed25c8ad191dfff734))
+
 ## [5.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.4.0...@markdown-confluence/lib-v5.5.0) (2023-06-29)
 
 
