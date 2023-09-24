@@ -1,5 +1,56 @@
 # Changelog
 
+## [5.5.1](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.5.0...obsidian-confluence-root-v5.5.1) (2023-09-24)
+
+
+### Bug Fixes
+
+* bump @typescript-eslint/parser to same as @typescript-eslint/plugin to avoid peer dependency issues ([7a422cf](https://github.com/markdown-confluence/markdown-confluence/commit/7a422cf3d1ebd22e1b6bea1b69caf171c559259c))
+* bump markdown-it-table to v4.1.1 ([806eabe](https://github.com/markdown-confluence/markdown-confluence/commit/806eabe5e05e7981b0367e1609d3c596830a4cff))
+
+
+### Dependencies
+
+* **deps:** bump @atlaskit/adf-schema from 25.10.1 to 26.2.1 ([6bbf385](https://github.com/markdown-confluence/markdown-confluence/commit/6bbf385b3b9c071d8a86bfce8c33b6adaabb8b75))
+* **deps:** bump @atlaskit/adf-schema from 26.2.1 to 26.3.0 ([6ef97ad](https://github.com/markdown-confluence/markdown-confluence/commit/6ef97ad7c5ec8d0c413d74d1cb29ecf4d3c6f7d9))
+* **deps:** bump @atlaskit/adf-schema from 26.4.1 to 29.2.0 ([db2745c](https://github.com/markdown-confluence/markdown-confluence/commit/db2745c1a66b0b725c779d16215888ec01201598))
+* **deps:** bump @atlaskit/adf-schema in /packages/lib ([b98b6fb](https://github.com/markdown-confluence/markdown-confluence/commit/b98b6fba55316e46a0eee97761be6193eb8bf517))
+* **deps:** bump @atlaskit/adf-utils from 18.4.2 to 19.0.0 ([3a2fae1](https://github.com/markdown-confluence/markdown-confluence/commit/3a2fae187d06483b3e3c6c4944d429479c702c1b))
+* **deps:** bump @atlaskit/editor-common from 74.29.0 to 74.34.4 ([62a82c6](https://github.com/markdown-confluence/markdown-confluence/commit/62a82c6a96dc5cd4bec6d22b4e42954f6743f0c3))
+* **deps:** bump @atlaskit/editor-common from 74.7.8 to 74.29.0 ([c543b7b](https://github.com/markdown-confluence/markdown-confluence/commit/c543b7ba7251b6e70b6916b112de14852bc84993))
+* **deps:** bump @atlaskit/editor-common in /packages/lib ([8f78eaf](https://github.com/markdown-confluence/markdown-confluence/commit/8f78eaf7b5642ab0c84632987580e35da515b707))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.10.3 to 8.10.4 ([1803259](https://github.com/markdown-confluence/markdown-confluence/commit/1803259e34e5c7b47b6d6aa121ec9517ba991e90))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.10.4 to 8.10.9 ([aa3797f](https://github.com/markdown-confluence/markdown-confluence/commit/aa3797f3fd41db939dfc984932393a3397e1b0b7))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.9.4 to 8.10.3 ([76ed649](https://github.com/markdown-confluence/markdown-confluence/commit/76ed649f4421c5a437deeb4198aba46c7a59d86d))
+* **deps:** bump actions/checkout from 3.5.3 to 4.0.0 ([52904f3](https://github.com/markdown-confluence/markdown-confluence/commit/52904f352e04f19302231b9d73b3822e25e6e479))
+* **deps:** bump actions/checkout from 3.5.3 to 4.1.0 ([9ab8b38](https://github.com/markdown-confluence/markdown-confluence/commit/9ab8b38b7bad5041020ff4f81b6b3d68ec698a8a))
+* **deps:** bump actions/dependency-review-action from 3.0.6 to 3.1.0 ([94a3388](https://github.com/markdown-confluence/markdown-confluence/commit/94a3388852f9a3cc60b690988eb75701146829ac))
+* **deps:** bump actions/setup-node from 3.6.0 to 3.7.0 ([489d3c4](https://github.com/markdown-confluence/markdown-confluence/commit/489d3c461e0dfc4a1d69c3f494f78f78357760f0))
+* **deps:** bump actions/setup-node from 3.7.0 to 3.8.1 ([231817f](https://github.com/markdown-confluence/markdown-confluence/commit/231817f338d5fc69cebc023c6b57166406e9abfc))
+* **deps:** bump docker/build-push-action from 4.1.1 to 5.0.0 ([ba1d845](https://github.com/markdown-confluence/markdown-confluence/commit/ba1d8457fd5bdbadac181516353b29da6e8275cb))
+* **deps:** bump google-github-actions/release-please-action ([b63a078](https://github.com/markdown-confluence/markdown-confluence/commit/b63a078f4c52ce1254044e4515c3d07f15ae1fbc))
+* **deps:** bump markdown-it-table from 2.0.4 to 4.1.0 ([12d7a43](https://github.com/markdown-confluence/markdown-confluence/commit/12d7a43efc351cc0e3f1cdf04d5bbb610ad74706))
+* **deps:** bump mermaid in /packages/mermaid-puppeteer-renderer ([391a22d](https://github.com/markdown-confluence/markdown-confluence/commit/391a22d244580052809437aff90d81e78f78df7d))
+* **deps:** bump mermaid in /packages/mermaid-puppeteer-renderer ([386fa2c](https://github.com/markdown-confluence/markdown-confluence/commit/386fa2c31a98d982d08e4009459f66f843857ba4))
+* **deps:** bump mermaid in /packages/mermaid-puppeteer-renderer ([9d57988](https://github.com/markdown-confluence/markdown-confluence/commit/9d579880906e499e8b3144042246f6abce790440))
+* **deps:** bump prosemirror-model and @types/prosemirror-model ([37d6299](https://github.com/markdown-confluence/markdown-confluence/commit/37d629962ff38c02f1c955ed25c8ad191dfff734))
+* **deps:** bump puppeteer from 20.7.3 to 20.8.0 ([16267cd](https://github.com/markdown-confluence/markdown-confluence/commit/16267cdbaa87626c523f83556e0bb725d63431ba))
+* **deps:** bump puppeteer from 20.8.0 to 20.9.0 ([d2a85b1](https://github.com/markdown-confluence/markdown-confluence/commit/d2a85b192d09e7ceb28220d2e2498b789bcba2f1))
+* **deps:** bump puppeteer in /packages/mermaid-puppeteer-renderer ([2f8c4cd](https://github.com/markdown-confluence/markdown-confluence/commit/2f8c4cd3d53b56abf2e28151e2b9d92c49aea63d))
+* **deps:** bump puppeteer in /packages/mermaid-puppeteer-renderer ([be818e5](https://github.com/markdown-confluence/markdown-confluence/commit/be818e5fc7739c824527e8c209a62c3924555335))
+* **deps:** bump puppeteer in /packages/mermaid-puppeteer-renderer ([a681954](https://github.com/markdown-confluence/markdown-confluence/commit/a6819545fcede72fbb647588a5d88bea0d3f69b8))
+* **deps:** bump puppeteer in /packages/mermaid-puppeteer-renderer ([1085023](https://github.com/markdown-confluence/markdown-confluence/commit/108502344b9c18d9d5a0ca8b4e45560211dbd3fa))
+* **deps:** bump puppeteer in /packages/mermaid-puppeteer-renderer ([5d63b3b](https://github.com/markdown-confluence/markdown-confluence/commit/5d63b3b4d23c7c2a40a9432b491a9a04471e8df4))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([ca328b5](https://github.com/markdown-confluence/markdown-confluence/commit/ca328b5ee2d7db1f9cd1caddf10505996a414a6e))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([3621e77](https://github.com/markdown-confluence/markdown-confluence/commit/3621e775033111cb74430e8b39a1b1297d2a4f51))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([e603bdd](https://github.com/markdown-confluence/markdown-confluence/commit/e603bdd3d3a8de6aaa84823bd7c7cf820073b9f9))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([912df0e](https://github.com/markdown-confluence/markdown-confluence/commit/912df0e52e29d27292d463f484b873afcb9a967f))
+* **deps:** bump semver from 5.7.1 to 5.7.2 ([9feb1cc](https://github.com/markdown-confluence/markdown-confluence/commit/9feb1cca67f9368864db5684acd67a9263373a07))
+* **deps:** bump step-security/harden-runner from 2.4.1 to 2.5.0 ([14bcdc4](https://github.com/markdown-confluence/markdown-confluence/commit/14bcdc43df3ebdfc4dc2b251d914469f733524eb))
+* **deps:** bump step-security/harden-runner from 2.5.0 to 2.5.1 ([e606cd4](https://github.com/markdown-confluence/markdown-confluence/commit/e606cd42f3ae0032f274ba4ac669004878eeba57))
+* **deps:** bump word-wrap from 1.2.3 to 1.2.4 ([1d4ba76](https://github.com/markdown-confluence/markdown-confluence/commit/1d4ba769d3b9b15fdbdaabceb6ad6239e1ec3a3c))
+* Update package-lock.json ([52ba4fe](https://github.com/markdown-confluence/markdown-confluence/commit/52ba4fe09edf8c978e973fa4f3c74d01ea9b35a5))
+
 ## [5.5.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.4.0...obsidian-confluence-root-v5.5.0) (2023-06-29)
 
 
