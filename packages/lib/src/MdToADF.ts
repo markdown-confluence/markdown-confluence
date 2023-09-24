@@ -2,16 +2,16 @@ import {
 	JSONDocNode,
 	JSONTransformer,
 } from "@atlaskit/editor-json-transformer";
-import { MarkdownTransformer } from "./MarkdownTransformer";
+import { MarkdownTransformer } from "./MarkdownTransformer/index.js";
 import { traverse } from "@atlaskit/adf-utils/traverse";
-import { MarkdownFile } from "./adaptors";
-import { LocalAdfFile } from "./Publisher";
-import { processConniePerPageConfig } from "./ConniePageConfig";
+import { MarkdownFile } from "./adaptors/index.js";
+import { LocalAdfFile } from "./Publisher.js";
+import { processConniePerPageConfig } from "./ConniePageConfig.js";
 import { p } from "@atlaskit/adf-utils/builders";
-import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap";
+import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap.js";
 import { isSafeUrl } from "@atlaskit/adf-schema";
-import { ConfluenceSettings } from "./Settings";
-import { cleanUpUrlIfConfluence } from "./ConfluenceUrlParser";
+import { ConfluenceSettings } from "./Settings.js";
+import { cleanUpUrlIfConfluence } from "./ConfluenceUrlParser.js";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 

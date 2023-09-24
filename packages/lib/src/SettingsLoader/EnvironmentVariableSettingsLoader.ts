@@ -1,10 +1,10 @@
-import { ConfluenceSettings } from "../Settings";
-import { SettingsLoader } from "./SettingsLoader";
+import { ConfluenceSettings } from "../Settings.js";
+import { SettingsLoader } from "./SettingsLoader.js";
 
 export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 	getValue<T extends keyof ConfluenceSettings>(
 		propertyKey: T,
-		envVar: string
+		envVar: string,
 	): Partial<ConfluenceSettings> {
 		const value = process.env[envVar];
 		return value ? { [propertyKey]: value } : {};

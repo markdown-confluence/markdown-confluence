@@ -31,19 +31,19 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 		private extraStyleSheets: string[],
 		private extraStyles: string[],
 		private mermaidConfig: MermaidConfig = pluginMermaidConfig,
-		private bodyClasses = ""
+		private bodyClasses = "",
 	) {}
 
 	async captureMermaidCharts(
-		charts: ChartData[]
+		charts: ChartData[],
 	): Promise<Map<string, Buffer>> {
 		if (!mermaidRenderHtml) {
 			mermaidRenderHtml = URL.createObjectURL(
 				this.getFileContentBlob(
 					this.extraStyleSheets,
 					this.extraStyles,
-					this.bodyClasses
-				)
+					this.bodyClasses,
+				),
 			);
 		}
 
@@ -78,7 +78,7 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 
 			// Render the chart and get the dimensions
 			const dimensions = await chartWindow.webContents.executeJavaScript(
-				`renderSvg(${JSON.stringify(svg)});`
+				`renderSvg(${JSON.stringify(svg)});`,
 			);
 
 			// Resize the window to fit the chart dimensions
@@ -89,7 +89,7 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 				// Capture the chart as a NativeImage
 				const image = await chartWindow.webContents.capturePage(
 					dimensions,
-					{ stayHidden: true, stayAwake: true }
+					{ stayHidden: true, stayAwake: true },
 				);
 				// Convert the NativeImage to a PNG buffer
 				const imageBuffer = image.toPNG();
@@ -110,12 +110,12 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 	getFileContentBlob(
 		extraStyleSheets: string[],
 		extraStyles: string[],
-		bodyClasses: string
+		bodyClasses: string,
 	): Blob {
 		const styleSheetTags = extraStyleSheets
 			.map(
 				(url) =>
-					`<link href="${url}" type="text/css" rel="stylesheet"/>`
+					`<link href="${url}" type="text/css" rel="stylesheet"/>`,
 			)
 			.join("\n");
 		const extraStylesTag = `

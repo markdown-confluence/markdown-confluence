@@ -7,13 +7,13 @@ import url from "url";
 interface RemoteWindowedCustomFunctions {
 	renderMermaidChart: (
 		mermaidData: string,
-		mermaidConfig: unknown
+		mermaidConfig: unknown,
 	) => Promise<{ width: number; height: number }>;
 }
 
 export class PuppeteerMermaidRenderer implements MermaidRenderer {
 	async captureMermaidCharts(
-		charts: ChartData[]
+		charts: ChartData[],
 	): Promise<Map<string, Buffer>> {
 		const capturedCharts = new Map<string, Buffer>();
 
@@ -34,7 +34,7 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 
 			console.log(
 				"LAUNCHING CHROME",
-				JSON.stringify(puppeteerLaunchConfig)
+				JSON.stringify(puppeteerLaunchConfig),
 			);
 			const browser = await puppeteer.launch(puppeteerLaunchConfig);
 
@@ -42,7 +42,7 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 			try {
 				const mermaidHTMLPath = path.join(
 					__dirname,
-					"mermaid_renderer.html"
+					"mermaid_renderer.html",
 				);
 				const pathToLoad = url.pathToFileURL(mermaidHTMLPath).href;
 
@@ -77,7 +77,7 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 						return renderMermaidChart(mermaidData, mermaidConfig);
 					},
 					chart.data,
-					mermaidConfig
+					mermaidConfig,
 				);
 				await page.setViewport({
 					width: result.width,

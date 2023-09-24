@@ -2,7 +2,7 @@ import sortAny from "sort-any";
 import { mapValues } from "lodash-es";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { ADFEntity, ADFEntityMark } from "@atlaskit/adf-utils/types";
-import { isEqual } from "./isEqual";
+import { isEqual } from "./isEqual.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sortDeep = (object: unknown): any => {
@@ -41,7 +41,7 @@ export function adfEqual(first: ADFEntity, second: ADFEntity): boolean {
 
 export function marksEqual(
 	first: ADFEntityMark[] | undefined,
-	second: ADFEntityMark[] | undefined
+	second: ADFEntityMark[] | undefined,
 ) {
 	if (first === second) {
 		return true;

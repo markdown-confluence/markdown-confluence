@@ -1,9 +1,9 @@
-import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings";
-import { DefaultSettingsLoader } from "./DefaultSettingsLoader";
-import { EnvironmentVariableSettingsLoader } from "./EnvironmentVariableSettingsLoader";
-import { ConfigFileSettingsLoader } from "./ConfigFileSettingsLoader";
-import { CommandLineArgumentSettingsLoader } from "./CommandLineArgumentSettingsLoader";
-import { SettingsLoader } from "./SettingsLoader";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings.js";
+import { DefaultSettingsLoader } from "./DefaultSettingsLoader.js";
+import { EnvironmentVariableSettingsLoader } from "./EnvironmentVariableSettingsLoader.js";
+import { ConfigFileSettingsLoader } from "./ConfigFileSettingsLoader.js";
+import { CommandLineArgumentSettingsLoader } from "./CommandLineArgumentSettingsLoader.js";
+import { SettingsLoader } from "./SettingsLoader.js";
 
 export class AutoSettingsLoader extends SettingsLoader {
 	constructor(private loaders: SettingsLoader[] = []) {
@@ -27,7 +27,7 @@ export class AutoSettingsLoader extends SettingsLoader {
 				if (
 					Object.prototype.hasOwnProperty.call(
 						partialSettings,
-						propertyKey
+						propertyKey,
 					)
 				) {
 					const element = partialSettings[propertyKey];

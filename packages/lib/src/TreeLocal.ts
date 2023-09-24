@@ -1,10 +1,10 @@
 import path from "path";
-import { MarkdownFile } from "./adaptors";
-import { convertMDtoADF } from "./MdToADF";
-import { folderFile } from "./FolderFile";
+import { MarkdownFile } from "./adaptors/index.js";
+import { convertMDtoADF } from "./MdToADF.js";
+import { folderFile } from "./FolderFile.js";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { LocalAdfFileTreeNode } from "./Publisher";
-import { ConfluenceSettings } from "./Settings";
+import { LocalAdfFileTreeNode } from "./Publisher.js";
+import { ConfluenceSettings } from "./Settings.js";
 
 const findCommonPath = (paths: string[]): string => {
 	const [firstPath, ...rest] = paths;
@@ -35,7 +35,7 @@ const addFileToTree = (
 	treeNode: LocalAdfFileTreeNode,
 	file: MarkdownFile,
 	relativePath: string,
-	settings: ConfluenceSettings
+	settings: ConfluenceSettings,
 ) => {
 	const [folderName, ...remainingPath] = relativePath.split(path.sep);
 	if (folderName === undefined) {
@@ -50,7 +50,7 @@ const addFileToTree = (
 		});
 	} else {
 		let childNode = treeNode.children.find(
-			(node) => node.name === folderName
+			(node) => node.name === folderName,
 		);
 
 		if (!childNode) {
@@ -65,21 +65,21 @@ const addFileToTree = (
 const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 	if (!node.file) {
 		let indexFile = node.children.find(
-			(child) => path.parse(child.name).name === node.name
+			(child) => path.parse(child.name).name === node.name,
 		);
 		if (!indexFile) {
 			// Support FolderFile with a file name of "index.md"
 			indexFile = node.children.find((child) =>
 				["index", "README", "readme"].includes(
-					path.parse(child.name).name
-				)
+					path.parse(child.name).name,
+				),
 			);
 		}
 
 		if (indexFile && indexFile.file) {
 			node.file = indexFile.file;
 			node.children = node.children.filter(
-				(child) => child !== indexFile
+				(child) => child !== indexFile,
 			);
 		} else {
 			node.file = {
@@ -99,20 +99,20 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 	}
 
 	const childCommonPath = path.parse(
-		node?.file?.absoluteFilePath ?? commonPath
+		node?.file?.absoluteFilePath ?? commonPath,
 	).dir;
 
 	node.children.forEach((childNode) =>
-		processNode(childCommonPath, childNode)
+		processNode(childCommonPath, childNode),
 	);
 };
 
 export const createFolderStructure = (
 	markdownFiles: MarkdownFile[],
-	settings: ConfluenceSettings
+	settings: ConfluenceSettings,
 ): LocalAdfFileTreeNode => {
 	const commonPath = findCommonPath(
-		markdownFiles.map((file) => file.absoluteFilePath)
+		markdownFiles.map((file) => file.absoluteFilePath),
 	);
 	const rootNode = createTreeNode(commonPath);
 
@@ -130,17 +130,17 @@ export const createFolderStructure = (
 
 function checkUniquePageTitle(
 	rootNode: LocalAdfFileTreeNode,
-	pageTitles: Set<string> = new Set<string>()
+	pageTitles: Set<string> = new Set<string>(),
 ) {
 	const currentPageTitle = rootNode.file?.pageTitle ?? "";
 
 	if (pageTitles.has(currentPageTitle)) {
 		throw new Error(
-			`Page title "${currentPageTitle}" is not unique across all files.`
+			`Page title "${currentPageTitle}" is not unique across all files.`,
 		);
 	}
 	pageTitles.add(currentPageTitle);
 	rootNode.children.forEach((child) =>
-		checkUniquePageTitle(child, pageTitles)
+		checkUniquePageTitle(child, pageTitles),
 	);
 }

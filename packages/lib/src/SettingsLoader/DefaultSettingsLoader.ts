@@ -1,5 +1,5 @@
-import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings";
-import { SettingsLoader } from "./SettingsLoader";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "../Settings.js";
+import { SettingsLoader } from "./SettingsLoader.js";
 
 export class DefaultSettingsLoader extends SettingsLoader {
 	loadPartial(): Partial<ConfluenceSettings> {

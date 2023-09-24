@@ -3,23 +3,26 @@ import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { markdownTable } from "markdown-table";
 
 export function renderADFDoc(adfDoc: JSONDocNode) {
-	const lines = (adfDoc.content ?? []).reduce((prev, curr, currentIndex) => {
-		if (!curr) {
-			return prev;
-		}
-		const result = renderADFContent(curr, adfDoc, currentIndex);
-		if (!result) {
-			return prev;
-		}
-		if (result instanceof Error) {
-			const createADFCodeBlock = renderCodeBlock(
-				"adf",
-				JSON.stringify(curr)
-			);
-			return [...prev, createADFCodeBlock];
-		}
-		return [...prev, result];
-	}, [] as (string | Error)[]);
+	const lines = (adfDoc.content ?? []).reduce(
+		(prev, curr, currentIndex) => {
+			if (!curr) {
+				return prev;
+			}
+			const result = renderADFContent(curr, adfDoc, currentIndex);
+			if (!result) {
+				return prev;
+			}
+			if (result instanceof Error) {
+				const createADFCodeBlock = renderCodeBlock(
+					"adf",
+					JSON.stringify(curr),
+				);
+				return [...prev, createADFCodeBlock];
+			}
+			return [...prev, result];
+		},
+		[] as (string | Error)[],
+	);
 	const result = lines.join("\n");
 	return result;
 }
@@ -68,7 +71,7 @@ function renderTextMarks(element: ADFEntity) {
 function renderADFContent(
 	element: ADFEntity,
 	parent: ADFEntity,
-	currentIndex: number
+	currentIndex: number,
 ): string | Error | undefined {
 	const renderChildrenResult = renderChildren(element);
 	if (renderChildrenResult instanceof Error) {
@@ -260,19 +263,22 @@ function renderCodeBlock(language: string, code: string) {
 }
 
 function renderChildren(element: ADFEntity) {
-	const lines = (element.content ?? []).reduce((prev, curr, currentIndex) => {
-		if (!curr || prev[0] instanceof Error) {
-			return prev;
-		}
-		const result = renderADFContent(curr, element, currentIndex);
-		if (!result) {
-			return prev;
-		}
-		if (result instanceof Error) {
-			return [result];
-		}
-		return [...prev, result];
-	}, [] as (string | Error)[]);
+	const lines = (element.content ?? []).reduce(
+		(prev, curr, currentIndex) => {
+			if (!curr || prev[0] instanceof Error) {
+				return prev;
+			}
+			const result = renderADFContent(curr, element, currentIndex);
+			if (!result) {
+				return prev;
+			}
+			if (result instanceof Error) {
+				return [result];
+			}
+			return [...prev, result];
+		},
+		[] as (string | Error)[],
+	);
 	const firstResult = lines.at(0);
 	if (firstResult instanceof Error) {
 		return firstResult;

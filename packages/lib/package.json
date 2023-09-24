@@ -9,7 +9,7 @@
     "sideEffects": false,
     "scripts": {
         "dev": "tsc --watch",
-        "build": "tsc",
+        "build": "tsc --version && tsc",
         "fmt": "npx prettier --write src/",
         "lint": "eslint --ignore-path ../../.eslintignore --ext .js,.ts src/",
         "prettier-check": "npx prettier --check src/",
@@ -40,7 +40,8 @@
         "@types/spark-md5": "^3.0.2",
         "@types/uuid": "^9.0.2",
         "jest": "^29.6.1",
-        "markdown-it": "^13.0.1"
+        "markdown-it": "^13.0.1",
+        "typescript": "5.1.6"
     },
     "dependencies": {
         "@atlaskit/adf-schema": "^30.2.3",

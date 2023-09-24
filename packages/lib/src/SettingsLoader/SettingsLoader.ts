@@ -1,4 +1,4 @@
-import { ConfluenceSettings } from "../Settings";
+import { ConfluenceSettings } from "../Settings.js";
 
 export abstract class SettingsLoader {
 	abstract loadPartial(): Partial<ConfluenceSettings>;
@@ -10,7 +10,7 @@ export abstract class SettingsLoader {
 	}
 
 	protected validateSettings(
-		settings: Partial<ConfluenceSettings>
+		settings: Partial<ConfluenceSettings>,
 	): ConfluenceSettings {
 		if (!settings.confluenceBaseUrl) {
 			throw new Error("Confluence base URL is required");

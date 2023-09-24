@@ -1,5 +1,10 @@
-import { ConfluenceSettings } from "../Settings";
-import { BinaryFile, FilesToUpload, LoaderAdaptor, MarkdownFile } from ".";
+import { ConfluenceSettings } from "../Settings.js";
+import {
+	BinaryFile,
+	FilesToUpload,
+	LoaderAdaptor,
+	MarkdownFile,
+} from "./index.js";
 import { lookup } from "mime-types";
 import { existsSync, lstatSync } from "fs";
 import * as fs from "fs/promises";
@@ -9,7 +14,7 @@ import {
 	ConfluencePerPageAllValues,
 	ConfluencePerPageConfig,
 	conniePerPageConfig,
-} from "../ConniePageConfig";
+} from "../ConniePageConfig.js";
 
 export class FileSystemAdaptor implements LoaderAdaptor {
 	settings: ConfluenceSettings;
@@ -33,11 +38,11 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 	async updateMarkdownValues(
 		absoluteFilePath: string,
-		values: Partial<ConfluencePerPageAllValues>
+		values: Partial<ConfluencePerPageAllValues>,
 	): Promise<void> {
 		const actualAbsoluteFilePath = path.join(
 			this.settings.contentRoot,
-			absoluteFilePath
+			absoluteFilePath,
 		);
 		try {
 			if (!(await fs.stat(actualAbsoluteFilePath)).isFile()) {
@@ -52,7 +57,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 						absoluteFilePath,
 						contentRoot: this.settings.contentRoot,
 						errorMessage: error.message,
-					})
+					}),
 				);
 			} else {
 				console.warn(
@@ -62,7 +67,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 						contentRoot: this.settings.contentRoot,
 						absoluteFilePath,
 						error,
-					})
+					}),
 				);
 			}
 			return;
@@ -99,7 +104,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
 		const { data, content: contents } = await this.getFileContent(
-			absoluteFilePath
+			absoluteFilePath,
 		);
 
 		const folderName = path.basename(path.parse(absoluteFilePath).dir);
@@ -112,7 +117,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 			folderName,
 			absoluteFilePath: absoluteFilePath.replace(
 				this.settings.contentRoot,
-				""
+				"",
 			),
 			fileName,
 			pageTitle,
@@ -152,7 +157,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 				if (
 					((file.absoluteFilePath.startsWith(
-						this.settings.folderToPublish
+						this.settings.folderToPublish,
 					) ||
 						this.settings.folderToPublish === ".") &&
 						(!frontMatter ||
@@ -170,13 +175,13 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 	async readBinary(
 		searchPath: string,
-		referencedFromFilePath: string
+		referencedFromFilePath: string,
 	): Promise<BinaryFile | false> {
 		const absoluteFilePath = await this.findClosestFile(
 			searchPath,
 			path.dirname(
-				path.join(this.settings.contentRoot, referencedFromFilePath)
-			)
+				path.join(this.settings.contentRoot, referencedFromFilePath),
+			),
 		);
 
 		if (absoluteFilePath) {
@@ -189,7 +194,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 				contents: fileContents,
 				filePath: absoluteFilePath.replace(
 					this.settings.contentRoot,
-					""
+					"",
 				),
 				filename: path.basename(absoluteFilePath),
 				mimeType: mimeType,
@@ -201,11 +206,11 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 	private async findClosestFile(
 		fileName: string,
-		startingDirectory: string
+		startingDirectory: string,
 	): Promise<string | null> {
 		const potentialAbsolutePathForFileName = path.join(
 			startingDirectory,
-			fileName
+			fileName,
 		);
 		if (await isFile(potentialAbsolutePathForFileName)) {
 			return potentialAbsolutePathForFileName;
