@@ -47,7 +47,7 @@ function createRule() {
 			const res = State.md.helpers.parseLinkDestination(
 				str,
 				str.indexOf("(") + 1,
-				str.length
+				str.length,
 			);
 			if (res.ok) {
 				const href = State.md.normalizeLink(res.str);
@@ -74,7 +74,7 @@ function createRule() {
 		const getWikiUrl = (str: string) => {
 			const content = str.substring(
 				str.indexOf("[[") + 2,
-				str.length - 2
+				str.length - 2,
 			);
 			const contentSplit = content.split("|");
 
@@ -101,7 +101,7 @@ function createRule() {
 			const mediaSingleClose = new State.Token(
 				"media_single_close",
 				"",
-				-1
+				-1,
 			);
 
 			return [mediaSingleOpen, media, mediaSingleClose];
@@ -110,7 +110,7 @@ function createRule() {
 		const createInlineTokens = (
 			str: string,
 			openingTokens: Token[],
-			closingTokens: Token[]
+			closingTokens: Token[],
 		) => {
 			if (!str || str.length === 0) {
 				return [];
@@ -157,8 +157,8 @@ function createRule() {
 								new State.Token(
 									token.type.replace("_open", "_close"),
 									token.tag,
-									-1
-								)
+									-1,
+								),
 						)
 						.reverse();
 
@@ -169,10 +169,10 @@ function createRule() {
 						const start = inlineContentStack.indexOf(match);
 						const contentBefore = inlineContentStack.substr(
 							0,
-							start
+							start,
 						);
 						inlineContentStack = inlineContentStack.substr(
-							start + match.length
+							start + match.length,
 						);
 
 						subTree = [
@@ -180,7 +180,7 @@ function createRule() {
 							...createInlineTokens(
 								contentBefore,
 								openingTokens,
-								closingTokens
+								closingTokens,
 							),
 							...createMediaTokens(match),
 						];
@@ -192,7 +192,7 @@ function createRule() {
 							...createInlineTokens(
 								inlineContentStack,
 								openingTokens,
-								closingTokens
+								closingTokens,
 							),
 						];
 					}
@@ -207,7 +207,7 @@ function createRule() {
 					// Ignore token if it's already processed
 					processedTokens.splice(
 						processedTokens.indexOf(token.type),
-						1
+						1,
 					);
 				} else {
 					tokens.push(token);
@@ -215,7 +215,7 @@ function createRule() {
 
 				return tokens;
 			},
-			[]
+			[],
 		);
 
 		State.tokens = newTokens;

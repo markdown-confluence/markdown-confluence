@@ -161,7 +161,7 @@ export function panel(state: StateCore): boolean {
 				if (check && check.length > 1) {
 					token.content = token.content.replace(
 						check[0],
-						calloutTitle
+						calloutTitle,
 					);
 					if (token.children) {
 						for (let i = 0; i < token.children.length; i++) {
@@ -169,7 +169,7 @@ export function panel(state: StateCore): boolean {
 							if (child && child.content.includes(check[0])) {
 								child.content = child.content.replace(
 									check[0],
-									calloutTitle
+									calloutTitle,
 								);
 								break;
 							}
@@ -180,7 +180,7 @@ export function panel(state: StateCore): boolean {
 
 			return [...previousTokens, tokenToReturn];
 		},
-		[] as Token[]
+		[] as Token[],
 	);
 
 	state.tokens = newTokens;

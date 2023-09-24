@@ -49,15 +49,15 @@ async function main() {
 		if (file.successfulUploadResult) {
 			console.log(
 				chalk.green(
-					`SUCCESS: ${file.node.file.absoluteFilePath} Content: ${file.successfulUploadResult.contentResult}, Images: ${file.successfulUploadResult.imageResult}, Labels: ${file.successfulUploadResult.labelResult}, Page URL: ${file.node.file.pageUrl}`
-				)
+					`SUCCESS: ${file.node.file.absoluteFilePath} Content: ${file.successfulUploadResult.contentResult}, Images: ${file.successfulUploadResult.imageResult}, Labels: ${file.successfulUploadResult.labelResult}, Page URL: ${file.node.file.pageUrl}`,
+				),
 			);
 			return;
 		}
 		console.error(
 			chalk.red(
-				`FAILED:  ${file.node.file.absoluteFilePath} publish failed. Error is: ${file.reason}`
-			)
+				`FAILED:  ${file.node.file.absoluteFilePath} publish failed. Error is: ${file.reason}`,
+			),
 		);
 	});
 }

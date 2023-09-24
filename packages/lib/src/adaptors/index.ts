@@ -23,13 +23,13 @@ export interface BinaryFile {
 export interface LoaderAdaptor {
 	updateMarkdownValues(
 		absoluteFilePath: string,
-		values: Partial<ConfluencePerPageAllValues>
+		values: Partial<ConfluencePerPageAllValues>,
 	): Promise<void>;
 	loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile>;
 	getMarkdownFilesToUpload(): Promise<FilesToUpload>;
 	readBinary(
 		path: string,
-		referencedFromFilePath: string
+		referencedFromFilePath: string,
 	): Promise<BinaryFile | false>;
 }
 

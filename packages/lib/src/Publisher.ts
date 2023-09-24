@@ -103,14 +103,14 @@ export class Publisher {
 		adaptor: LoaderAdaptor,
 		settingsLoader: SettingsLoader,
 		confluenceClient: RequiredConfluenceClient,
-		adfProcessingPlugins: ADFProcessingPlugin<unknown, unknown>[]
+		adfProcessingPlugins: ADFProcessingPlugin<unknown, unknown>[],
 	) {
 		this.adaptor = adaptor;
 		this.settingsLoader = settingsLoader;
 
 		this.confluenceClient = confluenceClient;
 		this.adfProcessingPlugins = adfProcessingPlugins.concat(
-			AlwaysADFProcessingPlugins
+			AlwaysADFProcessingPlugins,
 		);
 	}
 
@@ -142,12 +142,12 @@ export class Publisher {
 			spaceToPublishTo.key,
 			parentPage.id,
 			parentPage.id,
-			settings
+			settings,
 		);
 
 		if (publishFilter) {
 			confluencePagesToPublish = confluencePagesToPublish.filter(
-				(file) => file.file.absoluteFilePath === publishFilter
+				(file) => file.file.absoluteFilePath === publishFilter,
 			);
 		}
 
@@ -160,7 +160,7 @@ export class Publisher {
 	}
 
 	private async publishFile(
-		node: ConfluenceNode
+		node: ConfluenceNode,
 	): Promise<FilePublishResult> {
 		try {
 			const successfulUploadResult = await this.updatePageContent(
@@ -168,7 +168,7 @@ export class Publisher {
 				node.version,
 				node.existingPageData,
 				node.file,
-				node.lastUpdatedBy
+				node.lastUpdatedBy,
 			);
 
 			return {
@@ -195,16 +195,16 @@ export class Publisher {
 		pageVersionNumber: number,
 		existingPageData: ConfluencePageExistingData,
 		adfFile: ConfluenceAdfFile,
-		lastUpdatedBy: string
+		lastUpdatedBy: string,
 	): Promise<UploadAdfFileResult> {
 		if (lastUpdatedBy !== this.myAccountId) {
 			throw new Error(
-				`Page last updated by another user. Won't publish over their changes. MyAccountId: ${this.myAccountId}, Last Updated By: ${lastUpdatedBy}`
+				`Page last updated by another user. Won't publish over their changes. MyAccountId: ${this.myAccountId}, Last Updated By: ${lastUpdatedBy}`,
 			);
 		}
 		if (existingPageData.contentType !== adfFile.contentType) {
 			throw new Error(
-				`Cannot convert between content types. From ${existingPageData.contentType} to ${adfFile.contentType}`
+				`Cannot convert between content types. From ${existingPageData.contentType} to ${adfFile.contentType}`,
 			);
 		}
 
@@ -237,12 +237,12 @@ export class Publisher {
 			this.adaptor,
 			adfFile.pageId,
 			adfFile.absoluteFilePath,
-			currentAttachments
+			currentAttachments,
 		);
 		const adfToUpload = await executeADFProcessingPipeline(
 			this.adfProcessingPlugins,
 			adfFile.contents,
-			supportFunctions
+			supportFunctions,
 		);
 
 		/*
@@ -322,7 +322,7 @@ export class Publisher {
 				},
 			};
 			await this.confluenceClient.content.updateContent(
-				updateContentDetails
+				updateContentDetails,
 			);
 		}
 
@@ -331,7 +331,7 @@ export class Publisher {
 		};
 		const currentLabels =
 			await this.confluenceClient.contentLabels.getLabelsForContent(
-				getLabelsForContent
+				getLabelsForContent,
 			);
 
 		for (const existingLabel of currentLabels.results) {
@@ -341,7 +341,7 @@ export class Publisher {
 					{
 						id: adfFile.pageId,
 						name: existingLabel.name,
-					}
+					},
 				);
 			}
 		}
@@ -350,7 +350,7 @@ export class Publisher {
 		for (const newLabel of adfFile.tags) {
 			if (
 				currentLabels.results.findIndex(
-					(item) => item.label === newLabel
+					(item) => item.label === newLabel,
 				) === -1
 			) {
 				labelsToAdd.push({

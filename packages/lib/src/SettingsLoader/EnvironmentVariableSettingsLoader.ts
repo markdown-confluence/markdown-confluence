@@ -4,7 +4,7 @@ import { SettingsLoader } from "./SettingsLoader";
 export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 	getValue<T extends keyof ConfluenceSettings>(
 		propertyKey: T,
-		envVar: string
+		envVar: string,
 	): Partial<ConfluenceSettings> {
 		const value = process.env[envVar];
 		return value ? { [propertyKey]: value } : {};

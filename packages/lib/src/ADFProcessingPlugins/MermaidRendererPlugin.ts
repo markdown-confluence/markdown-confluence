@@ -35,19 +35,19 @@ export class MermaidRendererPlugin
 			adf,
 			(node) =>
 				node.type == "codeBlock" &&
-				(node.attrs || {})?.["language"] === "mermaid"
+				(node.attrs || {})?.["language"] === "mermaid",
 		);
 
 		const mermaidNodesToUpload = new Set(
 			mermaidNodes.map((node) => {
 				const mermaidDetails = getMermaidFileName(
-					node?.content?.at(0)?.text
+					node?.content?.at(0)?.text,
 				);
 				return {
 					name: mermaidDetails.uploadFilename,
 					data: mermaidDetails.mermaidText,
 				} as ChartData;
-			})
+			}),
 		);
 
 		return Array.from(mermaidNodesToUpload);
@@ -55,7 +55,7 @@ export class MermaidRendererPlugin
 
 	async transform(
 		mermaidNodesToUpload: ChartData[],
-		supportFunctions: PublisherFunctions
+		supportFunctions: PublisherFunctions,
 	): Promise<Record<string, UploadedImageData | null>> {
 		let imageMap: Record<string, UploadedImageData | null> = {};
 		if (mermaidNodesToUpload.length === 0) {
@@ -70,7 +70,7 @@ export class MermaidRendererPlugin
 		for (const mermaidImage of mermaidChartsAsImages) {
 			const uploadedContent = await supportFunctions.uploadBuffer(
 				mermaidImage[0],
-				mermaidImage[1]
+				mermaidImage[1],
 			);
 
 			imageMap = {
@@ -83,7 +83,7 @@ export class MermaidRendererPlugin
 	}
 	load(
 		adf: JSONDocNode,
-		imageMap: Record<string, UploadedImageData | null>
+		imageMap: Record<string, UploadedImageData | null>,
 	): JSONDocNode {
 		let afterAdf = adf as ADFEntity;
 

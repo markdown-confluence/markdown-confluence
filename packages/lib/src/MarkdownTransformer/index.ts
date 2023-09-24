@@ -177,7 +177,7 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 		this.markdownParser = new MarkdownParser(
 			schema,
 			tokenizer,
-			filterMdToPmSchemaMapping(schema, mdToPmMapping)
+			filterMdToPmSchemaMapping(schema, mdToPmMapping),
 		);
 	}
 	encode(_node: PMNode): Markdown {

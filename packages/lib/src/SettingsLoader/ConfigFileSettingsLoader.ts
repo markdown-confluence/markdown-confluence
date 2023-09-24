@@ -7,7 +7,7 @@ import yargs from "yargs";
 export class ConfigFileSettingsLoader extends SettingsLoader {
 	private configPath: string = path.join(
 		process.cwd() ?? "",
-		".markdown-confluence.json"
+		".markdown-confluence.json",
 	);
 
 	constructor(configPath?: string) {

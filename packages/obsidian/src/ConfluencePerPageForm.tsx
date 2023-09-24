@@ -14,7 +14,7 @@ export type ConfluencePerPageUIValues = {
 };
 
 export function mapFrontmatterToConfluencePerPageUIValues(
-	frontmatter: FrontMatterCache | undefined
+	frontmatter: FrontMatterCache | undefined,
 ): ConfluencePerPageUIValues {
 	const config = ConfluencePageConfig.conniePerPageConfig;
 	const result: Partial<ConfluencePerPageUIValues> = {};
@@ -78,7 +78,7 @@ const handleChange = (
 	inputValidator: ConfluencePageConfig.InputValidator<unknown>,
 	setValues: React.Dispatch<React.SetStateAction<ConfluencePerPageUIValues>>,
 	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>,
-	isSetValue: boolean
+	isSetValue: boolean,
 ) => {
 	const validationResult = inputValidator(value);
 
@@ -108,7 +108,7 @@ const renderTextInput = (
 	values: ConfluencePerPageUIValues,
 	errors: Record<string, Error[]>,
 	setValues: React.Dispatch<React.SetStateAction<ConfluencePerPageUIValues>>,
-	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>
+	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>,
 ) => (
 	<>
 		<tr key={key}>
@@ -130,7 +130,7 @@ const renderTextInput = (
 							config.inputValidator,
 							setValues,
 							setErrors,
-							false
+							false,
 						)
 					}
 				/>
@@ -150,7 +150,7 @@ const renderTextInput = (
 							config.inputValidator,
 							setValues,
 							setErrors,
-							true
+							true,
 						)
 					}
 				/>
@@ -176,7 +176,7 @@ const renderArrayText = (
 	values: ConfluencePerPageUIValues,
 	errors: Record<string, Error[]>,
 	setValues: React.Dispatch<React.SetStateAction<ConfluencePerPageUIValues>>,
-	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>
+	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>,
 ) => (
 	<>
 		<tr key={key}>
@@ -205,7 +205,7 @@ const renderArrayText = (
 								config.inputValidator,
 								setValues,
 								setErrors,
-								false
+								false,
 							);
 						}}
 					/>
@@ -224,7 +224,7 @@ const renderArrayText = (
 							config.inputValidator,
 							setValues,
 							setErrors,
-							false
+							false,
 						);
 					}}
 				>
@@ -246,7 +246,7 @@ const renderArrayText = (
 							config.inputValidator,
 							setValues,
 							setErrors,
-							true
+							true,
 						)
 					}
 				/>
@@ -272,7 +272,7 @@ const renderBoolean = (
 	values: ConfluencePerPageUIValues,
 	errors: Record<string, Error[]>,
 	setValues: React.Dispatch<React.SetStateAction<ConfluencePerPageUIValues>>,
-	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>
+	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>,
 ) => (
 	<>
 		<tr key={key}>
@@ -294,7 +294,7 @@ const renderBoolean = (
 							config.inputValidator,
 							setValues,
 							setErrors,
-							false
+							false,
 						)
 					}
 				/>
@@ -314,7 +314,7 @@ const renderBoolean = (
 							config.inputValidator,
 							setValues,
 							setErrors,
-							true
+							true,
 						)
 					}
 				/>
@@ -342,7 +342,7 @@ const renderOptions = (
 	values: ConfluencePerPageUIValues,
 	errors: Record<string, Error[]>,
 	setValues: React.Dispatch<React.SetStateAction<ConfluencePerPageUIValues>>,
-	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>
+	setErrors: React.Dispatch<React.SetStateAction<Record<string, Error[]>>>,
 ) => (
 	<>
 		<tr key={key}>
@@ -364,7 +364,7 @@ const renderOptions = (
 							config.inputValidator,
 							setValues,
 							setErrors,
-							false
+							false,
 						)
 					}
 				>
@@ -390,7 +390,7 @@ const renderOptions = (
 							config.inputValidator,
 							setValues,
 							setErrors,
-							true
+							true,
 						)
 					}
 				/>
@@ -448,7 +448,7 @@ const ConfluenceForm: React.FC<FormProps> = ({
 									values,
 									errors,
 									setValues,
-									setErrors
+									setErrors,
 								);
 							case "array-text":
 								return renderArrayText(
@@ -460,7 +460,7 @@ const ConfluenceForm: React.FC<FormProps> = ({
 									values,
 									errors,
 									setValues,
-									setErrors
+									setErrors,
 								);
 							case "boolean":
 								return renderBoolean(
@@ -472,7 +472,7 @@ const ConfluenceForm: React.FC<FormProps> = ({
 									values,
 									errors,
 									setValues,
-									setErrors
+									setErrors,
 								);
 							case "options":
 								return renderOptions(
@@ -484,7 +484,7 @@ const ConfluenceForm: React.FC<FormProps> = ({
 									values,
 									errors,
 									setValues,
-									setErrors
+									setErrors,
 								);
 							default:
 								return null;

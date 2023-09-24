@@ -216,7 +216,7 @@ const markdownTestCases: MarkdownFile[] = [
 
 class TestMermaidRenderer implements MermaidRenderer {
 	async captureMermaidCharts(
-		_charts: ChartData[]
+		_charts: ChartData[],
 	): Promise<Map<string, Buffer>> {
 		const capturedCharts = new Map<string, Buffer>();
 		return capturedCharts;
@@ -231,13 +231,13 @@ class InMemoryAdaptor implements LoaderAdaptor {
 	}
 	async updateMarkdownValues(
 		_absoluteFilePath: string,
-		_values: Partial<ConfluencePerPageAllValues>
+		_values: Partial<ConfluencePerPageAllValues>,
 	): Promise<void> {}
 
 	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return this.inMemoryFiles.find(
-			(t) => t.absoluteFilePath === absoluteFilePath
+			(t) => t.absoluteFilePath === absoluteFilePath,
 		)!;
 	}
 	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
@@ -246,7 +246,7 @@ class InMemoryAdaptor implements LoaderAdaptor {
 
 	async readBinary(
 		_path: string,
-		_referencedFromFilePath: string
+		_referencedFromFilePath: string,
 	): Promise<false | BinaryFile> {
 		throw new Error("Method not implemented.");
 	}
@@ -272,7 +272,7 @@ test("Upload to Confluence", async () => {
 		expand: ["version", "body.atlas_doc_format", "ancestors"],
 	};
 	const contentByTitle = await confluenceClient.content.getContent(
-		searchParams
+		searchParams,
 	);
 
 	const pageResult = contentByTitle.results[0];
@@ -294,7 +294,7 @@ test("Upload to Confluence", async () => {
 		filesystemAdaptor,
 		publisherSettingsLoader,
 		confluenceClient,
-		[new MermaidRendererPlugin(mermaidRenderer)]
+		[new MermaidRendererPlugin(mermaidRenderer)],
 	);
 
 	const result = await publisher.publish();
@@ -306,7 +306,7 @@ test("Upload to Confluence", async () => {
 		});
 
 		const uploadedAdf = orderMarks(
-			JSON.parse(afterUpload.body?.atlas_doc_format?.value ?? "{}")
+			JSON.parse(afterUpload.body?.atlas_doc_format?.value ?? "{}"),
 		);
 		const returnedAdf = orderMarks(uploadResult.node.file.contents);
 

@@ -28,7 +28,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.confluenceBaseUrl = value;
 						await this.plugin.saveSettings();
-					})
+					}),
 			);
 
 		new Setting(containerEl)
@@ -41,7 +41,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.atlassianUserName = value;
 						await this.plugin.saveSettings();
-					})
+					}),
 			);
 
 		new Setting(containerEl)
@@ -54,7 +54,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.atlassianApiToken = value;
 						await this.plugin.saveSettings();
-					})
+					}),
 			);
 
 		new Setting(containerEl)
@@ -67,13 +67,13 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.confluenceParentId = value;
 						await this.plugin.saveSettings();
-					})
+					}),
 			);
 
 		new Setting(containerEl)
 			.setName("Folder to publish")
 			.setDesc(
-				"Publish all files except notes that are excluded using YAML Frontmatter"
+				"Publish all files except notes that are excluded using YAML Frontmatter",
 			)
 			.addText((text) =>
 				text
@@ -82,7 +82,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.folderToPublish = value;
 						await this.plugin.saveSettings();
-					})
+					}),
 			);
 
 		new Setting(containerEl)
@@ -94,7 +94,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.firstHeadingPageTitle = value;
 						await this.plugin.saveSettings();
-					})
+					}),
 			);
 
 		new Setting(containerEl)

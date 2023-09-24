@@ -13,11 +13,12 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 		const mediaNodes = filter(
 			adf,
 			(node) =>
-				node.type === "media" && (node.attrs || {})?.["type"] === "file"
+				node.type === "media" &&
+				(node.attrs || {})?.["type"] === "file",
 		);
 
 		const imagesToUpload = new Set(
-			mediaNodes.map((node) => node?.attrs?.["url"])
+			mediaNodes.map((node) => node?.attrs?.["url"]),
 		);
 
 		return Array.from(imagesToUpload);
@@ -25,7 +26,7 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 
 	async transform(
 		imagesToUpload: string[],
-		supportFunctions: PublisherFunctions
+		supportFunctions: PublisherFunctions,
 	): Promise<Record<string, UploadedImageData | null>> {
 		let imageMap: Record<string, UploadedImageData | null> = {};
 
@@ -47,7 +48,7 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 
 	load(
 		adf: JSONDocNode,
-		imageMap: Record<string, UploadedImageData | null>
+		imageMap: Record<string, UploadedImageData | null>,
 	): JSONDocNode {
 		let afterAdf = adf as ADFEntity;
 

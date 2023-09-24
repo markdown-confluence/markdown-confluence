@@ -63,7 +63,7 @@ export class MyBaseClient implements Client {
 
 	protected removeUndefinedProperties(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		obj: Record<string, any>
+		obj: Record<string, any>,
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	): Record<string, any> {
 		return Object.entries(obj)
@@ -73,7 +73,7 @@ export class MyBaseClient implements Client {
 					...accumulator,
 					[key]: value,
 				}),
-				{}
+				{},
 			);
 	}
 
@@ -81,17 +81,17 @@ export class MyBaseClient implements Client {
 		requestConfig: RequestConfig,
 		callback: never,
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		telemetryData?: any
+		telemetryData?: any,
 	): Promise<T>;
 	async sendRequest<T>(
 		requestConfig: RequestConfig,
 		callback: Callback<T>,
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		telemetryData?: any
+		telemetryData?: any,
 	): Promise<void>;
 	async sendRequest<T>(
 		requestConfig: RequestConfig,
-		callback: Callback<T> | never
+		callback: Callback<T> | never,
 	): Promise<void | T> {
 		try {
 			const contentType = (requestConfig.headers ?? {})[
@@ -109,7 +109,7 @@ export class MyBaseClient implements Client {
 				"application/json";
 
 			const requestBody = requestContentType.startsWith(
-				"multipart/form-data"
+				"multipart/form-data",
 			)
 				? [
 						requestConfig.data.getHeaders(),
@@ -135,7 +135,7 @@ export class MyBaseClient implements Client {
 								baseURL: this.config.host,
 								url: `${this.config.host}${this.urlSuffix}`,
 								method: requestConfig.method ?? "GET",
-							}
+							},
 						),
 					...requestConfig.headers,
 					"Content-Type": requestContentType,
@@ -197,7 +197,10 @@ export interface ErrorData {
 }
 
 export class HTTPError extends Error {
-	constructor(msg: string, public response: ErrorData) {
+	constructor(
+		msg: string,
+		public response: ErrorData,
+	) {
 		super(msg);
 
 		// Set the prototype explicitly.

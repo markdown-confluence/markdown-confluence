@@ -19,7 +19,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		vault: Vault,
 		metadataCache: MetadataCache,
 		settings: ConfluenceUploadSettings.ConfluenceSettings,
-		app: App
+		app: App,
 	) {
 		this.vault = vault;
 		this.metadataCache = metadataCache;
@@ -95,11 +95,11 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 
 	async readBinary(
 		path: string,
-		referencedFromFilePath: string
+		referencedFromFilePath: string,
 	): Promise<BinaryFile | false> {
 		const testing = this.metadataCache.getFirstLinkpathDest(
 			path,
-			referencedFromFilePath
+			referencedFromFilePath,
 		);
 		if (testing) {
 			const files = await this.vault.readBinary(testing);
@@ -117,7 +117,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 	}
 	async updateMarkdownValues(
 		absoluteFilePath: string,
-		values: Partial<ConfluencePageConfig.ConfluencePerPageAllValues>
+		values: Partial<ConfluencePageConfig.ConfluencePerPageAllValues>,
 	): Promise<void> {
 		const config = ConfluencePageConfig.conniePerPageConfig;
 		const file = this.app.vault.getAbstractFileByPath(absoluteFilePath);

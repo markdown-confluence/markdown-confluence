@@ -20,7 +20,7 @@ export function wikilinks(state: StateInline): boolean {
 	const { hashFragment, headerStart, headerEnd } = findLinkToHeader(
 		state,
 		state.pos,
-		wikiLinkEnd
+		wikiLinkEnd,
 	);
 
 	if (hashFragment) {
@@ -28,21 +28,21 @@ export function wikilinks(state: StateInline): boolean {
 			state.src,
 			headerStart,
 			headerEnd,
-			hashFragment
+			hashFragment,
 		);
 	}
 
 	const { alias, aliasStart, aliasEnd } = findAlias(
 		state,
 		state.pos,
-		wikiLinkEnd
+		wikiLinkEnd,
 	);
 
 	const pageNameStart = wikilinkStart;
 	const pageNameEnd = Math.min(
 		wikiLinkEnd,
 		headerStart > 0 ? headerStart : wikiLinkEnd,
-		aliasStart > 0 ? aliasStart - 1 : wikiLinkEnd
+		aliasStart > 0 ? aliasStart - 1 : wikiLinkEnd,
 	);
 	const linkToPage = state.src.slice(pageNameStart, pageNameEnd);
 
@@ -72,7 +72,7 @@ function replaceBetween(
 	original: string,
 	start: number,
 	end: number,
-	replacement: string
+	replacement: string,
 ) {
 	return original.substring(0, start) + replacement + original.substring(end);
 }
@@ -111,7 +111,7 @@ function findLinkEnd(state: StateInline, start: number) {
 function findLinkToHeader(
 	state: StateInline,
 	start: number,
-	max: number
+	max: number,
 ): {
 	hashFragment: string | undefined;
 	headerStart: number;
@@ -162,7 +162,7 @@ function findLinkToHeader(
 function findAlias(
 	state: StateInline,
 	start: number,
-	max: number
+	max: number,
 ): { alias: string | undefined; aliasStart: number; aliasEnd: number } {
 	let aliasStart = -1,
 		aliasEnd = -1,

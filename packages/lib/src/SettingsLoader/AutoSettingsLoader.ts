@@ -27,7 +27,7 @@ export class AutoSettingsLoader extends SettingsLoader {
 				if (
 					Object.prototype.hasOwnProperty.call(
 						partialSettings,
-						propertyKey
+						propertyKey,
 					)
 				) {
 					const element = partialSettings[propertyKey];

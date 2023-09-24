@@ -30,7 +30,7 @@ export async function uploadBuffer(
 	currentAttachments: Record<
 		string,
 		{ filehash: string; attachmentId: string; collectionName: string }
-	>
+	>,
 ): Promise<UploadedImageData | null> {
 	const spark = new SparkMD5.ArrayBuffer();
 	const currentFileMd5 = spark.append(fileBuffer).end();
@@ -63,7 +63,7 @@ export async function uploadBuffer(
 
 	const attachmentResponse =
 		await confluenceClient.contentAttachments.createOrUpdateAttachments(
-			attachmentDetails
+			attachmentDetails,
 		);
 
 	const attachmentUploadResponse = attachmentResponse.results[0];
@@ -87,7 +87,7 @@ export async function uploadFile(
 	pageId: string,
 	pageFilePath: string,
 	fileNameToUpload: string,
-	currentAttachments: CurrentAttachments
+	currentAttachments: CurrentAttachments,
 ): Promise<UploadedImageData | null> {
 	let fileNameForUpload = fileNameToUpload;
 	let testing = await adaptor.readBinary(fileNameForUpload, pageFilePath);
@@ -129,7 +129,7 @@ export async function uploadFile(
 
 		const attachmentResponse =
 			await confluenceClient.contentAttachments.createOrUpdateAttachments(
-				attachmentDetails
+				attachmentDetails,
 			);
 
 		const attachmentUploadResponse = attachmentResponse.results[0];

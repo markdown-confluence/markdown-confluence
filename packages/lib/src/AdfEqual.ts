@@ -41,7 +41,7 @@ export function adfEqual(first: ADFEntity, second: ADFEntity): boolean {
 
 export function marksEqual(
 	first: ADFEntityMark[] | undefined,
-	second: ADFEntityMark[] | undefined
+	second: ADFEntityMark[] | undefined,
 ) {
 	if (first === second) {
 		return true;

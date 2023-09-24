@@ -32,7 +32,7 @@ type PossibleMatchForInlineComment = {
 
 export function prepareAdfToUpload(
 	confluencePagesToPublish: ConfluenceNode[],
-	settings: ConfluenceSettings
+	settings: ConfluenceSettings,
 ) {
 	const fileToPageIdMap: Record<string, ConfluenceAdfFile> = {};
 
@@ -51,13 +51,13 @@ export function prepareAdfToUpload(
 			confluenceNode.file.fileName,
 			result,
 			fileToPageIdMap,
-			settings
+			settings,
 		);
 
 		result = mergeTextNodes(result);
 
 		const pageInlineComments = extractInlineComments(
-			confluenceNode.existingPageData.adfContent
+			confluenceNode.existingPageData.adfContent,
 		);
 
 		result = applyInlineComments(result, pageInlineComments);
@@ -68,7 +68,7 @@ export function prepareAdfToUpload(
 
 function applyInlineComments(
 	adf: JSONDocNode,
-	pageInlineComments: ExtractedInlineComment[]
+	pageInlineComments: ExtractedInlineComment[],
 ) {
 	const unfoundInlineComments: ExtractedInlineComment[] = [];
 	let result = adf;
@@ -119,12 +119,12 @@ function applyInlineComments(
 						while (
 							(index = childText.indexOf(
 								comment.textForComment,
-								index
+								index,
 							)) !== -1
 						) {
 							const beforeTextMyNode = childText.slice(0, index);
 							const afterTextMyNode = childText.slice(
-								index + comment.textForComment.length
+								index + comment.textForComment.length,
 							);
 
 							const found: PossibleMatchForInlineComment = {
@@ -153,7 +153,7 @@ function applyInlineComments(
 
 		const whereToApplyComment = pickBestMatchForComment(
 			comment,
-			commentOptions
+			commentOptions,
 		);
 		if (
 			whereToApplyComment?.myNode &&
@@ -185,11 +185,11 @@ function applyInlineComments(
 							appliedComment = true;
 							const beforeText = child.text.slice(
 								0,
-								whereToApplyComment.commentStart
+								whereToApplyComment.commentStart,
 							);
 							const afterText = child.text.slice(
 								whereToApplyComment.commentEnd,
-								child.text.length
+								child.text.length,
 							);
 
 							if (beforeText) {
@@ -244,7 +244,7 @@ function applyInlineComments(
 	if (unfoundInlineComments.length > 0) {
 		const comments = [
 			heading({ level: 1 })(
-				text("Inline comments that couldn't be mapped")
+				text("Inline comments that couldn't be mapped"),
 			),
 			ol({ order: 1 })(
 				...unfoundInlineComments.map((item) =>
@@ -252,11 +252,11 @@ function applyInlineComments(
 						p(
 							commentedText(
 								item.textForComment ?? "",
-								item.inlineCommentId
-							)
+								item.inlineCommentId,
+							),
 						),
-					])
-				)
+					]),
+				),
 			),
 		];
 
@@ -284,7 +284,7 @@ function commentedText(text: string, inlineCommentId: string): TextDefinition {
 
 function pickBestMatchForComment(
 	inlineComment: ExtractedInlineComment,
-	possibleMatchsForInlineComment: PossibleMatchForInlineComment[]
+	possibleMatchsForInlineComment: PossibleMatchForInlineComment[],
 ): PossibleMatchForInlineComment | undefined {
 	if (possibleMatchsForInlineComment.length === 0) {
 		return undefined;
@@ -297,7 +297,7 @@ function pickBestMatchForComment(
 					possibleSpot.beforeTextMyNode &&
 			inlineComment.afterText ===
 				possibleSpot.afterTextMyNode +
-					possibleSpot.afterTextOutsideMyNode
+					possibleSpot.afterTextOutsideMyNode,
 	);
 	if (exactMatch) {
 		return exactMatch;
@@ -328,11 +328,11 @@ function pickBestMatchForComment(
 				beforeText.length > 0 &&
 				isSpecialCharacter(
 					inlineComment.beforeText.charAt(
-						inlineComment.beforeText.length - 1
-					)
+						inlineComment.beforeText.length - 1,
+					),
 				) !==
 					isSpecialCharacter(
-						beforeText.charAt(beforeText.length - 1)
+						beforeText.charAt(beforeText.length - 1),
 					)) ||
 			(inlineComment.afterText.length > 0 &&
 				afterText.length > 0 &&
@@ -344,11 +344,11 @@ function pickBestMatchForComment(
 
 		const beforeTextDistance = levenshteinDistance(
 			inlineComment.beforeText,
-			beforeText
+			beforeText,
 		);
 		const afterTextDistance = levenshteinDistance(
 			inlineComment.afterText,
-			afterText
+			afterText,
 		);
 
 		if (beforeTextDistance > 40 && afterTextDistance > 40) {
@@ -364,11 +364,11 @@ function pickBestMatchForComment(
 	const sortedDistances = distancesBeforeAfter.sort((a, b) => {
 		const minDistanceA = Math.min(
 			a.beforeTextDistance,
-			a.afterTextDistance
+			a.afterTextDistance,
 		);
 		const minDistanceB = Math.min(
 			b.beforeTextDistance,
-			b.afterTextDistance
+			b.afterTextDistance,
 		);
 
 		return minDistanceA - minDistanceB;
@@ -404,11 +404,11 @@ function pickBestMatchForComment(
 				beforeText.length > 0 &&
 				isSpecialCharacter(
 					inlineComment.beforeText.charAt(
-						inlineComment.beforeText.length - 1
-					)
+						inlineComment.beforeText.length - 1,
+					),
 				) !==
 					isSpecialCharacter(
-						beforeText.charAt(beforeText.length - 1)
+						beforeText.charAt(beforeText.length - 1),
 					)) ||
 			(inlineComment.afterText.length > 0 &&
 				afterText.length > 0 &&
@@ -423,47 +423,47 @@ function pickBestMatchForComment(
 
 		const wordsBeforeComment = getStringAfterXSpace(
 			inlineComment.beforeText,
-			2
+			2,
 		);
 		const wordsAfterComment = getStringBeforeXSpace(
 			inlineComment.afterText,
-			2
+			2,
 		);
 
 		const minBefore = Math.min(
 			wordsBeforeComment.length,
-			wordsFromBeforeText.length
+			wordsFromBeforeText.length,
 		);
 		const minAfter = Math.min(
 			wordsAfterComment.length,
-			wordsFromAfterText.length
+			wordsFromAfterText.length,
 		);
 
 		const trimmedWordsFromAfterText = wordsFromAfterText.substring(
 			0,
-			minAfter
+			minAfter,
 		);
 		const trimmedWordsAfterComment = wordsAfterComment.substring(
 			0,
-			minAfter
+			minAfter,
 		);
 
 		const trimmedWordsFromBeforeText = wordsFromBeforeText.substring(
 			wordsFromBeforeText.length - minBefore,
-			wordsFromBeforeText.length
+			wordsFromBeforeText.length,
 		);
 		const trimmedWordsBeforeComment = wordsBeforeComment.substring(
 			wordsBeforeComment.length - minBefore,
-			wordsBeforeComment.length
+			wordsBeforeComment.length,
 		);
 
 		const beforeTextDistance = levenshteinDistance(
 			trimmedWordsFromBeforeText,
-			trimmedWordsBeforeComment
+			trimmedWordsBeforeComment,
 		);
 		const afterTextDistance = levenshteinDistance(
 			trimmedWordsFromAfterText,
-			trimmedWordsAfterComment
+			trimmedWordsAfterComment,
 		);
 
 		if (
@@ -482,11 +482,11 @@ function pickBestMatchForComment(
 	const sortedDistancesWords = distancesBeforeAfterWords.sort((a, b) => {
 		const minDistanceA = Math.min(
 			a.beforeTextDistance,
-			a.afterTextDistance
+			a.afterTextDistance,
 		);
 		const minDistanceB = Math.min(
 			b.beforeTextDistance,
-			b.afterTextDistance
+			b.afterTextDistance,
 		);
 
 		return minDistanceA - minDistanceB;
@@ -590,7 +590,7 @@ function levenshteinDistance(a: string, b: string): number {
 				// @ts-expect-error
 				matrix[i][j - 1] + 1,
 				// @ts-expect-error
-				matrix[i - 1][j - 1] + cost
+				matrix[i - 1][j - 1] + cost,
 			);
 		}
 	}
@@ -609,13 +609,13 @@ function extractInlineComments(adf: JSONDocNode) {
 				node.marks.some(
 					(mark) =>
 						mark.type === "annotation" &&
-						mark.attrs?.["annotationType"] === "inlineComment"
+						mark.attrs?.["annotationType"] === "inlineComment",
 				)
 			) {
 				const inlineCommentMark = node.marks?.find(
 					(mark) =>
 						mark.type === "annotation" &&
-						mark.attrs?.["annotationType"] === "inlineComment"
+						mark.attrs?.["annotationType"] === "inlineComment",
 				);
 				const beforeNodes: (ADFEntity | undefined)[] = [],
 					afterNodes: (ADFEntity | undefined)[] = [];
@@ -655,7 +655,7 @@ function processWikilinkToActualLink(
 	currentFileName: string,
 	adf: JSONDocNode,
 	fileToPageIdMap: Record<string, ConfluenceAdfFile>,
-	settings: ConfluenceSettings
+	settings: ConfluenceSettings,
 ) {
 	return traverse(adf, {
 		text: (node, _parent) => {
