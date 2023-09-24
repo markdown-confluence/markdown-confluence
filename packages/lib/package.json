@@ -30,7 +30,7 @@
     "author": "andymac4182",
     "license": "Apache 2.0",
     "devDependencies": {
-        "@jest/globals": "^29.5.0",
+        "@jest/globals": "^29.7.0",
         "@types/lodash-es": "^4.17.9",
         "@types/markdown-it": "^13.0.0",
         "@types/prosemirror-model": "1.17.0",
