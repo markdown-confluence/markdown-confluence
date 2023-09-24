@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.5.1...@markdown-confluence/lib-v5.5.2) (2023-09-24)
+
+
+### Bug Fixes
+
+* Downgrade @atlaskit/adf-schema to fix issue ([914d324](https://github.com/markdown-confluence/markdown-confluence/commit/914d32431594a81d0b57a77a9051877b025c1a1d))
+
 ## [5.5.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.5.0...@markdown-confluence/lib-v5.5.1) (2023-09-24)
 
 
