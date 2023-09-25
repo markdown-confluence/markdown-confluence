@@ -20,7 +20,7 @@
         "obsidian": "1.1.1"
     },
     "dependencies": {
-        "confluence.js": "^1.6.3",
+        "confluence.js": "^1.7.0",
         "mime-types": "^2.1.35",
         "react": "^16.14.0",
         "react-dom": "^16.14.0",
