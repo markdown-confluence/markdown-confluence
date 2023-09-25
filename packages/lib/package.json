@@ -38,7 +38,7 @@
         "@types/prosemirror-transform": "^1.4.2",
         "@types/prosemirror-view": "^1.23.1",
         "@types/spark-md5": "^3.0.2",
-        "@types/uuid": "^9.0.2",
+        "@types/uuid": "^9.0.4",
         "jest": "^29.6.1",
         "markdown-it": "^13.0.1"
     },
@@ -59,7 +59,7 @@
         "prosemirror-model": "1.19.3",
         "sort-any": "^4.0.5",
         "spark-md5": "^3.0.2",
-        "uuid": "^9.0.0",
+        "uuid": "^9.0.1",
         "yargs": "17.7.2"
     },
     "resolutions": {
