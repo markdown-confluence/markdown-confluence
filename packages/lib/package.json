@@ -55,7 +55,7 @@
         "lodash-es": "^4.17.21",
         "markdown-it-table": "^4.1.1",
         "markdown-table": "^3.0.3",
-        "prosemirror-markdown": "^1.11.0",
+        "prosemirror-markdown": "^1.11.2",
         "prosemirror-model": "1.19.3",
         "sort-any": "^4.0.5",
         "spark-md5": "^3.0.2",
