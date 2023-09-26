@@ -35,8 +35,10 @@ async function main() {
 			break;
 		case "basic":
 			authentication = {
-				email: settings.atlassianUsername,
-				apiToken: settings.atlassianApiToken,
+				basic: {
+					email: settings.atlassianUsername,
+					apiToken: settings.atlassianApiToken,
+				},
 			};
 			break;
 		default:
