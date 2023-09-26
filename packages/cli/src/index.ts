@@ -15,18 +15,38 @@ import { ConfluenceClient } from "confluence.js";
 
 // Define the main function
 async function main() {
+	let authentication;
 	const settingLoader = new AutoSettingsLoader();
 	const settings = settingLoader.load();
 
 	const adaptor = new FileSystemAdaptor(settings); // Make sure this is identical as possible between Obsidian and CLI
+	switch (settings.confluenceAuthMethod) {
+		case "oauth2":
+			authentication = {
+				oauth2: {
+					accessToken: settings.atlassianApiToken,
+				},
+			};
+			break;
+		case "token":
+			authentication = {
+				personalAccessToken: settings.atlassianApiToken,
+			};
+			break;
+		case "basic":
+			authentication = {
+				email: settings.atlassianUsername,
+				apiToken: settings.atlassianApiToken,
+			};
+			break;
+		default:
+			throw new Error(
+				`Unknown authentication method: ${settings.confluenceAuthMethod}`,
+			);
+	}
 	const confluenceClient = new ConfluenceClient({
 		host: settings.confluenceBaseUrl,
-		authentication: {
-			basic: {
-				email: settings.atlassianUserName,
-				apiToken: settings.atlassianApiToken,
-			},
-		},
+		authentication,
 		middlewares: {
 			onError(e) {
 				if ("response" in e && "data" in e.response) {
