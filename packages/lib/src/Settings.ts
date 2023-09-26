@@ -1,5 +1,5 @@
 export type ConfluenceSettings = {
-	confluenceAuthMethod: "basic" | "oauth2" | "token";
+	confluenceAuthMethod: string;
 	confluenceBaseUrl: string;
 	confluenceParentId: string;
 	atlassianUserName: string;
