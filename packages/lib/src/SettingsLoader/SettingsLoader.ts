@@ -20,7 +20,7 @@ export abstract class SettingsLoader {
 			throw new Error("Confluence parent ID is required");
 		}
 
-		if (!settings.atlassianUserName) {
+		if (settings.confluenceAuthMethod == "basic" && !settings.atlassianUserName) {
 			throw new Error("Atlassian user name is required");
 		}
 

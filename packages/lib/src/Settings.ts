@@ -1,4 +1,5 @@
 export type ConfluenceSettings = {
+	confluenceAuthMethod: string;
 	confluenceBaseUrl: string;
 	confluenceParentId: string;
 	atlassianUserName: string;
@@ -9,6 +10,7 @@ export type ConfluenceSettings = {
 };
 
 export const DEFAULT_SETTINGS: ConfluenceSettings = {
+	confluenceAuthMethod: "basic",
 	confluenceBaseUrl: "",
 	confluenceParentId: "",
 	atlassianUserName: "",
