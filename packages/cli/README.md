@@ -64,7 +64,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Publish Markdown to Confluence
-        uses: markdown-confluence/publish@v5
+        uses: markdown-confluence/publish-action@v5
         with:
 		  confluenceAuthMethod: token
 		  confluenceBaseUrl: https://your_confluence_server_url
