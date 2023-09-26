@@ -50,7 +50,7 @@ docker run -it --rm -v "$(pwd):/content" -e ATLASSIAN_API_TOKEN ghcr.io/markdown
 
 ### GitHub Actions
 
-**Example setup**
+**Example setup, using a personal access token**
 
 `.github/workflows/publish.yml`:
 
@@ -62,10 +62,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Publish Markdown to Confluence
-        uses: markdown-confluence/publish@v1
+        uses: markdown-confluence/publish@v5
         with:
+		  confluenceAuthMethod: token
+		  confluenceBaseUrl: https://your_confluence_server_url
           atlassianApiToken: ${{ secrets.ATLASSIAN_API_TOKEN }}
 ```
 
