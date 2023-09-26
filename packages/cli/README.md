@@ -66,8 +66,8 @@ jobs:
       - name: Publish Markdown to Confluence
         uses: markdown-confluence/publish-action@v5
         with:
-		  confluenceAuthMethod: token
-		  confluenceBaseUrl: https://your_confluence_server_url
+          confluenceAuthMethod: token
+          confluenceBaseUrl: https://your_confluence_server_url
           atlassianApiToken: ${{ secrets.ATLASSIAN_API_TOKEN }}
 ```
 
