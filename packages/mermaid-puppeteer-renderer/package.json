@@ -19,7 +19,7 @@
     "license": "Apache 2.0",
     "dependencies": {
         "@markdown-confluence/lib": "5.5.2",
-        "mermaid": "10.4.0",
+        "mermaid": "10.6.1",
         "puppeteer": "21.3.4"
     },
     "publishConfig": {
