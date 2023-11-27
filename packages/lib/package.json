@@ -43,7 +43,7 @@
         "markdown-it": "^13.0.1"
     },
     "dependencies": {
-        "@atlaskit/adf-schema": "^25.6.4",
+        "@atlaskit/adf-schema": "^34.0.1",
         "@atlaskit/adf-utils": "^19.0.0",
         "@atlaskit/editor-common": "^75.5.2",
         "@atlaskit/editor-json-transformer": "^8.10.9",
