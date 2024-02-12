@@ -30,11 +30,21 @@ export async function uploadBuffer(
 	currentAttachments: Record<
 		string,
 		{ filehash: string; attachmentId: string; collectionName: string }
-	>,
+	>
 ): Promise<UploadedImageData | null> {
 	const spark = new SparkMD5.ArrayBuffer();
 	const currentFileMd5 = spark.append(fileBuffer).end();
-	const imageSize = await sizeOf(fileBuffer);
+	let width = 0;
+	let height = 0;
+	try {
+		const imageSize = sizeOf(fileBuffer);
+		width = imageSize.width ?? 0;
+		height = imageSize.height ?? 0;
+	} catch (e) {
+		// Manually specify resolution for files when not supported
+		width = 1080;
+		height = 720;
+	}
 
 	const fileInCurrentAttachments = currentAttachments[uploadFilename];
 	if (fileInCurrentAttachments?.filehash === currentFileMd5) {
@@ -42,8 +52,8 @@ export async function uploadBuffer(
 			filename: uploadFilename,
 			id: fileInCurrentAttachments.attachmentId,
 			collection: fileInCurrentAttachments.collectionName,
-			width: imageSize.width ?? 0,
-			height: imageSize.height ?? 0,
+			width: width,
+			height: height,
 			status: "existing",
 		};
 	}
@@ -63,7 +73,7 @@ export async function uploadBuffer(
 
 	const attachmentResponse =
 		await confluenceClient.contentAttachments.createOrUpdateAttachments(
-			attachmentDetails,
+			attachmentDetails
 		);
 
 	const attachmentUploadResponse = attachmentResponse.results[0];
@@ -75,8 +85,8 @@ export async function uploadBuffer(
 		filename: uploadFilename,
 		id: attachmentUploadResponse.extensions.fileId,
 		collection: `contentId-${attachmentUploadResponse.container.id}`,
-		width: imageSize.width ?? 0,
-		height: imageSize.height ?? 0,
+		width: width,
+		height: height,
 		status: "uploaded",
 	};
 }
@@ -87,7 +97,7 @@ export async function uploadFile(
 	pageId: string,
 	pageFilePath: string,
 	fileNameToUpload: string,
-	currentAttachments: CurrentAttachments,
+	currentAttachments: CurrentAttachments
 ): Promise<UploadedImageData | null> {
 	let fileNameForUpload = fileNameToUpload;
 	let testing = await adaptor.readBinary(fileNameForUpload, pageFilePath);
@@ -101,7 +111,18 @@ export async function uploadFile(
 		const pathMd5 = SparkMD5.hash(testing.filePath);
 		const uploadFilename = `${pathMd5}-${testing.filename}`;
 		const imageBuffer = Buffer.from(testing.contents);
-		const imageSize = await sizeOf(imageBuffer);
+
+		let width = 0;
+		let height = 0;
+		try {
+			const imageSize = sizeOf(imageBuffer);
+			width = imageSize.width ?? 0;
+			height = imageSize.height ?? 0;
+		} catch (e) {
+			// Manually specify resolution for files when not supported
+			width = 1080;
+			height = 720;
+		}
 
 		const fileInCurrentAttachments = currentAttachments[uploadFilename];
 		if (fileInCurrentAttachments?.filehash === currentFileMd5) {
@@ -109,8 +130,8 @@ export async function uploadFile(
 				filename: fileNameForUpload,
 				id: fileInCurrentAttachments.attachmentId,
 				collection: fileInCurrentAttachments.collectionName,
-				width: imageSize.width ?? 0,
-				height: imageSize.height ?? 0,
+				width: width,
+				height: height,
 				status: "existing",
 			};
 		}
@@ -129,7 +150,7 @@ export async function uploadFile(
 
 		const attachmentResponse =
 			await confluenceClient.contentAttachments.createOrUpdateAttachments(
-				attachmentDetails,
+				attachmentDetails
 			);
 
 		const attachmentUploadResponse = attachmentResponse.results[0];
@@ -141,8 +162,8 @@ export async function uploadFile(
 			filename: fileNameForUpload,
 			id: attachmentUploadResponse.extensions.fileId,
 			collection: `contentId-${attachmentUploadResponse.container.id}`,
-			width: imageSize.width ?? 0,
-			height: imageSize.height ?? 0,
+			width: width,
+			height: height,
 			status: "uploaded",
 		};
 	}
