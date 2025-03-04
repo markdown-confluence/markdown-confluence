@@ -38,6 +38,10 @@ async function main() {
 			},
 		},
 	});
+	// Forcefully overriding urlSuffix used by the client
+	// This is a hack and should be fixed in the confluence.js library
+	// This is needed because the confluence.js library doesn't allow us to set the urlSuffix in the constructor
+	confluenceClient["urlSuffix"] = settings.confluenceUrlSuffix;
 
 	const publisher = new Publisher(adaptor, settingLoader, confluenceClient, [
 		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),
