@@ -59,9 +59,20 @@ export class MappingManager {
 	 * @returns The index of the new mapping
 	 */
 	public async addMapping(mapping: PublishMapping): Promise<number> {
-		if (!mapping.folderToPublish || !mapping.confluenceParentId) {
+		// First validate that mapping object exists
+		if (!mapping) {
 			this.errorHandler.handleError({
-				message: 'Invalid mapping: folderToPublish and confluenceParentId are required',
+				message: 'Cannot add undefined mapping',
+				component: 'MappingManager',
+				level: ErrorLevel.WARNING
+			});
+			return -1;
+		}
+
+		// Then check for undefined properties - but allow empty strings for new mappings
+		if (mapping.folderToPublish === undefined || mapping.confluenceParentId === undefined) {
+			this.errorHandler.handleError({
+				message: 'Invalid mapping: folderToPublish and confluenceParentId cannot be undefined',
 				component: 'MappingManager',
 				level: ErrorLevel.WARNING
 			});

@@ -96,6 +96,9 @@ export default class ConfluencePlugin extends Plugin {
 			// Register event handlers 
 			this.visualIndicatorManager.registerEvents();
 
+			// Register context menu items
+			this.contextMenuManager.registerContextMenu();
+
 			// Just reference these properties to satisfy TypeScript unused variable check
 			// These could be used in future refactoring phases
 			void this.eventCoordinator;
