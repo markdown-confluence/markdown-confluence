@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TextComponent } from "obsidian";
+import { App, ButtonComponent, Modal, Notice, PluginSettingTab, setIcon, Setting, TextComponent, TFolder } from "obsidian";
 import ConfluencePlugin, { PublishMapping } from "./main";
 import { LogLevel } from "./utils";
 
@@ -17,12 +17,50 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl("h2", {
+		// Main header with description and links
+		containerEl.createEl("h1", {
 			text: "Confluence Integration",
 		});
 
-		// Atlassian Connection
+		containerEl.createEl("p", {
+			text: "This plugin allows you to publish Obsidian notes to Confluence. Configure your Atlassian connection and publishing options below.",
+			cls: "setting-item-description"
+		});
+
+		// Add documentation links
+		const linkContainer = containerEl.createDiv({ cls: "confluence-links-container" });
+
+		const githubLink = linkContainer.createEl("a", {
+			text: "GitHub",
+			cls: "confluence-external-link",
+			attr: {
+				href: "https://github.com/markdown-confluence/markdown-confluence",
+				target: "_blank",
+				rel: "noopener"
+			}
+		});
+		setIcon(githubLink, "github");
+
+		linkContainer.createSpan({ text: " • ", cls: "confluence-link-separator" });
+
+		const docsLink = linkContainer.createEl("a", {
+			text: "Documentation",
+			cls: "confluence-external-link",
+			attr: {
+				href: "https://markdown-confluence.github.io/",
+				target: "_blank",
+				rel: "noopener"
+			}
+		});
+		setIcon(docsLink, "book-open");
+
+		// Connection section with better description
 		containerEl.createEl("h2", { text: "Connection" });
+
+		containerEl.createEl("p", {
+			text: "Your Atlassian account credentials are stored locally in your vault and used to authenticate with Confluence API.",
+			cls: "setting-item-description"
+		});
 
 		new Setting(containerEl)
 			.setName("Confluence Domain")
@@ -34,8 +72,9 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.confluenceBaseUrl = value;
 						await this.plugin.saveSettings();
-					}),
-			);
+					})
+			)
+			.setTooltip("Enter the full URL of your Confluence instance, including https://");
 
 		new Setting(containerEl)
 			.setName("Atlassian Username")
@@ -47,7 +86,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.atlassianUserName = value;
 						await this.plugin.saveSettings();
-					}),
+					})
 			);
 
 		new Setting(containerEl)
@@ -60,96 +99,30 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.atlassianApiToken = value;
 						await this.plugin.saveSettings();
-					}),
-			);
-
-		// containerEl.createEl("hr");
-
-		// Publishing
-		containerEl.createEl("h2", { text: "Publishing" });
-
-		// Legacy settings for backward compatibility
-		if (this.plugin.settings.folderToPublish || this.plugin.settings.confluenceParentId) {
-			const legacySettingEl = containerEl.createDiv({ cls: "setting-item-legacy" });
-			legacySettingEl.createEl("p", {
-				text: "Legacy settings (maintained for compatibility):",
-				cls: "setting-item-description"
+					})
+			)
+			.addExtraButton((button) => {
+				button
+					.setIcon("external-link")
+					.setTooltip("Create an API token on Atlassian")
+					.onClick(() => {
+						window.open(
+							"https://id.atlassian.com/manage-profile/security/api-tokens",
+							"_blank"
+						);
+					});
 			});
 
-			new Setting(legacySettingEl)
-				.setName("Confluence Parent Page ID")
-				.setDesc("Page ID under which your content will be published")
-				.addText((text) =>
-					text
-						.setPlaceholder("23232345645")
-						.setValue(this.plugin.settings.confluenceParentId)
-						.onChange(async (value) => {
-							this.plugin.settings.confluenceParentId = value;
-							await this.plugin.saveSettings();
-						}),
-				);
+		// Publishing section with better descriptions
+		containerEl.createEl("h2", { text: "Publishing" });
 
-			const folderSetting = new Setting(legacySettingEl)
-				.setName("Folder to publish")
-				.setDesc(
-					"Specify the folder containing files to publish. Files can be excluded using YAML frontmatter."
-				)
-				.addText((text) => {
-					const textComponent = text
-						.setPlaceholder("my-confluence-content")
-						.setValue(this.plugin.settings.folderToPublish)
-						.onChange(async (value) => {
-							// Check if folder exists
-							const folderExists = this.app.vault.getAbstractFileByPath(value) !== null;
+		// Multi-folder mappings with improved description
+		containerEl.createEl("h3", { text: "Publish Mappings" });
 
-							// Update UI based on validation
-							if (value && !folderExists) {
-								textComponent.inputEl.addClass("is-invalid");
-								folderValidationEl.setText("⚠️ This folder doesn't exist in your vault");
-								folderValidationEl.show();
-							} else {
-								textComponent.inputEl.removeClass("is-invalid");
-								folderValidationEl.hide();
-							}
-
-							// Still save the value (user might create the folder later)
-							this.plugin.settings.folderToPublish = value;
-							await this.plugin.saveSettings();
-						});
-
-					return textComponent;
-				});
-
-			// Add validation message element
-			const folderValidationEl = folderSetting.descEl.createDiv("validation-error");
-			folderValidationEl.addClass("setting-item-description");
-			folderValidationEl.addClass("text-error");
-			folderValidationEl.style.marginTop = "8px";
-			folderValidationEl.hide();
-
-			// Validate on initial load
-			if (this.plugin.settings.folderToPublish) {
-				const folderExists = this.app.vault.getAbstractFileByPath(this.plugin.settings.folderToPublish) !== null;
-				if (!folderExists) {
-					const textComponent = folderSetting.components[0] as TextComponent;
-					if (textComponent?.inputEl) {
-						textComponent.inputEl.addClass("is-invalid");
-						folderValidationEl.setText("⚠️ This folder doesn't exist in your vault");
-						folderValidationEl.show();
-					}
-				}
-			}
-		}
-
-		// Multi-folder mappings
-		const mappingHeader = containerEl.createEl("h3", { text: "Publish Mappings" });
-		mappingHeader.style.marginBottom = "0.5em";
-
-		const mappingDescription = containerEl.createEl("p", {
-			text: "Configure multiple folders to publish to different Confluence parent pages.",
+		containerEl.createEl("p", {
+			text: "Configure multiple folders to publish to different Confluence parent pages. Each mapping defines a source folder in your vault and a destination parent page in Confluence.",
 			cls: "setting-item-description"
 		});
-		mappingDescription.style.marginBottom = "1em";
 
 		// Container for mapping list
 		this.mappingsContainerEl = containerEl.createDiv({ cls: "confluence-mappings" });
@@ -179,10 +152,13 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					});
 			});
 
-		// containerEl.createEl("hr");
+		// Display options with improved descriptions
+		containerEl.createEl("h2", { text: "Display Options" });
 
-		// Display
-		containerEl.createEl("h2", { text: "Display" });
+		containerEl.createEl("p", {
+			text: "Customize how your content appears in Confluence pages.",
+			cls: "setting-item-description"
+		});
 
 		new Setting(containerEl)
 			.setName("Use first header as page title")
@@ -193,8 +169,9 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.firstHeadingPageTitle = value;
 						await this.plugin.saveSettings();
-					}),
-			);
+					})
+			)
+			.setTooltip("Recommended for better readability in Confluence");
 
 		new Setting(containerEl)
 			.setName("Mermaid Diagram Theme")
@@ -218,20 +195,14 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 				/* eslint-enable @typescript-eslint/naming-convention */
-			});
+			})
+			.setTooltip("Choose a theme that matches your Confluence appearance");
 
-		// Add a footer with helpful information
-		containerEl.createEl("div", {
-			text: "Need help? Refer to the plugin documentation or create an issue on GitHub.",
-			cls: "setting-item-description",
+		// Advanced options
+		containerEl.createEl("h2", {
+			text: "Advanced Options",
+			cls: "confluence-developer-heading"
 		});
-
-		containerEl.createEl("br");
-
-		// Add debug logging settings
-		new Setting(containerEl)
-			.setName("Developer")
-			.setHeading();
 
 		new Setting(containerEl)
 			.setName("Debug Logging Level")
@@ -253,7 +224,18 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						// Logger will be updated when settings are saved
 					});
-			});
+			})
+			.setTooltip("Higher detail levels may impact performance");
+
+		// Add footer with version info
+		const footerEl = containerEl.createEl("div", {
+			cls: "confluence-settings-footer"
+		});
+
+		footerEl.createEl("span", {
+			text: `Markdown Confluence v${this.plugin.manifest.version}`,
+			cls: "confluence-version-info"
+		});
 	}
 
 	renderMappings(): void {
@@ -261,8 +243,14 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 		console.debug("ConfluenceSettingTab: renderMappings called");
 
 		if (this.plugin.settings.publishMappings.length === 0) {
-			const emptyState = this.mappingsContainerEl.createDiv({ cls: "confluence-empty-state" });
-			emptyState.createEl("p", { text: "No publish mappings defined yet. Add one to get started." });
+			const emptyState = this.mappingsContainerEl.createEl("div", {
+				cls: "confluence-empty-state"
+			});
+
+			emptyState.createEl("p", {
+				text: "No publish mappings defined yet. Add one to get started."
+			});
+
 			return;
 		}
 
@@ -279,15 +267,20 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 
 			const isActive = i === this.plugin.settings.activeMappingIndex;
 
-			const mappingEl = this.mappingsContainerEl.createDiv({
+			const mappingEl = this.mappingsContainerEl.createEl("div", {
 				cls: `confluence-mapping ${isActive ? "active-mapping" : ""}`
 			});
 
 			if (isActive) {
-				mappingEl.createEl("div", {
-					text: "ACTIVE",
+				const badgeEl = mappingEl.createEl("div", {
 					cls: "confluence-mapping-active-badge"
 				});
+
+				badgeEl.createSpan({
+					text: "ACTIVE",
+				});
+
+				setIcon(badgeEl, "check-circle");
 			}
 
 			// Mapping heading with label
@@ -313,6 +306,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings(true);
 							headingEl.setText(value || `Mapping ${i + 1}`);
 						});
+					return text;
 				});
 
 			// Parent ID setting
@@ -331,10 +325,35 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 							// Use skipInit=true to prevent settings reset
 							await this.plugin.saveSettings(true);
 						});
+
+					return text;
+				})
+				.addExtraButton((button) => {
+					button
+						.setIcon("help-circle")
+						.setTooltip("How to find your Confluence page ID")
+						.onClick(() => {
+							const notice = new Notice("", 0);
+							const noticeContent = document.createElement("div");
+							noticeContent.innerHTML = `
+								<h4>How to find your Confluence Page ID</h4>
+								<p>1. Go to your Confluence page</p>
+								<p>2. Look at the URL, find the number after "pageId=" or before "view-page"</p>
+								<p>3. Example: .../spaces/SPACE/pages/<strong>123456789</strong>/Page+Title</p>
+								<div style="text-align:right">
+									<button class="mod-cta">Dismiss</button>
+								</div>
+							`;
+							const dismissButton = noticeContent.querySelector("button");
+							dismissButton?.addEventListener("click", () => {
+								notice.hide();
+							});
+							notice.noticeEl.replaceChildren(noticeContent);
+						});
 				});
 
 			// Folder setting with validation
-			let folderComponent: TextComponent;
+			let folderComponent: TextComponent | undefined;
 			const folderSetting = new Setting(mappingEl)
 				.setName("Folder to publish")
 				.setDesc("Specify the folder containing files to publish")
@@ -349,13 +368,12 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 							const folderExists = this.app.vault.getAbstractFileByPath(value) !== null;
 
 							// Update UI based on validation
-							if (value && !folderExists) {
-								textComponent.inputEl.addClass("is-invalid");
+							if (folderExists) {
+								// No validation needed
+							} else if (folderComponent?.inputEl) {
+								folderComponent.inputEl.addClass("is-invalid");
 								folderValidationEl.setText("⚠️ This folder doesn't exist in your vault");
-								folderValidationEl.show();
-							} else {
-								textComponent.inputEl.removeClass("is-invalid");
-								folderValidationEl.hide();
+								folderValidationEl.style.display = "block";
 							}
 
 							mapping.folderToPublish = value;
@@ -364,24 +382,60 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 						});
 
 					return textComponent;
+				})
+				.addExtraButton((button) => {
+					button
+						.setIcon("folder")
+						.setTooltip("Browse folders")
+						.onClick(() => {
+							// Get all folders
+							const folders: string[] = [];
+
+							// Recursive function to get all folders
+							const getFolders = (path: string = "") => {
+								const file = this.app.vault.getAbstractFileByPath(path);
+								if (!file) return;
+
+								if (file instanceof TFolder) {
+									for (const child of file.children) {
+										if (child instanceof TFolder) { // Check if it's a folder
+											folders.push(child.path);
+											getFolders(child.path);
+										}
+									}
+								}
+							};
+
+							getFolders("");
+
+							// Create folder selector modal
+							const modal = new FolderSelectorModal(this.app, folders, (selectedFolder) => {
+								if (folderComponent && mapping) {
+									folderComponent.setValue(selectedFolder);
+									mapping.folderToPublish = selectedFolder;
+									this.plugin.saveSettings(true);
+								}
+							});
+
+							modal.open();
+						});
 				});
 
 			// Add validation message element
 			const folderValidationEl = folderSetting.descEl.createDiv("validation-error");
 			folderValidationEl.addClass("setting-item-description");
 			folderValidationEl.addClass("text-error");
-			folderValidationEl.style.marginTop = "8px";
-			folderValidationEl.hide();
+			folderValidationEl.style.display = "none";
 
 			// Validate folder on initial load
 			if (mapping.folderToPublish) {
 				const folderExists = this.app.vault.getAbstractFileByPath(mapping.folderToPublish) !== null;
 				if (!folderExists) {
-					const textComponent = folderSetting.components[0] as TextComponent;
+					const textComponent = folderComponent;
 					if (textComponent?.inputEl) {
 						textComponent.inputEl.addClass("is-invalid");
 						folderValidationEl.setText("⚠️ This folder doesn't exist in your vault");
-						folderValidationEl.show();
+						folderValidationEl.style.display = "block";
 					}
 				}
 			}
@@ -403,9 +457,9 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 							});
 
 							// Get the current values from the text components
-							const labelValue = labelComponent.getValue();
-							const parentIdValue = parentIdComponent.getValue();
-							const folderValue = folderComponent.getValue();
+							const labelValue = labelComponent?.getValue();
+							const parentIdValue = parentIdComponent?.getValue();
+							const folderValue = folderComponent?.getValue();
 
 							console.debug("Current values from components:", {
 								labelValue,
@@ -414,14 +468,16 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 							});
 
 							// Update mapping values
-							mapping.label = labelValue || mapping.label || "";
-							mapping.confluenceParentId = parentIdValue || mapping.confluenceParentId;
-							mapping.folderToPublish = folderValue || mapping.folderToPublish;
+							if (mapping) {
+								mapping.label = labelValue || mapping.label || "";
+								mapping.confluenceParentId = parentIdValue || mapping.confluenceParentId;
+								mapping.folderToPublish = folderValue || mapping.folderToPublish;
+							}
 
 							console.debug("Updated mapping object:", {
-								label: mapping.label,
-								confluenceParentId: mapping.confluenceParentId,
-								folderToPublish: mapping.folderToPublish
+								label: mapping?.label,
+								confluenceParentId: mapping?.confluenceParentId,
+								folderToPublish: mapping?.folderToPublish
 							});
 
 							// Save the settings with updated values
@@ -429,9 +485,14 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 							// Use skipInit=true to prevent settings reset
 							await this.plugin.saveSettings(true);
 
-							// Now set the mapping as active
+							// Set the active mapping index directly to ensure UI updates
+							this.plugin.settings.activeMappingIndex = i;
+
+							// Now set the mapping as active (this handles any other logic)
 							console.debug(`Setting active mapping to index ${i}`);
 							await this.plugin.setActiveMapping(i);
+
+							// Make sure to re-render with the updated active index
 							console.debug("Rerendering mappings");
 							this.renderMappings();
 						});
@@ -441,10 +502,23 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			actionsSetting.addButton((button) => {
 				button
 					.setButtonText("Remove")
-					.setWarning()
+					.setIcon("trash-2")
+					.setClass("confluence-delete-button")
 					.onClick(async () => {
-						await this.plugin.removeMapping(i);
-						this.renderMappings();
+						// Create confirmation modal
+						const modal = new ConfirmationModal(
+							this.app,
+							"Delete mapping",
+							`Are you sure you want to delete the mapping "${mapping.label || `Mapping ${i + 1}`}"?`,
+							async (confirmed) => {
+								if (confirmed) {
+									await this.plugin.removeMapping(i);
+									this.renderMappings();
+								}
+							}
+						);
+
+						modal.open();
 					});
 			});
 		}
@@ -460,39 +534,225 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			const styleEl = document.createElement("style");
 			styleEl.id = styleId;
 			styleEl.textContent = `
+				.confluence-links-container {
+					display: flex;
+					align-items: center;
+					margin-bottom: 20px;
+					gap: 8px;
+				}
+				
+				.confluence-external-link {
+					display: inline-flex;
+					align-items: center;
+					gap: 4px;
+				}
+				
+				.confluence-link-separator {
+					color: var(--text-muted);
+				}
+				
 				.confluence-mapping {
 					border: 1px solid var(--background-modifier-border);
-					border-radius: 5px;
-					padding: 10px;
-					margin-bottom: 15px;
+					border-radius: var(--radius-m);
+					padding: 16px;
+					margin-bottom: 16px;
 					position: relative;
+					background-color: var(--background-secondary);
 				}
+				
 				.confluence-mapping.active-mapping {
 					border-color: var(--interactive-accent);
 					border-width: 2px;
 				}
+				
 				.confluence-mapping-active-badge {
 					position: absolute;
-					top: 10px;
-					right: 10px;
+					top: 12px;
+					right: 12px;
 					background-color: var(--interactive-accent);
 					color: var(--text-on-accent);
 					font-size: 12px;
 					font-weight: bold;
-					padding: 2px 6px;
-					border-radius: 3px;
+					padding: 2px 8px;
+					border-radius: var(--radius-s);
+					display: flex;
+					align-items: center;
+					gap: 4px;
 				}
+				
 				.confluence-mapping-heading {
 					margin-top: 0;
-					margin-bottom: 10px;
+					margin-bottom: 16px;
 				}
+				
 				.confluence-empty-state {
 					text-align: center;
-					padding: 20px;
+					padding: 30px;
 					color: var(--text-muted);
+					background-color: var(--background-secondary);
+					border-radius: var(--radius-m);
+					margin-bottom: 16px;
+				}
+				
+				.confluence-delete-button {
+					color: var(--text-error) !important;
+				}
+				
+				.is-invalid {
+					border-color: var(--text-error) !important;
+				}
+				
+				.text-error {
+					color: var(--text-error);
+				}
+				
+				.confluence-settings-footer {
+					margin-top: 40px;
+					padding-top: 16px;
+					border-top: 1px solid var(--background-modifier-border);
+					color: var(--text-muted);
+					font-size: 12px;
+				}
+				
+				.confluence-developer-heading {
+					margin-top: 40px;
 				}
 			`;
 			document.head.appendChild(styleEl);
 		}
 	}
 }
+
+// Helper modal for folder selection
+class FolderSelectorModal extends Modal {
+	folders: string[];
+	onSelect: (folder: string) => void;
+
+	constructor(app: App, folders: string[], onSelect: (folder: string) => void) {
+		super(app);
+		this.folders = folders;
+		this.onSelect = onSelect;
+	}
+
+	override open() {
+		super.open();
+	}
+
+	override onOpen() {
+		const { contentEl } = this;
+
+		contentEl.createEl("h2", { text: "Select a folder" });
+
+		const folderList = contentEl.createEl("div", { cls: "confluence-folder-list" });
+
+		// Style the folder list
+		folderList.style.maxHeight = "300px";
+		folderList.style.overflow = "auto";
+		folderList.style.marginBottom = "16px";
+
+		// Sort folders alphabetically
+		this.folders.sort();
+
+		for (const folder of this.folders) {
+			const folderItem = folderList.createEl("div", { cls: "confluence-folder-item" });
+
+			folderItem.createEl("span", {
+				text: folder || "(Root)",
+				cls: "confluence-folder-name"
+			});
+
+			// Style the folder item
+			folderItem.style.padding = "8px";
+			folderItem.style.cursor = "pointer";
+			folderItem.style.borderRadius = "4px";
+			folderItem.style.marginBottom = "4px";
+
+			// Hover effect
+			folderItem.addEventListener("mouseenter", () => {
+				folderItem.style.backgroundColor = "var(--background-modifier-hover)";
+			});
+
+			folderItem.addEventListener("mouseleave", () => {
+				folderItem.style.backgroundColor = "";
+			});
+
+			folderItem.addEventListener("click", () => {
+				this.onSelect(folder);
+				this.close();
+			});
+		}
+
+		// Cancel button
+		const footerEl = contentEl.createEl("div", { cls: "confluence-modal-footer" });
+		footerEl.style.textAlign = "right";
+
+		new ButtonComponent(footerEl)
+			.setButtonText("Cancel")
+			.onClick(() => this.close());
+	}
+
+	override close() {
+		super.close();
+	}
+
+	override onClose() {
+		const { contentEl } = this;
+		contentEl.empty();
+	}
+}
+
+// Confirmation modal
+class ConfirmationModal extends Modal {
+	title: string;
+	message: string;
+	onConfirm: (confirmed: boolean) => void;
+
+	constructor(app: App, title: string, message: string, onConfirm: (confirmed: boolean) => void) {
+		super(app);
+		this.title = title;
+		this.message = message;
+		this.onConfirm = onConfirm;
+	}
+
+	override open() {
+		super.open();
+	}
+
+	override onOpen() {
+		const { contentEl } = this;
+
+		contentEl.createEl("h2", { text: this.title });
+		contentEl.createEl("p", { text: this.message });
+
+		const footerEl = contentEl.createEl("div", { cls: "confluence-modal-footer" });
+		footerEl.style.display = "flex";
+		footerEl.style.justifyContent = "flex-end";
+		footerEl.style.gap = "8px";
+		footerEl.style.marginTop = "20px";
+
+		new ButtonComponent(footerEl)
+			.setButtonText("Cancel")
+			.onClick(() => {
+				this.onConfirm(false);
+				this.close();
+			});
+
+		new ButtonComponent(footerEl)
+			.setButtonText("Delete")
+			.setWarning()
+			.onClick(() => {
+				this.onConfirm(true);
+				this.close();
+			});
+	}
+
+	override close() {
+		super.close();
+	}
+
+	override onClose() {
+		const { contentEl } = this;
+		contentEl.empty();
+	}
+}
+

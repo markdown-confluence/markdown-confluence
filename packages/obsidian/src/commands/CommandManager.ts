@@ -64,7 +64,6 @@ export class CommandManager {
 				return;
 			}
 
-			this.stateManager.setSyncingState(true);
 			try {
 				const stats = await this.publishManager.publish();
 				if (this.app) {
@@ -92,8 +91,6 @@ export class CommandManager {
 						}).open();
 					}
 				}
-			} finally {
-				this.stateManager.setSyncingState(false);
 			}
 		});
 
@@ -138,8 +135,6 @@ export class CommandManager {
 			checkCallback: (checking: boolean) => {
 				if (!this.stateManager.getSyncingState()) {
 					if (!checking) {
-						this.stateManager.setSyncingState(true);
-
 						const activeLeafPath = this.getActiveLeafPath();
 
 						this.publishManager.publish(activeLeafPath)
@@ -170,9 +165,6 @@ export class CommandManager {
 										}).open();
 									}
 								}
-							})
-							.finally(() => {
-								this.stateManager.setSyncingState(false);
 							});
 					}
 					return true;
@@ -188,7 +180,6 @@ export class CommandManager {
 			checkCallback: (checking: boolean) => {
 				if (!this.stateManager.getSyncingState()) {
 					if (!checking) {
-						this.stateManager.setSyncingState(true);
 						this.publishManager.publish()
 							.then((stats) => {
 								if (this.app) {
@@ -217,9 +208,6 @@ export class CommandManager {
 										}).open();
 									}
 								}
-							})
-							.finally(() => {
-								this.stateManager.setSyncingState(false);
 							});
 					}
 				}

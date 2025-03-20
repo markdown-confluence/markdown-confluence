@@ -86,6 +86,8 @@ export default class ConfluencePlugin extends Plugin {
 			this.visualIndicatorManager.initialize(this.app);
 			this.contextMenuManager.initialize(this.app);
 			this.commandManager.initialize(this.app, this);
+			this.mermaidManager.initialize(this.app);
+			await this.publishManager.initialize(this.app);
 
 			// Register UI components
 			this.addSettingTab(new ConfluenceSettingTab(this.app, this));
@@ -104,8 +106,6 @@ export default class ConfluencePlugin extends Plugin {
 			void this.eventCoordinator;
 			void this.stateManager;
 			void this.configMigrator;
-			void this.publishManager;
-			void this.mermaidManager;
 
 			mainLogger.info("Confluence plugin loaded successfully");
 		} catch (error) {
