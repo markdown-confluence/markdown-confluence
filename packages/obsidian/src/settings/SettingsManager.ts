@@ -274,10 +274,27 @@ export class SettingsManager {
 	 */
 	public async updateMapping(index: number, mapping: Partial<PublishMapping>): Promise<void> {
 		if (index >= 0 && index < this.settings.publishMappings.length) {
-			this.settings.publishMappings[index] = {
-				...this.settings.publishMappings[index],
-				...mapping
+			// Ensure required properties are not undefined after the update
+			const currentMapping = this.settings.publishMappings[index];
+
+			if (!currentMapping) {
+				this.errorHandler.handleError({
+					message: `Invalid mapping at index ${index}`,
+					component: 'SettingsManager',
+					level: ErrorLevel.WARNING,
+					showNotice: false
+				});
+				return;
+			}
+
+			const updatedMapping: PublishMapping = {
+				confluenceParentId: mapping.confluenceParentId ?? currentMapping.confluenceParentId,
+				folderToPublish: mapping.folderToPublish ?? currentMapping.folderToPublish,
+				// Ensure label is never undefined but can be empty string
+				label: mapping.label !== undefined ? mapping.label : (currentMapping.label ?? '')
 			};
+
+			this.settings.publishMappings[index] = updatedMapping;
 			await this.saveSettings(false);
 
 			// Notify about mapping change
@@ -297,5 +314,16 @@ export class SettingsManager {
 	 */
 	public static reset(): void {
 		SettingsManager.instance = undefined as unknown as SettingsManager;
+	}
+
+	/**
+	 * Get legacy settings for backward compatibility
+	 * @returns Object containing folderToPublish and confluenceParentId
+	 */
+	public getLegacySettings(): { folderToPublish: string, confluenceParentId: string } {
+		return {
+			folderToPublish: this.settings.folderToPublish,
+			confluenceParentId: this.settings.confluenceParentId
+		};
 	}
 } 

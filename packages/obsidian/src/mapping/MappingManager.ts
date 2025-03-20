@@ -116,7 +116,8 @@ export class MappingManager {
 	public getMappingForFolder(folderPath: string): PublishMapping | null {
 		const index = this.getMappingIndexForFolder(folderPath);
 		if (index >= 0) {
-			return this.getPublishMappings()[index];
+			const mapping = this.getPublishMappings()[index];
+			return mapping || null;
 		}
 		return null;
 	}
@@ -153,5 +154,17 @@ export class MappingManager {
 	 */
 	public static reset(): void {
 		MappingManager.instance = undefined as unknown as MappingManager;
+	}
+
+	/**
+	 * Get the legacy settings (for backward compatibility)
+	 * @returns Legacy settings object with folderToPublish and confluenceParentId
+	 */
+	public getSettings(): { folderToPublish: string; confluenceParentId: string } {
+		const settings = this.settingsManager.getSettings();
+		return {
+			folderToPublish: settings.folderToPublish,
+			confluenceParentId: settings.confluenceParentId
+		};
 	}
 } 

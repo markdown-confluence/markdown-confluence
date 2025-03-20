@@ -36,6 +36,7 @@ export class PublishManager {
 
 	private publisher: Publisher | null = null;
 	private adaptor: ObsidianAdaptor | null = null;
+	// @ts-ignore: used during initialization 
 	private app: App | null = null;
 
 	/**
@@ -282,5 +283,21 @@ export class PublishManager {
 	 */
 	public static reset(): void {
 		PublishManager.instance = undefined as unknown as PublishManager;
+	}
+
+	/**
+	 * Get the Obsidian adaptor
+	 * @returns The Obsidian adaptor or null if not initialized
+	 */
+	public getAdaptor(): ObsidianAdaptor | null {
+		return this.adaptor;
+	}
+
+	/**
+	 * Get the settings manager
+	 * @returns The settings manager instance
+	 */
+	public getSettingsManager(): SettingsManager {
+		return this.settingsManager;
 	}
 } 

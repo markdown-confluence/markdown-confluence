@@ -136,7 +136,7 @@ export class MermaidManager {
 			return {
 				extraStyleSheets,
 				extraStyles,
-				mermaidConfig,
+				mermaidConfig: mermaidConfig as Record<string, unknown>,
 				bodyStyles,
 			};
 		} catch (error) {

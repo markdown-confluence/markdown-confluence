@@ -1,0 +1,328 @@
+import { App, MarkdownView, Notice, setIcon } from 'obsidian';
+import { MappingManager } from '../mapping/MappingManager';
+import { LoggerManager } from '../utils';
+
+/**
+ * Manages visual indicators in the UI (file explorer and editor)
+ */
+export class VisualIndicatorManager {
+	private static instance: VisualIndicatorManager;
+	private app: App | null = null;
+	private logger = LoggerManager.getInstance().getLogger();
+	private mappingManager = MappingManager.getInstance();
+	private publishIconRef: HTMLElement | null = null;
+
+	private constructor() { }
+
+	/**
+	 * Get the singleton instance of VisualIndicatorManager
+	 * @returns VisualIndicatorManager instance
+	 */
+	public static getInstance(): VisualIndicatorManager {
+		if (!VisualIndicatorManager.instance) {
+			VisualIndicatorManager.instance = new VisualIndicatorManager();
+		}
+		return VisualIndicatorManager.instance;
+	}
+
+	/**
+	 * Reset the instance (for testing)
+	 */
+	public static reset(): void {
+		VisualIndicatorManager.instance = new VisualIndicatorManager();
+	}
+
+	/**
+	 * Initialize the manager with the app instance
+	 * @param app Obsidian App instance
+	 */
+	public initialize(app: App): void {
+		this.app = app;
+		this.logger.debug('VisualIndicatorManager initialized');
+	}
+
+	/**
+	 * Register event listeners for visual indicators
+	 */
+	public registerEvents(): void {
+		if (!this.app) {
+			throw new Error('VisualIndicatorManager is not initialized with an App instance');
+		}
+
+		// Add CSS for visual indicators
+		this.addVisualIndicatorStyles();
+
+		// Register event to update visual indicators when file explorer is updated
+		this.app.workspace.on('layout-change', () => {
+			this.updateVisualIndicators();
+		});
+
+		// Also register event for active leaf change to update editor indicators
+		this.app.workspace.on('active-leaf-change', () => {
+			this.updateEditorIndicator();
+		});
+
+		// Initial update of visual indicators
+		setTimeout(() => {
+			this.updateVisualIndicators();
+		}, 1000);
+	}
+
+	/**
+	 * Get all mappings from the MappingManager
+	 */
+	private getAllMappings() {
+		return this.mappingManager.getPublishMappings();
+	}
+
+	/**
+	 * Get legacy settings from the MappingManager
+	 */
+	private getLegacySettings() {
+		return this.mappingManager.getSettings();
+	}
+
+	/**
+	 * Add CSS styles for visual indicators
+	 */
+	private addVisualIndicatorStyles(): void {
+		const styleId = "confluence-visual-indicators";
+		if (!document.getElementById(styleId)) {
+			const css = `
+                .nav-folder-title-content .confluence-icon,
+                .nav-file-title-content .confluence-icon {
+                    margin-left: 4px;
+                    display: inline-flex;
+                    align-items: center;
+                }
+                .nav-folder-title-content .confluence-icon svg,
+                .nav-file-title-content .confluence-icon svg {
+                    width: 14px;
+                    height: 14px;
+                    fill: var(--interactive-accent);
+                }
+                .is-active .view-header .confluence-icon {
+                    display: inline-flex;
+                    align-items: center;
+                    background-color: var(--interactive-accent);
+                    color: var(--text-on-accent);
+                    font-size: 12px;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    margin-left: 8px;
+                    opacity: 0.85;
+                }
+                .is-active .view-header .confluence-icon svg {
+                    width: 14px;
+                    height: 14px;
+                    fill: var(--text-on-accent);
+                    margin-right: 4px;
+                }
+            `;
+
+			const styleEl = document.createElement("style");
+			styleEl.id = styleId;
+			styleEl.textContent = css;
+			document.head.appendChild(styleEl);
+		}
+	}
+
+	/**
+	 * Update visual indicators in the file explorer
+	 */
+	public updateVisualIndicators(): void {
+		if (!this.app) {
+			this.logger.debug('VisualIndicatorManager not initialized, skipping updateVisualIndicators');
+			return;
+		}
+
+		// Get all folder elements
+		const folderEls = document.querySelectorAll(".nav-folder");
+
+		// Process each folder
+		folderEls.forEach((folderEl) => {
+			// Get folder path from the data attributes
+			const folderTitle = folderEl.querySelector(".nav-folder-title");
+			if (!folderTitle) return;
+
+			const folderPath = folderTitle.getAttribute("data-path");
+			if (!folderPath) return;
+
+			// Check if folder is a publish root
+			const isPublishRoot = this.mappingManager.isFolderPublishRoot(folderPath);
+
+			// Get active mapping
+			const activeMapping = this.mappingManager.getActiveMapping();
+			const isActiveRoot = activeMapping?.folderToPublish === folderPath;
+
+			// Remove old classes that applied styling
+			folderEl.classList.remove("confluence-publish-root", "confluence-active-root");
+
+			// Get or create icon container
+			const folderTitleContent = folderTitle.querySelector(".nav-folder-title-content");
+			if (!folderTitleContent) return;
+
+			// Remove any existing icon
+			const existingIcon = folderTitleContent.querySelector(".confluence-icon");
+			if (existingIcon) existingIcon.remove();
+
+			// Add icon for publish roots
+			if (isPublishRoot) {
+				const iconEl = document.createElement("span");
+				iconEl.className = "confluence-icon";
+
+				// Create icon element using Obsidian's icon system
+				const iconName = isActiveRoot ? "cloud-upload" : "cloud-off";
+
+				// Use setIcon from Obsidian's icon library
+				setIcon(iconEl, iconName);
+
+				folderTitleContent.appendChild(iconEl);
+			}
+
+			// Process files in this folder if it's a publish root
+			if (isPublishRoot) {
+				// Get all file elements within this folder (including subfolders)
+				const processFileEl = (fileEl: Element) => {
+					const fileTitle = fileEl.querySelector(".nav-file-title");
+					if (!fileTitle) return;
+
+					const filePath = fileTitle.getAttribute("data-path");
+					if (!filePath || filePath.endsWith(".excalidraw")) return;
+
+					// Remove old classes
+					fileEl.classList.remove("confluence-publishable-note", "confluence-active-publishable-note");
+
+					// Find or add the icon
+					const fileTitleContent = fileTitle.querySelector(".nav-file-title-content");
+					if (!fileTitleContent) return;
+
+					// Remove any existing icon
+					const existingIcon = fileTitleContent.querySelector(".confluence-icon");
+					if (existingIcon) existingIcon.remove();
+
+					// Check frontmatter to see if publishing is specifically disabled
+					if (!this.app) return;
+					const frontMatter = this.app.metadataCache.getCache(filePath)?.frontmatter;
+					const isExcluded = frontMatter && frontMatter["connie-publish"] === false;
+
+					// Add icon if file should be published
+					if (!isExcluded) {
+						const iconEl = document.createElement("span");
+						iconEl.className = "confluence-icon";
+
+						// Create icon element using Obsidian's icon system
+						const iconName = isActiveRoot ? "cloud-upload" : "cloud-off";
+
+						// Use setIcon from Obsidian's icon library
+						setIcon(iconEl, iconName);
+
+						fileTitleContent.appendChild(iconEl);
+					}
+				};
+
+				// Process direct files in this folder
+				folderEl.querySelectorAll(":scope > .nav-folder-children > .nav-file").forEach(processFileEl);
+
+				// Also process files in subfolders if they're part of the publish path
+				const traverseFolder = (parentFolder: Element) => {
+					const subfolders = parentFolder.querySelectorAll(":scope > .nav-folder-children > .nav-folder");
+					subfolders.forEach(subfolder => {
+						const subfolderTitle = subfolder.querySelector(".nav-folder-title");
+						if (!subfolderTitle) return;
+
+						const subfolderPath = subfolderTitle.getAttribute("data-path");
+						if (!subfolderPath) return;
+
+						// Process files in this subfolder
+						subfolder.querySelectorAll(":scope > .nav-folder-children > .nav-file").forEach(processFileEl);
+
+						// Recursively process deeper subfolders
+						traverseFolder(subfolder);
+					});
+				};
+
+				traverseFolder(folderEl);
+			}
+		});
+
+		// Update editor view indicator
+		this.updateEditorIndicator();
+	}
+
+	/**
+	 * Add visual indicator to editor when editing a publishable note
+	 */
+	public updateEditorIndicator(): void {
+		if (!this.app) return;
+
+		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!activeView || !activeView.file) return;
+
+		const filePath = activeView.file.path;
+		let isPublishable = false;
+
+		// Check if file is in any publish folder
+		const mappings = this.getAllMappings();
+		for (const mapping of mappings) {
+			if (filePath.startsWith(mapping.folderToPublish)) {
+				// Check frontmatter to see if publishing is specifically disabled
+				const frontMatter = this.app.metadataCache.getCache(filePath)?.frontmatter;
+				if (!frontMatter || frontMatter["connie-publish"] !== false) {
+					isPublishable = true;
+					break;
+				}
+			}
+		}
+
+		// Also check for explicit connie-publish:true in frontmatter
+		if (!isPublishable) {
+			const frontMatter = this.app.metadataCache.getCache(filePath)?.frontmatter;
+			if (frontMatter && frontMatter["connie-publish"] === true) {
+				isPublishable = true;
+			}
+		}
+
+		// Get explicit connie-publish:false in frontmatter
+		const isExplicitlyDisabled = this.app.metadataCache.getCache(filePath)?.frontmatter?.["connie-publish"] === false;
+
+		// Remove existing icon if any
+		if (this.publishIconRef) {
+			this.publishIconRef.remove();
+			this.publishIconRef = null;
+		}
+
+		// Add appropriate icon based on publish status
+		if (isPublishable) {
+			// Add cloud-upload icon for enabled publishing
+			this.publishIconRef = activeView.addAction("cloud-upload", "Publishing enabled", () => {
+				// Toggle publishing off when clicked
+				if (activeView.file && this.app) {
+					this.app.fileManager.processFrontMatter(activeView.file, (frontmatter) => {
+						frontmatter["connie-publish"] = false;
+					});
+					new Notice("Publishing disabled for this note");
+					// Update the indicator after toggling
+					setTimeout(() => this.updateEditorIndicator(), 100);
+				}
+			});
+		} else if (isExplicitlyDisabled) {
+			// Add cloud-off icon for disabled publishing
+			this.publishIconRef = activeView.addAction("cloud-off", "Publishing disabled", () => {
+				// Toggle publishing on when clicked
+				if (activeView.file && this.app) {
+					this.app.fileManager.processFrontMatter(activeView.file, (frontmatter) => {
+						if (activeView.file && activeView.file.path.startsWith(this.getLegacySettings().folderToPublish)) {
+							delete frontmatter["connie-publish"];
+						} else {
+							frontmatter["connie-publish"] = true;
+						}
+					});
+					new Notice("Publishing enabled for this note");
+					// Update the indicator after toggling
+					setTimeout(() => this.updateEditorIndicator(), 100);
+				}
+			});
+		}
+	}
+} 

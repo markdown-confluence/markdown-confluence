@@ -211,10 +211,12 @@ export class EventCoordinator {
 	 */
 	public getLastEvent(event: string): { timestamp: number, args: unknown[] } | null {
 		const history = this.eventHistory.get(event);
-		if (history && history.length > 0) {
-			return history[history.length - 1];
+		if (!history || history.length === 0) {
+			return null;
 		}
-		return null;
+		// Use the non-null assertion operator since we know history is non-empty
+		const lastEvent = history[history.length - 1];
+		return lastEvent || null;
 	}
 
 	/**

@@ -60,4 +60,14 @@ export interface UploadResults {
 	failedFiles: FailedFile[];
 	/** Array of successfully published files */
 	filesUploadResult: UploadAdfFileResult[];
+}
+
+/**
+ * UI interface for Confluence per-page settings
+ */
+export interface ConfluencePerPageUIValues {
+	[key: string]: {
+		isSet: boolean;
+		value: unknown;
+	};
 } 
