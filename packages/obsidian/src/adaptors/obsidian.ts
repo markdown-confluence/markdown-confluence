@@ -8,6 +8,7 @@ import {
 } from "@markdown-confluence/lib";
 import { lookup } from "mime-types";
 import { App, MetadataCache, TFile, Vault } from "obsidian";
+import { PublishMapping } from "../main";
 import { Logger, LogLevel } from "../utils";
 
 export default class ObsidianAdaptor implements LoaderAdaptor {
@@ -39,6 +40,14 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		const files = this.vault.getMarkdownFiles();
 		this.logger.debug(`Found ${files.length} total markdown files in vault`);
 		const filesToPublish = [];
+
+		// Get all valid folders to publish
+		const publishFolders = ('publishMappings' in this.settings)
+			? ((this.settings as unknown as { publishMappings: PublishMapping[] }).publishMappings.map(m => m.folderToPublish))
+			: [this.settings.folderToPublish];
+
+		this.logger.debug(`Checking files against publish folders: ${publishFolders.join(', ')}`);
+
 		for (const file of files) {
 			try {
 				if (file.path.endsWith(".excalidraw")) {
@@ -53,8 +62,11 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 				}
 				const frontMatter = fileFM.frontmatter;
 
+				// Check if file should be published (either in a publish folder or explicitly marked for publishing)
+				const inPublishFolder = publishFolders.some(folder => file.path.startsWith(folder));
+
 				if (
-					(file.path.startsWith(this.settings.folderToPublish) &&
+					(inPublishFolder &&
 						(!frontMatter ||
 							frontMatter["connie-publish"] !== false)) ||
 					(frontMatter && frontMatter["connie-publish"] === true)

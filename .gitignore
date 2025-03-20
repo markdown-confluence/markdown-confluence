@@ -19,6 +19,11 @@ data.json
 
 dist/
 **/*.md
+**/*.markdown
 dev-vault/
 **/*.ts.bak
 build.log
+confcloud.1.postman.json
+confcloud.2.postman.json
+openapi_v1.json
+openapi-v2.v3.json
