@@ -5,6 +5,7 @@
  * Provides a pub/sub system for components to communicate with each other.
  */
 
+import { ErrorHandler, ErrorLevel } from "../utils/ErrorHandler";
 import { LoggerManager } from "../utils/LoggerManager";
 
 export type EventCallback = (...args: unknown[]) => void;
@@ -18,10 +19,26 @@ export interface EventSubscription {
 	context?: string;
 }
 
+export enum PluginEvents {
+	INITIALIZED = 'plugin-initialized',
+	SETTINGS_CHANGED = 'settings-changed',
+	MAPPINGS_CHANGED = 'mappings-changed',
+	ACTIVE_MAPPING_CHANGED = 'active-mapping-changed',
+	STATE_CHANGED = 'state-changed',
+	PUBLISH_STARTED = 'publish-started',
+	PUBLISH_COMPLETED = 'publish-completed',
+	PUBLISH_FAILED = 'publish-failed',
+	UI_UPDATED = 'ui-updated',
+	FILE_INDICATORS_UPDATED = 'file-indicators-updated'
+}
+
 export class EventCoordinator {
 	private static instance: EventCoordinator;
 	private subscriptions: Map<string, EventSubscription[]> = new Map();
 	private logger = LoggerManager.getInstance().getComponentLogger('EventCoordinator');
+	private errorHandler = ErrorHandler.getInstance();
+	private eventHistory: Map<string, { timestamp: number, args: unknown[] }[]> = new Map();
+	private historyLimit = 10;
 
 	/**
 	 * Private constructor for singleton pattern
@@ -96,11 +113,14 @@ export class EventCoordinator {
 	 */
 	public unsubscribeContext(context: string): void {
 		this.logger.debug(`Unsubscribing all events for context: ${context}`);
+		let count = 0;
 
 		for (const [event, subs] of this.subscriptions.entries()) {
 			const remainingSubs = subs.filter(s => s.context !== context);
 
 			if (remainingSubs.length !== subs.length) {
+				count += subs.length - remainingSubs.length;
+
 				if (remainingSubs.length === 0) {
 					this.subscriptions.delete(event);
 				} else {
@@ -108,6 +128,8 @@ export class EventCoordinator {
 				}
 			}
 		}
+
+		this.logger.debug(`Unsubscribed ${count} event handlers for context: ${context}`);
 	}
 
 	/**
@@ -117,12 +139,15 @@ export class EventCoordinator {
 	 * @param args Arguments to pass to the event callbacks
 	 */
 	public publish(event: string, ...args: unknown[]): void {
+		// Record in event history
+		this.recordEvent(event, args);
+
 		if (!this.subscriptions.has(event)) {
 			this.logger.debug(`Published event with no subscribers: ${event}`);
 			return;
 		}
 
-		this.logger.debug(`Publishing event: ${event}`);
+		this.logger.debug(`Publishing event: ${event} with ${this.subscriptions.get(event)?.length || 0} subscribers`);
 		const subs = this.subscriptions.get(event);
 		if (!subs) return;
 
@@ -131,9 +156,65 @@ export class EventCoordinator {
 			try {
 				sub.callback(...args);
 			} catch (error) {
-				this.logger.error(`Error in event handler for ${event}:`, error);
+				this.errorHandler.handleError({
+					message: `Error in event handler for ${event}`,
+					error,
+					component: 'EventCoordinator',
+					level: ErrorLevel.ERROR,
+					showNotice: false
+				});
 			}
 		}
+	}
+
+	/**
+	 * Record event in history
+	 * 
+	 * @param event Event name
+	 * @param args Event arguments
+	 */
+	private recordEvent(event: string, args: unknown[]): void {
+		if (!this.eventHistory.has(event)) {
+			this.eventHistory.set(event, []);
+		}
+
+		const eventEntries = this.eventHistory.get(event);
+		if (eventEntries) {
+			// Add the new event entry
+			eventEntries.push({
+				timestamp: Date.now(),
+				args
+			});
+
+			// Trim to history limit
+			if (eventEntries.length > this.historyLimit) {
+				eventEntries.shift();
+			}
+		}
+	}
+
+	/**
+	 * Get event history for a specific event
+	 * 
+	 * @param event Event name to get history for
+	 * @returns Array of event entries with timestamp and arguments
+	 */
+	public getEventHistory(event: string): { timestamp: number, args: unknown[] }[] {
+		return this.eventHistory.get(event) || [];
+	}
+
+	/**
+	 * Get the last occurrence of an event
+	 * 
+	 * @param event Event name to get the last occurrence for
+	 * @returns The last event entry, or null if none exists
+	 */
+	public getLastEvent(event: string): { timestamp: number, args: unknown[] } | null {
+		const history = this.eventHistory.get(event);
+		if (history && history.length > 0) {
+			return history[history.length - 1];
+		}
+		return null;
 	}
 
 	/**
@@ -144,6 +225,31 @@ export class EventCoordinator {
 	 */
 	public hasSubscribers(event: string): boolean {
 		return this.subscriptions.has(event) && (this.subscriptions.get(event)?.length ?? 0) > 0;
+	}
+
+	/**
+	 * Set the maximum number of events to store in history
+	 * 
+	 * @param limit Maximum number of events per event type
+	 */
+	public setHistoryLimit(limit: number): void {
+		this.historyLimit = limit;
+
+		// Trim existing histories
+		for (const [event, history] of this.eventHistory.entries()) {
+			if (history.length > limit) {
+				this.eventHistory.set(event, history.slice(-limit));
+			}
+		}
+	}
+
+	/**
+	 * Get all events that have subscribers
+	 * 
+	 * @returns Array of event names
+	 */
+	public getActiveEvents(): string[] {
+		return Array.from(this.subscriptions.keys());
 	}
 
 	/**
