@@ -41,10 +41,30 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		this.logger.debug(`Found ${files.length} total markdown files in vault`);
 		const filesToPublish = [];
 
-		// Get all valid folders to publish
-		const publishFolders = ('publishMappings' in this.settings)
-			? ((this.settings as unknown as { publishMappings: PublishMapping[] }).publishMappings.map(m => m.folderToPublish))
-			: [this.settings.folderToPublish];
+		// Get only the active folder to publish
+		let publishFolders: string[] = [];
+		if ('publishMappings' in this.settings && 'activeMappingIndex' in this.settings) {
+			const settings = this.settings as unknown as {
+				publishMappings: PublishMapping[],
+				activeMappingIndex: number
+			};
+
+			// Only use the active mapping's folder
+			if (settings.publishMappings.length > 0) {
+				const activeIndex = settings.activeMappingIndex;
+				if (activeIndex >= 0 && activeIndex < settings.publishMappings.length) {
+					const activeMapping = settings.publishMappings[activeIndex];
+					if (activeMapping && activeMapping.folderToPublish) {
+						publishFolders = [activeMapping.folderToPublish];
+					}
+				}
+			}
+		}
+
+		// Fall back to legacy setting if no active mapping
+		if (publishFolders.length === 0) {
+			publishFolders = [this.settings.folderToPublish];
+		}
 
 		this.logger.debug(`Checking files against publish folders: ${publishFolders.join(', ')}`);
 
@@ -62,15 +82,11 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 				}
 				const frontMatter = fileFM.frontmatter;
 
-				// Check if file should be published (either in a publish folder or explicitly marked for publishing)
+				// Check if file should be published
 				const inPublishFolder = publishFolders.some(folder => file.path.startsWith(folder));
 
-				if (
-					(inPublishFolder &&
-						(!frontMatter ||
-							frontMatter["connie-publish"] !== false)) ||
-					(frontMatter && frontMatter["connie-publish"] === true)
-				) {
+				// Only include files in the active publish folder (unless they have connie-publish: false)
+				if (inPublishFolder && (!frontMatter || frontMatter["connie-publish"] !== false)) {
 					this.logger.debug(`Adding file to publish: ${file.path}`);
 					filesToPublish.push(file);
 				} else {

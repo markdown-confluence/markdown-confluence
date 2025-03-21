@@ -9,8 +9,7 @@ import {
 	ConfluencePageConfig,
 	MermaidRendererPlugin,
 	Publisher,
-	StaticSettingsLoader,
-	UploadAdfFileResult,
+	UploadAdfFileResult
 } from "@markdown-confluence/lib";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
 import { App } from "obsidian";
@@ -18,6 +17,7 @@ import { ObsidianConfluenceClient } from "../MyBaseClient";
 import ObsidianAdaptor from "../adaptors/obsidian";
 import { MappingManager } from "../mapping/MappingManager";
 import { UploadResults } from "../models/Types";
+import { ObsidianSettingsLoader } from "../settings/ObsidianSettingsLoader";
 import { SettingsManager } from "../settings/SettingsManager";
 import { StateManager } from "../state/StateManager";
 import { ErrorHandler, ErrorLevel } from "../utils/ErrorHandler";
@@ -105,9 +105,12 @@ export class PublishManager {
 				},
 			});
 
-			// Create publisher
-			const settingsLoader = new StaticSettingsLoader(settings);
+			// Create publisher with dynamic settings loader that pulls latest settings
 			const loggerAdapter = new ObsidianLoggerAdapter(this.logger);
+
+			// Import and use ObsidianSettingsLoader instead of StaticSettingsLoader
+			const settingsLoader = new ObsidianSettingsLoader(this.settingsManager, app);
+
 			this.publisher = new Publisher(
 				this.adaptor,
 				settingsLoader,
@@ -150,7 +153,16 @@ export class PublishManager {
 				// Default case: use active mapping
 				const activeMapping = this.mappingManager.getActiveMapping();
 				if (activeMapping) {
-					return await this.publishWithParentId(publishFilter, activeMapping.confluenceParentId);
+					// When publishing the entire active mapping folder, don't pass the folder path
+					// as a filter to avoid filtering out all files
+					if (!publishFilter) {
+						this.logger.debug(`Publishing active mapping folder: ${activeMapping.folderToPublish}, not using as filter`);
+						return await this.publishWithParentId(undefined, activeMapping.confluenceParentId);
+					} else {
+						// When no specific filter is provided, use the active mapping's folder path
+						const mappingFilter = publishFilter;
+						return await this.publishWithParentId(mappingFilter, activeMapping.confluenceParentId);
+					}
 				}
 
 				// Fall back to legacy behavior if no mappings exist
@@ -190,16 +202,49 @@ export class PublishManager {
 		}
 
 		try {
-			// Temporarily override the parent ID for this publish operation
+			// Save the original settings values for logging
 			const settings = this.settingsManager.getSettings();
 			const originalParentId = settings.confluenceParentId;
-			await this.settingsManager.updateSettings({ confluenceParentId: parentId }, false);
+			const originalFolderToPublish = settings.folderToPublish;
 
-			// Publish with the overridden parent ID
-			const adrFiles = await this.publisher.publish(publishFilter);
+			// Get the folder to publish from the appropriate mapping if available
+			let folderToPublish = originalFolderToPublish;
+			if (!publishFilter) {
+				const activeMapping = this.mappingManager.getActiveMapping();
+				if (activeMapping && activeMapping.confluenceParentId === parentId) {
+					folderToPublish = activeMapping.folderToPublish;
+				}
+			}
 
-			// Restore the original parent ID
-			await this.settingsManager.updateSettings({ confluenceParentId: originalParentId }, false);
+			// Update settings - the ObsidianSettingsLoader will pick these up automatically
+			await this.settingsManager.updateSettings({
+				confluenceParentId: parentId,
+				folderToPublish: folderToPublish
+			}, false);
+
+			// Log the settings change for debugging
+			this.logger.debug(`Publishing with parentId=${parentId}, folderToPublish=${folderToPublish}`, {
+				publishFilter,
+				originalParentId,
+				originalFolderToPublish
+			});
+
+			// Determine if publishFilter is a specific file or a folder
+			let actualPublishFilter: string | undefined = publishFilter;
+
+			// If publishFilter matches one of our folder publish paths, it's a folder, not a file
+			// In this case, don't pass it to publisher.publish to avoid filtering out all files
+			if (publishFilter) {
+				const allMappings = this.mappingManager.getPublishMappings();
+				if (allMappings.some(mapping => mapping.folderToPublish === publishFilter) ||
+					settings.folderToPublish === publishFilter) {
+					this.logger.debug(`Detected folder path in publishFilter, not passing to publisher to avoid filtering`);
+					actualPublishFilter = undefined;
+				}
+			}
+
+			// Publish with the updated settings
+			const adrFiles = await this.publisher.publish(actualPublishFilter);
 
 			// Process results
 			return this.processPublishResults(adrFiles);

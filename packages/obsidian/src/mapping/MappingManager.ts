@@ -149,9 +149,9 @@ export class MappingManager {
 			}
 		}
 
-		// If not in any specific folder, use active mapping's parent ID
+		// If not in any specific folder, check if it's in the active mapping's folder
 		const activeMapping = this.getActiveMapping();
-		if (activeMapping) {
+		if (activeMapping && filePath.startsWith(activeMapping.folderToPublish)) {
 			this.logger.debug(`Using active mapping for file: ${activeMapping.folderToPublish} -> ${activeMapping.confluenceParentId}`);
 			return activeMapping.confluenceParentId;
 		}
