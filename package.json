@@ -1,47 +1,46 @@
 {
-   "name": "obsidian-confluence-root",
-   "private": true,
-   "version": "5.5.2",
-   "type": "module",
-   "scripts": {
-      "prepare": "husky install",
-      "predev-obsidian": "npm run build",
-      "dev-obsidian": "npm run dev --workspace=@markdown-confluence/lib & npm run dev --workspace=@markdown-confluence/mermaid-electron-renderer & npm run dev --workspace=obsidian-confluence",
-      "build": "npm run build -ws --if-present",
-      "fmt": "npm run fmt -ws --if-present",
-      "test": "npm test -ws --if-present"
-   },
-   "devDependencies": {
-      "@types/node": "^16.11.6",
-      "@typescript-eslint/eslint-plugin": "^6.3.0",
-      "@typescript-eslint/parser": "^6.3.0",
-      "builtin-modules": "3.3.0",
-      "electron": "^34.3.0",
-      "esbuild": "0.18.14",
-      "esbuild-node-externals": "^1.18.0",
-      "esbuild-plugin-copy": "^2.1.1",
-      "eslint": "^8.46.0",
-      "eslint-config-prettier": "^9.0.0",
-      "husky": "^8.0.3",
-      "lint-staged": "13.2.3",
-      "prettier": "3.0.0",
-      "ts-jest": "^29.1.1",
-      "ts-node": "^10.9.1",
-      "tslib": "2.5.0",
-      "typescript": "^5.1.6"
-   },
-   "workspaces": [
-      "packages/lib",
-      "packages/mermaid-electron-renderer",
-      "packages/mermaid-puppeteer-renderer",
-      "packages/cli",
-      "packages/obsidian"
-   ],
-   "lint-staged": {
-      "packages/**/*.ts": "prettier --write"
-   },
-   "dependencies": {
-      "@electron/remote": "^2.1.2"
-   },
-   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+	"dependencies": {
+		"@electron/remote": "^2.1.2"
+	},
+	"devDependencies": {
+		"@types/node": "^16.11.6",
+		"@typescript-eslint/eslint-plugin": "^6.3.0",
+		"@typescript-eslint/parser": "^6.3.0",
+		"builtin-modules": "3.3.0",
+		"electron": "^34.3.0",
+		"esbuild": "0.18.14",
+		"esbuild-node-externals": "^1.18.0",
+		"esbuild-plugin-copy": "^2.1.1",
+		"eslint": "^8.46.0",
+		"eslint-config-prettier": "^9.0.0",
+		"husky": "^8.0.3",
+		"lint-staged": "13.2.3",
+		"prettier": "3.0.0",
+		"ts-jest": "^29.1.1",
+		"ts-node": "^10.9.1",
+		"tslib": "2.5.0",
+		"typescript": "^5.1.6"
+	},
+	"lint-staged": {
+		"packages/**/*.ts": "prettier --write"
+	},
+	"name": "obsidian-confluence-root",
+	"private": true,
+	"scripts": {
+		"build": "npm run build -ws --if-present",
+		"dev-obsidian": "npm run dev --workspace=@markdown-confluence/lib & npm run dev --workspace=@markdown-confluence/mermaid-electron-renderer & npm run dev --workspace=obsidian-confluence",
+		"fmt": "npm run fmt -ws --if-present",
+		"predev-obsidian": "npm run build",
+		"prepare": "husky install",
+		"test": "npm test -ws --if-present"
+	},
+	"type": "module",
+	"version": "5.5.2",
+	"workspaces": [
+		"packages/lib",
+		"packages/mermaid-electron-renderer",
+		"packages/mermaid-puppeteer-renderer",
+		"packages/cli",
+		"packages/obsidian"
+	]
 }

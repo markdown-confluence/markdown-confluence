@@ -6,6 +6,7 @@ export type ConfluenceSettings = {
 	folderToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
+	logLevel?: number | string;
 };
 
 export const DEFAULT_SETTINGS: ConfluenceSettings = {

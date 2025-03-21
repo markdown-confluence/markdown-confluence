@@ -165,9 +165,17 @@ export class PublishManager {
 					}
 				}
 
+				// Default return for cases where no publishing occurs
+				return {
+					errorMessage: "No active mapping or valid file path provided for publishing",
+					failedFiles: [],
+					filesUploadResult: [],
+				};
+
+				// FIXME: This is a legacy behavior that should be removed
 				// Fall back to legacy behavior if no mappings exist
-				const settings = this.settingsManager.getSettings();
-				return await this.publishWithParentId(publishFilter, settings.confluenceParentId);
+				// const settings = this.settingsManager.getSettings();
+				// return await this.publishWithParentId(publishFilter, settings.confluenceParentId);
 			} catch (error) {
 				this.logger.error("Error during publication", error);
 				return {
