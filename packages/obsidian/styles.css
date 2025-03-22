@@ -5,8 +5,8 @@
 	align-items: center;
 	vertical-align: middle;
 	line-height: calc(var(--line-height-tight) - 2px);
-	height: calc(var(--line-height-tight) - 4px) !important;
-	width: calc(var(--line-height-tight) - 4px) !important;
+	height: calc(var(--line-height-tight) - 2px) !important;
+	width: calc(var(--line-height-tight) - 2px) !important;
 }
 
 /* Target SVG directly */
@@ -87,8 +87,11 @@
 	color: var(--nav-item-color-active);
 }
 
-.nav-file-title-content .confluence-icon.active svg {
+.nav-file-title-content .confluence-icon.active svg.svg-icon {
 	stroke: var(--nav-item-color-active);
+
+	height: 14px !important;
+	width: 14px !important;
 }
 
 /* Publishable Content - Inactive */

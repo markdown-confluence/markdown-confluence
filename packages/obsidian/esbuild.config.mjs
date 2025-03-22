@@ -1,7 +1,7 @@
 import builtins from "builtin-modules";
 import esbuild from "esbuild";
 import { copy } from "esbuild-plugin-copy";
-import { copyFileSync, writeFileSync } from "fs";
+import { copyFileSync, watch, writeFileSync } from "fs";
 import process from "process";
 
 const banner = `/*
@@ -77,4 +77,17 @@ if (prod) {
 		"styles.css",
 		"../../dev-vault/.obsidian/plugins/obsidian-confluence/styles.css",
 	);
+
+	// Watch for changes to styles.css
+	console.log("Watching for changes to styles.css...");
+	watch("styles.css", (eventType, filename) => {
+		if (eventType === "change") {
+			console.log("styles.css changed, updating...");
+			copyFileSync(
+				"styles.css",
+				"../../dev-vault/.obsidian/plugins/obsidian-confluence/styles.css",
+			);
+			console.log("styles.css updated in dev environment");
+		}
+	});
 }
