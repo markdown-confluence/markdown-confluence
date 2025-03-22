@@ -106,7 +106,7 @@ export class MappingManager {
 	 */
 	public isFolderPublishRoot(folderPath: string): boolean {
 		return this.getPublishMappings().some(mapping =>
-			mapping.folderToPublish === folderPath);
+			mapping.folderToPublish === folderPath && mapping.active !== false);
 	}
 
 	/**
@@ -116,7 +116,7 @@ export class MappingManager {
 	 */
 	public getMappingIndexForFolder(folderPath: string): number {
 		return this.getPublishMappings().findIndex(mapping =>
-			mapping.folderToPublish === folderPath);
+			mapping.folderToPublish === folderPath && mapping.active !== false);
 	}
 
 	/**
@@ -143,7 +143,7 @@ export class MappingManager {
 
 		// First check if file is in any publish root folder
 		for (const mapping of this.getPublishMappings()) {
-			if (filePath.startsWith(mapping.folderToPublish)) {
+			if (mapping.active !== false && filePath.startsWith(mapping.folderToPublish)) {
 				this.logger.debug(`Found mapping for file: ${mapping.folderToPublish} -> ${mapping.confluenceParentId}`);
 				return mapping.confluenceParentId;
 			}

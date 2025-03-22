@@ -61,6 +61,11 @@ export interface ConfluenceAdfFile {
 
 	contentType: PageContentType;
 	blogPostDate: string | undefined;
+
+	// Images attached to the page
+	images?: { fileName: string; filePath: string; id: string }[];
+	// Labels attached to the page
+	labels?: { name: string; id: string }[];
 }
 
 interface ConfluencePageExistingData {
@@ -281,7 +286,7 @@ export class Publisher {
 			title: existingPageData.pageTitle,
 			type: existingPageData.contentType,
 			...(adfFile.contentType === "blogpost" ||
-			adfFile.dontChangeParentPageId
+				adfFile.dontChangeParentPageId
 				? {}
 				: { ancestors: existingPageData.ancestors }),
 		};
@@ -290,13 +295,13 @@ export class Publisher {
 			title: adfFile.pageTitle,
 			type: adfFile.contentType,
 			...(adfFile.contentType === "blogpost" ||
-			adfFile.dontChangeParentPageId
+				adfFile.dontChangeParentPageId
 				? {}
 				: {
-						ancestors: ancestors.map((ancestor) => ({
-							id: ancestor,
-						})),
-				  }),
+					ancestors: ancestors.map((ancestor) => ({
+						id: ancestor,
+					})),
+				}),
 		};
 
 		if (

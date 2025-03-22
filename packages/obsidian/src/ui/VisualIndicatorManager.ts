@@ -193,7 +193,7 @@ export class VisualIndicatorManager {
 					} else {
 						// Add file-up icon for publishable content
 						iconEl.className = `confluence-icon ${isActiveRoot ? 'active' : 'inactive'}`;
-						setIcon(iconEl, "file-up");
+						setIcon(iconEl, "file-text");
 						fileTitleContent.appendChild(iconEl);
 					}
 				};

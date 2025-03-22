@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1742576024321" clover="3.2.0">
-  <project timestamp="1742576024321" name="All files">
+<coverage generated="1742678529665" clover="3.2.0">
+  <project timestamp="1742678529665" name="All files">
     <metrics statements="192" coveredstatements="93" conditionals="1" coveredconditionals="1" methods="9" coveredmethods="0" elements="202" coveredelements="94" complexity="0" loc="192" ncloc="192" packages="1" files="1" classes="1"/>
     <file name="Logger.ts" path="/Users/jsade/Development/markdown-confluence/packages/obsidian/src/utils/Logger.ts">
       <metrics statements="192" coveredstatements="93" conditionals="1" coveredconditionals="1" methods="9" coveredmethods="0"/>

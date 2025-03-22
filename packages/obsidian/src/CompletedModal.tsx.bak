@@ -342,15 +342,14 @@ export class CompletedModal extends Modal {
 			// Extract and show just the filename
 			const pathParts = result.adfFile.absoluteFilePath.split("/");
 			const fileName = pathParts[pathParts.length - 1];
-			const fileNameSpan = filePath.createSpan();
-			fileNameSpan.setText(fileName || "");
+			filePath.createSpan({ text: fileName });
 
 			// Add a separate link to view in Confluence
 			const linkDiv = item.createDiv({ cls: "file-link" });
 			const link = linkDiv.createEl("a");
 			link.href = result.adfFile.pageUrl;
 			link.setText("View in Confluence");
-			setIcon(link, "external-link");
+			setIcon(link, "external-link", { after: true });
 			link.addEventListener("click", (e) => {
 				e.preventDefault();
 				window.open(result.adfFile.pageUrl, "_blank");
@@ -400,20 +399,19 @@ export class CompletedModal extends Modal {
 			(result.adfFile.images || []).forEach((image) => {
 				const item = list.createEl("li");
 
-				// Create image entry with icon
+				// Create image path display with icon
 				const imagePath = item.createDiv({ cls: "file-path" });
 				setIcon(imagePath.createSpan(), "image");
 
 				// Show the image name
-				const imageNameSpan = imagePath.createSpan();
-				imageNameSpan.setText(image.fileName || "");
+				imagePath.createSpan({ text: image.fileName });
 
 				// Add a separate link to view parent page in Confluence
 				const linkDiv = item.createDiv({ cls: "file-link" });
 				const link = linkDiv.createEl("a");
 				link.href = result.adfFile.pageUrl;
 				link.setText("View in Confluence");
-				setIcon(link, "external-link");
+				setIcon(link, "external-link", { after: true });
 				link.addEventListener("click", (e) => {
 					e.preventDefault();
 					window.open(result.adfFile.pageUrl, "_blank");
@@ -469,24 +467,22 @@ export class CompletedModal extends Modal {
 				setIcon(labelEl.createSpan(), "tag");
 
 				// Show the label name
-				const labelNameSpan = labelEl.createSpan();
-				labelNameSpan.setText(label.name || "");
+				labelEl.createSpan({ text: label });
 
 				// Add info about which file this label belongs to
-				const fileInfoSpan = labelEl.createSpan();
-				fileInfoSpan.setText(
-					` (in ${
-						result.adfFile.absoluteFilePath.split("/").pop() || ""
-					})`,
-				);
-				fileInfoSpan.addClass("label-file-info");
+				labelEl.createSpan({
+					text: ` (in ${result.adfFile.absoluteFilePath
+						.split("/")
+						.pop()})`,
+					cls: "label-file-info",
+				});
 
 				// Add a separate link to view parent page in Confluence
 				const linkDiv = item.createDiv({ cls: "file-link" });
 				const link = linkDiv.createEl("a");
 				link.href = result.adfFile.pageUrl;
 				link.setText("View in Confluence");
-				setIcon(link, "external-link");
+				setIcon(link, "external-link", { after: true });
 				link.addEventListener("click", (e) => {
 					e.preventDefault();
 					window.open(result.adfFile.pageUrl, "_blank");

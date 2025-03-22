@@ -1,7 +1,12 @@
+/* ********** Folder Note Underline ********** */
+.folder-note-underline .has-folder-note .nav-folder-title-content {
+	text-decoration: none;
+}
+
 /* for  both folder and file icons **/
 .nav-folder-title-content .confluence-icon,
 .nav-file-title-content .confluence-icon {
-	margin-left: 4px;
+	margin-left: 6px;
 	margin-right: 4px;
 	display: inline-flex;
 	align-items: center;
@@ -10,11 +15,6 @@
 	height: calc(var(--font-ui-medium)) !important;
 	width: calc(var(--font-ui-medium)) !important;
 	text-decoration: none !important;
-}
-
-/* ********** Folder Note Underline ********** */
-.folder-note-underline .has-folder-note .nav-folder-title-content {
-	text-decoration: none;
 }
 
 /* Target SVG directly */
@@ -40,15 +40,32 @@
 	text-decoration: none !important;
 }
 
+.tree-item.nav-folder:has(span.confluence-indicator-container) {
+	background-color: var(--background-primary-alt);
+	border-left: 2px solid;
+	border-radius: 4px;
+}
+
 /* ********** Source Folder - ACTIVE ********** */
+
+.tree-item.nav-folder:has(span.confluence-indicator-container.active) {
+	background-color: var(--background-primary-alt);
+	border-left-color: var(--text-accent);
+	border-radius: 4px;
+}
+
 .nav-folder-title-content .confluence-indicator-container.active {
-	background-color: var(--nav-item-background-hover);
+	background-color: var(--text-normal);
+	stroke: var(--text-accent);
+	color: var(--background-primary);
 }
 
 /* Target both the container and SVG element for active folders */
 
 ≠ .nav-folder-title-content .confluence-indicator-container.active svg {
 	stroke: var(--text-normal);
+	stroke: var(--background-primary);
+	color: var(--background-primary);
 }
 
 .nav-folder-title-content
@@ -61,7 +78,14 @@
 	font-weight: 600;
 }
 
-/* ********** Source Folder - Inactive ********** */
+/* ********** Source Folder - INACTIVE ********** */
+
+.tree-item.nav-folder:has(span.confluence-indicator-container.inactive) {
+	background-color: var(--background-primary-alt);
+
+	border-radius: 4px;
+}
+
 .nav-folder-title-content .confluence-indicator-container.inactive {
 	background-color: var(--nav-item-background-hover);
 }
@@ -85,11 +109,6 @@
 	margin: 0;
 	text-transform: uppercase !important;
 	font-weight: 600;
-	border-width: 1px;
-	border-style: solid;
-	border-color: var(--background-primary);
-	border-radius: 4px;
-	padding: 0 4px;
 }
 
 /* ********** Publishable Content ********** */

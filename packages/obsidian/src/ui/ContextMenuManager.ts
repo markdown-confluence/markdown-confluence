@@ -42,6 +42,56 @@ export class ContextMenuManager {
 	}
 
 	/**
+	 * Check if a folder path is inside any existing publish root folder
+	 * @param folderPath The folder path to check
+	 * @returns true if the folder is nested inside another publish root folder
+	 */
+	private isNestedInsidePublishRoot(folderPath: string): boolean {
+		const mappings = this.mappingManager.getPublishMappings();
+
+		// Check if this folder is nested inside any existing publish root
+		// This validates that: "A source folder cannot be inside another source folder"
+		for (const mapping of mappings) {
+			// Skip checking against itself
+			if (mapping.folderToPublish === folderPath) {
+				continue;
+			}
+
+			// Check if this folder is a subfolder of another publish root
+			if (folderPath.startsWith(mapping.folderToPublish + '/')) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if a folder contains any existing publish root folders
+	 * @param folderPath The folder path to check
+	 * @returns true if the folder contains other publish root folders
+	 */
+	private containsPublishRoots(folderPath: string): boolean {
+		const mappings = this.mappingManager.getPublishMappings();
+
+		// Check if any publish root is nested inside this folder
+		// This validates that: "Source folders cannot be nested inside each other"
+		for (const mapping of mappings) {
+			// Skip checking against itself
+			if (mapping.folderToPublish === folderPath) {
+				continue;
+			}
+
+			// Check if another publish root is a subfolder of this folder
+			if (mapping.folderToPublish.startsWith(folderPath + '/')) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Register the context menu for folder items
 	 */
 	public registerContextMenu(): void {
@@ -58,6 +108,8 @@ export class ContextMenuManager {
 
 			const folderPath = file.path;
 			const isPublishRoot = this.mappingManager.isFolderPublishRoot(folderPath);
+			const mappingIndex = this.mappingManager.getMappingIndexForFolder(folderPath);
+			const mapping = mappingIndex >= 0 ? this.mappingManager.getPublishMappings()[mappingIndex] : null;
 
 			// Add main Confluence menu with submenu
 			menu.addItem((item) => {
@@ -78,11 +130,24 @@ export class ContextMenuManager {
 							.setTitle("Add as a Publish Root Folder")
 							.setIcon("plus-circle")
 							.onClick(async () => {
+								// Validate: check if this folder is nested inside another publish root
+								if (this.isNestedInsidePublishRoot(folderPath)) {
+									new Notice("Cannot add as publish root: Folder is nested inside another publish root");
+									return;
+								}
+
+								// Validate: check if this folder contains other publish roots
+								if (this.containsPublishRoots(folderPath)) {
+									new Notice("Cannot add as publish root: Folder contains other publish roots");
+									return;
+								}
+
 								// Create new mapping
 								const newMapping: PublishMapping = {
 									folderToPublish: folderPath,
 									confluenceParentId: "",
-									label: file.name
+									label: file.name,
+									active: true
 								};
 
 								// Show prompt for Confluence Parent Page ID
@@ -99,6 +164,12 @@ export class ContextMenuManager {
 							.setTitle("Remove as a Publish Root Folder")
 							.setIcon("minus-circle")
 							.onClick(async () => {
+								// Validate: Confirm this is actually a publish root
+								if (!isPublishRoot) {
+									new Notice("This folder is not set as a publish root");
+									return;
+								}
+
 								const mappingIndex = this.mappingManager.getMappingIndexForFolder(folderPath);
 								if (mappingIndex >= 0) {
 									await this.mappingManager.removeMapping(mappingIndex);
@@ -107,6 +178,24 @@ export class ContextMenuManager {
 							});
 					}
 				});
+
+				// Only show the toggle active/inactive option if this is a publish root
+				if (isPublishRoot && mapping) {
+					subMenu.addItem((subItem: MenuItem) => {
+						const isActive = mapping.active !== false; // Default to true if undefined
+
+						subItem
+							.setTitle(isActive ? "Set Inactive" : "Set Active")
+							.setIcon(isActive ? "toggle-right" : "toggle-left")
+							.onClick(async () => {
+								// Toggle the active state
+								await this.mappingManager.updateMapping(mappingIndex, {
+									active: !isActive
+								});
+								new Notice(`${file.name} is now ${!isActive ? "active" : "inactive"}`);
+							});
+					});
+				}
 			});
 		});
 	}

@@ -16,6 +16,8 @@ export interface PublishMapping {
 	folderToPublish: string;
 	/** Optional friendly name for the mapping */
 	label?: string;
+	/** Whether this mapping is active and should be included in publishing */
+	active?: boolean;
 }
 
 /**
