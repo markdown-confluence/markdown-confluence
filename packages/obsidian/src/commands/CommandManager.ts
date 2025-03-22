@@ -67,27 +67,21 @@ export class CommandManager {
 			try {
 				const stats = await this.publishManager.publish();
 				if (this.app) {
-					new CompletedModal(this.app, {
-						uploadResults: stats,
-					}).open();
+					new CompletedModal(this.app, stats).open();
 				}
 			} catch (error) {
 				if (this.app) {
 					if (error instanceof Error) {
 						new CompletedModal(this.app, {
-							uploadResults: {
-								errorMessage: error.message,
-								failedFiles: [],
-								filesUploadResult: [],
-							},
+							errorMessage: error.message,
+							failedFiles: [],
+							filesUploadResult: [],
 						}).open();
 					} else {
 						new CompletedModal(this.app, {
-							uploadResults: {
-								errorMessage: JSON.stringify(error),
-								failedFiles: [],
-								filesUploadResult: [],
-							},
+							errorMessage: JSON.stringify(error),
+							failedFiles: [],
+							filesUploadResult: [],
 						}).open();
 					}
 				}
@@ -140,28 +134,22 @@ export class CommandManager {
 						this.publishManager.publish(activeLeafPath)
 							.then((stats) => {
 								if (this.app) {
-									new CompletedModal(this.app, {
-										uploadResults: stats,
-									}).open();
+									new CompletedModal(this.app, stats).open();
 								}
 							})
 							.catch((error) => {
 								if (this.app) {
 									if (error instanceof Error) {
 										new CompletedModal(this.app, {
-											uploadResults: {
-												errorMessage: error.message,
-												failedFiles: [],
-												filesUploadResult: [],
-											},
+											errorMessage: error.message,
+											failedFiles: [],
+											filesUploadResult: [],
 										}).open();
 									} else {
 										new CompletedModal(this.app, {
-											uploadResults: {
-												errorMessage: JSON.stringify(error),
-												failedFiles: [],
-												filesUploadResult: [],
-											},
+											errorMessage: JSON.stringify(error),
+											failedFiles: [],
+											filesUploadResult: [],
 										}).open();
 									}
 								}
@@ -183,28 +171,22 @@ export class CommandManager {
 						this.publishManager.publish()
 							.then((stats) => {
 								if (this.app) {
-									new CompletedModal(this.app, {
-										uploadResults: stats,
-									}).open();
+									new CompletedModal(this.app, stats).open();
 								}
 							})
 							.catch((error) => {
 								if (this.app) {
 									if (error instanceof Error) {
 										new CompletedModal(this.app, {
-											uploadResults: {
-												errorMessage: error.message,
-												failedFiles: [],
-												filesUploadResult: [],
-											},
+											errorMessage: error.message,
+											failedFiles: [],
+											filesUploadResult: [],
 										}).open();
 									} else {
 										new CompletedModal(this.app, {
-											uploadResults: {
-												errorMessage: JSON.stringify(error),
-												failedFiles: [],
-												filesUploadResult: [],
-											},
+											errorMessage: JSON.stringify(error),
+											failedFiles: [],
+											filesUploadResult: [],
 										}).open();
 									}
 								}
