@@ -39,8 +39,8 @@
 		"fmt": "npx prettier --write src/",
 		"lint": "eslint --ignore-path ../../.eslintignore --ext .jsx,tsx,.js,.ts src/",
 		"prettier-check": "npx prettier --check src/",
-		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"test": "jest"
+		"test": "jest",
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"type": "module",
 	"version": "5.5.2"

@@ -4,6 +4,7 @@ import {
 	PluginManifest
 } from "obsidian";
 
+
 // Import types from models
 import { ObsidianPluginSettings, PublishMapping } from "./models/Types";
 

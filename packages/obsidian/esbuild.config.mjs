@@ -1,6 +1,7 @@
 import builtins from "builtin-modules";
 import esbuild from "esbuild";
-import { writeFileSync } from "fs";
+import { copy } from "esbuild-plugin-copy";
+import { copyFileSync, writeFileSync } from "fs";
 import process from "process";
 
 const banner = `/*
@@ -10,6 +11,9 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = process.argv[2] === "production";
+const outDir = prod
+	? "dist"
+	: "../../dev-vault/.obsidian/plugins/obsidian-confluence";
 
 const buildConfig = {
 	banner: {
@@ -38,18 +42,39 @@ const buildConfig = {
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outdir: prod
-		? "dist"
-		: "../../dev-vault/.obsidian/plugins/obsidian-confluence",
+	outdir: outDir,
 	mainFields: ["module", "main"],
 	minify: true,
 	metafile: true,
+	plugins: [
+		copy({
+			resolveFrom: "cwd",
+			assets: {
+				from: [
+					"packages/obsidian/styles.css",
+					"packages/obsidian/manifest.json",
+				],
+				to: [
+					prod
+						? "packages/obsidian/dist"
+						: "dev-vault/.obsidian/plugins/obsidian-confluence",
+				],
+			},
+		}),
+	],
 };
 
 if (prod) {
 	const buildResult = await esbuild.build(buildConfig);
 	writeFileSync("./dist/meta.json", JSON.stringify(buildResult.metafile));
+	// Copy styles.css to dist folder in production mode
+	copyFileSync("styles.css", "./dist/styles.css");
 } else {
 	const context = await esbuild.context(buildConfig);
 	await context.watch();
+	// Copy styles.css to dev environment
+	copyFileSync(
+		"styles.css",
+		"../../dev-vault/.obsidian/plugins/obsidian-confluence/styles.css",
+	);
 }
