@@ -1,16 +1,24 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions":{
-    "baseUrl":".",
-    "rootDir": "src",
-    "outDir": "dist",
-    "declarationDir": "dist",
-    "emitDeclarationOnly": false,
-    "skipLibCheck": true,
-    "listEmittedFiles": true,
-    "module":"ESNext",
-    "target":"ESNext",
-  },
-  "include":[ "**/*.ts", "**/*.tsx", "**/**.js", "**/**.jsx", ],
-  "exclude": ["node_modules", "packages/**/dist/*", "dist/*", "**/*.test.ts", "**/jest.config.ts"]
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"rootDir": "src",
+		"outDir": "dist",
+		"declarationDir": "dist",
+		"emitDeclarationOnly": false,
+		"skipLibCheck": true,
+		"listEmittedFiles": true,
+		"module": "ESNext",
+		"target": "ESNext"
+	},
+	"include": ["**/*.ts", "**/*.tsx", "**/**.js", "**/**.jsx"],
+	"exclude": [
+		"node_modules",
+		"packages/**/dist/*",
+		"dist/*",
+		"**/*.test.ts",
+		"**/jest.config.ts",
+		"babel.config.js",
+		"babel.config.d.ts"
+	]
 }

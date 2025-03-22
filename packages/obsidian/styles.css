@@ -54,6 +54,14 @@
 	border-radius: 4px;
 }
 
+/* Add direct styling for confluence-active-root class */
+.tree-item.nav-folder.confluence-active-root {
+	background-color: rgba(var(--interactive-accent-rgb), 0.1);
+	border-left-color: var(--interactive-accent);
+	border-left-width: 3px;
+	border-radius: 4px;
+}
+
 .nav-folder-title-content .confluence-indicator-container.active {
 	background-color: var(--text-normal);
 	stroke: var(--text-accent);

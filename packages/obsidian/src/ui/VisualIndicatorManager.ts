@@ -107,6 +107,16 @@ export class VisualIndicatorManager {
 			const activeMapping = this.mappingManager.getActiveMapping();
 			const isActiveRoot = activeMapping?.folderToPublish === folderPath;
 
+			// Debug active mapping information
+			if (isPublishRoot) {
+				this.logger.debug(`Folder ${folderPath} is a publish root. Active: ${isActiveRoot}`);
+				if (activeMapping) {
+					this.logger.debug(`Active mapping: ${activeMapping.folderToPublish}, current folder: ${folderPath}`);
+				} else {
+					this.logger.debug('No active mapping found');
+				}
+			}
+
 			// Find the mapping for this folder to get the label
 			let folderLabel = '';
 			if (isPublishRoot) {
@@ -118,6 +128,14 @@ export class VisualIndicatorManager {
 
 			// Remove old classes that applied styling
 			folderEl.classList.remove("confluence-publish-root", "confluence-active-root");
+
+			// Add appropriate classes to the folder element
+			if (isPublishRoot) {
+				folderEl.classList.add("confluence-publish-root");
+				if (isActiveRoot) {
+					folderEl.classList.add("confluence-active-root");
+				}
+			}
 
 			// Get or create icon container
 			const folderTitleContent = folderTitle.querySelector(".nav-folder-title-content");
