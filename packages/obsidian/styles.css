@@ -164,3 +164,167 @@
 	margin-right: 4px;
 	vertical-align: middle;
 }
+
+/* Completed Modal styling */
+.completed-modal h3 {
+	margin-top: 16px;
+	margin-bottom: 8px;
+	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+}
+
+.completed-modal p {
+	margin: 0 0 16px;
+	color: var(--text-muted);
+}
+
+/* Success and error banners */
+.completed-modal .success-banner {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 16px;
+	background-color: var(--background-modifier-success);
+	border-radius: var(--radius-m);
+	margin-bottom: 16px;
+}
+
+.completed-modal .success-banner .success-icon {
+	color: var(--text-success);
+}
+
+.completed-modal .error-banner {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 16px;
+	background-color: var(--background-modifier-error);
+	border-radius: var(--radius-m);
+	margin-bottom: 16px;
+}
+
+.completed-modal .error-banner .error-icon {
+	color: var(--text-error);
+}
+
+/* Failed uploads section */
+.completed-modal .failed-uploads {
+	margin: 16px 0;
+	padding: 12px 16px;
+	background-color: rgba(var(--background-modifier-error-rgb), 0.15);
+	border-radius: var(--radius-m);
+	border-left: 4px solid var(--text-error);
+}
+
+.completed-modal .failed-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.completed-modal .failed-header .failed-icon {
+	color: var(--text-error);
+}
+
+.completed-modal .failed-list {
+	margin-top: 8px;
+	padding-left: 24px;
+}
+
+/* Results table styling */
+.completed-modal .result-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 8px;
+	margin-bottom: 16px;
+}
+
+.completed-modal .result-table th,
+.completed-modal .result-table td {
+	padding: 8px 12px;
+	text-align: left;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.completed-modal .result-table th {
+	background-color: var(--background-secondary-alt);
+	font-weight: 600;
+}
+
+.completed-modal .updated-count {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+.completed-modal .same-count {
+	color: var(--text-muted);
+}
+
+/* Expandable section styling */
+.completed-modal .expandable-section {
+	margin: 16px 0;
+}
+
+.completed-modal .button-container {
+	margin-bottom: 8px;
+}
+
+.completed-modal .updated-files {
+	margin-top: 8px;
+	padding: 12px;
+	background-color: var(--background-secondary);
+	border-radius: var(--radius-m);
+}
+
+/* Updated files sections */
+.completed-modal .section-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
+.completed-modal .updated-files ul {
+	margin-top: 4px;
+	padding-left: 24px;
+}
+
+.completed-modal .updated-files li {
+	margin-bottom: 8px;
+	display: flex;
+	flex-direction: column;
+}
+
+.completed-modal .updated-files .file-path {
+	font-weight: 500;
+	margin-bottom: 2px;
+	color: var(--text-normal);
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.completed-modal .updated-files .file-link {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-accent);
+	margin-left: 20px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.completed-modal .updated-files .file-link a {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.completed-modal .updated-files .file-link:hover {
+	text-decoration: underline;
+}
+
+.completed-modal .label-file-info {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-style: italic;
+}
