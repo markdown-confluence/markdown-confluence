@@ -1,0 +1,148 @@
+.nav-folder-title-content .confluence-icon,
+.nav-file-title-content .confluence-icon {
+	margin-left: 4px;
+	display: inline-flex;
+	align-items: center;
+	vertical-align: middle;
+	line-height: calc(var(--line-height-tight) - 2px);
+	height: calc(var(--line-height-tight) - 4px) !important;
+	width: calc(var(--line-height-tight) - 4px) !important;
+}
+
+/* Target SVG directly */
+.confluence-icon svg.svg-icon {
+	height: 12px !important;
+	width: 12px !important;
+	stroke-width: 1.8px !important;
+}
+
+/* Remove overly specific and redundant selector */
+.confluence-label {
+	text-decoration: none !important;
+}
+
+/* Source Folder Indicator Container */
+.nav-folder-title-content .confluence-indicator-container {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 10px;
+	padding: 1px 2px;
+	border-radius: 4px;
+	vertical-align: middle;
+	text-decoration: none !important;
+}
+
+/* Source Folder - Active */
+.nav-folder-title-content .confluence-indicator-container.active {
+	background-color: var(--nav-item-background-hover);
+}
+
+/* Target both the container and SVG element for active folders */
+.nav-folder-title-content .confluence-indicator-container.active {
+	color: var(--nav-item-color-highlighted);
+}
+
+.nav-folder-title-content .confluence-indicator-container.active svg {
+	stroke: var(--nav-item-color-highlighted);
+}
+
+.nav-folder-title-content
+	.confluence-indicator-container.active
+	.confluence-label {
+	color: var(--nav-item-color-highlighted);
+	font-size: calc(var(--font-ui-smaller) - 2px) !important;
+	line-height: calc(var(--line-height-tight) + 2px);
+	margin: 0;
+	text-transform: uppercase !important;
+	font-weight: 600;
+}
+
+/* Source Folder - Inactive */
+.nav-folder-title-content .confluence-indicator-container.inactive {
+	background-color: var(--nav-item-background-hover);
+}
+
+/* Target both the container and SVG element for inactive folders */
+.nav-folder-title-content .confluence-indicator-container.inactive {
+	color: var(--nav-item-color-active);
+}
+
+.nav-folder-title-content .confluence-indicator-container.inactive svg {
+	stroke: var(--nav-item-color-active);
+}
+
+.nav-folder-title-content
+	.confluence-indicator-container.inactive
+	.confluence-label {
+	color: var(--nav-item-color-active);
+	font-size: calc(var(--font-ui-smaller) - 2px) !important;
+	line-height: calc(var(--line-height-tight) + 2px);
+	margin: 0;
+	text-transform: uppercase !important;
+	font-weight: 600;
+}
+
+/* Publishable Content - Active */
+.nav-file-title-content .confluence-icon.active {
+	color: var(--nav-item-color-active);
+}
+
+.nav-file-title-content .confluence-icon.active svg {
+	stroke: var(--nav-item-color-active);
+}
+
+/* Publishable Content - Inactive */
+.nav-file-title-content .confluence-icon.inactive {
+	color: var(--text-muted);
+}
+
+.nav-file-title-content .confluence-icon.inactive svg {
+	stroke: var(--text-muted);
+}
+
+/* Excluded Content */
+.nav-file-title-content .confluence-icon.excluded {
+	color: var(--text-muted);
+}
+
+.nav-file-title-content .confluence-icon.excluded svg {
+	stroke: var(--text-muted);
+}
+
+/* Label styling */
+.nav-folder-title-content .confluence-label {
+	margin-left: 8px; /* Increased from 4px */
+	margin-right: 4px;
+	font-size: calc(var(--font-ui-smaller) - 3px) !important;
+	text-transform: uppercase !important;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	vertical-align: middle;
+	line-height: calc(var(--line-height-tight) - 6px);
+	padding: 0 2px; /* Minimal padding */
+	border-radius: 3px; /* Rounded corners */
+}
+
+/* Editor indicators */
+.is-active .view-header .confluence-icon {
+	display: inline-flex;
+	align-items: center;
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-size: var(--font-ui-smaller);
+	padding: 2px 6px;
+	border-radius: 4px;
+	margin-left: 8px;
+	opacity: 0.85;
+	vertical-align: middle;
+}
+
+.is-active .view-header .confluence-icon svg {
+	width: var(--font-ui-smaller);
+	height: var(--font-ui-smaller);
+	fill: var(--text-on-accent);
+	stroke: var(--text-on-accent);
+	margin-right: 4px;
+	vertical-align: middle;
+}

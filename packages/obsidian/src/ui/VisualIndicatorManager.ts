@@ -49,9 +49,6 @@ export class VisualIndicatorManager {
 			throw new Error('VisualIndicatorManager is not initialized with an App instance');
 		}
 
-		// Add CSS for visual indicators
-		this.addVisualIndicatorStyles();
-
 		// Register event to update visual indicators when file explorer is updated
 		this.app.workspace.on('layout-change', () => {
 			this.updateVisualIndicators();
@@ -83,51 +80,6 @@ export class VisualIndicatorManager {
 	}
 
 	/**
-	 * Add CSS styles for visual indicators
-	 */
-	private addVisualIndicatorStyles(): void {
-		const styleId = "confluence-visual-indicators";
-		if (!document.getElementById(styleId)) {
-			const css = `
-                .nav-folder-title-content .confluence-icon,
-                .nav-file-title-content .confluence-icon {
-                    margin-left: 4px;
-                    display: inline-flex;
-                    align-items: center;
-                }
-                .nav-folder-title-content .confluence-icon svg,
-                .nav-file-title-content .confluence-icon svg {
-                    width: 14px;
-                    height: 14px;
-                    fill: var(--interactive-accent);
-                }
-                .is-active .view-header .confluence-icon {
-                    display: inline-flex;
-                    align-items: center;
-                    background-color: var(--interactive-accent);
-                    color: var(--text-on-accent);
-                    font-size: 12px;
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                    margin-left: 8px;
-                    opacity: 0.85;
-                }
-                .is-active .view-header .confluence-icon svg {
-                    width: 14px;
-                    height: 14px;
-                    fill: var(--text-on-accent);
-                    margin-right: 4px;
-                }
-            `;
-
-			const styleEl = document.createElement("style");
-			styleEl.id = styleId;
-			styleEl.textContent = css;
-			document.head.appendChild(styleEl);
-		}
-	}
-
-	/**
 	 * Update visual indicators in the file explorer
 	 */
 	public updateVisualIndicators(): void {
@@ -155,6 +107,15 @@ export class VisualIndicatorManager {
 			const activeMapping = this.mappingManager.getActiveMapping();
 			const isActiveRoot = activeMapping?.folderToPublish === folderPath;
 
+			// Find the mapping for this folder to get the label
+			let folderLabel = '';
+			if (isPublishRoot) {
+				const folderMapping = this.getAllMappings().find(m => m.folderToPublish === folderPath);
+				if (folderMapping && folderMapping.label) {
+					folderLabel = folderMapping.label;
+				}
+			}
+
 			// Remove old classes that applied styling
 			folderEl.classList.remove("confluence-publish-root", "confluence-active-root");
 
@@ -162,22 +123,37 @@ export class VisualIndicatorManager {
 			const folderTitleContent = folderTitle.querySelector(".nav-folder-title-content");
 			if (!folderTitleContent) return;
 
-			// Remove any existing icon
+			// Remove any existing icon, label, and container
+			const existingContainer = folderTitleContent.querySelector(".confluence-indicator-container");
+			if (existingContainer) existingContainer.remove();
+
 			const existingIcon = folderTitleContent.querySelector(".confluence-icon");
 			if (existingIcon) existingIcon.remove();
 
+			const existingLabel = folderTitleContent.querySelector(".confluence-label");
+			if (existingLabel) existingLabel.remove();
+
 			// Add icon for publish roots
 			if (isPublishRoot) {
+				// Create combined icon+label container
+				const containerEl = document.createElement("span");
+				containerEl.className = `confluence-indicator-container ${isActiveRoot ? 'active' : 'inactive'}`;
+
+				// Create icon element
 				const iconEl = document.createElement("span");
 				iconEl.className = "confluence-icon";
+				setIcon(iconEl, isActiveRoot ? "cloud-upload" : "cloud");
+				containerEl.appendChild(iconEl);
 
-				// Create icon element using Obsidian's icon system
-				const iconName = isActiveRoot ? "cloud-upload" : "cloud-off";
+				// Add label if available
+				if (folderLabel) {
+					const labelEl = document.createElement("span");
+					labelEl.className = "confluence-label";
+					labelEl.textContent = folderLabel;
+					containerEl.appendChild(labelEl);
+				}
 
-				// Use setIcon from Obsidian's icon library
-				setIcon(iconEl, iconName);
-
-				folderTitleContent.appendChild(iconEl);
+				folderTitleContent.appendChild(containerEl);
 			}
 
 			// Process files in this folder if it's a publish root
@@ -206,17 +182,18 @@ export class VisualIndicatorManager {
 					const frontMatter = this.app.metadataCache.getCache(filePath)?.frontmatter;
 					const isExcluded = frontMatter && frontMatter["connie-publish"] === false;
 
-					// Add icon if file should be published
-					if (!isExcluded) {
-						const iconEl = document.createElement("span");
-						iconEl.className = "confluence-icon";
+					// Add icon based on status
+					const iconEl = document.createElement("span");
 
-						// Create icon element using Obsidian's icon system
-						const iconName = isActiveRoot ? "cloud-upload" : "cloud-off";
-
-						// Use setIcon from Obsidian's icon library
-						setIcon(iconEl, iconName);
-
+					if (isExcluded) {
+						// Add file-minus icon for excluded content
+						iconEl.className = "confluence-icon excluded";
+						setIcon(iconEl, "file-minus");
+						fileTitleContent.appendChild(iconEl);
+					} else {
+						// Add file-up icon for publishable content
+						iconEl.className = `confluence-icon ${isActiveRoot ? 'active' : 'inactive'}`;
+						setIcon(iconEl, "file-up");
 						fileTitleContent.appendChild(iconEl);
 					}
 				};
@@ -264,6 +241,7 @@ export class VisualIndicatorManager {
 
 		// Check if file is in any publish folder
 		const mappings = this.getAllMappings();
+
 		for (const mapping of mappings) {
 			if (filePath.startsWith(mapping.folderToPublish)) {
 				// Check frontmatter to see if publishing is specifically disabled
@@ -294,8 +272,8 @@ export class VisualIndicatorManager {
 
 		// Add appropriate icon based on publish status
 		if (isPublishable) {
-			// Add cloud-upload icon for enabled publishing
-			this.publishIconRef = activeView.addAction("cloud-upload", "Publishing enabled", () => {
+			// Add file-up icon for enabled publishing
+			this.publishIconRef = activeView.addAction("file-up", "Publishing enabled", () => {
 				// Toggle publishing off when clicked
 				if (activeView.file && this.app) {
 					this.app.fileManager.processFrontMatter(activeView.file, (frontmatter) => {
@@ -307,8 +285,8 @@ export class VisualIndicatorManager {
 				}
 			});
 		} else if (isExplicitlyDisabled) {
-			// Add cloud-off icon for disabled publishing
-			this.publishIconRef = activeView.addAction("cloud-off", "Publishing disabled", () => {
+			// Add file-minus icon for disabled publishing
+			this.publishIconRef = activeView.addAction("file-minus", "Publishing disabled", () => {
 				// Toggle publishing on when clicked
 				if (activeView.file && this.app) {
 					this.app.fileManager.processFrontMatter(activeView.file, (frontmatter) => {

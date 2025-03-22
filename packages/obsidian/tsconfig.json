@@ -1,5 +1,4 @@
 {
-	"extends": "../../tsconfig.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"inlineSourceMap": true,
@@ -11,12 +10,13 @@
 		"skipLibCheck": true,
 		"types": ["node"]
 	},
-	"include": ["**/*.ts", "**/*.tsx"],
 	"exclude": [
 		"node_modules",
 		"packages/**/dist/*",
 		"dist/*",
 		"**/*.test.ts",
 		"**/jest.config.ts"
-	]
+	],
+	"extends": "../../tsconfig.json",
+	"include": ["**/*.ts", "**/*.tsx"]
 }
