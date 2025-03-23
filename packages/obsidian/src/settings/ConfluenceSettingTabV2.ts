@@ -71,11 +71,14 @@ export class ConfluenceSettingTabV2 extends PluginSettingTab {
 					}),
 			);
 
+
 		// Publishing
 		containerEl.createEl("h2", { text: "Publishing" });
 
+
+
 		// Legacy settings for backward compatibility
-		if (settings.folderToPublish || settings.confluenceParentId) {
+		/* if (settings.folderToPublish || settings.confluenceParentId) {
 			const legacySettingEl = containerEl.createDiv({ cls: "setting-item-legacy" });
 			legacySettingEl.createEl("p", {
 				text: "Legacy settings (maintained for compatibility):",
@@ -143,9 +146,10 @@ export class ConfluenceSettingTabV2 extends PluginSettingTab {
 					}
 				}
 			}
-		}
+		} */
 
 		// Multi-folder mappings
+
 		const mappingHeader = containerEl.createEl("h3", { text: "Publish Mappings" });
 		mappingHeader.style.marginBottom = "0.5em";
 
@@ -188,6 +192,25 @@ export class ConfluenceSettingTabV2 extends PluginSettingTab {
 						}
 					});
 			});
+
+
+		// Unpublish Settings
+		const unpublishHeader = containerEl.createEl("h3", { text: "Unpublish Settings" });
+		unpublishHeader.style.marginBottom = "0.5em";
+
+		// Add setting for removing frontmatter on unpublish
+		new Setting(containerEl)
+			.setName("Remove frontmatter on unpublish")
+			.setDesc("When removing a folder as a publish root, remove connie-publish frontmatter settings from all files in the folder")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(settings.removeFrontmatterOnUnpublish)
+					.onChange(async (value) => {
+						await this.settingsManager.updateSettings({ removeFrontmatterOnUnpublish: value }, false);
+					}),
+			);
+
+
 
 		// Display
 		containerEl.createEl("h2", { text: "Display" });
@@ -393,7 +416,7 @@ export class ConfluenceSettingTabV2 extends PluginSettingTab {
 			buttonContainer.addButton((button) => {
 				button
 					.setButtonText("Set Active")
-					.setClass(!isActive ? "mod-cta" : "")
+					.setClass(isActive ? "mod-active" : "mod-cta")
 					.setDisabled(isActive)
 					.onClick(async () => {
 						try {

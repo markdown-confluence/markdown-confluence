@@ -90,4 +90,16 @@ if (prod) {
 			console.log("styles.css updated in dev environment");
 		}
 	});
+
+	// Watch for changes to TypeScript files in the settings directory
+	console.log("Watching for changes to settings files...");
+	watch("src/settings", { recursive: true }, (eventType, filename) => {
+		if (eventType === "change") {
+			console.log(`${filename} changed, rebuilding...`);
+			context
+				.rebuild()
+				.then(() => console.log("Rebuild complete"))
+				.catch((err) => console.error("Rebuild failed:", err));
+		}
+	});
 }

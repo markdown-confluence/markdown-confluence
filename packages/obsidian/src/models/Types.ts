@@ -40,6 +40,8 @@ export interface ObsidianPluginSettings
 	publishMappings: PublishMapping[];
 	/** Index of the currently active mapping in the publishMappings array */
 	activeMappingIndex: number;
+	/** Whether to remove connie-publish frontmatter settings when removing a folder as a publish root */
+	removeFrontmatterOnUnpublish: boolean;
 }
 
 /**

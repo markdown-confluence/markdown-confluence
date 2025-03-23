@@ -39,6 +39,7 @@ export class SettingsManager {
 			logLevel: 3, // SILENT
 			publishMappings: [],
 			activeMappingIndex: 0,
+			removeFrontmatterOnUnpublish: false,
 		};
 	}
 
@@ -94,6 +95,7 @@ export class SettingsManager {
 					logLevel: 3, // SILENT
 					publishMappings: [],
 					activeMappingIndex: 0,
+					removeFrontmatterOnUnpublish: false,
 				},
 				migrationResult.settings
 			);

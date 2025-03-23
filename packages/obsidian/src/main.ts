@@ -28,7 +28,7 @@ import { ContextMenuManager } from "./ui/ContextMenuManager";
 import { VisualIndicatorManager } from "./ui/VisualIndicatorManager";
 
 // Import UI components
-import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
+import { ConfluenceSettingTabV2 } from "./settings/ConfluenceSettingTabV2";
 
 export default class ConfluencePlugin extends Plugin {
 	settings!: ObsidianPluginSettings;
@@ -91,7 +91,7 @@ export default class ConfluencePlugin extends Plugin {
 			await this.publishManager.initialize(this.app);
 
 			// Register UI components
-			this.addSettingTab(new ConfluenceSettingTab(this.app, this));
+			this.addSettingTab(new ConfluenceSettingTabV2(this.app, this));
 
 			// Register commands
 			this.commandManager.registerCommands();

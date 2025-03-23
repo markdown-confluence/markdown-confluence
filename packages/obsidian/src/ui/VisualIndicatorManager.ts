@@ -256,6 +256,21 @@ export class VisualIndicatorManager {
 		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!activeView || !activeView.file) return;
 
+		// First, remove ALL existing publish-related icons from the view
+		// This handles cases where our reference is stale or multiple icons were added
+		const statusBarIcons = activeView.containerEl.querySelectorAll('.view-action');
+		statusBarIcons.forEach(icon => {
+			const ariaLabel = icon.getAttribute('aria-label');
+			if (ariaLabel === "Publishing enabled" || ariaLabel === "Publishing disabled") {
+				icon.remove();
+			}
+		});
+
+		// Also clear our reference
+		if (this.publishIconRef) {
+			this.publishIconRef = null;
+		}
+
 		const filePath = activeView.file.path;
 		let isPublishable = false;
 
@@ -284,12 +299,6 @@ export class VisualIndicatorManager {
 		// Get explicit connie-publish:false in frontmatter
 		const isExplicitlyDisabled = this.app.metadataCache.getCache(filePath)?.frontmatter?.["connie-publish"] === false;
 
-		// Remove existing icon if any
-		if (this.publishIconRef) {
-			this.publishIconRef.remove();
-			this.publishIconRef = null;
-		}
-
 		// Add appropriate icon based on publish status
 		if (isPublishable) {
 			// Determine if file is in active mapping
@@ -316,9 +325,10 @@ export class VisualIndicatorManager {
 			const activeMapping = this.mappingManager.getActiveMapping();
 			const isInActiveMapping = activeMapping && filePath.startsWith(activeMapping.folderToPublish);
 
+
 			// Add appropriate icon for disabled publishing based on active/inactive status
 			this.publishIconRef = activeView.addAction(
-				isInActiveMapping ? "ban" : "circle-slash",
+				isInActiveMapping ? "circle-pause" : "circle-pause",
 				"Publishing disabled",
 				() => {
 					// Toggle publishing on when clicked

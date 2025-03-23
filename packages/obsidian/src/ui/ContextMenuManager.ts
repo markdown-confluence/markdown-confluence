@@ -3,6 +3,7 @@ import { CompletedModal } from '../CompletedModal';
 import { MappingManager } from '../mapping/MappingManager';
 import { PublishMapping } from '../models/Types';
 import { PublishManager } from '../publish/PublishManager';
+import { SettingsManager } from '../settings/SettingsManager';
 import { StateManager } from '../state/StateManager';
 import { LoggerManager } from '../utils';
 import { VisualIndicatorManager } from './VisualIndicatorManager';
@@ -17,6 +18,7 @@ export class ContextMenuManager {
 	private mappingManager = MappingManager.getInstance();
 	private publishManager = PublishManager.getInstance();
 	private stateManager = StateManager.getInstance();
+	private settingsManager = SettingsManager.getInstance();
 
 	private constructor() { }
 
@@ -539,6 +541,43 @@ export class ContextMenuManager {
 						const mappingIndex = this.mappingManager.getMappingIndexForFolder(folderPath);
 						if (mappingIndex >= 0) {
 							this.logger.debug(`Removing mapping at index ${mappingIndex} for folder: ${folderPath}`);
+
+							// Check if we should remove frontmatter when unpublishing
+							const settings = this.settingsManager.getSettings();
+							if (settings.removeFrontmatterOnUnpublish) {
+								this.logger.debug(`Will remove frontmatter for files in folder: ${folderPath}`);
+								// Get folder object
+								const folder = this.app?.vault.getAbstractFileByPath(folderPath);
+								if (folder instanceof TFolder) {
+									try {
+										this.logger.debug(`Clearing connie-publish frontmatter for all files in: ${folderPath}`);
+										await this.processFilesInFolder(folder, async (file) => {
+											try {
+												await this.app?.fileManager.processFrontMatter(file, (frontmatter) => {
+													// Remove connie-publish property from frontmatter
+													if (frontmatter && "connie-publish" in frontmatter) {
+														delete frontmatter["connie-publish"];
+														this.logger.debug(`Removed connie-publish from ${file.path}`);
+													}
+													// Also remove connie-parent-id if it exists
+													if (frontmatter && "connie-parent-id" in frontmatter) {
+														delete frontmatter["connie-parent-id"];
+														this.logger.debug(`Removed connie-parent-id from ${file.path}`);
+													}
+												});
+											} catch (error) {
+												this.logger.error(`Error clearing frontmatter for file ${file.path}: ${error}`);
+											}
+										});
+										this.logger.debug(`Finished clearing frontmatter for files in: ${folderPath}`);
+										new Notice(`Removed publishing settings from all files in "${folder.name}"`);
+									} catch (error) {
+										this.logger.error(`Error clearing frontmatter in folder ${folderPath}: ${error}`);
+										new Notice(`Error removing publishing settings: ${error}`);
+									}
+								}
+							}
+
 							await this.mappingManager.removeMapping(mappingIndex);
 							this.logger.debug(`Mapping removed successfully for folder: ${folderPath}`);
 							new Notice(`Removed "${file.name}" as a publish root folder`);
