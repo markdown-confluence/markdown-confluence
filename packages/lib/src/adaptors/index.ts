@@ -26,7 +26,7 @@ export interface LoaderAdaptor {
 		values: Partial<ConfluencePerPageAllValues>,
 	): Promise<void>;
 	loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile>;
-	getMarkdownFilesToUpload(): Promise<FilesToUpload>;
+	getMarkdownFilesToUpload(publishingSpecificFile?: boolean): Promise<FilesToUpload>;
 	readBinary(
 		path: string,
 		referencedFromFilePath: string,

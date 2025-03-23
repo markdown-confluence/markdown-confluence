@@ -35,7 +35,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		});
 	}
 
-	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
+	async getMarkdownFilesToUpload(publishingSpecificFile: boolean = false): Promise<FilesToUpload> {
 		this.logger.debug("Getting markdown files to upload");
 		const files = this.vault.getMarkdownFiles();
 		this.logger.debug(`Found ${files.length} total markdown files in vault`);
@@ -84,9 +84,16 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 
 				// Check if file should be published
 				const inPublishFolder = publishFolders.some(folder => file.path.startsWith(folder));
+				const hasExplicitPublishFlag = frontMatter && frontMatter["connie-publish"] === true;
+				const hasParentId = frontMatter && frontMatter["connie-parent-id"];
 
-				// Only include files in the active publish folder (unless they have connie-publish: false)
-				if (inPublishFolder && (!frontMatter || frontMatter["connie-publish"] !== false)) {
+				// Include files that:
+				// 1. Are in the active publish folder (and don't have connie-publish: false)
+				// 2. OR, if we're publishing a specific file:
+				//    a. has connie-publish: true in frontmatter
+				//    b. has connie-parent-id set in frontmatter
+				if ((inPublishFolder && (!frontMatter || frontMatter["connie-publish"] !== false)) ||
+					(publishingSpecificFile && (hasExplicitPublishFlag || hasParentId))) {
 					this.logger.debug(`Adding file to publish: ${file.path}`);
 					filesToPublish.push(file);
 				} else {

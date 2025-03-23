@@ -1,15 +1,15 @@
-import { ConfluenceSettings } from "../Settings";
-import { BinaryFile, FilesToUpload, LoaderAdaptor, MarkdownFile } from ".";
-import { lookup } from "mime-types";
 import { existsSync, lstatSync } from "fs";
 import * as fs from "fs/promises";
-import * as path from "path";
 import matter, { stringify } from "gray-matter";
+import { lookup } from "mime-types";
+import * as path from "path";
+import { BinaryFile, FilesToUpload, LoaderAdaptor, MarkdownFile } from ".";
 import {
 	ConfluencePerPageAllValues,
 	ConfluencePerPageConfig,
 	conniePerPageConfig,
 } from "../ConniePageConfig";
+import { ConfluenceSettings } from "../Settings";
 
 export class FileSystemAdaptor implements LoaderAdaptor {
 	settings: ConfluenceSettings;
@@ -143,21 +143,27 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 		return files;
 	}
 
-	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
+	async getMarkdownFilesToUpload(publishingSpecificFile: boolean = false): Promise<FilesToUpload> {
 		const files = await this.loadMarkdownFiles(this.settings.contentRoot);
 		const filesToPublish = [];
 		for (const file of files) {
 			try {
 				const frontMatter = file.frontmatter;
 
+				const inPublishFolder = file.absoluteFilePath.startsWith(
+					this.settings.folderToPublish,
+				) || this.settings.folderToPublish === ".";
+
+				// FIXME: This is a bit of a hack, we should probably move this to the Publisher class
+				// FIXME: We should also move the logic for determining if we're publishing a specific file to the Publisher class
+				// FIXME: The use of connie-parent-id has not been designed well as it was a quick hack without much thought
+				// If we're publishing a specific file, we need to check if it has a custom parent ID in frontmatter
+				const hasExplicitPublishFlag = frontMatter && frontMatter["connie-publish"] === true;
+				const hasParentId = frontMatter && frontMatter["connie-parent-id"];
+
 				if (
-					((file.absoluteFilePath.startsWith(
-						this.settings.folderToPublish,
-					) ||
-						this.settings.folderToPublish === ".") &&
-						(!frontMatter ||
-							frontMatter["connie-publish"] !== false)) ||
-					(frontMatter && frontMatter["connie-publish"] === true)
+					(inPublishFolder && (!frontMatter || frontMatter["connie-publish"] !== false)) ||
+					(publishingSpecificFile && (hasExplicitPublishFlag || hasParentId))
 				) {
 					filesToPublish.push(file);
 				}

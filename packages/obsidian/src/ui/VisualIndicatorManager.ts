@@ -206,12 +206,12 @@ export class VisualIndicatorManager {
 					if (isExcluded) {
 						// Add file-minus icon for excluded content
 						iconEl.className = "confluence-icon excluded";
-						setIcon(iconEl, "file-minus");
+						setIcon(iconEl, "circle-slash");
 						fileTitleContent.appendChild(iconEl);
 					} else {
 						// Add file-up icon for publishable content
 						iconEl.className = `confluence-icon ${isActiveRoot ? 'active' : 'inactive'}`;
-						setIcon(iconEl, "file-text");
+						setIcon(iconEl, "circle-check");
 						fileTitleContent.appendChild(iconEl);
 					}
 				};

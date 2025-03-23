@@ -172,10 +172,7 @@ export class PublishManager {
 					filesUploadResult: [],
 				};
 
-				// FIXME: This is a legacy behavior that should be removed
-				// Fall back to legacy behavior if no mappings exist
-				// const settings = this.settingsManager.getSettings();
-				// return await this.publishWithParentId(publishFilter, settings.confluenceParentId);
+
 			} catch (error) {
 				this.logger.error("Error during publication", error);
 				return {
@@ -202,7 +199,7 @@ export class PublishManager {
 	 * @param parentId Confluence parent page ID
 	 * @returns Upload results
 	 */
-	private async publishWithParentId(publishFilter: string | undefined, parentId: string): Promise<UploadResults> {
+	public async publishWithParentId(publishFilter: string | undefined, parentId: string): Promise<UploadResults> {
 		this.ensureInitialized();
 
 		if (!this.publisher) {
@@ -239,6 +236,7 @@ export class PublishManager {
 
 			// Determine if publishFilter is a specific file or a folder
 			let actualPublishFilter: string | undefined = publishFilter;
+			let publishingSpecificFile = !!publishFilter; // Default: if publishFilter exists, we're publishing a specific file
 
 			// If publishFilter matches one of our folder publish paths, it's a folder, not a file
 			// In this case, don't pass it to publisher.publish to avoid filtering out all files
@@ -248,11 +246,12 @@ export class PublishManager {
 					settings.folderToPublish === publishFilter) {
 					this.logger.debug(`Detected folder path in publishFilter, not passing to publisher to avoid filtering`);
 					actualPublishFilter = undefined;
+					publishingSpecificFile = false; // Not publishing a specific file, but a folder
 				}
 			}
 
 			// Publish with the updated settings
-			const adrFiles = await this.publisher.publish(actualPublishFilter);
+			const adrFiles = await this.publisher.publish(actualPublishFilter, publishingSpecificFile);
 
 			// Process results
 			return this.processPublishResults(adrFiles);

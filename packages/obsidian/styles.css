@@ -151,7 +151,6 @@
 
 .nav-file-title-content .confluence-icon.excluded svg {
 	stroke: var(--text-faint);
-	visibility: hidden;
 }
 
 /* Label styling */

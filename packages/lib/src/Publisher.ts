@@ -122,7 +122,7 @@ export class Publisher {
 		this.logger = logger;
 	}
 
-	async publish(publishFilter?: string) {
+	async publish(publishFilter?: string, publishingSpecificFile?: boolean) {
 		const settings = this.settingsLoader.load();
 
 		if (!this.myAccountId) {
@@ -131,8 +131,31 @@ export class Publisher {
 			this.myAccountId = currentUser.accountId;
 		}
 
+		// If publishingSpecificFile isn't provided, determine it based on publishFilter
+		const isPublishingSpecificFile = publishingSpecificFile ?? !!publishFilter;
+
+		// Determine the parent page ID
+		let parentId = settings.confluenceParentId;
+
+		// If publishing a specific file, check if it has a custom parent ID in frontmatter
+		if (publishFilter) {
+			// Try to get the files that will be uploaded
+			const files = await this.adaptor.getMarkdownFilesToUpload(isPublishingSpecificFile);
+
+			// Find the specific file being published
+			const matchingFile = files.find(file => file.absoluteFilePath === publishFilter);
+
+			// If found and it has a custom parent ID in frontmatter, use that instead
+			if (matchingFile?.frontmatter?.["connie-parent-id"]) {
+				parentId = matchingFile.frontmatter["connie-parent-id"].toString();
+				if (this.logger) {
+					this.logger.info(`Using custom parent ID from frontmatter: ${parentId}`);
+				}
+			}
+		}
+
 		const parentPage = await this.confluenceClient.content.getContentById({
-			id: settings.confluenceParentId,
+			id: parentId,
 			expand: ["body.atlas_doc_format", "space"],
 		});
 		if (!parentPage.space) {
@@ -141,7 +164,8 @@ export class Publisher {
 
 		const spaceToPublishTo = parentPage.space;
 
-		const files = await this.adaptor.getMarkdownFilesToUpload();
+		// Get all files to upload, passing the publishingSpecificFile flag
+		const files = await this.adaptor.getMarkdownFilesToUpload(isPublishingSpecificFile);
 		const folderTree = createLocalAdfTree(files, settings);
 		let confluencePagesToPublish = await ensureAllFilesExistInConfluence(
 			this.confluenceClient,
