@@ -204,14 +204,16 @@ export class VisualIndicatorManager {
 					const iconEl = document.createElement("span");
 
 					if (isExcluded) {
-						// Add file-minus icon for excluded content
-						iconEl.className = "confluence-icon excluded";
-						setIcon(iconEl, "circle-slash");
+						// Add different icons for excluded content based on active status
+						iconEl.className = `confluence-icon excluded ${isActiveRoot ? 'active' : 'inactive'}`;
+						// Use different icon for active vs inactive mapping
+						setIcon(iconEl, isActiveRoot ? "circle-pause" : "circle-pause");
 						fileTitleContent.appendChild(iconEl);
 					} else {
-						// Add file-up icon for publishable content
+						// Add different icons based on active status
 						iconEl.className = `confluence-icon ${isActiveRoot ? 'active' : 'inactive'}`;
-						setIcon(iconEl, "circle-check");
+						// Use different icon for active vs inactive mapping
+						setIcon(iconEl, isActiveRoot ? "check" : "circle-pause");
 						fileTitleContent.appendChild(iconEl);
 					}
 				};
@@ -290,35 +292,49 @@ export class VisualIndicatorManager {
 
 		// Add appropriate icon based on publish status
 		if (isPublishable) {
-			// Add file-up icon for enabled publishing
-			this.publishIconRef = activeView.addAction("file-up", "Publishing enabled", () => {
-				// Toggle publishing off when clicked
-				if (activeView.file && this.app) {
-					this.app.fileManager.processFrontMatter(activeView.file, (frontmatter) => {
-						frontmatter["connie-publish"] = false;
-					});
-					new Notice("Publishing disabled for this note");
-					// Update the indicator after toggling
-					setTimeout(() => this.updateEditorIndicator(), 100);
-				}
-			});
+			// Determine if file is in active mapping
+			const activeMapping = this.mappingManager.getActiveMapping();
+			const isInActiveMapping = activeMapping && filePath.startsWith(activeMapping.folderToPublish);
+
+			// Add icon for enabled publishing with active/inactive status
+			this.publishIconRef = activeView.addAction(
+				isInActiveMapping ? "cloud-upload" : "cloud",
+				"Publishing enabled",
+				() => {
+					// Toggle publishing off when clicked
+					if (activeView.file && this.app) {
+						this.app.fileManager.processFrontMatter(activeView.file, (frontmatter) => {
+							frontmatter["connie-publish"] = false;
+						});
+						new Notice("Publishing disabled for this note");
+						// Update the indicator after toggling
+						setTimeout(() => this.updateEditorIndicator(), 100);
+					}
+				});
 		} else if (isExplicitlyDisabled) {
-			// Add file-minus icon for disabled publishing
-			this.publishIconRef = activeView.addAction("file-minus", "Publishing disabled", () => {
-				// Toggle publishing on when clicked
-				if (activeView.file && this.app) {
-					this.app.fileManager.processFrontMatter(activeView.file, (frontmatter) => {
-						if (activeView.file && activeView.file.path.startsWith(this.getLegacySettings().folderToPublish)) {
-							delete frontmatter["connie-publish"];
-						} else {
-							frontmatter["connie-publish"] = true;
-						}
-					});
-					new Notice("Publishing enabled for this note");
-					// Update the indicator after toggling
-					setTimeout(() => this.updateEditorIndicator(), 100);
-				}
-			});
+			// Determine if file is in active mapping
+			const activeMapping = this.mappingManager.getActiveMapping();
+			const isInActiveMapping = activeMapping && filePath.startsWith(activeMapping.folderToPublish);
+
+			// Add appropriate icon for disabled publishing based on active/inactive status
+			this.publishIconRef = activeView.addAction(
+				isInActiveMapping ? "ban" : "circle-slash",
+				"Publishing disabled",
+				() => {
+					// Toggle publishing on when clicked
+					if (activeView.file && this.app) {
+						this.app.fileManager.processFrontMatter(activeView.file, (frontmatter) => {
+							if (activeView.file && activeView.file.path.startsWith(this.getLegacySettings().folderToPublish)) {
+								delete frontmatter["connie-publish"];
+							} else {
+								frontmatter["connie-publish"] = true;
+							}
+						});
+						new Notice("Publishing enabled for this note");
+						// Update the indicator after toggling
+						setTimeout(() => this.updateEditorIndicator(), 100);
+					}
+				});
 		}
 	}
 } 

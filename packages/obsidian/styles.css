@@ -21,7 +21,7 @@
 .confluence-icon svg.svg-icon {
 	height: 18px !important;
 	width: 18px !important;
-	stroke-width: 2px !important;
+	stroke-width: 1.7px !important;
 }
 
 /* Remove overly specific and redundant selector */
@@ -40,25 +40,26 @@
 	text-decoration: none !important;
 }
 
-.tree-item.nav-folder:has(span.confluence-indicator-container) {
+/* .tree-item.nav-folder:has(span.confluence-indicator-container) {
 	background-color: var(--background-primary-alt);
 	border-left: 2px solid;
 	border-radius: 4px;
-}
+} */
 
 /* ********** Source Folder - ACTIVE ********** */
 
-.tree-item.nav-folder:has(span.confluence-indicator-container.active) {
+/* .tree-item.nav-folder:has(span.confluence-indicator-container.active) {
 	background-color: var(--background-primary-alt);
 	border-left-color: var(--text-accent);
 	border-radius: 4px;
-}
+} */
 
 /* Add direct styling for confluence-active-root class */
-.tree-item.nav-folder.confluence-active-root {
+.tree-item.nav-folder.confluence-publish-root.confluence-active-root {
 	background-color: rgba(var(--interactive-accent-rgb), 0.1);
 	border-left-color: var(--interactive-accent);
 	border-left-width: 3px;
+	border-left-style: solid;
 	border-radius: 4px;
 }
 
@@ -70,8 +71,7 @@
 
 /* Target both the container and SVG element for active folders */
 
-≠ .nav-folder-title-content .confluence-indicator-container.active svg {
-	stroke: var(--text-normal);
+.nav-folder-title-content .confluence-indicator-container.active svg {
 	stroke: var(--background-primary);
 	color: var(--background-primary);
 }
@@ -88,9 +88,17 @@
 
 /* ********** Source Folder - INACTIVE ********** */
 
+/* Add direct styling for confluence-active-root class */
+.tree-item.nav-folder.confluence-publish-root:not(.confluence-active-root) {
+	background-color: rgba(var(--interactive-accent-rgb), 0.1);
+	border-left-color: var(--interactive-accent-hsl);
+	border-left-width: 3px;
+	border-left-style: solid;
+	border-radius: 4px;
+}
+
 .tree-item.nav-folder:has(span.confluence-indicator-container.inactive) {
 	background-color: var(--background-primary-alt);
-
 	border-radius: 4px;
 }
 
@@ -126,30 +134,43 @@
 	vertical-align: text-top;
 }
 
-/* Publishable Content - Active */
-.nav-file-title-content .confluence-icon.active {
+/* Publishable Content - Active Mapping */
+.nav-file-title-content .confluence-icon.active:not(.excluded) {
 	color: var(--nav-item-color-active);
+	height: 13px !important;
+	width: 13px !important;
 }
 
-.nav-file-title-content .confluence-icon.active svg.svg-icon {
-	stroke: var(--nav-item-color-active);
+.nav-file-title-content .confluence-icon.active:not(.excluded) svg.svg-icon {
+	stroke: var(--text-success);
+	height: 13px !important;
+	width: 13px !important;
 }
 
-/* Publishable Content - Inactive */
-.nav-file-title-content .confluence-icon.inactive {
+/* Publishable Content - Inactive Mapping */
+.nav-file-title-content .confluence-icon.inactive:not(.excluded) {
 	color: var(--text-faint);
 }
 
-.nav-file-title-content .confluence-icon.inactive svg {
+.nav-file-title-content .confluence-icon.inactive:not(.excluded) svg {
 	stroke: var(--text-faint);
 }
 
-/* Excluded Content */
-.nav-file-title-content .confluence-icon.excluded {
+/* Excluded Content - Active Mapping */
+.nav-file-title-content .confluence-icon.excluded.active {
+	color: var(--text-error);
+}
+
+.nav-file-title-content .confluence-icon.excluded.active svg {
+	stroke: var(--text-error);
+}
+
+/* Excluded Content - Inactive Mapping */
+.nav-file-title-content .confluence-icon.excluded.inactive {
 	color: var(--text-faint);
 }
 
-.nav-file-title-content .confluence-icon.excluded svg {
+.nav-file-title-content .confluence-icon.excluded.inactive svg {
 	stroke: var(--text-faint);
 }
 
