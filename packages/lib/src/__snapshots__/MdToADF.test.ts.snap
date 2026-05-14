@@ -972,6 +972,84 @@ exports[`parses horizontal_rules.md 1`] = `
 }
 `;
 
+exports[`parses html_comments.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/html_comments.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
+  "contents": {
+    "content": [
+      {
+        "content": [
+          {
+            "text": "Before",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "text": "Middle  text",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "text": "After",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "content": [
+          {
+            "marks": [
+              {
+                "type": "code",
+              },
+            ],
+            "text": "<!-- visible inline code comment -->",
+            "type": "text",
+          },
+        ],
+        "type": "paragraph",
+      },
+      {
+        "attrs": {
+          "language": "html",
+        },
+        "content": [
+          {
+            "text": "<!-- visible fenced code comment -->",
+            "type": "text",
+          },
+        ],
+        "type": "codeBlock",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "html_comments.md",
+  "folderName": "html_comments",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating HTML comments are ignored.",
+    "title": "HTML Comments",
+  },
+  "pageId": undefined,
+  "pageTitle": "HTML Comments",
+  "publish": false,
+  "tags": [],
+}
+`;
+
 exports[`parses images.md 1`] = `
 {
   "absoluteFilePath": "/path/to/images.md",
