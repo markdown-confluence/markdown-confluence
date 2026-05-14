@@ -4,7 +4,7 @@ import { lookup } from "mime-types";
 import { existsSync, lstatSync } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
-import matter, { stringify } from "gray-matter";
+import matter from "gray-matter";
 import {
 	ConfluencePerPageAllValues,
 	ConfluencePerPageConfig,
@@ -15,13 +15,18 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 	settings: ConfluenceSettings;
 
 	constructor(settings: ConfluenceSettings) {
-		this.settings = settings;
+		this.settings = {
+			...settings,
+			contentRoot: normalizeContentRoot(settings.contentRoot),
+		};
 
-		if (!existsSync(settings.contentRoot)) {
-			throw new Error(`'${settings.contentRoot}' doesn't exist.`);
+		if (!existsSync(this.settings.contentRoot)) {
+			throw new Error(`'${this.settings.contentRoot}' doesn't exist.`);
 		}
-		if (!lstatSync(settings.contentRoot).isDirectory()) {
-			throw new Error(`'${settings.contentRoot}' is not a directory.`);
+		if (!lstatSync(this.settings.contentRoot).isDirectory()) {
+			throw new Error(
+				`'${this.settings.contentRoot}' is not a directory.`,
+			);
 		}
 	}
 
@@ -93,7 +98,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 			}
 		}
 
-		const updatedData = stringify(fileContent, fm);
+		const updatedData = matter.stringify(fileContent, fm);
 		await fs.writeFile(actualAbsoluteFilePath, updatedData);
 	}
 
@@ -254,6 +259,13 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 		return await this.findClosestFile(fileName, parentDirectory);
 	}
+}
+
+function normalizeContentRoot(contentRoot: string): string {
+	const resolvedContentRoot = path.resolve(contentRoot);
+	return resolvedContentRoot.endsWith(path.sep)
+		? resolvedContentRoot
+		: `${resolvedContentRoot}${path.sep}`;
 }
 
 async function isFile(filePath: string): Promise<boolean> {
