@@ -12,12 +12,16 @@ export interface MdState {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	Token: Token;
 	tokens: Token[];
+	env?: {
+		references?: Record<string, { href: string; title: string }>;
+	};
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	md: any;
 }
 
 function createRule() {
-	const regx = /!\[[^\]]*\]\([^)]+\)|!\[\[.*\..*]]/g;
+	const regx = /!\[[^\]]*\]\([^)]+\)|!\[[^\]]*\]\[[^\]]*]|!\[\[.*\..*]]/g;
+	const referenceImageRegex = /^!\[(?<alt>[^\]]*)]\[(?<label>[^\]]*)]$/;
 	const validParentTokens = ["th_open", "td_open", "list_item_open"];
 
 	/**
@@ -43,6 +47,19 @@ function createRule() {
 	 * remaining inline content (bold, links, etc.) is kept intact!
 	 */
 	return function media(State: MdState) {
+		const createUrlAttrs = (href: string) => {
+			if (href.startsWith("http")) {
+				return [
+					["url", href],
+					["type", "external"],
+				];
+			}
+			return [
+				["url", `file://${href}`],
+				["type", "file"],
+			];
+		};
+
 		const getUrl = (str: string) => {
 			const res = State.md.helpers.parseLinkDestination(
 				str,
@@ -52,17 +69,28 @@ function createRule() {
 			if (res.ok) {
 				const href = State.md.normalizeLink(res.str);
 				if (State.md.validateLink(href)) {
-					if (href.startsWith("http")) {
-						return [
-							["url", href],
-							["type", "external"],
-						];
-					}
-					return [
-						["url", `file://${href}`],
-						["type", "file"],
-					];
+					return createUrlAttrs(href);
 				}
+			}
+
+			return [
+				["url", ""],
+				["type", "external"],
+			];
+		};
+
+		const getReferenceUrl = (str: string) => {
+			const match = str.match(referenceImageRegex);
+			const alt = match?.groups?.["alt"] ?? "";
+			const label = match?.groups?.["label"] || alt;
+			const normalizedReference = label
+				.trim()
+				.replace(/\s+/g, " ")
+				.toUpperCase();
+			const href = State.env?.references?.[normalizedReference]?.href;
+
+			if (href && State.md.validateLink(href)) {
+				return createUrlAttrs(State.md.normalizeLink(href));
 			}
 
 			return [
@@ -97,7 +125,11 @@ function createRule() {
 		const createMediaTokens = (url: string) => {
 			const mediaSingleOpen = new State.Token("media_single_open", "", 1);
 			const media = new State.Token("media", "", 0);
-			media.attrs = url.startsWith("![[") ? getWikiUrl(url) : getUrl(url);
+			media.attrs = url.startsWith("![[")
+				? getWikiUrl(url)
+				: referenceImageRegex.test(url)
+				? getReferenceUrl(url)
+				: getUrl(url);
 			const mediaSingleClose = new State.Token(
 				"media_single_close",
 				"",

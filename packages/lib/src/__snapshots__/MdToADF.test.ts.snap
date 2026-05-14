@@ -1218,6 +1218,65 @@ exports[`parses lists.md 1`] = `
 }
 `;
 
+exports[`parses reference_images.md 1`] = `
+{
+  "absoluteFilePath": "/path/to/reference_images.md",
+  "blogPostDate": undefined,
+  "contentType": "page",
+  "contents": {
+    "content": [
+      {
+        "attrs": {
+          "layout": "center",
+        },
+        "content": [
+          {
+            "attrs": {
+              "collection": "",
+              "id": "",
+              "type": "file",
+              "url": "file://../images/the-image.png",
+            },
+            "type": "media",
+          },
+        ],
+        "type": "mediaSingle",
+      },
+      {
+        "attrs": {
+          "layout": "center",
+        },
+        "content": [
+          {
+            "attrs": {
+              "collection": "",
+              "id": "",
+              "type": "file",
+              "url": "file://../images/collapsed.png",
+            },
+            "type": "media",
+          },
+        ],
+        "type": "mediaSingle",
+      },
+    ],
+    "type": "doc",
+    "version": 1,
+  },
+  "dontChangeParentPageId": false,
+  "fileName": "reference_images.md",
+  "folderName": "reference_images",
+  "frontmatter": {
+    "description": "A Markdown file demonstrating reference-style image links.",
+    "title": "Reference Images",
+  },
+  "pageId": undefined,
+  "pageTitle": "Reference Images",
+  "publish": false,
+  "tags": [],
+}
+`;
+
 exports[`parses tables.md 1`] = `
 {
   "absoluteFilePath": "/path/to/tables.md",

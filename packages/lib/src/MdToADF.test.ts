@@ -70,6 +70,19 @@ const markdownTestCases: MarkdownFile[] = [
 		},
 	},
 	{
+		folderName: "reference_images",
+		absoluteFilePath: "/path/to/reference_images.md",
+		fileName: "reference_images.md",
+		contents:
+			"![Alt text][image-ref]\n\n![Collapsed reference][]\n\n[image-ref]: ../images/the-image.png\n[Collapsed reference]: ../images/collapsed.png",
+		pageTitle: "Reference Images",
+		frontmatter: {
+			title: "Reference Images",
+			description:
+				"A Markdown file demonstrating reference-style image links.",
+		},
+	},
+	{
 		folderName: "code",
 		absoluteFilePath: "/path/to/code.md",
 		fileName: "code.md",
