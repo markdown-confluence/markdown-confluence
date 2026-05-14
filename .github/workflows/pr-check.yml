@@ -8,8 +8,8 @@ on:
 permissions: read-all
 
 concurrency:
-  group: "ci-check"
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-lint:
