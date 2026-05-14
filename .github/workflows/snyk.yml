@@ -33,8 +33,16 @@ jobs:
         with:
           args: --sarif-file-output=snyk.sarif --all-projects --dev --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --prune-repeated-subdependencies
 
+      - name: Normalize Snyk SARIF
+        if: ${{ always() && hashFiles('snyk.sarif') != '' }}
+        run: |
+          jq '(.runs[].tool.driver.rules[]?.properties."security-severity") |= (if . == null then "0.0" else . end)' snyk.sarif > snyk-normalized.sarif
+          mv snyk-normalized.sarif snyk.sarif
+
       - name: Upload result to GitHub Code Scanning
+        if: ${{ always() && hashFiles('snyk.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a # v2.13.4
+        continue-on-error: true
         with:
           sarif_file: snyk.sarif
           category: "Snyk Open Source"
@@ -70,9 +78,17 @@ jobs:
         with:
           command: code test
           args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --sarif-file-output=snyk-code.sarif
-        
+
+      - name: Normalize Snyk Code SARIF
+        if: ${{ always() && hashFiles('snyk-code.sarif') != '' }}
+        run: |
+          jq '(.runs[].tool.driver.rules[]?.properties."security-severity") |= (if . == null then "0.0" else . end)' snyk-code.sarif > snyk-code-normalized.sarif
+          mv snyk-code-normalized.sarif snyk-code.sarif
+
       - name: Upload result to GitHub Code Scanning
+        if: ${{ always() && hashFiles('snyk-code.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a # v2.13.4
+        continue-on-error: true
         with:
           sarif_file: snyk-code.sarif
           category: "Snyk Code"
@@ -115,8 +131,16 @@ jobs:
           image: markdown-confluence/markdown-confluence
           args: --org=23a1dbcf-c24a-4c44-aa74-cabdc4ba99d5 --file=packages/cli/Dockerfile
 
+      - name: Normalize Snyk Container SARIF
+        if: ${{ always() && hashFiles('snyk.sarif') != '' }}
+        run: |
+          jq '(.runs[].tool.driver.rules[]?.properties."security-severity") |= (if . == null then "0.0" else . end)' snyk.sarif > snyk-normalized.sarif
+          mv snyk-normalized.sarif snyk.sarif
+
       - name: Upload result to GitHub Code Scanning
+        if: ${{ always() && hashFiles('snyk.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@cdcdbb579706841c47f7063dda365e292e5cad7a # v2.13.4
+        continue-on-error: true
         with:
           sarif_file: snyk.sarif
 
