@@ -18,11 +18,99 @@ const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 const transformer = new MarkdownTransformer();
 const serializer = new JSONTransformer();
 
+export function stripMarkdownHtmlComments(markdown: string): string {
+	const lines = markdown.split("\n");
+	const strippedLines: string[] = [];
+	let inComment = false;
+	let fenceMarker: string | undefined;
+
+	for (const line of lines) {
+		const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
+		if (fenceMarker) {
+			strippedLines.push(line);
+			if (
+				fenceMatch &&
+				fenceMatch[1]?.startsWith(fenceMarker.charAt(0)) &&
+				fenceMatch[1].length >= fenceMarker.length
+			) {
+				fenceMarker = undefined;
+			}
+			continue;
+		}
+
+		if (fenceMatch) {
+			fenceMarker = fenceMatch[1];
+			strippedLines.push(line);
+			continue;
+		}
+
+		if (/^( {4,}|\t)/.test(line)) {
+			strippedLines.push(line);
+			continue;
+		}
+
+		let strippedLine = "";
+		let position = 0;
+
+		while (position < line.length) {
+			if (inComment) {
+				const commentEnd = line.indexOf("-->", position);
+				if (commentEnd === -1) {
+					position = line.length;
+				} else {
+					inComment = false;
+					position = commentEnd + 3;
+				}
+				continue;
+			}
+
+			if (line.startsWith("<!--", position)) {
+				inComment = true;
+				position += 4;
+				continue;
+			}
+
+			if (line[position] === "`") {
+				const runEnd = position + countBacktickRun(line, position);
+				const backtickRun = line.slice(position, runEnd);
+				const closingRun = line.indexOf(backtickRun, runEnd);
+
+				if (closingRun === -1) {
+					strippedLine += backtickRun;
+					position = runEnd;
+				} else {
+					strippedLine += line.slice(
+						position,
+						closingRun + backtickRun.length,
+					);
+					position = closingRun + backtickRun.length;
+				}
+				continue;
+			}
+
+			strippedLine += line[position];
+			position++;
+		}
+
+		strippedLines.push(strippedLine);
+	}
+
+	return strippedLines.join("\n");
+}
+
+function countBacktickRun(line: string, position: number): number {
+	let count = 0;
+	while (line[position + count] === "`") {
+		count++;
+	}
+	return count;
+}
+
 export function parseMarkdownToADF(
 	markdown: string,
 	confluenceBaseUrl: string,
 ) {
-	const prosenodes = transformer.parse(markdown);
+	const prosenodes = transformer.parse(stripMarkdownHtmlComments(markdown));
 	const adfNodes = serializer.encode(prosenodes);
 	const nodes = processADF(adfNodes, confluenceBaseUrl);
 	return nodes;
