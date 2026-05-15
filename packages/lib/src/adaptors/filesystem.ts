@@ -40,7 +40,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 		absoluteFilePath: string,
 		values: Partial<ConfluencePerPageAllValues>,
 	): Promise<void> {
-		const actualAbsoluteFilePath = path.join(
+		const actualAbsoluteFilePath = resolveContentFilePath(
 			this.settings.contentRoot,
 			absoluteFilePath,
 		);
@@ -259,6 +259,34 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 		return await this.findClosestFile(fileName, parentDirectory);
 	}
+}
+
+function resolveContentFilePath(contentRoot: string, filePath: string): string {
+	if (path.isAbsolute(filePath)) {
+		return filePath;
+	}
+
+	const pathFromContentRoot = path.resolve(contentRoot, filePath);
+	const pathFromWorkingDirectory = path.resolve(filePath);
+
+	if (isPathInside(contentRoot, pathFromWorkingDirectory)) {
+		if (
+			existsSync(pathFromWorkingDirectory) ||
+			!existsSync(pathFromContentRoot)
+		) {
+			return pathFromWorkingDirectory;
+		}
+	}
+
+	return pathFromContentRoot;
+}
+
+function isPathInside(parentPath: string, childPath: string): boolean {
+	const relativePath = path.relative(parentPath, childPath);
+	return (
+		relativePath === "" ||
+		(!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
+	);
 }
 
 function normalizeContentRoot(contentRoot: string): string {

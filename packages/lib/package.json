@@ -13,7 +13,7 @@
         "fmt": "npx prettier --write src/",
         "lint": "eslint --ignore-path ../../.eslintignore --ext .js,.ts src/",
         "prettier-check": "npx prettier --check src/",
-        "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+        "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js"
     },
     "keywords": [
         "markdown",

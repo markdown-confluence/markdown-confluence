@@ -84,3 +84,26 @@ jobs:
         ; then
           exit 1
         fi
+
+  test-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+    - name: Set up Node.js
+      uses: actions/setup-node@5e21ff4d9bc1a8cf6de233a3057d20ec6b3fb69d # v3.8.1
+      with:
+        node-version: "16.x"
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Tests
+      run: npm run test -ws --if-present
+      env:
+        CONFLUENCE_BASE_URL: ${{ secrets.CONFLUENCE_BASE_URL }}
+        ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
+        ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
+        CONFLUENCE_PARENT_ID: "IGNORE ME"
