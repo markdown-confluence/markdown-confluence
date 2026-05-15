@@ -100,7 +100,8 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
   "atlassianApiToken": "optional-token-from-config",
   "folderToPublish": "docs",
   "contentRoot": ".",
-  "firstHeadingPageTitle": false
+  "firstHeadingPageTitle": false,
+  "confluenceUrlSuffix": "/wiki/rest/"
 }
 ```
 
@@ -115,6 +116,7 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 | `folderToPublish` | `FOLDER_TO_PUBLISH` | `--enableFolder`, `-f` | The folder, relative to `contentRoot`, whose Markdown files default to `connie-publish: true`. Use `.` to publish all Markdown files under `contentRoot`. |
 | `contentRoot` | `CONFLUENCE_CONTENT_ROOT` | `--contentRoot`, `--cr` | The root directory to scan for Markdown files and referenced content. |
 | `firstHeadingPageTitle` | `CONFLUENCE_FIRST_HEADING_PAGE_TITLE` | `--firstHeaderPageTitle`, `--fh` | When `true`, use the first heading as the page title when `connie-title` is not set. |
+| `confluenceUrlSuffix` | `CONFLUENCE_URL_SUFFIX` | `--urlSuffix` | The REST API suffix appended to `confluenceBaseUrl`. The default is `/wiki/rest/`; use `/rest/` for Confluence Data Center instances whose REST API is not below `/wiki`. |
 
 ### `folderToPublish` vs `contentRoot`
 

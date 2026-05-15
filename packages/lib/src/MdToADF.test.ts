@@ -266,6 +266,7 @@ test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
 		folderToPublish: ".",
 		contentRoot: "./",
 		firstHeadingPageTitle: false,
+		confluenceUrlSuffix: "/wiki/rest/",
 	};
 	const adfFile = convertMDtoADF(markdown, settings);
 	expect(adfFile).toMatchSnapshot();

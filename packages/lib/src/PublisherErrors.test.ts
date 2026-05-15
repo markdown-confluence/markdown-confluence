@@ -72,4 +72,5 @@ const testSettings: ConfluenceSettings = {
 	folderToPublish: ".",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
+	confluenceUrlSuffix: "/wiki/rest/",
 };

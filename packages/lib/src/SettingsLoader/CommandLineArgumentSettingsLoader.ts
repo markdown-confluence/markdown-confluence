@@ -57,6 +57,12 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 				type: "boolean",
 				demandOption: false,
 			})
+			.option("urlSuffix", {
+				describe:
+					"Confluence REST URL suffix. Use /rest/ for Confluence Data Center instances whose REST API is not under /wiki/rest/.",
+				type: "string",
+				demandOption: false,
+			})
 			.parseSync();
 
 		return {
@@ -80,6 +86,9 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 				: undefined),
 			...(options.firstHeaderPageTitle
 				? { firstHeadingPageTitle: options.firstHeaderPageTitle }
+				: undefined),
+			...(options.urlSuffix
+				? { confluenceUrlSuffix: options.urlSuffix }
 				: undefined),
 		};
 	}

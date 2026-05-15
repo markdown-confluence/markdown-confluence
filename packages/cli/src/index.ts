@@ -11,7 +11,7 @@ import {
 	MermaidRendererPlugin,
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
-import { ConfluenceClient } from "confluence.js";
+import { Config, ConfluenceClient } from "confluence.js";
 
 // Define the main function
 async function main() {
@@ -19,25 +19,28 @@ async function main() {
 	const settings = settingLoader.load();
 
 	const adaptor = new FileSystemAdaptor(settings); // Make sure this is identical as possible between Obsidian and CLI
-	const confluenceClient = new ConfluenceClient({
-		host: settings.confluenceBaseUrl,
-		authentication: {
-			basic: {
-				email: settings.atlassianUserName,
-				apiToken: settings.atlassianApiToken,
+	const confluenceClient = new MarkdownConfluenceClient(
+		{
+			host: settings.confluenceBaseUrl,
+			authentication: {
+				basic: {
+					email: settings.atlassianUserName,
+					apiToken: settings.atlassianApiToken,
+				},
+			},
+			middlewares: {
+				onError(e) {
+					if ("response" in e && "data" in e.response) {
+						e.message =
+							typeof e.response.data === "string"
+								? e.response.data
+								: JSON.stringify(e.response.data);
+					}
+				},
 			},
 		},
-		middlewares: {
-			onError(e) {
-				if ("response" in e && "data" in e.response) {
-					e.message =
-						typeof e.response.data === "string"
-							? e.response.data
-							: JSON.stringify(e.response.data);
-				}
-			},
-		},
-	});
+		settings.confluenceUrlSuffix,
+	);
 
 	const publisher = new Publisher(adaptor, settingLoader, confluenceClient, [
 		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),
@@ -67,3 +70,15 @@ main().catch((error) => {
 	console.error(chalk.red(boxen(`Error: ${error.message}`, { padding: 1 })));
 	process.exit(1);
 });
+
+class MarkdownConfluenceClient extends ConfluenceClient {
+	constructor(config: Config, urlSuffix: string) {
+		super(config);
+		this.urlSuffix = normalizeUrlSuffix(urlSuffix);
+	}
+}
+
+function normalizeUrlSuffix(urlSuffix: string) {
+	const prefixed = urlSuffix.startsWith("/") ? urlSuffix : `/${urlSuffix}`;
+	return prefixed.endsWith("/") ? prefixed : `${prefixed}/`;
+}
