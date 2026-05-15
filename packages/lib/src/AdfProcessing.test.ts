@@ -1,4 +1,5 @@
 import { expect, test } from "@jest/globals";
+import { TextDefinition } from "@atlaskit/adf-schema";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { prepareAdfToUpload } from "./AdfProcessing";
 import { ConfluenceAdfFile, ConfluenceNode } from "./Publisher";
@@ -24,8 +25,9 @@ test("resolves wikilinks that include a path under the publish root", () => {
 
 	prepareAdfToUpload(pages, testSettings);
 
-	const link = pages[0]!.file.contents.content[0]!.content![0] as any;
-	expect(link.marks[0].attrs.href).toBe(
+	const link = pages[0]!.file.contents.content[0]!
+		.content![0] as TextDefinition;
+	expect(link.marks?.[0]?.attrs?.href).toBe(
 		"https://example.atlassian.net/wiki/spaces/SPACE/pages/123456",
 	);
 });
