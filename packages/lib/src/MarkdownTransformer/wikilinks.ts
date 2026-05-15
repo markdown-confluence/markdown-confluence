@@ -1,5 +1,5 @@
 import MarkdownIt from "markdown-it";
-import StateInline from "markdown-it/lib/rules_inline/state_inline";
+import type StateInline from "markdown-it/lib/rules_inline/state_inline.mjs";
 
 export function wikilinks(state: StateInline): boolean {
 	const max = state.posMax;

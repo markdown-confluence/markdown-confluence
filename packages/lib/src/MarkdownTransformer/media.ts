@@ -128,8 +128,8 @@ function createRule() {
 			media.attrs = url.startsWith("![[")
 				? getWikiUrl(url)
 				: referenceImageRegex.test(url)
-				? getReferenceUrl(url)
-				: getUrl(url);
+					? getReferenceUrl(url)
+					: getUrl(url);
 			const mediaSingleClose = new State.Token(
 				"media_single_close",
 				"",

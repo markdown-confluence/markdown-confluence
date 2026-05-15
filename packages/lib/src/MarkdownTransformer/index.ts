@@ -1,14 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { defaultSchema } from "@atlaskit/adf-schema/schema-default";
-import { Transformer } from "@atlaskit/editor-common/types";
 import MarkdownIt from "markdown-it";
 import { markdownItTable } from "markdown-it-table";
-import { MarkdownParser } from "prosemirror-markdown";
-import { Schema, Node as PMNode } from "prosemirror-model";
+import { MarkdownParser } from "@atlaskit/editor-prosemirror/markdown";
+import { Schema, Node as PMNode } from "@atlaskit/editor-prosemirror/model";
 import { markdownItMedia } from "./media";
 import myTokenizer from "./callout";
 import wikilinksPlugin from "./wikilinks";
+
+interface Transformer<T> {
+	encode(node: PMNode): T;
+	parse(content: T): PMNode;
+}
 
 function filterMdToPmSchemaMapping(schema: Schema, map: any) {
 	return Object.keys(map).reduce((newMap: any, key: string) => {

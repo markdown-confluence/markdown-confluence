@@ -1,5 +1,5 @@
 import { Modal, App, FrontMatterCache } from "obsidian";
-import ReactDOM from "react-dom";
+import { createRoot, Root } from "react-dom/client";
 import React, { useState, ChangeEvent } from "react";
 import { ConfluencePageConfig } from "@markdown-confluence/lib";
 import { Property } from "csstype";
@@ -499,6 +499,7 @@ const ConfluenceForm: React.FC<FormProps> = ({
 
 export class ConfluencePerPageForm extends Modal {
 	modalProps: ModalProps;
+	private root: Root | null = null;
 
 	constructor(app: App, modalProps: ModalProps) {
 		super(app);
@@ -514,12 +515,14 @@ export class ConfluencePerPageForm extends Modal {
 				this.modalProps.onSubmit(values, boundClose);
 			},
 		};
-		ReactDOM.render(React.createElement(ConfluenceForm, test), contentEl);
+		this.root = createRoot(contentEl);
+		this.root.render(React.createElement(ConfluenceForm, test));
 	}
 
 	override onClose() {
 		const { contentEl } = this;
-		ReactDOM.unmountComponentAtNode(contentEl);
+		this.root?.unmount();
+		this.root = null;
 		contentEl.empty();
 	}
 }

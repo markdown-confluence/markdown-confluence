@@ -8,26 +8,23 @@
         "dev": "node esbuild.config.mjs",
         "build": "tsc && node esbuild.config.mjs production",
         "fmt": "npx prettier --write src/",
-        "lint": "eslint --ignore-path ../../.eslintignore --ext .jsx,tsx,.js,.ts src/",
+        "lint": "eslint src/",
         "prettier-check": "npx prettier --check src/"
     },
     "keywords": [],
     "author": "andymac4182",
     "license": "Apache 2.0",
     "devDependencies": {
-        "@types/mime-types": "^2.1.1",
-        "@types/react-dom": "^18.0.11",
+        "@types/mime-types": "^3.0.1",
+        "@types/react-dom": "^19.2.3",
         "obsidian": "1.12.3"
     },
     "dependencies": {
-        "confluence.js": "^1.7.4",
-        "mime-types": "^2.1.35",
-        "react": "^16.14.0",
-        "react-dom": "^16.14.0",
+        "confluence.js": "^2.1.0",
+        "mime-types": "^3.0.2",
+        "react": "^19.2.6",
+        "react-dom": "^19.2.6",
         "@markdown-confluence/lib": "5.5.2",
         "@markdown-confluence/mermaid-electron-renderer": "5.5.2"
-    },
-    "resolutions": {
-        "prosemirror-model": "1.14.3"
     }
 }

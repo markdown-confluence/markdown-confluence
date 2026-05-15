@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 
 let mermaidRenderHtml: string;
 
-const pluginMermaidConfig = {
+const pluginMermaidConfig: MermaidConfig = {
 	theme: "base",
 	themeVariables: {
 		background: "#ffffff",

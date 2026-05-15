@@ -22,6 +22,10 @@ export type CurrentAttachments = Record<
 	}
 >;
 
+function toArrayBuffer(contents: Uint8Array): ArrayBuffer {
+	return Uint8Array.from(contents).buffer;
+}
+
 export async function uploadBuffer(
 	confluenceClient: RequiredConfluenceClient,
 	pageId: string,
@@ -33,7 +37,7 @@ export async function uploadBuffer(
 	>,
 ): Promise<UploadedImageData | null> {
 	const spark = new SparkMD5.ArrayBuffer();
-	const currentFileMd5 = spark.append(fileBuffer).end();
+	const currentFileMd5 = spark.append(toArrayBuffer(fileBuffer)).end();
 	const imageSize = await sizeOf(fileBuffer);
 
 	const fileInCurrentAttachments = currentAttachments[uploadFilename];
@@ -96,11 +100,17 @@ export async function uploadFile(
 		testing = await adaptor.readBinary(fileNameForUpload, pageFilePath);
 	}
 	if (testing) {
+		const binaryContents =
+			testing.contents instanceof ArrayBuffer
+				? new Uint8Array(testing.contents)
+				: testing.contents;
 		const spark = new SparkMD5.ArrayBuffer();
-		const currentFileMd5 = spark.append(testing.contents).end();
+		const currentFileMd5 = spark
+			.append(toArrayBuffer(binaryContents))
+			.end();
 		const pathMd5 = SparkMD5.hash(testing.filePath);
 		const uploadFilename = `${pathMd5}-${testing.filename}`;
-		const imageBuffer = Buffer.from(testing.contents);
+		const imageBuffer = Buffer.from(binaryContents);
 		const imageSize = await sizeOf(imageBuffer);
 
 		const fileInCurrentAttachments = currentAttachments[uploadFilename];

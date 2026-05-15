@@ -17,7 +17,7 @@ export interface BinaryFile {
 	filename: string;
 	filePath: string;
 	mimeType: string;
-	contents: ArrayBuffer;
+	contents: ArrayBuffer | Uint8Array;
 }
 
 export interface LoaderAdaptor {

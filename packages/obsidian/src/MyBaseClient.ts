@@ -4,7 +4,7 @@ import {
 	Client,
 	Config,
 	RequestConfig,
-	AuthenticationService,
+	getAuthenticationToken,
 } from "confluence.js";
 import { requestUrl } from "obsidian";
 import { RequiredConfluenceClient } from "@markdown-confluence/lib";
@@ -114,7 +114,7 @@ export class MyBaseClient implements Client {
 				? [
 						requestConfig.data.getHeaders(),
 						requestConfig.data.getBuffer().buffer,
-				  ]
+					]
 				: [{}, JSON.stringify(requestConfig.data)];
 
 			const modifiedRequestConfig = {
@@ -127,16 +127,15 @@ export class MyBaseClient implements Client {
 						? ATLASSIAN_TOKEN_CHECK_NOCHECK_VALUE
 						: undefined,
 					...this.config.baseRequestConfig?.headers,
-					Authorization:
-						await AuthenticationService.getAuthenticationToken(
-							this.config.authentication,
-							{
-								// eslint-disable-next-line @typescript-eslint/naming-convention
-								baseURL: this.config.host,
-								url: `${this.config.host}${this.urlSuffix}`,
-								method: requestConfig.method ?? "GET",
-							},
-						),
+					Authorization: await getAuthenticationToken(
+						this.config.authentication,
+						{
+							// eslint-disable-next-line @typescript-eslint/naming-convention
+							baseURL: this.config.host,
+							url: `${this.config.host}${this.urlSuffix}`,
+							method: requestConfig.method ?? "GET",
+						},
+					),
 					...requestConfig.headers,
 					"Content-Type": requestContentType,
 					...requestBody[0],
@@ -171,13 +170,11 @@ export class MyBaseClient implements Client {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (e: any) {
 			console.warn({ httpError: e, requestConfig });
-			const err =
-				this.config.newErrorHandling && e.isAxiosError
-					? e.response.data
-					: e;
+			const err = e;
 
 			const callbackErrorHandler =
-				callback && ((error: Config.Error) => callback(error));
+				callback &&
+				((error: Parameters<Callback<T>>[0]) => callback(error));
 			const defaultErrorHandler = (error: Error) => {
 				throw error;
 			};

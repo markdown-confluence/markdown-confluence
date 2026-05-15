@@ -9,16 +9,16 @@
         "build": "tsc && node esbuild.config.mjs production",
         "build:docker": "docker build -t markdown-confluence/markdown-confluence .",
         "fmt": "npx prettier --write src/",
-        "lint": "eslint --ignore-path ../../.eslintignore --ext .js,.ts src/",
+        "lint": "eslint src/",
         "prettier-check": "npx prettier --check src/"
     },
     "keywords": [],
     "author": "andymac4182",
     "license": "Apache 2.0",
     "devDependencies": {
-        "confluence.js": "^1.7.4",
-        "boxen": "7.1.1",
-        "chalk": "5.3.0",
+        "confluence.js": "^2.1.0",
+        "boxen": "8.0.1",
+        "chalk": "5.6.2",
         "@markdown-confluence/lib": "5.5.2",
         "@markdown-confluence/mermaid-puppeteer-renderer": "5.5.2"
     },

@@ -297,7 +297,7 @@ export class Publisher {
 						ancestors: ancestors.map((ancestor) => ({
 							id: ancestor,
 						})),
-				  }),
+					}),
 		};
 
 		if (

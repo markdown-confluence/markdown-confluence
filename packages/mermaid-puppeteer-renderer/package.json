@@ -11,7 +11,7 @@
         "dev": "node esbuild.config.mjs",
         "build": "tsc && node esbuild.config.mjs production",
         "fmt": "npx prettier --write src/",
-        "lint": "eslint --ignore-path ../../.eslintignore --ext .js,.ts src/",
+        "lint": "eslint src/",
         "prettier-check": "npx prettier --check src/"
     },
     "keywords": [],
@@ -19,8 +19,8 @@
     "license": "Apache 2.0",
     "dependencies": {
         "@markdown-confluence/lib": "5.5.2",
-        "mermaid": "10.9.6",
-        "puppeteer": "21.3.4"
+        "mermaid": "11.15.0",
+        "puppeteer": "25.0.2"
     },
     "publishConfig": {
         "access": "public",

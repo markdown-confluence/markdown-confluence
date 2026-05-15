@@ -235,9 +235,8 @@ async function ensurePageExists(
 		title: file.pageTitle,
 		expand: ["version", "body.atlas_doc_format", "ancestors"],
 	};
-	const contentByTitle = await confluenceClient.content.getContent(
-		searchParams,
-	);
+	const contentByTitle =
+		await confluenceClient.content.getContent(searchParams);
 
 	const currentPage = contentByTitle.results[0];
 

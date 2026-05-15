@@ -1,6 +1,7 @@
 {
    "compilerOptions":{
       "baseUrl":".",
+      "ignoreDeprecations":"6.0",
       "inlineSourceMap":true,
       "inlineSources":true,
       "jsx":"react",
@@ -8,6 +9,9 @@
       "target":"ES2022",
       "allowJs":true,
       "moduleResolution":"node",
+      "types":[
+         "node"
+      ],
       "importHelpers":true,
       "isolatedModules":true,
       "strictNullChecks":true,

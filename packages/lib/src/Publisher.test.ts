@@ -275,9 +275,8 @@ confluenceIntegrationTest(
 			title: "Test - bf8bb13d-21b4-31b6-4584-8b9683d82086",
 			expand: ["version", "body.atlas_doc_format", "ancestors"],
 		};
-		const contentByTitle = await confluenceClient.content.getContent(
-			searchParams,
-		);
+		const contentByTitle =
+			await confluenceClient.content.getContent(searchParams);
 
 		const pageResult = contentByTitle.results[0];
 		if (!pageResult) {

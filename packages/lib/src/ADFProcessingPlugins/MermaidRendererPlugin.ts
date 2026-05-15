@@ -21,13 +21,10 @@ export interface MermaidRenderer {
 	captureMermaidCharts(charts: ChartData[]): Promise<Map<string, Buffer>>;
 }
 
-export class MermaidRendererPlugin
-	implements
-		ADFProcessingPlugin<
-			ChartData[],
-			Record<string, UploadedImageData | null>
-		>
-{
+export class MermaidRendererPlugin implements ADFProcessingPlugin<
+	ChartData[],
+	Record<string, UploadedImageData | null>
+> {
 	constructor(private mermaidRenderer: MermaidRenderer) {}
 
 	extract(adf: JSONDocNode): ChartData[] {
