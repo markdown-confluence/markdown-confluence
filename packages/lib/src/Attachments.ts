@@ -34,7 +34,7 @@ export async function uploadBuffer(
 ): Promise<UploadedImageData | null> {
 	const spark = new SparkMD5.ArrayBuffer();
 	const currentFileMd5 = spark.append(fileBuffer).end();
-	const imageSize = await sizeOf(fileBuffer);
+	const mediaSize = await getMediaSize(fileBuffer);
 
 	const fileInCurrentAttachments = currentAttachments[uploadFilename];
 	if (fileInCurrentAttachments?.filehash === currentFileMd5) {
@@ -42,8 +42,8 @@ export async function uploadBuffer(
 			filename: uploadFilename,
 			id: fileInCurrentAttachments.attachmentId,
 			collection: fileInCurrentAttachments.collectionName,
-			width: imageSize.width ?? 0,
-			height: imageSize.height ?? 0,
+			width: mediaSize.width,
+			height: mediaSize.height,
 			status: "existing",
 		};
 	}
@@ -75,8 +75,8 @@ export async function uploadBuffer(
 		filename: uploadFilename,
 		id: attachmentUploadResponse.extensions.fileId,
 		collection: `contentId-${attachmentUploadResponse.container.id}`,
-		width: imageSize.width ?? 0,
-		height: imageSize.height ?? 0,
+		width: mediaSize.width,
+		height: mediaSize.height,
 		status: "uploaded",
 	};
 }
@@ -101,7 +101,7 @@ export async function uploadFile(
 		const pathMd5 = SparkMD5.hash(testing.filePath);
 		const uploadFilename = `${pathMd5}-${testing.filename}`;
 		const imageBuffer = Buffer.from(testing.contents);
-		const imageSize = await sizeOf(imageBuffer);
+		const mediaSize = await getMediaSize(imageBuffer);
 
 		const fileInCurrentAttachments = currentAttachments[uploadFilename];
 		if (fileInCurrentAttachments?.filehash === currentFileMd5) {
@@ -109,8 +109,8 @@ export async function uploadFile(
 				filename: fileNameForUpload,
 				id: fileInCurrentAttachments.attachmentId,
 				collection: fileInCurrentAttachments.collectionName,
-				width: imageSize.width ?? 0,
-				height: imageSize.height ?? 0,
+				width: mediaSize.width,
+				height: mediaSize.height,
 				status: "existing",
 			};
 		}
@@ -141,11 +141,26 @@ export async function uploadFile(
 			filename: fileNameForUpload,
 			id: attachmentUploadResponse.extensions.fileId,
 			collection: `contentId-${attachmentUploadResponse.container.id}`,
-			width: imageSize.width ?? 0,
-			height: imageSize.height ?? 0,
+			width: mediaSize.width,
+			height: mediaSize.height,
 			status: "uploaded",
 		};
 	}
 
 	return null;
+}
+
+async function getMediaSize(fileBuffer: Buffer) {
+	try {
+		const dimensions = await sizeOf(fileBuffer);
+		return {
+			width: dimensions.width ?? 0,
+			height: dimensions.height ?? 0,
+		};
+	} catch {
+		return {
+			width: 0,
+			height: 0,
+		};
+	}
 }
