@@ -38,7 +38,7 @@ test("matches folderToPublish under a relative contentRoot", async () => {
 	const files = await adaptor.getMarkdownFilesToUpload();
 
 	expect(files.map((file) => file.absoluteFilePath)).toEqual([
-		"thingy/mydude.md",
+		join("thingy", "mydude.md"),
 	]);
 });
 
