@@ -5,7 +5,7 @@
       "inlineSources":true,
       "jsx":"react",
       "module":"CommonJS",
-      "target":"ES2021",
+      "target":"ES2022",
       "allowJs":true,
       "moduleResolution":"node",
       "importHelpers":true,
@@ -40,7 +40,7 @@
          "ES5",
          "ES6",
          "ES7",
-         "ES2021"
+         "ES2022"
       ],
       "paths":{
          "@markdown-confluence/*":[
