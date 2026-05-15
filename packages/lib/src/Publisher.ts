@@ -8,6 +8,7 @@ import {
 import { adfEqual } from "./AdfEqual";
 import { CurrentAttachments } from "./Attachments";
 import { PageContentType } from "./ConniePageConfig";
+import { createMissingSpaceKeyError } from "./ConfluenceErrors";
 import { SettingsLoader } from "./SettingsLoader";
 import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
 import { createFolderStructure as createLocalAdfTree } from "./TreeLocal";
@@ -127,8 +128,11 @@ export class Publisher {
 			id: settings.confluenceParentId,
 			expand: ["body.atlas_doc_format", "space"],
 		});
-		if (!parentPage.space) {
-			throw new Error("Missing Space Key");
+		if (!parentPage.space?.key) {
+			throw createMissingSpaceKeyError(
+				settings.confluenceParentId,
+				settings.confluenceBaseUrl,
+			);
 		}
 
 		const spaceToPublishTo = parentPage.space;

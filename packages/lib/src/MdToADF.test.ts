@@ -70,6 +70,19 @@ const markdownTestCases: MarkdownFile[] = [
 		},
 	},
 	{
+		folderName: "reference_images",
+		absoluteFilePath: "/path/to/reference_images.md",
+		fileName: "reference_images.md",
+		contents:
+			"![Alt text][image-ref]\n\n![Collapsed reference][]\n\n[image-ref]: ../images/the-image.png\n[Collapsed reference]: ../images/collapsed.png",
+		pageTitle: "Reference Images",
+		frontmatter: {
+			title: "Reference Images",
+			description:
+				"A Markdown file demonstrating reference-style image links.",
+		},
+	},
+	{
 		folderName: "code",
 		absoluteFilePath: "/path/to/code.md",
 		fileName: "code.md",
@@ -127,6 +140,34 @@ const markdownTestCases: MarkdownFile[] = [
 			title: "Inline HTML",
 			description:
 				"A Markdown file demonstrating the use of inline HTML.",
+		},
+	},
+	{
+		folderName: "html_comments",
+		absoluteFilePath: "/path/to/html_comments.md",
+		fileName: "html_comments.md",
+		contents: [
+			"Before",
+			"",
+			"<!-- hidden block comment -->",
+			"",
+			"Middle <!-- hidden inline comment --> text",
+			"",
+			"<!-- multi-line",
+			"hidden comment -->",
+			"After",
+			"",
+			"`<!-- visible inline code comment -->`",
+			"",
+			"```html",
+			"<!-- visible fenced code comment -->",
+			"```",
+		].join("\n"),
+		pageTitle: "HTML Comments",
+		frontmatter: {
+			title: "HTML Comments",
+			description:
+				"A Markdown file demonstrating HTML comments are ignored.",
 		},
 	},
 	{

@@ -9,6 +9,7 @@ import { doc, p } from "@atlaskit/adf-utils/builders";
 import { RequiredConfluenceClient, LoaderAdaptor } from "./adaptors";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { prepareAdfToUpload } from "./AdfProcessing";
+import { createMissingSpaceKeyError } from "./ConfluenceErrors";
 import { ConfluenceSettings } from "./Settings";
 
 const blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
@@ -98,6 +99,7 @@ async function createFileStructureInConfluence(
 			confluenceClient,
 			adaptor,
 			node.file,
+			settings,
 			spaceKey,
 			parentPageId,
 			topPageId,
@@ -111,6 +113,13 @@ async function createFileStructureInConfluence(
 		lastUpdatedBy = pageDetails.lastUpdatedBy;
 		contentType = pageDetails.contentType;
 	} else {
+		if (isMarkdownBackedFile(node.file)) {
+			await adaptor.updateMarkdownValues(node.file.absoluteFilePath, {
+				publish: true,
+				pageId: parentPageId,
+			});
+		}
+
 		version = 0;
 		adfContent = doc(p());
 		pageTitle = "";
@@ -148,10 +157,15 @@ async function createFileStructureInConfluence(
 	};
 }
 
+function isMarkdownBackedFile(file: LocalAdfFile): boolean {
+	return file.absoluteFilePath.toLowerCase().endsWith(".md");
+}
+
 async function ensurePageExists(
 	confluenceClient: RequiredConfluenceClient,
 	adaptor: LoaderAdaptor,
 	file: LocalAdfFile,
+	settings: ConfluenceSettings,
 	spaceKey: string,
 	parentPageId: string,
 	topPageId: string,
@@ -169,7 +183,10 @@ async function ensurePageExists(
 			});
 
 			if (!contentById.space?.key) {
-				throw new Error("Missing Space Key");
+				throw createMissingSpaceKeyError(
+					file.pageId,
+					settings.confluenceBaseUrl,
+				);
 			}
 
 			await adaptor.updateMarkdownValues(file.absoluteFilePath, {
