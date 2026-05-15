@@ -37,7 +37,9 @@ export function prepareAdfToUpload(
 	const fileToPageIdMap: Record<string, ConfluenceAdfFile> = {};
 
 	confluencePagesToPublish.forEach((node) => {
-		fileToPageIdMap[node.file.fileName] = node.file;
+		for (const key of getWikilinkLookupKeys(node.file, settings)) {
+			fileToPageIdMap[key] = node.file;
+		}
 	});
 
 	confluencePagesToPublish.forEach((confluenceNode) => {
@@ -671,7 +673,12 @@ function processWikilinkToActualLink(
 				) {
 					const wikilinkUrl = new URL(node.marks[0].attrs["href"]);
 
-					const pathName = decodeURI(wikilinkUrl.pathname);
+					const pathName = normalizeWikilinkPath(
+						decodeURI(wikilinkUrl.pathname),
+					);
+					const pathNameParts = pathName.split("/");
+					const displayFileName =
+						pathNameParts[pathNameParts.length - 1] ?? pathName;
 					const pagename =
 						wikilinkUrl.pathname !== ""
 							? `${pathName}.md`
@@ -681,7 +688,11 @@ function processWikilinkToActualLink(
 					if (linkPage) {
 						const confluenceUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
 						node.marks[0].attrs["href"] = confluenceUrl;
-						if (node.text === `${pathName}${wikilinkUrl.hash}`) {
+						if (
+							node.text === `${pathName}${wikilinkUrl.hash}` ||
+							node.text ===
+								`${displayFileName}${wikilinkUrl.hash}`
+						) {
 							node.type = "inlineCard";
 							node.attrs = {
 								url: node.marks[0].attrs["href"],
@@ -715,6 +726,33 @@ function processWikilinkToActualLink(
 			return;
 		},
 	}) as JSONDocNode;
+}
+
+function getWikilinkLookupKeys(
+	file: ConfluenceAdfFile,
+	settings: ConfluenceSettings,
+) {
+	const keys = new Set<string>([file.fileName]);
+	const normalizedPath = normalizeWikilinkPath(file.absoluteFilePath);
+	const folderToPublish = normalizeWikilinkPath(settings.folderToPublish);
+
+	if (normalizedPath) {
+		keys.add(normalizedPath);
+	}
+
+	if (
+		folderToPublish &&
+		folderToPublish !== "." &&
+		normalizedPath.startsWith(`${folderToPublish}/`)
+	) {
+		keys.add(normalizedPath.slice(folderToPublish.length + 1));
+	}
+
+	return keys;
+}
+
+function normalizeWikilinkPath(value: string) {
+	return value.replace(/\\/g, "/").replace(/^\/+/, "");
 }
 
 function removeEmptyProperties(adf: JSONDocNode) {
