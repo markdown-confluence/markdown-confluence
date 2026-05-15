@@ -42,6 +42,14 @@ set ATLASSIAN_API_TOKEN="YOUR API TOKEN"
 npx @markdown-confluence/cli
 ```
 
+**Convert Markdown to ADF**
+
+```bash
+npx @markdown-confluence/cli to-adf ./docs/page.md
+npx @markdown-confluence/cli to-adf ./docs/page.md --output page.adf.json
+cat ./docs/page.md | npx @markdown-confluence/cli to-adf
+```
+
 ### Docker Container
 
 **Example setup**
