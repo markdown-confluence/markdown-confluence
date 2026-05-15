@@ -85,7 +85,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 
 		return {
 			pageTitle: file.basename,
-			folderName: file.parent.name,
+			folderName: file.parent?.name ?? "",
 			absoluteFilePath: file.path,
 			fileName: file.name,
 			contents: await this.vault.cachedRead(file),

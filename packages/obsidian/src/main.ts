@@ -51,7 +51,7 @@ export default class ConfluencePlugin extends Plugin {
 	adaptor!: ObsidianAdaptor;
 
 	activeLeafPath(workspace: Workspace) {
-		return workspace.getActiveViewOfType(MarkdownView)?.file.path;
+		return workspace.getActiveViewOfType(MarkdownView)?.file?.path;
 	}
 
 	async init() {
