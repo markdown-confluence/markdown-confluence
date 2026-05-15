@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vite-plus/test";
 import { TextDefinition } from "@atlaskit/adf-schema";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { prepareAdfToUpload } from "./AdfProcessing";
@@ -10,10 +10,7 @@ test("resolves wikilinks that include a path under the publish root", () => {
 		createNode({
 			fileName: "source.md",
 			absoluteFilePath: "Confluence Pages/source.md",
-			contents: docWithLink(
-				"Read this",
-				"wikilinks:confluence/note/test",
-			),
+			contents: docWithLink("Read this", "wikilinks:confluence/note/test"),
 		}),
 		createNode({
 			fileName: "test.md",
@@ -25,8 +22,7 @@ test("resolves wikilinks that include a path under the publish root", () => {
 
 	prepareAdfToUpload(pages, testSettings);
 
-	const link = pages[0]!.file.contents.content[0]!
-		.content![0] as TextDefinition;
+	const link = pages[0]!.file.contents.content[0]!.content![0] as TextDefinition;
 	expect(link.marks?.[0]?.attrs?.href).toBe(
 		"https://example.atlassian.net/wiki/spaces/SPACE/pages/123456",
 	);

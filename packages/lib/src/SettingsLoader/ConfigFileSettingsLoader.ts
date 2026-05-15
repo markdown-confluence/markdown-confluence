@@ -5,10 +5,7 @@ import fs from "fs";
 import yargs from "yargs";
 
 export class ConfigFileSettingsLoader extends SettingsLoader {
-	private configPath: string = path.join(
-		process.cwd() ?? "",
-		".markdown-confluence.json",
-	);
+	private configPath: string = path.join(process.cwd() ?? "", ".markdown-confluence.json");
 
 	constructor(configPath?: string) {
 		super();
@@ -18,10 +15,7 @@ export class ConfigFileSettingsLoader extends SettingsLoader {
 			return;
 		}
 
-		if (
-			"CONFLUENCE_CONFIG_FILE" in process.env &&
-			process.env["CONFLUENCE_CONFIG_FILE"]
-		) {
+		if ("CONFLUENCE_CONFIG_FILE" in process.env && process.env["CONFLUENCE_CONFIG_FILE"]) {
 			this.configPath = process.env["CONFLUENCE_CONFIG_FILE"];
 		}
 
@@ -52,8 +46,7 @@ export class ConfigFileSettingsLoader extends SettingsLoader {
 					const propertyKey = key as keyof ConfluenceSettings;
 					const element = config[propertyKey];
 					if (element) {
-						(result as Record<string, unknown>)[propertyKey] =
-							element;
+						(result as Record<string, unknown>)[propertyKey] = element;
 					}
 				}
 			}

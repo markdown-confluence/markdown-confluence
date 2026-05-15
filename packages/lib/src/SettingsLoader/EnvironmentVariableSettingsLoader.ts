@@ -19,8 +19,7 @@ export class EnvironmentVariableSettingsLoader extends SettingsLoader {
 			...this.getValue("folderToPublish", "FOLDER_TO_PUBLISH"),
 			...this.getValue("contentRoot", "CONFLUENCE_CONTENT_ROOT"),
 			firstHeadingPageTitle:
-				(process.env["CONFLUENCE_FIRST_HEADING_PAGE_TITLE"] ??
-					"false") === "true",
+				(process.env["CONFLUENCE_FIRST_HEADING_PAGE_TITLE"] ?? "false") === "true",
 		};
 	}
 }

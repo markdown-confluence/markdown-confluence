@@ -1,49 +1,32 @@
 {
-   "name": "obsidian-confluence-root",
-   "private": true,
-   "version": "5.5.2",
-   "type": "module",
-   "scripts": {
-      "prepare": "husky install",
-      "predev-obsidian": "npm run build",
-      "dev-obsidian": "npm run dev --workspace=@markdown-confluence/lib & npm run dev --workspace=@markdown-confluence/mermaid-electron-renderer & npm run dev --workspace=obsidian-confluence",
-      "build": "npm run build -ws --if-present",
-      "fmt": "npm run fmt -ws --if-present",
-      "test": "npm test -ws --if-present"
-   },
-   "devDependencies": {
-      "@eslint/js": "^10.0.1",
-      "@types/node": "^25.8.0",
-      "@typescript-eslint/eslint-plugin": "^8.59.3",
-      "@typescript-eslint/parser": "^8.59.3",
-      "builtin-modules": "5.2.0",
-      "esbuild": "0.28.0",
-      "esbuild-node-externals": "^1.22.0",
-      "esbuild-plugin-copy": "^2.1.1",
-      "eslint": "^10.4.0",
-      "eslint-config-prettier": "^10.1.8",
-      "globals": "^17.6.0",
-      "husky": "^9.1.7",
-      "lint-staged": "17.0.4",
-      "prettier": "3.8.3",
-      "ts-jest": "^29.4.9",
-      "ts-node": "^10.9.2",
-      "tslib": "2.8.1",
-      "typescript": "^6.0.3"
-   },
-   "workspaces": [
-      "packages/lib",
-      "packages/mermaid-electron-renderer",
-      "packages/mermaid-puppeteer-renderer",
-      "packages/cli",
-      "packages/obsidian"
-   ],
-   "lint-staged": {
-      "packages/**/*.ts": "prettier --write"
-   },
-   "overrides": {
-      "babel-plugin-istanbul": {
-         "test-exclude": "7.0.1"
-      }
-   }
+	"name": "obsidian-confluence-root",
+	"version": "5.5.2",
+	"private": true,
+	"workspaces": [
+		"packages/lib",
+		"packages/mermaid-electron-renderer",
+		"packages/mermaid-puppeteer-renderer",
+		"packages/cli",
+		"packages/obsidian"
+	],
+	"type": "module",
+	"scripts": {
+		"prepare": "husky install",
+		"predev-obsidian": "vp run build",
+		"dev-obsidian": "vp run --parallel --filter @markdown-confluence/lib --filter @markdown-confluence/mermaid-electron-renderer --filter obsidian-confluence dev",
+		"build": "vp run -r build",
+		"check": "vp check",
+		"fmt": "vp fmt --write",
+		"fmt:check": "vp fmt --check",
+		"lint": "vp lint --vitest-plugin --react-plugin .",
+		"test": "vp test run"
+	},
+	"devDependencies": {
+		"@types/node": "^25.8.0",
+		"husky": "^9.1.7",
+		"tslib": "2.8.1",
+		"typescript": "^6.0.3",
+		"vite-plus": "^0.1.21"
+	},
+	"packageManager": "pnpm@11.1.2"
 }

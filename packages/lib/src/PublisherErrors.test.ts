@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vite-plus/test";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
 import { Publisher } from "./Publisher";
 import { ConfluenceSettings } from "./Settings";
@@ -40,10 +40,7 @@ class UnusedAdaptor implements LoaderAdaptor {
 		throw new Error("Method not implemented.");
 	}
 
-	async readBinary(
-		_path: string,
-		_referencedFromFilePath: string,
-	): Promise<BinaryFile | false> {
+	async readBinary(_path: string, _referencedFromFilePath: string): Promise<BinaryFile | false> {
 		throw new Error("Method not implemented.");
 	}
 }

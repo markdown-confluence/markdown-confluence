@@ -14,10 +14,7 @@ import { ConfluenceSettings } from "./Settings";
 
 const blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
 
-function flattenTree(
-	node: ConfluenceTreeNode,
-	ancestors: string[] = [],
-): ConfluenceNode[] {
+function flattenTree(node: ConfluenceTreeNode, ancestors: string[] = []): ConfluenceNode[] {
 	const nodes: ConfluenceNode[] = [];
 	const { file, version, lastUpdatedBy, existingPageData, children } = node;
 
@@ -174,19 +171,11 @@ async function ensurePageExists(
 		try {
 			const contentById = await confluenceClient.content.getContentById({
 				id: file.pageId,
-				expand: [
-					"version",
-					"body.atlas_doc_format",
-					"ancestors",
-					"space",
-				],
+				expand: ["version", "body.atlas_doc_format", "ancestors", "space"],
 			});
 
 			if (!contentById.space?.key) {
-				throw createMissingSpaceKeyError(
-					file.pageId,
-					settings.confluenceBaseUrl,
-				);
+				throw createMissingSpaceKeyError(file.pageId, settings.confluenceBaseUrl);
 			}
 
 			await adaptor.updateMarkdownValues(file.absoluteFilePath, {
@@ -198,8 +187,7 @@ async function ensurePageExists(
 				id: contentById.id,
 				title: file.pageTitle,
 				version: contentById?.version?.number ?? 1,
-				lastUpdatedBy:
-					contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
+				lastUpdatedBy: contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
 				existingAdf: contentById?.body?.atlas_doc_format?.value,
 				spaceKey: contentById.space.key,
 				pageTitle: contentById.title,
@@ -235,8 +223,7 @@ async function ensurePageExists(
 		title: file.pageTitle,
 		expand: ["version", "body.atlas_doc_format", "ancestors"],
 	};
-	const contentByTitle =
-		await confluenceClient.content.getContent(searchParams);
+	const contentByTitle = await confluenceClient.content.getContent(searchParams);
 
 	const currentPage = contentByTitle.results[0];
 
@@ -258,8 +245,7 @@ async function ensurePageExists(
 			id: currentPage.id,
 			title: file.pageTitle,
 			version: currentPage.version?.number ?? 1,
-			lastUpdatedBy:
-				currentPage.version?.by?.accountId ?? "NO ACCOUNT ID",
+			lastUpdatedBy: currentPage.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: currentPage.body?.atlas_doc_format?.value,
 			pageTitle: currentPage.title,
 			spaceKey,
@@ -272,9 +258,7 @@ async function ensurePageExists(
 	} else {
 		const creatingBlankPageRequest = {
 			space: { key: spaceKey },
-			...(file.contentType === "page"
-				? { ancestors: [{ id: parentPageId }] }
-				: {}),
+			...(file.contentType === "page" ? { ancestors: [{ id: parentPageId }] } : {}),
 			title: file.pageTitle,
 			type: file.contentType,
 			body: {
@@ -286,9 +270,7 @@ async function ensurePageExists(
 			},
 			expand: ["version", "body.atlas_doc_format", "ancestors"],
 		};
-		const pageDetails = await confluenceClient.content.createContent(
-			creatingBlankPageRequest,
-		);
+		const pageDetails = await confluenceClient.content.createContent(creatingBlankPageRequest);
 
 		await adaptor.updateMarkdownValues(file.absoluteFilePath, {
 			publish: true,
@@ -298,8 +280,7 @@ async function ensurePageExists(
 			id: pageDetails.id,
 			title: file.pageTitle,
 			version: pageDetails.version?.number ?? 1,
-			lastUpdatedBy:
-				pageDetails.version?.by?.accountId ?? "NO ACCOUNT ID",
+			lastUpdatedBy: pageDetails.version?.by?.accountId ?? "NO ACCOUNT ID",
 			existingAdf: pageDetails.body?.atlas_doc_format?.value,
 			pageTitle: pageDetails.title,
 			ancestors:

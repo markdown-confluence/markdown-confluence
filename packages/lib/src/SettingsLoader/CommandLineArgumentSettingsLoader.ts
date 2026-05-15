@@ -60,24 +60,12 @@ export class CommandLineArgumentSettingsLoader extends SettingsLoader {
 			.parseSync();
 
 		return {
-			...(options.baseUrl
-				? { confluenceBaseUrl: options.baseUrl }
-				: undefined),
-			...(options.parentId
-				? { confluenceParentId: options.parentId }
-				: undefined),
-			...(options.userName
-				? { atlassianUserName: options.userName }
-				: undefined),
-			...(options.apiToken
-				? { atlassianApiToken: options.apiToken }
-				: undefined),
-			...(options.enableFolder
-				? { folderToPublish: options.enableFolder }
-				: undefined),
-			...(options.contentRoot
-				? { contentRoot: options.contentRoot }
-				: undefined),
+			...(options.baseUrl ? { confluenceBaseUrl: options.baseUrl } : undefined),
+			...(options.parentId ? { confluenceParentId: options.parentId } : undefined),
+			...(options.userName ? { atlassianUserName: options.userName } : undefined),
+			...(options.apiToken ? { atlassianApiToken: options.apiToken } : undefined),
+			...(options.enableFolder ? { folderToPublish: options.enableFolder } : undefined),
+			...(options.contentRoot ? { contentRoot: options.contentRoot } : undefined),
 			...(options.firstHeaderPageTitle
 				? { firstHeadingPageTitle: options.firstHeaderPageTitle }
 				: undefined),

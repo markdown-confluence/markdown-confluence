@@ -2,8 +2,7 @@ import type MarkdownIt from "markdown-it";
 import type StateCore from "markdown-it/lib/rules_core/state_core.mjs";
 import type Token from "markdown-it/lib/token.mjs";
 
-const panelRegex =
-	/\[!(?<calloutType>.*?)\](?<collapseType>[+-])?[ \t]*(?<title>.*)/;
+const panelRegex = /\[!(?<calloutType>.*?)\](?<collapseType>[+-])?[ \t]*(?<title>.*)/;
 
 //panelType Options: "info", "note", "warning", "success", "error", "custom"
 const panelTypeToAttributesMap: Record<string, [string, string][]> = {
@@ -116,11 +115,7 @@ export function panel(state: StateCore): boolean {
 
 					const check = tokenToCheck.content.match(panelRegex);
 
-					if (
-						check === null ||
-						check === undefined ||
-						check.groups === undefined
-					) {
+					if (check === null || check === undefined || check.groups === undefined) {
 						continue;
 					}
 
@@ -159,18 +154,12 @@ export function panel(state: StateCore): boolean {
 				const check = token.content.match(panelRegex);
 				const calloutTitle = capitalizeFirstLetter(blockTitle);
 				if (check && check.length > 1) {
-					token.content = token.content.replace(
-						check[0],
-						calloutTitle,
-					);
+					token.content = token.content.replace(check[0], calloutTitle);
 					if (token.children) {
 						for (let i = 0; i < token.children.length; i++) {
 							const child = token.children[i];
 							if (child && child.content.includes(check[0])) {
-								child.content = child.content.replace(
-									check[0],
-									calloutTitle,
-								);
+								child.content = child.content.replace(check[0], calloutTitle);
 								break;
 							}
 						}

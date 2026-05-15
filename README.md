@@ -15,11 +15,11 @@ Obsidian Downloads: ![GitHub all releases](https://img.shields.io/github/downloa
 Copyright © 2022 Atlassian Pty Ltd   
 Copyright © 2022 Atlassian US, Inc  
 
-Welcome to the `Markdown to Confluence Tools` project! This mono repository contains a collection of tools to convert and publish your Markdown files to Confluence, while using the Atlassian Document Format (ADF). We provide you with an Obsidian plugin, an npm CLI, a Docker CLI, a GitHub Action, and an npm library.
+Welcome to the `Markdown to Confluence Tools` project! This mono repository contains a collection of tools to convert and publish your Markdown files to Confluence, while using the Atlassian Document Format (ADF). We provide you with an Obsidian plugin, a package CLI, a Docker CLI, a GitHub Action, and a package library.
 
 We focus on providing an opinionated, simple publishing workflow, with [Obsidian](https://obsidian.md/) as the recommended editor. However, you can use our tools with any Markdown files.
 
-All projects within this mono repo use the core npm library [@markdown-confluence/lib](https://www.npmjs.com/package/@markdown-confluence/lib) to provide the same features, ensuring consistent results across different interfaces.
+All projects within this mono repo use the core package library [@markdown-confluence/lib](https://www.npmjs.com/package/@markdown-confluence/lib) to provide the same features, ensuring consistent results across different interfaces.
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@ All projects within this mono repo use the core npm library [@markdown-confluenc
 - Converts Markdown files to [Atlassian Document Format (ADF)](https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/)
 - Simple publishing workflow with [Obsidian](https://obsidian.md/) as the recommended editor
 - Can be used with any Markdown files
-- Supports Obsidian plugin, npm CLI, Docker CLI, GitHub Action, and npm library
+- Supports Obsidian plugin, package CLI, Docker CLI, GitHub Action, and package library
 
 ## Documentation
 

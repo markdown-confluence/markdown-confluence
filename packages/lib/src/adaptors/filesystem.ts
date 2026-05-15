@@ -24,9 +24,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 			throw new Error(`'${this.settings.contentRoot}' doesn't exist.`);
 		}
 		if (!lstatSync(this.settings.contentRoot).isDirectory()) {
-			throw new Error(
-				`'${this.settings.contentRoot}' is not a directory.`,
-			);
+			throw new Error(`'${this.settings.contentRoot}' is not a directory.`);
 		}
 	}
 
@@ -83,10 +81,8 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 				continue;
 			}
 
-			const { key } =
-				config[propertyKey as keyof ConfluencePerPageConfig];
-			const value =
-				values[propertyKey as keyof ConfluencePerPageAllValues];
+			const { key } = config[propertyKey as keyof ConfluencePerPageConfig];
+			const value = values[propertyKey as keyof ConfluencePerPageAllValues];
 			if (propertyKey in values) {
 				if (value) {
 					fm[key] = value;
@@ -103,8 +99,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 	}
 
 	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
-		const { data, content: contents } =
-			await this.getFileContent(absoluteFilePath);
+		const { data, content: contents } = await this.getFileContent(absoluteFilePath);
 
 		const folderName = path.basename(path.parse(absoluteFilePath).dir);
 		const fileName = path.basename(absoluteFilePath);
@@ -114,10 +109,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 
 		return {
 			folderName,
-			absoluteFilePath: absoluteFilePath.replace(
-				this.settings.contentRoot,
-				"",
-			),
+			absoluteFilePath: absoluteFilePath.replace(this.settings.contentRoot, ""),
 			fileName,
 			pageTitle,
 			contents,
@@ -155,12 +147,9 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 				const frontMatter = file.frontmatter;
 
 				if (
-					((file.absoluteFilePath.startsWith(
-						this.settings.folderToPublish,
-					) ||
+					((file.absoluteFilePath.startsWith(this.settings.folderToPublish) ||
 						this.settings.folderToPublish === ".") &&
-						(!frontMatter ||
-							frontMatter["connie-publish"] !== false)) ||
+						(!frontMatter || frontMatter["connie-publish"] !== false)) ||
 					(frontMatter && frontMatter["connie-publish"] === true)
 				) {
 					filesToPublish.push(file);
@@ -178,23 +167,16 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 	): Promise<BinaryFile | false> {
 		const absoluteFilePath = await this.findClosestFile(
 			searchPath,
-			path.dirname(
-				path.join(this.settings.contentRoot, referencedFromFilePath),
-			),
+			path.dirname(path.join(this.settings.contentRoot, referencedFromFilePath)),
 		);
 
 		if (absoluteFilePath) {
 			const fileContents = await fs.readFile(absoluteFilePath);
 
-			const mimeType =
-				lookup(path.extname(absoluteFilePath)) ||
-				"application/octet-stream";
+			const mimeType = lookup(path.extname(absoluteFilePath)) || "application/octet-stream";
 			return {
 				contents: fileContents,
-				filePath: absoluteFilePath.replace(
-					this.settings.contentRoot,
-					"",
-				),
+				filePath: absoluteFilePath.replace(this.settings.contentRoot, ""),
 				filename: path.basename(absoluteFilePath),
 				mimeType: mimeType,
 			};
@@ -207,10 +189,7 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 		fileName: string,
 		startingDirectory: string,
 	): Promise<string | null> {
-		const potentialAbsolutePathForFileName = path.join(
-			startingDirectory,
-			fileName,
-		);
+		const potentialAbsolutePathForFileName = path.join(startingDirectory, fileName);
 		if (await isFile(potentialAbsolutePathForFileName)) {
 			return potentialAbsolutePathForFileName;
 		}
@@ -231,15 +210,9 @@ export class FileSystemAdaptor implements LoaderAdaptor {
 			for (const entry of entries) {
 				const fullPath = path.join(currentDirectory, entry.name);
 
-				if (
-					entry.isFile() &&
-					entry.name.toLowerCase() === fileName.toLowerCase()
-				) {
+				if (entry.isFile() && entry.name.toLowerCase() === fileName.toLowerCase()) {
 					matchingFiles.push(fullPath);
-				} else if (
-					entry.isDirectory() &&
-					fullPath.startsWith(this.settings.contentRoot)
-				) {
+				} else if (entry.isDirectory() && fullPath.startsWith(this.settings.contentRoot)) {
 					directoriesToSearch.push(fullPath);
 				}
 			}
@@ -269,10 +242,7 @@ function resolveContentFilePath(contentRoot: string, filePath: string): string {
 	const pathFromWorkingDirectory = path.resolve(filePath);
 
 	if (isPathInside(contentRoot, pathFromWorkingDirectory)) {
-		if (
-			existsSync(pathFromWorkingDirectory) ||
-			!existsSync(pathFromContentRoot)
-		) {
+		if (existsSync(pathFromWorkingDirectory) || !existsSync(pathFromContentRoot)) {
 			return pathFromWorkingDirectory;
 		}
 	}
@@ -283,8 +253,7 @@ function resolveContentFilePath(contentRoot: string, filePath: string): string {
 function isPathInside(parentPath: string, childPath: string): boolean {
 	const relativePath = path.relative(parentPath, childPath);
 	return (
-		relativePath === "" ||
-		(!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
+		relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
 	);
 }
 
@@ -299,7 +268,7 @@ async function isFile(filePath: string): Promise<boolean> {
 	try {
 		const stats = await fs.stat(filePath);
 		return stats.isFile();
-	} catch (error: unknown) {
+	} catch {
 		return false; // Just return false instead of rethrowing any other errors.
 	}
 }

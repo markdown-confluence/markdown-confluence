@@ -32,10 +32,10 @@ mkdir -p packages/obsidian/dist/
 cp README.md packages/obsidian/dist/
 cp manifest.json packages/obsidian/dist/
 
-npm ci
-npm run lint -ws --if-present
-npm run prettier-check -ws --if-present
-npm run build -ws --if-present
+vp install --frozen-lockfile
+vp run check
+vp run fmt:check
+vp run build
 
 cd packages/obsidian
 
@@ -44,4 +44,3 @@ gh release create $TAG -R markdown-confluence/obsidian-integration -t $TAG --gen
 echo $FILES
 
 cd $ORIGINAL_PATH
-

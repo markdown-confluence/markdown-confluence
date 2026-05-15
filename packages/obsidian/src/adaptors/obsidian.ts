@@ -44,8 +44,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 
 				if (
 					(file.path.startsWith(this.settings.folderToPublish) &&
-						(!frontMatter ||
-							frontMatter["connie-publish"] !== false)) ||
+						(!frontMatter || frontMatter["connie-publish"] !== false)) ||
 					(frontMatter && frontMatter["connie-publish"] === true)
 				) {
 					filesToPublish.push(file);
@@ -93,18 +92,11 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 		};
 	}
 
-	async readBinary(
-		path: string,
-		referencedFromFilePath: string,
-	): Promise<BinaryFile | false> {
-		const testing = this.metadataCache.getFirstLinkpathDest(
-			path,
-			referencedFromFilePath,
-		);
+	async readBinary(path: string, referencedFromFilePath: string): Promise<BinaryFile | false> {
+		const testing = this.metadataCache.getFirstLinkpathDest(path, referencedFromFilePath);
 		if (testing) {
 			const files = await this.vault.readBinary(testing);
-			const mimeType =
-				lookup(testing.extension) || "application/octet-stream";
+			const mimeType = lookup(testing.extension) || "application/octet-stream";
 			return {
 				contents: files,
 				filePath: testing.path,
@@ -129,9 +121,7 @@ export default class ObsidianAdaptor implements LoaderAdaptor {
 					}
 
 					const { key } =
-						config[
-							propertyKey as keyof ConfluencePageConfig.ConfluencePerPageConfig
-						];
+						config[propertyKey as keyof ConfluencePageConfig.ConfluencePerPageConfig];
 					const value =
 						values[
 							propertyKey as keyof ConfluencePageConfig.ConfluencePerPageAllValues

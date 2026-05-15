@@ -13,10 +13,7 @@ export function renderADFDoc(adfDoc: JSONDocNode) {
 				return prev;
 			}
 			if (result instanceof Error) {
-				const createADFCodeBlock = renderCodeBlock(
-					"adf",
-					JSON.stringify(curr),
-				);
+				const createADFCodeBlock = renderCodeBlock("adf", JSON.stringify(curr));
 				return [...prev, createADFCodeBlock];
 			}
 			return [...prev, result];
@@ -48,16 +45,12 @@ function renderTextMarks(element: ADFEntity) {
 				returnText = `\`${returnText}\``;
 				break;
 			case "subsup": {
-				const subsupType =
-					mark.attrs && mark.attrs["type"]
-						? mark.attrs["type"]
-						: "sup";
+				const subsupType = mark.attrs && mark.attrs["type"] ? mark.attrs["type"] : "sup";
 				returnText = `<${subsupType}>${returnText}</${subsupType}>`;
 				break;
 			}
 			case "link": {
-				const linkHref =
-					mark.attrs && mark.attrs["href"] ? mark.attrs["href"] : "#";
+				const linkHref = mark.attrs && mark.attrs["href"] ? mark.attrs["href"] : "#";
 				returnText = `[${returnText}](${linkHref})`;
 				break;
 			}
@@ -99,17 +92,13 @@ function renderADFContent(
 		}
 		case "heading": {
 			const headingLevel =
-				element.attrs && element.attrs["level"]
-					? parseInt(element.attrs["level"])
-					: 1;
+				element.attrs && element.attrs["level"] ? parseInt(element.attrs["level"]) : 1;
 			const beforeText = "#".repeat(headingLevel);
 			return beforeText + " " + renderChildrenResult;
 		}
 		case "codeBlock": {
 			const language =
-				element.attrs && element.attrs["language"]
-					? element.attrs["language"]
-					: "";
+				element.attrs && element.attrs["language"] ? element.attrs["language"] : "";
 			return renderCodeBlock(language, renderChildrenResult);
 		}
 		case "taskList":
@@ -146,9 +135,7 @@ function renderADFContent(
 		}
 		case "panel": {
 			const panelType =
-				element.attrs && element.attrs["panelType"]
-					? element.attrs["panelType"]
-					: "info";
+				element.attrs && element.attrs["panelType"] ? element.attrs["panelType"] : "info";
 			const result = renderChildrenResult
 				.split("\n")
 				.map((line) => (line ? `> ${line}\n` : line))
@@ -158,10 +145,7 @@ function renderADFContent(
 			return headerRow + result;
 		}
 		case "expand": {
-			const title =
-				element.attrs && element.attrs["title"]
-					? element.attrs["title"]
-					: "info";
+			const title = element.attrs && element.attrs["title"] ? element.attrs["title"] : "info";
 			const result = renderChildrenResult
 				.split("\n")
 				.map((line) => (line ? `> ${line}\n` : line))
@@ -171,29 +155,18 @@ function renderADFContent(
 			return headerRow + result;
 		}
 		case "mention": {
-			const userId =
-				element.attrs && element.attrs["id"]
-					? element.attrs["id"]
-					: undefined;
-			const text =
-				element.attrs && element.attrs["text"]
-					? element.attrs["text"]
-					: undefined;
+			const userId = element.attrs && element.attrs["id"] ? element.attrs["id"] : undefined;
+			const text = element.attrs && element.attrs["text"] ? element.attrs["text"] : undefined;
 			return `[[mention:${userId}|${text}]]`;
 		}
 		case "taskItem": {
 			const taskState =
-				element.attrs && element.attrs["state"]
-					? element.attrs["state"]
-					: "TODO";
+				element.attrs && element.attrs["state"] ? element.attrs["state"] : "TODO";
 			const taskStateMarkdown = taskState === "TODO" ? " " : "x";
 			return `- [${taskStateMarkdown}] ${renderChildrenResult}\n`;
 		}
 		case "emoji": {
-			const emojiId =
-				element.attrs && element.attrs["id"]
-					? element.attrs["id"]
-					: undefined;
+			const emojiId = element.attrs && element.attrs["id"] ? element.attrs["id"] : undefined;
 
 			let shortName =
 				element.attrs &&
@@ -210,9 +183,7 @@ function renderADFContent(
 		}
 		case "inlineCard": {
 			const inlineCardUrl =
-				element.attrs && element.attrs["url"]
-					? element.attrs["url"]
-					: undefined;
+				element.attrs && element.attrs["url"] ? element.attrs["url"] : undefined;
 			return `[${inlineCardUrl}](${inlineCardUrl})`;
 		}
 		case "table": {

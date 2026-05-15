@@ -12,14 +12,10 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 	extract(adf: JSONDocNode): string[] {
 		const mediaNodes = filter(
 			adf,
-			(node) =>
-				node.type === "media" &&
-				(node.attrs || {})?.["type"] === "file",
+			(node) => node.type === "media" && (node.attrs || {})?.["type"] === "file",
 		);
 
-		const imagesToUpload = new Set(
-			mediaNodes.map((node) => node?.attrs?.["url"]),
-		);
+		const imagesToUpload = new Set(mediaNodes.map((node) => node?.attrs?.["url"]));
 
 		return Array.from(imagesToUpload);
 	},
@@ -46,10 +42,7 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 		return imageMap;
 	},
 
-	load(
-		adf: JSONDocNode,
-		imageMap: Record<string, UploadedImageData | null>,
-	): JSONDocNode {
+	load(adf: JSONDocNode, imageMap: Record<string, UploadedImageData | null>): JSONDocNode {
 		let afterAdf = adf as ADFEntity;
 
 		afterAdf =
@@ -79,12 +72,8 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 					if (!node || !node.content) {
 						return;
 					}
-					if (
-						node.content.at(0)?.attrs?.["url"] !== undefined &&
-						(
-							node.content.at(0)?.attrs?.["url"] as string
-						).startsWith("file://")
-					) {
+					const url = node.content.at(0)?.attrs?.["url"];
+					if (typeof url === "string" && url.startsWith("file://")) {
 						return p("Invalid Image Path");
 					}
 					return;

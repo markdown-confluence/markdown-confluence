@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vite-plus/test";
 import { doc, p } from "@atlaskit/adf-utils/builders";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
@@ -80,10 +80,7 @@ class TestAdaptor implements LoaderAdaptor {
 		throw new Error("Method not implemented.");
 	}
 
-	async readBinary(
-		_path: string,
-		_referencedFromFilePath: string,
-	): Promise<BinaryFile | false> {
+	async readBinary(_path: string, _referencedFromFilePath: string): Promise<BinaryFile | false> {
 		throw new Error("Method not implemented.");
 	}
 }

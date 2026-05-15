@@ -49,9 +49,7 @@ const addFileToTree = (
 			file: adfFile,
 		});
 	} else {
-		let childNode = treeNode.children.find(
-			(node) => node.name === folderName,
-		);
+		let childNode = treeNode.children.find((node) => node.name === folderName);
 
 		if (!childNode) {
 			childNode = createTreeNode(folderName);
@@ -64,23 +62,17 @@ const addFileToTree = (
 
 const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 	if (!node.file) {
-		let indexFile = node.children.find(
-			(child) => path.parse(child.name).name === node.name,
-		);
+		let indexFile = node.children.find((child) => path.parse(child.name).name === node.name);
 		if (!indexFile) {
 			// Support FolderFile with a file name of "index.md"
 			indexFile = node.children.find((child) =>
-				["index", "README", "readme"].includes(
-					path.parse(child.name).name,
-				),
+				["index", "README", "readme"].includes(path.parse(child.name).name),
 			);
 		}
 
 		if (indexFile && indexFile.file) {
 			node.file = indexFile.file;
-			node.children = node.children.filter(
-				(child) => child !== indexFile,
-			);
+			node.children = node.children.filter((child) => child !== indexFile);
 		} else {
 			node.file = {
 				folderName: node.name,
@@ -98,22 +90,16 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 		}
 	}
 
-	const childCommonPath = path.parse(
-		node?.file?.absoluteFilePath ?? commonPath,
-	).dir;
+	const childCommonPath = path.parse(node?.file?.absoluteFilePath ?? commonPath).dir;
 
-	node.children.forEach((childNode) =>
-		processNode(childCommonPath, childNode),
-	);
+	node.children.forEach((childNode) => processNode(childCommonPath, childNode));
 };
 
 export const createFolderStructure = (
 	markdownFiles: MarkdownFile[],
 	settings: ConfluenceSettings,
 ): LocalAdfFileTreeNode => {
-	const commonPath = findCommonPath(
-		markdownFiles.map((file) => file.absoluteFilePath),
-	);
+	const commonPath = findCommonPath(markdownFiles.map((file) => file.absoluteFilePath));
 	const rootNode = createTreeNode(commonPath);
 
 	markdownFiles.forEach((file) => {
@@ -135,12 +121,8 @@ function checkUniquePageTitle(
 	const currentPageTitle = rootNode.file?.pageTitle ?? "";
 
 	if (pageTitles.has(currentPageTitle)) {
-		throw new Error(
-			`Page title "${currentPageTitle}" is not unique across all files.`,
-		);
+		throw new Error(`Page title "${currentPageTitle}" is not unique across all files.`);
 	}
 	pageTitles.add(currentPageTitle);
-	rootNode.children.forEach((child) =>
-		checkUniquePageTitle(child, pageTitles),
-	);
+	rootNode.children.forEach((child) => checkUniquePageTitle(child, pageTitles));
 }

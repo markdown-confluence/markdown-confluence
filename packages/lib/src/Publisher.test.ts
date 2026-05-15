@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vite-plus/test";
 import { ConfluenceClient } from "confluence.js";
-import {
-	BinaryFile,
-	FilesToUpload,
-	LoaderAdaptor,
-	MarkdownFile,
-} from "./adaptors";
+import { BinaryFile, FilesToUpload, LoaderAdaptor, MarkdownFile } from "./adaptors";
 import { orderMarks } from "./AdfEqual";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
 import { Publisher } from "./Publisher";
@@ -37,8 +32,7 @@ const markdownTestCases: MarkdownFile[] = [
 		pageTitle: "Headers",
 		frontmatter: {
 			title: "Headers",
-			description:
-				"A Markdown file demonstrating different header levels.",
+			description: "A Markdown file demonstrating different header levels.",
 		},
 	},
 	{
@@ -50,8 +44,7 @@ const markdownTestCases: MarkdownFile[] = [
 		pageTitle: "Emphasis",
 		frontmatter: {
 			title: "Emphasis",
-			description:
-				"A Markdown file demonstrating different text emphasis styles.",
+			description: "A Markdown file demonstrating different text emphasis styles.",
 		},
 	},
 	{
@@ -63,8 +56,7 @@ const markdownTestCases: MarkdownFile[] = [
 		pageTitle: "Lists",
 		frontmatter: {
 			title: "Lists",
-			description:
-				"A Markdown file demonstrating ordered and unordered lists.",
+			description: "A Markdown file demonstrating ordered and unordered lists.",
 		},
 	},
 	{
@@ -102,16 +94,14 @@ const markdownTestCases: MarkdownFile[] = [
 		pageTitle: "Code",
 		frontmatter: {
 			title: "Code",
-			description:
-				"A Markdown file demonstrating inline code and code blocks.",
+			description: "A Markdown file demonstrating inline code and code blocks.",
 		},
 	},
 	{
 		folderName: "tables",
 		absoluteFilePath: "/path/to/tables.md",
 		fileName: "tables.md",
-		contents:
-			"| Header 1 | Header 2 |\n| -------- | -------- |\n| Cell 1   | Cell 2   |",
+		contents: "| Header 1 | Header 2 |\n| -------- | -------- |\n| Cell 1   | Cell 2   |",
 		pageTitle: "Tables",
 		frontmatter: {
 			title: "Tables",
@@ -137,8 +127,7 @@ const markdownTestCases: MarkdownFile[] = [
 		pageTitle: "Horizontal Rules",
 		frontmatter: {
 			title: "Horizontal Rules",
-			description:
-				"A Markdown file demonstrating different horizontal rule styles.",
+			description: "A Markdown file demonstrating different horizontal rule styles.",
 		},
 	},
 	/*
@@ -164,8 +153,7 @@ const markdownTestCases: MarkdownFile[] = [
 		pageTitle: "Escaping",
 		frontmatter: {
 			title: "Escaping",
-			description:
-				"A Markdown file demonstrating how to escape special characters.",
+			description: "A Markdown file demonstrating how to escape special characters.",
 		},
 	},
 	{
@@ -216,9 +204,7 @@ const markdownTestCases: MarkdownFile[] = [
 ];
 
 class TestMermaidRenderer implements MermaidRenderer {
-	async captureMermaidCharts(
-		_charts: ChartData[],
-	): Promise<Map<string, Buffer>> {
+	async captureMermaidCharts(_charts: ChartData[]): Promise<Map<string, Buffer>> {
 		const capturedCharts = new Map<string, Buffer>();
 		return capturedCharts;
 	}
@@ -237,18 +223,13 @@ class InMemoryAdaptor implements LoaderAdaptor {
 
 	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		return this.inMemoryFiles.find(
-			(t) => t.absoluteFilePath === absoluteFilePath,
-		)!;
+		return this.inMemoryFiles.find((t) => t.absoluteFilePath === absoluteFilePath)!;
 	}
 	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
 		return this.inMemoryFiles;
 	}
 
-	async readBinary(
-		_path: string,
-		_referencedFromFilePath: string,
-	): Promise<false | BinaryFile> {
+	async readBinary(_path: string, _referencedFromFilePath: string): Promise<false | BinaryFile> {
 		throw new Error("Method not implemented.");
 	}
 }
@@ -275,8 +256,7 @@ confluenceIntegrationTest(
 			title: "Test - bf8bb13d-21b4-31b6-4584-8b9683d82086",
 			expand: ["version", "body.atlas_doc_format", "ancestors"],
 		};
-		const contentByTitle =
-			await confluenceClient.content.getContent(searchParams);
+		const contentByTitle = await confluenceClient.content.getContent(searchParams);
 
 		const pageResult = contentByTitle.results[0];
 		if (!pageResult) {

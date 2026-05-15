@@ -83,10 +83,7 @@ function createRule() {
 			const match = str.match(referenceImageRegex);
 			const alt = match?.groups?.["alt"] ?? "";
 			const label = match?.groups?.["label"] || alt;
-			const normalizedReference = label
-				.trim()
-				.replace(/\s+/g, " ")
-				.toUpperCase();
+			const normalizedReference = label.trim().replace(/\s+/g, " ").toUpperCase();
 			const href = State.env?.references?.[normalizedReference]?.href;
 
 			if (href && State.md.validateLink(href)) {
@@ -100,19 +97,13 @@ function createRule() {
 		};
 
 		const getWikiUrl = (str: string) => {
-			const content = str.substring(
-				str.indexOf("[[") + 2,
-				str.length - 2,
-			);
+			const content = str.substring(str.indexOf("[[") + 2, str.length - 2);
 			const contentSplit = content.split("|");
 
 			const filename = contentSplit[0];
 			const widthHeight = contentSplit[1]?.split("x");
 			const width = widthHeight ? widthHeight[0] : undefined;
-			const height =
-				!!widthHeight && widthHeight.length > 1
-					? widthHeight[1]
-					: undefined;
+			const height = !!widthHeight && widthHeight.length > 1 ? widthHeight[1] : undefined;
 
 			return [
 				["url", `file://${filename}`],
@@ -130,11 +121,7 @@ function createRule() {
 				: referenceImageRegex.test(url)
 					? getReferenceUrl(url)
 					: getUrl(url);
-			const mediaSingleClose = new State.Token(
-				"media_single_close",
-				"",
-				-1,
-			);
+			const mediaSingleClose = new State.Token("media_single_close", "", -1);
 
 			return [mediaSingleOpen, media, mediaSingleClose];
 		};
@@ -174,10 +161,7 @@ function createRule() {
 						previousToken = arr[cursor];
 					}
 
-					if (
-						previousToken &&
-						validParentTokens.indexOf(previousToken.type) === -1
-					) {
+					if (previousToken && validParentTokens.indexOf(previousToken.type) === -1) {
 						openingTokens.unshift(previousToken);
 					} else {
 						cursor++;
@@ -199,21 +183,12 @@ function createRule() {
 					let inlineContentStack = token.content;
 					matches.forEach((match) => {
 						const start = inlineContentStack.indexOf(match);
-						const contentBefore = inlineContentStack.substr(
-							0,
-							start,
-						);
-						inlineContentStack = inlineContentStack.substr(
-							start + match.length,
-						);
+						const contentBefore = inlineContentStack.substr(0, start);
+						inlineContentStack = inlineContentStack.substr(start + match.length);
 
 						subTree = [
 							...subTree,
-							...createInlineTokens(
-								contentBefore,
-								openingTokens,
-								closingTokens,
-							),
+							...createInlineTokens(contentBefore, openingTokens, closingTokens),
 							...createMediaTokens(match),
 						];
 					});
@@ -221,26 +196,16 @@ function createRule() {
 					if (inlineContentStack.length) {
 						subTree = [
 							...subTree,
-							...createInlineTokens(
-								inlineContentStack,
-								openingTokens,
-								closingTokens,
-							),
+							...createInlineTokens(inlineContentStack, openingTokens, closingTokens),
 						];
 					}
 
-					processedTokens = [
-						...processedTokens,
-						...closingTokens.map((c) => c.type),
-					];
+					processedTokens = [...processedTokens, ...closingTokens.map((c) => c.type)];
 
 					tokens = [...tokens.slice(0, cursor), ...subTree];
 				} else if (processedTokens.indexOf(token.type) !== -1) {
 					// Ignore token if it's already processed
-					processedTokens.splice(
-						processedTokens.indexOf(token.type),
-						1,
-					);
+					processedTokens.splice(processedTokens.indexOf(token.type), 1);
 				} else {
 					tokens.push(token);
 				}

@@ -37,16 +37,13 @@ jobs:
           command: manifest
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
       
-      - name: Use Node.js
+      - name: Set up Vite+
         if: ${{ steps.release-please.outputs.release_created }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "24.x"
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Use NPM 11
-        if: ${{ steps.release-please.outputs.release_created }}
-        run: npm install -g npm@11
+          node-version: "24"
+          cache: true
+          run-install: false
 
       - name: Checkout source repository
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
@@ -62,25 +59,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_PAT }}
 
-      - name: Use Node.js for trusted publishing
-        if: ${{ steps.release-please.outputs.release_created }}
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-        with:
-          node-version: "24.x"
-          registry-url: 'https://registry.npmjs.org'
-          package-manager-cache: false
-
-      - name: Use NPM with trusted publishing support
-        if: ${{ steps.release-please.outputs.release_created }}
-        run: npm install -g npm@^11.5.1
-
-      - name: Publish to NPM
+      - name: Publish packages
         if: ${{ steps.release-please.outputs.release_created }}
         run: |
-          npm publish -w @markdown-confluence/lib
-          npm publish -w @markdown-confluence/mermaid-electron-renderer
-          npm publish -w @markdown-confluence/mermaid-puppeteer-renderer
-          npm publish -w @markdown-confluence/cli
+          vp pm publish --filter @markdown-confluence/lib --access public --no-git-checks
+          vp pm publish --filter @markdown-confluence/mermaid-electron-renderer --access public --no-git-checks
+          vp pm publish --filter @markdown-confluence/mermaid-puppeteer-renderer --access public --no-git-checks
+          vp pm publish --filter @markdown-confluence/cli --access public --no-git-checks
 
       - name: Log in to the Container registry
         if: ${{ steps.release-please.outputs.release_created }}

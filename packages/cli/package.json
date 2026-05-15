@@ -1,41 +1,42 @@
 {
-    "name": "@markdown-confluence/cli",
-    "version": "5.5.2",
-    "description": "This CLI allows you to publish your notes to Confluence",
-    "bin": "dist/index.js",
-    "scripts": {
-        "dev": "node esbuild.config.mjs",
-        "clidev": "npm run build && node ./dist/index.js",
-        "build": "tsc && node esbuild.config.mjs production",
-        "build:docker": "docker build -t markdown-confluence/markdown-confluence .",
-        "fmt": "npx prettier --write src/",
-        "lint": "eslint src/",
-        "prettier-check": "npx prettier --check src/"
-    },
-    "keywords": [],
-    "author": "andymac4182",
-    "license": "Apache 2.0",
-    "devDependencies": {
-        "confluence.js": "^2.1.0",
-        "boxen": "8.0.1",
-        "chalk": "5.6.2",
-        "@markdown-confluence/lib": "5.5.2",
-        "@markdown-confluence/mermaid-puppeteer-renderer": "5.5.2"
-    },
-    "dependencies": {},
-    "bundleDependencies": true,
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/",
-        "provenance": true
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/markdown-confluence/markdown-confluence",
-        "directory": "packages/cli"
-    },
-    "homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/cli",
-    "bugs": {
-        "url": "https://github.com/markdown-confluence/markdown-confluence/issues"
-    }
+	"name": "@markdown-confluence/cli",
+	"version": "5.5.2",
+	"description": "This CLI allows you to publish your notes to Confluence",
+	"keywords": [],
+	"homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/cli",
+	"bugs": {
+		"url": "https://github.com/markdown-confluence/markdown-confluence/issues"
+	},
+	"license": "Apache 2.0",
+	"author": "andymac4182",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/markdown-confluence/markdown-confluence",
+		"directory": "packages/cli"
+	},
+	"bin": "dist/index.js",
+	"type": "module",
+	"publishConfig": {
+		"access": "public",
+		"provenance": true,
+		"registry": "https://registry.npmjs.org/"
+	},
+	"scripts": {
+		"dev": "vp build --watch",
+		"clidev": "vp run build && node ./dist/index.js",
+		"build": "vp exec tsc --noEmit && vp build",
+		"build:docker": "docker build -t markdown-confluence/markdown-confluence .",
+		"fmt": "vp fmt --write \"src/**/*.{ts,tsx,js}\"",
+		"fmt:check": "vp fmt --check \"src/**/*.{ts,tsx,js}\"",
+		"lint": "vp lint src"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@markdown-confluence/lib": "workspace:5.5.2",
+		"@markdown-confluence/mermaid-puppeteer-renderer": "workspace:5.5.2",
+		"boxen": "8.0.1",
+		"chalk": "5.6.2",
+		"confluence.js": "^2.1.0"
+	},
+	"bundleDependencies": true
 }

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parses blockquotes.md 1`] = `
+exports[`parses 'blockquotes.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/blockquotes.md",
   "blogPostDate": undefined,
@@ -53,7 +53,7 @@ exports[`parses blockquotes.md 1`] = `
 }
 `;
 
-exports[`parses blog.md 1`] = `
+exports[`parses 'blog.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/blog.md",
   "blogPostDate": "2022-01-01",
@@ -149,7 +149,7 @@ exports[`parses blog.md 1`] = `
 }
 `;
 
-exports[`parses code.md 1`] = `
+exports[`parses 'code.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/code.md",
   "blogPostDate": undefined,
@@ -205,7 +205,7 @@ exports[`parses code.md 1`] = `
 }
 `;
 
-exports[`parses emphasis.md 1`] = `
+exports[`parses 'emphasis.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/emphasis.md",
   "blogPostDate": undefined,
@@ -320,7 +320,7 @@ exports[`parses emphasis.md 1`] = `
 }
 `;
 
-exports[`parses escaping.md 1`] = `
+exports[`parses 'escaping.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/escaping.md",
   "blogPostDate": undefined,
@@ -363,7 +363,7 @@ exports[`parses escaping.md 1`] = `
 }
 `;
 
-exports[`parses file1.md 1`] = `
+exports[`parses 'file1.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/folder1/file1.md",
   "blogPostDate": undefined,
@@ -572,7 +572,7 @@ exports[`parses file1.md 1`] = `
 }
 `;
 
-exports[`parses file2.md 1`] = `
+exports[`parses 'file2.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/folder2/file2.md",
   "blogPostDate": undefined,
@@ -731,7 +731,7 @@ exports[`parses file2.md 1`] = `
 }
 `;
 
-exports[`parses file3.md 1`] = `
+exports[`parses 'file3.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/folder3/file3.md",
   "blogPostDate": undefined,
@@ -841,7 +841,7 @@ exports[`parses file3.md 1`] = `
 }
 `;
 
-exports[`parses headers.md 1`] = `
+exports[`parses 'headers.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/headers.md",
   "blogPostDate": undefined,
@@ -938,7 +938,7 @@ exports[`parses headers.md 1`] = `
 }
 `;
 
-exports[`parses horizontal_rules.md 1`] = `
+exports[`parses 'horizontal_rules.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/horizontal_rules.md",
   "blogPostDate": undefined,
@@ -972,7 +972,7 @@ exports[`parses horizontal_rules.md 1`] = `
 }
 `;
 
-exports[`parses html_comments.md 1`] = `
+exports[`parses 'html_comments.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/html_comments.md",
   "blogPostDate": undefined,
@@ -1050,7 +1050,7 @@ exports[`parses html_comments.md 1`] = `
 }
 `;
 
-exports[`parses images.md 1`] = `
+exports[`parses 'images.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/images.md",
   "blogPostDate": undefined,
@@ -1109,7 +1109,7 @@ exports[`parses images.md 1`] = `
 }
 `;
 
-exports[`parses inline_html.md 1`] = `
+exports[`parses 'inline_html.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/inline_html.md",
   "blogPostDate": undefined,
@@ -1143,7 +1143,7 @@ exports[`parses inline_html.md 1`] = `
 }
 `;
 
-exports[`parses links.md 1`] = `
+exports[`parses 'links.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/links.md",
   "blogPostDate": undefined,
@@ -1202,7 +1202,7 @@ exports[`parses links.md 1`] = `
 }
 `;
 
-exports[`parses lists.md 1`] = `
+exports[`parses 'lists.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/lists.md",
   "blogPostDate": undefined,
@@ -1296,7 +1296,7 @@ exports[`parses lists.md 1`] = `
 }
 `;
 
-exports[`parses reference_images.md 1`] = `
+exports[`parses 'reference_images.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/reference_images.md",
   "blogPostDate": undefined,
@@ -1355,7 +1355,7 @@ exports[`parses reference_images.md 1`] = `
 }
 `;
 
-exports[`parses tables.md 1`] = `
+exports[`parses 'tables.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/tables.md",
   "blogPostDate": undefined,
@@ -1482,7 +1482,7 @@ exports[`parses tables.md 1`] = `
 }
 `;
 
-exports[`parses tasks.md 1`] = `
+exports[`parses 'tasks.md' 1`] = `
 {
   "absoluteFilePath": "/path/to/tasks.md",
   "blogPostDate": "2022-01-01",

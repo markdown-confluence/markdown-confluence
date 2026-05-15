@@ -9,9 +9,7 @@ export abstract class SettingsLoader {
 		return settings;
 	}
 
-	protected validateSettings(
-		settings: Partial<ConfluenceSettings>,
-	): ConfluenceSettings {
+	protected validateSettings(settings: Partial<ConfluenceSettings>): ConfluenceSettings {
 		if (!settings.confluenceBaseUrl) {
 			throw new Error("Confluence base URL is required");
 		}

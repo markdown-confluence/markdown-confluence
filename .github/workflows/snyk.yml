@@ -106,11 +106,18 @@ jobs:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+      - name: Set up Vite+
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "24"
+          cache: true
+          run-install: false
+
       - name: Build a Docker image
         run: |
-          npm ci
-          npm run build -ws --if-present
-          npm run build:docker -ws --if-present
+          vp install --frozen-lockfile
+          vp run build
+          vp run -r build:docker
 
       - name: Run Snyk to check for vulnerabilities (monitor)
         uses: snyk/actions/docker@b98d498629f1c368650224d6d212bf7dfa89e4bf # master

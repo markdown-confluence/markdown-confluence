@@ -1,7 +1,4 @@
-import {
-	JSONDocNode,
-	JSONTransformer,
-} from "@atlaskit/editor-json-transformer";
+import { JSONDocNode, JSONTransformer } from "@atlaskit/editor-json-transformer";
 import { MarkdownTransformer } from "./MarkdownTransformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { MarkdownFile } from "./adaptors";
@@ -79,10 +76,7 @@ export function stripMarkdownHtmlComments(markdown: string): string {
 					strippedLine += backtickRun;
 					position = runEnd;
 				} else {
-					strippedLine += line.slice(
-						position,
-						closingRun + backtickRun.length,
-					);
+					strippedLine += line.slice(position, closingRun + backtickRun.length);
 					position = closingRun + backtickRun.length;
 				}
 				continue;
@@ -106,10 +100,7 @@ function countBacktickRun(line: string, position: number): number {
 	return count;
 }
 
-export function parseMarkdownToADF(
-	markdown: string,
-	confluenceBaseUrl: string,
-) {
+export function parseMarkdownToADF(markdown: string, confluenceBaseUrl: string) {
 	const prosenodes = transformer.parse(stripMarkdownHtmlComments(markdown));
 	const adfNodes = serializer.encode(prosenodes);
 	const nodes = processADF(adfNodes, confluenceBaseUrl);
@@ -141,12 +132,8 @@ function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 			if (
 				node.marks[0].attrs["href"] === "" ||
 				(!isSafeUrl(node.marks[0].attrs["href"]) &&
-					!(node.marks[0].attrs["href"] as string).startsWith(
-						"wikilinks:",
-					) &&
-					!(node.marks[0].attrs["href"] as string).startsWith(
-						"mention:",
-					))
+					!(node.marks[0].attrs["href"] as string).startsWith("wikilinks:") &&
+					!(node.marks[0].attrs["href"] as string).startsWith("mention:"))
 			) {
 				node.marks[0].attrs["href"] = "#";
 			}
@@ -213,13 +200,11 @@ function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 				try {
 					const parsedAdf = JSON.parse(
 						node?.content?.at(0)?.text ??
-							JSON.stringify(
-								p("ADF missing from ADF Code Block."),
-							),
+							JSON.stringify(p("ADF missing from ADF Code Block.")),
 					);
 					node = parsedAdf;
 					return node;
-				} catch (e) {
+				} catch {
 					return node;
 				}
 			}
@@ -235,16 +220,10 @@ function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 	return olivia as JSONDocNode;
 }
 
-export function convertMDtoADF(
-	file: MarkdownFile,
-	settings: ConfluenceSettings,
-): LocalAdfFile {
+export function convertMDtoADF(file: MarkdownFile, settings: ConfluenceSettings): LocalAdfFile {
 	file.contents = file.contents.replace(frontmatterRegex, "");
 
-	const adfContent = parseMarkdownToADF(
-		file.contents,
-		settings.confluenceBaseUrl,
-	);
+	const adfContent = parseMarkdownToADF(file.contents, settings.confluenceBaseUrl);
 
 	const results = processConniePerPageConfig(file, settings, adfContent);
 

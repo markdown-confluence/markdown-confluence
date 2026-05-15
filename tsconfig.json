@@ -1,60 +1,44 @@
 {
-   "compilerOptions":{
-      "baseUrl":".",
-      "ignoreDeprecations":"6.0",
-      "inlineSourceMap":true,
-      "inlineSources":true,
-      "jsx":"react",
-      "module":"CommonJS",
-      "target":"ES2022",
-      "allowJs":true,
-      "moduleResolution":"node",
-      "types":[
-         "node"
-      ],
-      "importHelpers":true,
-      "isolatedModules":true,
-      "strictNullChecks":true,
-      "strict":true,
-      "noImplicitAny":true,
-      "noUnusedLocals":true,
-      "noImplicitOverride":true,
-      "noUnusedParameters":true,
-      "noPropertyAccessFromIndexSignature":true,
-      "noUncheckedIndexedAccess":true,
-      "noImplicitReturns": true,
-      "noFallthroughCasesInSwitch":true,
-      "noImplicitThis":true,
-      "strictBindCallApply":true,
-      "strictFunctionTypes":true,
-      "strictPropertyInitialization":true,
-      "useUnknownInCatchVariables":true,
-      "allowUnreachableCode":false,
-      "alwaysStrict":true,
-      "allowUnusedLabels":false,
-      "exactOptionalPropertyTypes":true,
-      "allowSyntheticDefaultImports":true,
-      "esModuleInterop":true,
-      "declaration":true,
-      "declarationMap":true,
-      "forceConsistentCasingInFileNames": true,
-      "newLine": "lf",
-      "lib":[
-         "DOM",
-         "ES5",
-         "ES6",
-         "ES7",
-         "ES2022"
-      ],
-      "paths":{
-         "@markdown-confluence/*":[
-            "packages/*/"
-         ]
-      }
-   },
-   "exclude":[
-      "node_modules",
-      ".build",
-      "esbuild.config.mjs"
-   ]
+	"compilerOptions": {
+		"inlineSourceMap": true,
+		"inlineSources": true,
+		"jsx": "react",
+		"module": "ESNext",
+		"target": "ES2022",
+		"allowJs": true,
+		"moduleResolution": "Bundler",
+		"types": ["node"],
+		"importHelpers": true,
+		"isolatedModules": true,
+		"strictNullChecks": true,
+		"strict": true,
+		"noImplicitAny": true,
+		"noUnusedLocals": true,
+		"noImplicitOverride": true,
+		"noUnusedParameters": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitThis": true,
+		"strictBindCallApply": true,
+		"strictFunctionTypes": true,
+		"strictPropertyInitialization": true,
+		"useUnknownInCatchVariables": true,
+		"allowUnreachableCode": false,
+		"alwaysStrict": true,
+		"allowUnusedLabels": false,
+		"exactOptionalPropertyTypes": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"declaration": true,
+		"declarationMap": true,
+		"forceConsistentCasingInFileNames": true,
+		"newLine": "lf",
+		"lib": ["DOM", "ES5", "ES6", "ES7", "ES2022"],
+		"paths": {
+			"@markdown-confluence/*": ["./packages/*/"]
+		}
+	},
+	"exclude": ["node_modules", ".build"]
 }

@@ -18,10 +18,9 @@ import {
 	ConfluencePerPageUIValues,
 	mapFrontmatterToConfluencePerPageUIValues,
 } from "./ConfluencePerPageForm";
-import { Mermaid } from "mermaid";
+import type { Mermaid } from "mermaid";
 
-export interface ObsidianPluginSettings
-	extends ConfluenceUploadSettings.ConfluenceSettings {
+export interface ObsidianPluginSettings extends ConfluenceUploadSettings.ConfluenceSettings {
 	mermaidTheme:
 		| "match-obsidian"
 		| "light-obsidian"
@@ -58,12 +57,7 @@ export default class ConfluencePlugin extends Plugin {
 		await this.loadSettings();
 		const { vault, metadataCache, workspace } = this.app;
 		this.workspace = workspace;
-		this.adaptor = new ObsidianAdaptor(
-			vault,
-			metadataCache,
-			this.settings,
-			this.app,
-		);
+		this.adaptor = new ObsidianAdaptor(vault, metadataCache, this.settings, this.app);
 
 		const mermaidItems = await this.getMermaidItems();
 		const mermaidRenderer = new ElectronMermaidRenderer(
@@ -93,12 +87,9 @@ export default class ConfluencePlugin extends Plugin {
 		});
 
 		const settingsLoader = new StaticSettingsLoader(this.settings);
-		this.publisher = new Publisher(
-			this.adaptor,
-			settingsLoader,
-			confluenceClient,
-			[new MermaidRendererPlugin(mermaidRenderer)],
-		);
+		this.publisher = new Publisher(this.adaptor, settingsLoader, confluenceClient, [
+			new MermaidRendererPlugin(mermaidRenderer),
+		]);
 	}
 
 	async getMermaidItems() {
@@ -165,9 +156,7 @@ export default class ConfluencePlugin extends Plugin {
 		return {
 			extraStyleSheets,
 			extraStyles,
-			mermaidConfig: (
-				(await loadMermaid()) as Mermaid
-			).mermaidAPI.getConfig(),
+			mermaidConfig: ((await loadMermaid()) as Mermaid).mermaidAPI.getConfig(),
 			bodyStyles,
 		};
 	}
@@ -183,9 +172,7 @@ export default class ConfluencePlugin extends Plugin {
 
 		adrFiles.forEach((element) => {
 			if (element.successfulUploadResult) {
-				returnVal.filesUploadResult.push(
-					element.successfulUploadResult,
-				);
+				returnVal.filesUploadResult.push(element.successfulUploadResult);
 				return;
 			}
 
@@ -254,14 +241,12 @@ export default class ConfluencePlugin extends Plugin {
 						},
 					},
 				});
-				const testingPage =
-					await confluenceClient.content.getContentById({
-						id: "9732097",
-						expand: ["body.atlas_doc_format", "space"],
-					});
+				const testingPage = await confluenceClient.content.getContentById({
+					id: "9732097",
+					expand: ["body.atlas_doc_format", "space"],
+				});
 				const adf = JSON.parse(
-					testingPage.body?.atlas_doc_format?.value ||
-						'{type: "doc", content:[]}',
+					testingPage.body?.atlas_doc_format?.value || '{type: "doc", content:[]}',
 				);
 				renderADFDoc(adf);
 			},
@@ -365,27 +350,18 @@ export default class ConfluencePlugin extends Plugin {
 					const file = view.file;
 					const enabledForPublishing =
 						(file.path.startsWith(this.settings.folderToPublish) &&
-							(!frontMatter ||
-								frontMatter["connie-publish"] !== false)) ||
+							(!frontMatter || frontMatter["connie-publish"] !== false)) ||
 						(frontMatter && frontMatter["connie-publish"] === true);
 					return !enabledForPublishing;
 				}
 
-				this.app.fileManager.processFrontMatter(
-					view.file,
-					(frontmatter) => {
-						if (
-							view.file &&
-							view.file.path.startsWith(
-								this.settings.folderToPublish,
-							)
-						) {
-							delete frontmatter["connie-publish"];
-						} else {
-							frontmatter["connie-publish"] = true;
-						}
-					},
-				);
+				this.app.fileManager.processFrontMatter(view.file, (frontmatter) => {
+					if (view.file && view.file.path.startsWith(this.settings.folderToPublish)) {
+						delete frontmatter["connie-publish"];
+					} else {
+						frontmatter["connie-publish"] = true;
+					}
+				});
 				return true;
 			},
 		});
@@ -405,27 +381,18 @@ export default class ConfluencePlugin extends Plugin {
 					const file = view.file;
 					const enabledForPublishing =
 						(file.path.startsWith(this.settings.folderToPublish) &&
-							(!frontMatter ||
-								frontMatter["connie-publish"] !== false)) ||
+							(!frontMatter || frontMatter["connie-publish"] !== false)) ||
 						(frontMatter && frontMatter["connie-publish"] === true);
 					return enabledForPublishing;
 				}
 
-				this.app.fileManager.processFrontMatter(
-					view.file,
-					(frontmatter) => {
-						if (
-							view.file &&
-							view.file.path.startsWith(
-								this.settings.folderToPublish,
-							)
-						) {
-							frontmatter["connie-publish"] = false;
-						} else {
-							delete frontmatter["connie-publish"];
-						}
-					},
-				);
+				this.app.fileManager.processFrontMatter(view.file, (frontmatter) => {
+					if (view.file && view.file.path.startsWith(this.settings.folderToPublish)) {
+						frontmatter["connie-publish"] = false;
+					} else {
+						delete frontmatter["connie-publish"];
+					}
+				});
 				return true;
 			},
 		});
@@ -438,41 +405,27 @@ export default class ConfluencePlugin extends Plugin {
 					return false;
 				}
 
-				const frontMatter = this.app.metadataCache.getCache(
-					view.file.path,
-				)?.frontmatter;
+				const frontMatter = this.app.metadataCache.getCache(view.file.path)?.frontmatter;
 
 				const file = view.file;
 
 				new ConfluencePerPageForm(this.app, {
 					config: ConfluencePageConfig.conniePerPageConfig,
-					initialValues:
-						mapFrontmatterToConfluencePerPageUIValues(frontMatter),
+					initialValues: mapFrontmatterToConfluencePerPageUIValues(frontMatter),
 					onSubmit: (values, close) => {
 						const valuesToSet: Partial<ConfluencePageConfig.ConfluencePerPageAllValues> =
 							{};
 						for (const propertyKey in values) {
-							if (
-								Object.prototype.hasOwnProperty.call(
-									values,
-									propertyKey,
-								)
-							) {
+							if (Object.prototype.hasOwnProperty.call(values, propertyKey)) {
 								const element =
-									values[
-										propertyKey as keyof ConfluencePerPageUIValues
-									];
+									values[propertyKey as keyof ConfluencePerPageUIValues];
 								if (element.isSet) {
-									valuesToSet[
-										propertyKey as keyof ConfluencePerPageUIValues
-									] = element.value as never;
+									valuesToSet[propertyKey as keyof ConfluencePerPageUIValues] =
+										element.value as never;
 								}
 							}
 						}
-						this.adaptor.updateMarkdownValues(
-							file.path,
-							valuesToSet,
-						);
+						this.adaptor.updateMarkdownValues(file.path, valuesToSet);
 						close();
 					},
 				}).open();

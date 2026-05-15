@@ -34,16 +34,10 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 		private bodyClasses = "",
 	) {}
 
-	async captureMermaidCharts(
-		charts: ChartData[],
-	): Promise<Map<string, Buffer>> {
+	async captureMermaidCharts(charts: ChartData[]): Promise<Map<string, Buffer>> {
 		if (!mermaidRenderHtml) {
 			mermaidRenderHtml = URL.createObjectURL(
-				this.getFileContentBlob(
-					this.extraStyleSheets,
-					this.extraStyles,
-					this.bodyClasses,
-				),
+				this.getFileContentBlob(this.extraStyleSheets, this.extraStyles, this.bodyClasses),
 			);
 		}
 
@@ -87,10 +81,10 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 
 			try {
 				// Capture the chart as a NativeImage
-				const image = await chartWindow.webContents.capturePage(
-					dimensions,
-					{ stayHidden: true, stayAwake: true },
-				);
+				const image = await chartWindow.webContents.capturePage(dimensions, {
+					stayHidden: true,
+					stayAwake: true,
+				});
 				// Convert the NativeImage to a PNG buffer
 				const imageBuffer = image.toPNG();
 				// Add the buffer to the capturedCharts map
@@ -113,10 +107,7 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 		bodyClasses: string,
 	): Blob {
 		const styleSheetTags = extraStyleSheets
-			.map(
-				(url) =>
-					`<link href="${url}" type="text/css" rel="stylesheet"/>`,
-			)
+			.map((url) => `<link href="${url}" type="text/css" rel="stylesheet"/>`)
 			.join("\n");
 		const extraStylesTag = `
 		<style>

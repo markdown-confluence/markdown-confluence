@@ -1,8 +1,6 @@
 import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
-import path from "path";
 import puppeteer, { LaunchOptions } from "puppeteer";
 import { downloadBrowsers } from "puppeteer/lib/puppeteer/node/install.js";
-import url from "url";
 
 interface RemoteWindowedCustomFunctions {
 	renderMermaidChart: (
@@ -12,9 +10,7 @@ interface RemoteWindowedCustomFunctions {
 }
 
 export class PuppeteerMermaidRenderer implements MermaidRenderer {
-	async captureMermaidCharts(
-		charts: ChartData[],
-	): Promise<Map<string, Buffer>> {
+	async captureMermaidCharts(charts: ChartData[]): Promise<Map<string, Buffer>> {
 		const capturedCharts = new Map<string, Buffer>();
 
 		await downloadBrowsers();
@@ -33,19 +29,16 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 				],
 			} satisfies LaunchOptions;
 
-			console.log(
-				"LAUNCHING CHROME",
-				JSON.stringify(puppeteerLaunchConfig),
-			);
+			console.log("LAUNCHING CHROME", JSON.stringify(puppeteerLaunchConfig));
 			const browser = await puppeteer.launch(puppeteerLaunchConfig);
 
 			const page = await browser.newPage();
 			try {
-				const mermaidHTMLPath = path.join(
-					__dirname,
+				const pathToLoad = new URL(
+					/* @vite-ignore */
 					"mermaid_renderer.html",
-				);
-				const pathToLoad = url.pathToFileURL(mermaidHTMLPath).href;
+					import.meta.url,
+				).href;
 
 				await page.goto(pathToLoad);
 

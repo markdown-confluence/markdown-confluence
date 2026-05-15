@@ -1,72 +1,73 @@
 {
-    "name": "@markdown-confluence/lib",
-    "version": "5.5.2",
-    "description": "This library allows you to publish your notes to Confluence",
-    "main": "dist/index.js",
-    "module": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "type": "module",
-    "sideEffects": false,
-    "scripts": {
-        "dev": "tsc --watch",
-        "build": "tsc",
-        "fmt": "npx prettier --write src/",
-        "lint": "eslint src/",
-        "prettier-check": "npx prettier --check src/",
-        "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js"
-    },
-    "keywords": [
-        "markdown",
-        "markdown-confluence",
-        "confluence",
-        "adf",
-        "atlassian",
-        "atlassian-document-format",
-        "publish-confluence",
-        "convert-markdown",
-        "obsidian-confluence",
-        "obsidian-plugin"
-    ],
-    "author": "andymac4182",
-    "license": "Apache 2.0",
-    "devDependencies": {
-        "@jest/globals": "^30.4.1",
-        "@types/lodash-es": "^4.17.12",
-        "@types/markdown-it": "^14.1.2",
-        "@types/spark-md5": "^3.0.5",
-        "jest": "^30.4.2",
-        "markdown-it": "^14.1.1"
-    },
-    "dependencies": {
-        "@atlaskit/adf-schema": "^52.11.3",
-        "@atlaskit/adf-utils": "^19.29.6",
-        "@atlaskit/editor-prosemirror": "^7.3.0",
-        "@atlaskit/editor-json-transformer": "^8.31.8",
-        "confluence.js": "^2.1.0",
-        "formdata-node": "^6.0.3",
-        "glob": "^13.0.6",
-        "gray-matter": "^4.0.3",
-        "image-size": "^2.0.2",
-        "lodash-es": "^4.18.1",
-        "markdown-it-table": "^4.1.1",
-        "markdown-table": "^3.0.4",
-        "sort-any": "^4.0.7",
-        "spark-md5": "^3.0.2",
-        "uuid": "^14.0.0",
-        "yargs": "18.0.0"
-    },
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/",
-        "provenance": true
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/markdown-confluence/markdown-confluence",
-        "directory": "packages/lib"
-    },
-    "homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/lib",
-    "bugs": {
-        "url": "https://github.com/markdown-confluence/markdown-confluence/issues"
-    }
+	"name": "@markdown-confluence/lib",
+	"version": "5.5.2",
+	"description": "This library allows you to publish your notes to Confluence",
+	"keywords": [
+		"adf",
+		"atlassian",
+		"atlassian-document-format",
+		"confluence",
+		"convert-markdown",
+		"markdown",
+		"markdown-confluence",
+		"obsidian-confluence",
+		"obsidian-plugin",
+		"publish-confluence"
+	],
+	"homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/lib",
+	"bugs": {
+		"url": "https://github.com/markdown-confluence/markdown-confluence/issues"
+	},
+	"license": "Apache 2.0",
+	"author": "andymac4182",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/markdown-confluence/markdown-confluence",
+		"directory": "packages/lib"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"publishConfig": {
+		"access": "public",
+		"provenance": true,
+		"registry": "https://registry.npmjs.org/"
+	},
+	"scripts": {
+		"dev": "vp build --watch",
+		"build": "vp exec tsc --noEmit && vp build && vp exec tsc --emitDeclarationOnly",
+		"fmt": "vp fmt --write \"src/**/*.{ts,tsx,js}\"",
+		"fmt:check": "vp fmt --check \"src/**/*.{ts,tsx,js}\"",
+		"lint": "vp lint --vitest-plugin src",
+		"test": "vp test run --config ../../vitest.config.ts"
+	},
+	"dependencies": {
+		"@atlaskit/adf-schema": "^52.11.3",
+		"@atlaskit/adf-utils": "^19.29.6",
+		"@atlaskit/editor-json-transformer": "^8.31.8",
+		"@atlaskit/editor-prosemirror": "^7.3.0",
+		"confluence.js": "^2.1.0",
+		"formdata-node": "^6.0.3",
+		"glob": "^13.0.6",
+		"gray-matter": "^4.0.3",
+		"image-size": "^2.0.2",
+		"lodash-es": "^4.18.1",
+		"markdown-it-table": "^4.1.1",
+		"markdown-table": "^3.0.4",
+		"mime-types": "^3.0.2",
+		"sort-any": "^4.0.7",
+		"spark-md5": "^3.0.2",
+		"uuid": "^14.0.0",
+		"yargs": "18.0.0"
+	},
+	"devDependencies": {
+		"@types/lodash-es": "^4.17.12",
+		"@types/markdown-it": "^14.1.2",
+		"@types/mime-types": "^3.0.1",
+		"@types/spark-md5": "^3.0.5",
+		"@types/yargs": "^17.0.35",
+		"markdown-it": "^14.1.1"
+	}
 }

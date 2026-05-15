@@ -24,19 +24,10 @@ export function wikilinks(state: StateInline): boolean {
 	);
 
 	if (hashFragment) {
-		state.src = replaceBetween(
-			state.src,
-			headerStart,
-			headerEnd,
-			hashFragment,
-		);
+		state.src = replaceBetween(state.src, headerStart, headerEnd, hashFragment);
 	}
 
-	const { alias, aliasStart, aliasEnd } = findAlias(
-		state,
-		state.pos,
-		wikiLinkEnd,
-	);
+	const { alias, aliasStart, aliasEnd } = findAlias(state, state.pos, wikiLinkEnd);
 
 	const pageNameStart = wikilinkStart;
 	const pageNameEnd = Math.min(
@@ -68,12 +59,7 @@ export function wikilinks(state: StateInline): boolean {
 	return true;
 }
 
-function replaceBetween(
-	original: string,
-	start: number,
-	end: number,
-	replacement: string,
-) {
+function replaceBetween(original: string, start: number, end: number, replacement: string) {
 	return original.substring(0, start) + replacement + original.substring(end);
 }
 
@@ -179,10 +165,7 @@ function findAlias(
 			aliasStart = state.pos + 1;
 		}
 
-		if (
-			foundStart &&
-			state.src.charCodeAt(state.pos + 1) === 0x5d /* ] (Link End) */
-		) {
+		if (foundStart && state.src.charCodeAt(state.pos + 1) === 0x5d /* ] (Link End) */) {
 			found = true;
 			break;
 		}

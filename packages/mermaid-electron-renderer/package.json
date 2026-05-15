@@ -1,40 +1,40 @@
 {
-    "name": "@markdown-confluence/mermaid-electron-renderer",
-    "version": "5.5.2",
-    "description": "This library allows you to publish your notes to Confluence",
-    "main": "dist/index.js",
-    "module": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "type": "module",
-    "sideEffects": false,
-    "scripts": {
-        "dev": "tsc --watch",
-        "build": "tsc",
-        "fmt": "npx prettier --write src/",
-        "lint": "eslint src/",
-        "prettier-check": "npx prettier --check src/"
-    },
-    "keywords": [],
-    "author": "andymac4182",
-    "license": "Apache 2.0",
-    "devDependencies": {},
-    "dependencies": {
-        "@electron/remote": "^2.1.3",
-        "mermaid": "^11.15.0",
-        "@markdown-confluence/lib": "5.5.2"
-    },
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/",
-        "provenance": true
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/markdown-confluence/markdown-confluence",
-        "directory": "packages/mermaid-electron-renderer"
-    },
-    "homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/lib",
-    "bugs": {
-        "url": "https://github.com/markdown-confluence/markdown-confluence/issues"
-    }
+	"name": "@markdown-confluence/mermaid-electron-renderer",
+	"version": "5.5.2",
+	"description": "This library allows you to publish your notes to Confluence",
+	"keywords": [],
+	"homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/lib",
+	"bugs": {
+		"url": "https://github.com/markdown-confluence/markdown-confluence/issues"
+	},
+	"license": "Apache 2.0",
+	"author": "andymac4182",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/markdown-confluence/markdown-confluence",
+		"directory": "packages/mermaid-electron-renderer"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"publishConfig": {
+		"access": "public",
+		"provenance": true,
+		"registry": "https://registry.npmjs.org/"
+	},
+	"scripts": {
+		"dev": "vp build --watch",
+		"build": "vp exec tsc --noEmit && vp build && vp exec tsc --emitDeclarationOnly",
+		"fmt": "vp fmt --write \"src/**/*.{ts,tsx,js}\"",
+		"fmt:check": "vp fmt --check \"src/**/*.{ts,tsx,js}\"",
+		"lint": "vp lint src"
+	},
+	"dependencies": {
+		"@electron/remote": "^2.1.3",
+		"@markdown-confluence/lib": "workspace:5.5.2",
+		"mermaid": "^11.15.0",
+		"uuid": "^14.0.0"
+	}
 }

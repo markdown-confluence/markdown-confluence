@@ -1,7 +1,4 @@
-export function cleanUpUrlIfConfluence(
-	input: string,
-	confluenceBaseUrl: string,
-): string {
+export function cleanUpUrlIfConfluence(input: string, confluenceBaseUrl: string): string {
 	let url: URL;
 
 	// Check if the input is a valid URL

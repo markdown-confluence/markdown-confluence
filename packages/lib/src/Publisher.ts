@@ -110,17 +110,14 @@ export class Publisher {
 		this.settingsLoader = settingsLoader;
 
 		this.confluenceClient = confluenceClient;
-		this.adfProcessingPlugins = adfProcessingPlugins.concat(
-			AlwaysADFProcessingPlugins,
-		);
+		this.adfProcessingPlugins = adfProcessingPlugins.concat(AlwaysADFProcessingPlugins);
 	}
 
 	async publish(publishFilter?: string) {
 		const settings = this.settingsLoader.load();
 
 		if (!this.myAccountId) {
-			const currentUser =
-				await this.confluenceClient.users.getCurrentUser();
+			const currentUser = await this.confluenceClient.users.getCurrentUser();
 			this.myAccountId = currentUser.accountId;
 		}
 
@@ -163,9 +160,7 @@ export class Publisher {
 		return adrFiles;
 	}
 
-	private async publishFile(
-		node: ConfluenceNode,
-	): Promise<FilePublishResult> {
+	private async publishFile(node: ConfluenceNode): Promise<FilePublishResult> {
 		try {
 			const successfulUploadResult = await this.updatePageContent(
 				node.ancestors,
@@ -224,8 +219,8 @@ export class Publisher {
 				id: adfFile.pageId,
 			});
 
-		const currentAttachments: CurrentAttachments =
-			currentUploadedAttachments.results.reduce((prev, curr) => {
+		const currentAttachments: CurrentAttachments = currentUploadedAttachments.results.reduce(
+			(prev, curr) => {
 				return {
 					...prev,
 					[`${curr.title}`]: {
@@ -234,7 +229,9 @@ export class Publisher {
 						collectionName: curr.extensions.collectionName,
 					},
 				};
-			}, {});
+			},
+			{},
+		);
 
 		const supportFunctions = createPublisherFunctions(
 			this.confluenceClient,
@@ -281,8 +278,7 @@ export class Publisher {
 		const existingPageDetails = {
 			title: existingPageData.pageTitle,
 			type: existingPageData.contentType,
-			...(adfFile.contentType === "blogpost" ||
-			adfFile.dontChangeParentPageId
+			...(adfFile.contentType === "blogpost" || adfFile.dontChangeParentPageId
 				? {}
 				: { ancestors: existingPageData.ancestors }),
 		};
@@ -290,8 +286,7 @@ export class Publisher {
 		const newPageDetails = {
 			title: adfFile.pageTitle,
 			type: adfFile.contentType,
-			...(adfFile.contentType === "blogpost" ||
-			adfFile.dontChangeParentPageId
+			...(adfFile.contentType === "blogpost" || adfFile.dontChangeParentPageId
 				? {}
 				: {
 						ancestors: ancestors.map((ancestor) => ({
@@ -325,18 +320,14 @@ export class Publisher {
 					},
 				},
 			};
-			await this.confluenceClient.content.updateContent(
-				updateContentDetails,
-			);
+			await this.confluenceClient.content.updateContent(updateContentDetails);
 		}
 
 		const getLabelsForContent = {
 			id: adfFile.pageId,
 		};
 		const currentLabels =
-			await this.confluenceClient.contentLabels.getLabelsForContent(
-				getLabelsForContent,
-			);
+			await this.confluenceClient.contentLabels.getLabelsForContent(getLabelsForContent);
 
 		for (const existingLabel of currentLabels.results) {
 			if (!adfFile.tags.includes(existingLabel.label)) {
@@ -352,11 +343,7 @@ export class Publisher {
 
 		const labelsToAdd = [];
 		for (const newLabel of adfFile.tags) {
-			if (
-				currentLabels.results.findIndex(
-					(item) => item.label === newLabel,
-				) === -1
-			) {
+			if (currentLabels.results.findIndex((item) => item.label === newLabel) === -1) {
 				labelsToAdd.push({
 					prefix: "global",
 					name: newLabel,

@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "@jest/globals";
+import { afterEach, expect, test } from "vite-plus/test";
 import { mkdir, mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -37,9 +37,7 @@ test("matches folderToPublish under a relative contentRoot", async () => {
 
 	const files = await adaptor.getMarkdownFilesToUpload();
 
-	expect(files.map((file) => file.absoluteFilePath)).toEqual([
-		join("thingy", "mydude.md"),
-	]);
+	expect(files.map((file) => file.absoluteFilePath)).toEqual([join("thingy", "mydude.md")]);
 });
 
 test("updates markdown values for a cwd-relative file path inside contentRoot", async () => {

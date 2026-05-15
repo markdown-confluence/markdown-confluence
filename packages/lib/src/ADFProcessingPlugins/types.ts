@@ -1,28 +1,16 @@
-import {
-	CurrentAttachments,
-	UploadedImageData,
-	uploadBuffer,
-	uploadFile,
-} from "../Attachments";
+import { CurrentAttachments, UploadedImageData, uploadBuffer, uploadFile } from "../Attachments";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { LoaderAdaptor, RequiredConfluenceClient } from "../adaptors";
 
 export interface PublisherFunctions {
-	uploadBuffer(
-		uploadFilename: string,
-		fileBuffer: Buffer,
-	): Promise<UploadedImageData | null>;
+	uploadBuffer(uploadFilename: string, fileBuffer: Buffer): Promise<UploadedImageData | null>;
 	uploadFile(fileNameToUpload: string): Promise<UploadedImageData | null>;
 }
 
 export interface ADFProcessingPlugin<E, T> {
 	extract(adf: JSONDocNode, supportFunctions: PublisherFunctions): E;
 	transform(items: E, supportFunctions: PublisherFunctions): Promise<T>;
-	load(
-		adf: JSONDocNode,
-		transformedItems: T,
-		supportFunctions: PublisherFunctions,
-	): JSONDocNode;
+	load(adf: JSONDocNode, transformedItems: T, supportFunctions: PublisherFunctions): JSONDocNode;
 }
 
 export function createPublisherFunctions(
@@ -33,9 +21,7 @@ export function createPublisherFunctions(
 	currentAttachments: CurrentAttachments,
 ): PublisherFunctions {
 	return {
-		uploadFile: async function (
-			fileNameToUpload: string,
-		): Promise<UploadedImageData | null> {
+		uploadFile: async function (fileNameToUpload: string): Promise<UploadedImageData | null> {
 			const uploadedContent = await uploadFile(
 				confluenceClient,
 				adaptor,
@@ -70,15 +56,11 @@ export async function executeADFProcessingPipeline(
 	supportFunctions: PublisherFunctions,
 ): Promise<JSONDocNode> {
 	// Extract data in parallel
-	const extractedData = plugins.map((plugin) =>
-		plugin.extract(adf, supportFunctions),
-	);
+	const extractedData = plugins.map((plugin) => plugin.extract(adf, supportFunctions));
 
 	// Transform data in parallel
 	const transformedData = await Promise.all(
-		plugins.map((plugin, index) =>
-			plugin.transform(extractedData[index], supportFunctions),
-		),
+		plugins.map((plugin, index) => plugin.transform(extractedData[index], supportFunctions)),
 	);
 
 	// Load transformed data synchronously using reduce

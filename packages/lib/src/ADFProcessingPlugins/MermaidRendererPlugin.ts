@@ -30,16 +30,12 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 	extract(adf: JSONDocNode): ChartData[] {
 		const mermaidNodes = filter(
 			adf,
-			(node) =>
-				node.type == "codeBlock" &&
-				(node.attrs || {})?.["language"] === "mermaid",
+			(node) => node.type == "codeBlock" && (node.attrs || {})?.["language"] === "mermaid",
 		);
 
 		const mermaidNodesToUpload = new Set(
 			mermaidNodes.map((node) => {
-				const mermaidDetails = getMermaidFileName(
-					node?.content?.at(0)?.text,
-				);
+				const mermaidDetails = getMermaidFileName(node?.content?.at(0)?.text);
 				return {
 					name: mermaidDetails.uploadFilename,
 					data: mermaidDetails.mermaidText,
@@ -59,10 +55,9 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 			return imageMap;
 		}
 
-		const mermaidChartsAsImages =
-			await this.mermaidRenderer.captureMermaidCharts([
-				...mermaidNodesToUpload,
-			]);
+		const mermaidChartsAsImages = await this.mermaidRenderer.captureMermaidCharts([
+			...mermaidNodesToUpload,
+		]);
 
 		for (const mermaidImage of mermaidChartsAsImages) {
 			const uploadedContent = await supportFunctions.uploadBuffer(
@@ -78,10 +73,7 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 
 		return imageMap;
 	}
-	load(
-		adf: JSONDocNode,
-		imageMap: Record<string, UploadedImageData | null>,
-	): JSONDocNode {
+	load(adf: JSONDocNode, imageMap: Record<string, UploadedImageData | null>): JSONDocNode {
 		let afterAdf = adf as ADFEntity;
 
 		afterAdf =
@@ -92,14 +84,12 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 						if (!mermaidContent) {
 							return;
 						}
-						const mermaidFilename =
-							getMermaidFileName(mermaidContent);
+						const mermaidFilename = getMermaidFileName(mermaidContent);
 
 						if (!imageMap[mermaidFilename.uploadFilename]) {
 							return;
 						}
-						const mappedImage =
-							imageMap[mermaidFilename.uploadFilename];
+						const mappedImage = imageMap[mermaidFilename.uploadFilename];
 						if (mappedImage) {
 							node.type = "mediaSingle";
 							node.attrs["layout"] = "center";

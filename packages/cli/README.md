@@ -1,6 +1,6 @@
 # @markdown-confluence/cli
 
-`@markdown-confluence/cli` is a powerful tool that allows you to publish your markdown files as Confluence pages. It is designed to work seamlessly in various environments, including NPM CLI, Docker Container, and GitHub Actions, enabling you to use your docs wherever you need them. Comprehensive documentation for the tool can be found at [https://markdown-confluence.com/](https://markdown-confluence.com/).
+`@markdown-confluence/cli` is a powerful tool that allows you to publish your markdown files as Confluence pages. It is designed to work seamlessly in various environments, including package CLI, Docker Container, and GitHub Actions, enabling you to use your docs wherever you need them. Comprehensive documentation for the tool can be found at [https://markdown-confluence.com/](https://markdown-confluence.com/).
 
 ## Usage Examples
 
@@ -39,7 +39,7 @@ set ATLASSIAN_API_TOKEN="YOUR API TOKEN"
 **CLI Command**
 
 ```bash
-npx @markdown-confluence/cli
+vp dlx @markdown-confluence/cli
 ```
 
 ### Docker Container

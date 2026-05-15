@@ -66,9 +66,7 @@ export async function uploadBuffer(
 	};
 
 	const attachmentResponse =
-		await confluenceClient.contentAttachments.createOrUpdateAttachments(
-			attachmentDetails,
-		);
+		await confluenceClient.contentAttachments.createOrUpdateAttachments(attachmentDetails);
 
 	const attachmentUploadResponse = attachmentResponse.results[0];
 	if (!attachmentUploadResponse) {
@@ -105,9 +103,7 @@ export async function uploadFile(
 				? new Uint8Array(testing.contents)
 				: testing.contents;
 		const spark = new SparkMD5.ArrayBuffer();
-		const currentFileMd5 = spark
-			.append(toArrayBuffer(binaryContents))
-			.end();
+		const currentFileMd5 = spark.append(toArrayBuffer(binaryContents)).end();
 		const pathMd5 = SparkMD5.hash(testing.filePath);
 		const uploadFilename = `${pathMd5}-${testing.filename}`;
 		const imageBuffer = Buffer.from(binaryContents);
@@ -138,9 +134,7 @@ export async function uploadFile(
 		};
 
 		const attachmentResponse =
-			await confluenceClient.contentAttachments.createOrUpdateAttachments(
-				attachmentDetails,
-			);
+			await confluenceClient.contentAttachments.createOrUpdateAttachments(attachmentDetails);
 
 		const attachmentUploadResponse = attachmentResponse.results[0];
 		if (!attachmentUploadResponse) {

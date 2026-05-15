@@ -1,30 +1,33 @@
 {
-    "name": "obsidian-confluence",
-    "version": "5.5.2",
-    "description": "This library allows you to publish your notes to Confluence",
-    "main": "main.js",
-    "type": "module",
-    "scripts": {
-        "dev": "node esbuild.config.mjs",
-        "build": "tsc && node esbuild.config.mjs production",
-        "fmt": "npx prettier --write src/",
-        "lint": "eslint src/",
-        "prettier-check": "npx prettier --check src/"
-    },
-    "keywords": [],
-    "author": "andymac4182",
-    "license": "Apache 2.0",
-    "devDependencies": {
-        "@types/mime-types": "^3.0.1",
-        "@types/react-dom": "^19.2.3",
-        "obsidian": "1.12.3"
-    },
-    "dependencies": {
-        "confluence.js": "^2.1.0",
-        "mime-types": "^3.0.2",
-        "react": "^19.2.6",
-        "react-dom": "^19.2.6",
-        "@markdown-confluence/lib": "5.5.2",
-        "@markdown-confluence/mermaid-electron-renderer": "5.5.2"
-    }
+	"name": "obsidian-confluence",
+	"version": "5.5.2",
+	"description": "This library allows you to publish your notes to Confluence",
+	"keywords": [],
+	"license": "Apache 2.0",
+	"author": "andymac4182",
+	"type": "module",
+	"main": "main.js",
+	"scripts": {
+		"dev": "vp build --watch --mode development",
+		"build": "vp exec tsc --noEmit && vp build",
+		"fmt": "vp fmt --write \"src/**/*.{ts,tsx,js}\"",
+		"fmt:check": "vp fmt --check \"src/**/*.{ts,tsx,js}\"",
+		"lint": "vp lint --react-plugin src"
+	},
+	"dependencies": {
+		"@markdown-confluence/lib": "workspace:5.5.2",
+		"@markdown-confluence/mermaid-electron-renderer": "workspace:5.5.2",
+		"confluence.js": "^2.1.0",
+		"mime-types": "^3.0.2",
+		"react": "^19.2.6",
+		"react-dom": "^19.2.6"
+	},
+	"devDependencies": {
+		"@types/mime-types": "^3.0.1",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"csstype": "^3.2.3",
+		"mermaid": "^11.15.0",
+		"obsidian": "1.12.3"
+	}
 }

@@ -39,9 +39,7 @@ const CompletedView: React.FC<UploadResultsProps> = ({ uploadResults }) => {
 			.filter((result) => result[`${type}Result`] === "updated")
 			.map((result, index) => (
 				<li key={index}>
-					<a href={result.adfFile.pageUrl}>
-						{result.adfFile.absoluteFilePath}
-					</a>
+					<a href={result.adfFile.pageUrl}>{result.adfFile.absoluteFilePath}</a>
 				</li>
 			));
 	};
@@ -60,23 +58,17 @@ const CompletedView: React.FC<UploadResultsProps> = ({ uploadResults }) => {
 				<>
 					<div className="successful-uploads">
 						<h3>Successful Uploads</h3>
-						<p>
-							{filesUploadResult.length} file(s) uploaded
-							successfully.
-						</p>
+						<p>{filesUploadResult.length} file(s) uploaded successfully.</p>
 					</div>
 
 					{failedFiles.length > 0 && (
 						<div className="failed-uploads">
 							<h3>Failed Uploads</h3>
-							<p>
-								{failedFiles.length} file(s) failed to upload.
-							</p>
+							<p>{failedFiles.length} file(s) failed to upload.</p>
 							<ul>
 								{failedFiles.map((file, index) => (
 									<li key={index}>
-										<strong>{file.fileName}</strong>:{" "}
-										{file.reason}
+										<strong>{file.fileName}</strong>: {file.reason}
 									</li>
 								))}
 							</ul>
@@ -148,9 +140,7 @@ export class CompletedModal extends Modal {
 	override onOpen() {
 		const { contentEl } = this;
 		this.root = createRoot(contentEl);
-		this.root.render(
-			React.createElement(CompletedView, this.uploadResults),
-		);
+		this.root.render(React.createElement(CompletedView, this.uploadResults));
 	}
 
 	override onClose() {

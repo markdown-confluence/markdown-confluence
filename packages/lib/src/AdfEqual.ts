@@ -10,11 +10,7 @@ const sortDeep = (object: unknown): any => {
 		return sortAny([...object]);
 	}
 	if (!Array.isArray(object)) {
-		if (
-			typeof object !== "object" ||
-			object === null ||
-			object instanceof Date
-		) {
+		if (typeof object !== "object" || object === null || object instanceof Date) {
 			return object;
 		}
 

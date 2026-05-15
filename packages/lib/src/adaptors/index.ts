@@ -27,10 +27,7 @@ export interface LoaderAdaptor {
 	): Promise<void>;
 	loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile>;
 	getMarkdownFilesToUpload(): Promise<FilesToUpload>;
-	readBinary(
-		path: string,
-		referencedFromFilePath: string,
-	): Promise<BinaryFile | false>;
+	readBinary(path: string, referencedFromFilePath: string): Promise<BinaryFile | false>;
 }
 
 export interface RequiredConfluenceClient {

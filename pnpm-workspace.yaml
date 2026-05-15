@@ -1,0 +1,9 @@
+allowBuilds:
+    puppeteer: true
+
+packages:
+    - packages/lib
+    - packages/mermaid-electron-renderer
+    - packages/mermaid-puppeteer-renderer
+    - packages/cli
+    - packages/obsidian

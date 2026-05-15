@@ -94,9 +94,7 @@ export class MyBaseClient implements Client {
 		callback: Callback<T> | never,
 	): Promise<void | T> {
 		try {
-			const contentType = (requestConfig.headers ?? {})[
-				"content-type"
-			]?.toString();
+			const contentType = (requestConfig.headers ?? {})["content-type"]?.toString();
 			if (requestConfig.headers && contentType) {
 				requestConfig.headers["Content-Type"] = contentType;
 				delete requestConfig?.headers["content-type"];
@@ -105,16 +103,10 @@ export class MyBaseClient implements Client {
 			const params = this.paramSerializer(requestConfig.params);
 
 			const requestContentType =
-				(requestConfig.headers ?? {})["Content-Type"]?.toString() ??
-				"application/json";
+				(requestConfig.headers ?? {})["Content-Type"]?.toString() ?? "application/json";
 
-			const requestBody = requestContentType.startsWith(
-				"multipart/form-data",
-			)
-				? [
-						requestConfig.data.getHeaders(),
-						requestConfig.data.getBuffer().buffer,
-					]
+			const requestBody = requestContentType.startsWith("multipart/form-data")
+				? [requestConfig.data.getHeaders(), requestConfig.data.getBuffer().buffer]
 				: [{}, JSON.stringify(requestConfig.data)];
 
 			const modifiedRequestConfig = {
@@ -122,20 +114,16 @@ export class MyBaseClient implements Client {
 				headers: this.removeUndefinedProperties({
 					"User-Agent": "Obsidian.md",
 					Accept: "application/json",
-					[ATLASSIAN_TOKEN_CHECK_FLAG]: this.config
-						.noCheckAtlassianToken
+					[ATLASSIAN_TOKEN_CHECK_FLAG]: this.config.noCheckAtlassianToken
 						? ATLASSIAN_TOKEN_CHECK_NOCHECK_VALUE
 						: undefined,
 					...this.config.baseRequestConfig?.headers,
-					Authorization: await getAuthenticationToken(
-						this.config.authentication,
-						{
-							// eslint-disable-next-line @typescript-eslint/naming-convention
-							baseURL: this.config.host,
-							url: `${this.config.host}${this.urlSuffix}`,
-							method: requestConfig.method ?? "GET",
-						},
-					),
+					Authorization: await getAuthenticationToken(this.config.authentication, {
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						baseURL: this.config.host,
+						url: `${this.config.host}${this.urlSuffix}`,
+						method: requestConfig.method ?? "GET",
+					}),
 					...requestConfig.headers,
 					"Content-Type": requestContentType,
 					...requestBody[0],
@@ -157,12 +145,10 @@ export class MyBaseClient implements Client {
 				});
 			}
 
-			const callbackResponseHandler =
-				callback && ((data: T): void => callback(null, data));
+			const callbackResponseHandler = callback && ((data: T): void => callback(null, data));
 			const defaultResponseHandler = (data: T): T => data;
 
-			const responseHandler =
-				callbackResponseHandler ?? defaultResponseHandler;
+			const responseHandler = callbackResponseHandler ?? defaultResponseHandler;
 
 			this.config.middlewares?.onResponse?.(response.json);
 
@@ -173,8 +159,7 @@ export class MyBaseClient implements Client {
 			const err = e;
 
 			const callbackErrorHandler =
-				callback &&
-				((error: Parameters<Callback<T>>[0]) => callback(error));
+				callback && ((error: Parameters<Callback<T>>[0]) => callback(error));
 			const defaultErrorHandler = (error: Error) => {
 				throw error;
 			};
@@ -205,10 +190,7 @@ export class HTTPError extends Error {
 	}
 }
 
-export class ObsidianConfluenceClient
-	extends MyBaseClient
-	implements RequiredConfluenceClient
-{
+export class ObsidianConfluenceClient extends MyBaseClient implements RequiredConfluenceClient {
 	content = new Api.Content(this);
 	space = new Api.Space(this);
 	contentAttachments = new Api.ContentAttachments(this);
