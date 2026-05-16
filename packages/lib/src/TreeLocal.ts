@@ -8,30 +8,41 @@ import { LocalAdfFileTreeNode } from "./Publisher";
 import { ConfluenceSettings } from "./Settings";
 import { MarkdownFile } from "./MarkdownWorkspace";
 
-const findCommonPath = (paths: string[], path: Path): string => {
+const findTreeRootPath = (paths: string[], path: Path): string => {
 	const [firstPath, ...rest] = paths;
 	if (!firstPath) {
 		throw new Error("No Paths Provided");
 	}
-	const commonPathParts = firstPath.split(path.sep);
+	const treeRootPathParts = firstPath.split(path.sep);
 
 	rest.forEach((filePath) => {
 		const pathParts = filePath.split(path.sep);
-		for (let i = 0; i < commonPathParts.length; i++) {
-			if (pathParts[i] !== commonPathParts[i]) {
-				commonPathParts.splice(i);
+		for (let i = 0; i < treeRootPathParts.length; i++) {
+			if (pathParts[i] !== treeRootPathParts[i]) {
+				treeRootPathParts.splice(i);
 				break;
 			}
 		}
 	});
 
-	return commonPathParts.join(path.sep);
+	const treeRootPath = treeRootPathParts.join(path.sep);
+	if (paths.some((filePath) => path.relative(treeRootPath, filePath) === "")) {
+		return path.dirname(treeRootPath);
+	}
+	return treeRootPath;
 };
 
 const createTreeNode = (name: string): LocalAdfFileTreeNode => ({
 	name,
 	children: [],
 });
+
+const resolveTreeNodePath = (contentRootPath: string, nodeName: string, path: Path): string => {
+	if (nodeName === contentRootPath) {
+		return nodeName;
+	}
+	return path.join(contentRootPath, nodeName);
+};
 
 const addFileToTree = (
 	treeNode: LocalAdfFileTreeNode,
@@ -63,7 +74,7 @@ const addFileToTree = (
 	}
 };
 
-const processNode = (commonPath: string, node: LocalAdfFileTreeNode, path: Path) => {
+const processNode = (treeRootPath: string, node: LocalAdfFileTreeNode, path: Path) => {
 	if (!node.file) {
 		let indexFile = node.children.find((child) => path.parse(child.name).name === node.name);
 		if (!indexFile) {
@@ -79,7 +90,7 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode, path: Path)
 		} else {
 			node.file = {
 				folderName: node.name,
-				absoluteFilePath: path.join(commonPath, node.name),
+				absoluteFilePath: resolveTreeNodePath(treeRootPath, node.name, path),
 				fileName: `${node.name}.md`,
 				contents: folderFile as JSONDocNode,
 				pageTitle: node.name,
@@ -93,9 +104,13 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode, path: Path)
 		}
 	}
 
-	const childCommonPath = path.parse(node?.file?.absoluteFilePath ?? commonPath).dir;
+	const nodeFile = node.file;
+	const childTreeRootPath =
+		nodeFile.contents === (folderFile as JSONDocNode)
+			? nodeFile.absoluteFilePath
+			: path.parse(nodeFile.absoluteFilePath).dir;
 
-	node.children.forEach((childNode) => processNode(childCommonPath, childNode, path));
+	node.children.forEach((childNode) => processNode(childTreeRootPath, childNode, path));
 };
 
 export const createFolderStructure = (
@@ -113,18 +128,18 @@ export const createFolderStructureEffect = (
 ): Effect.Effect<LocalAdfFileTreeNode, Error, Path> =>
 	Effect.gen(function* () {
 		const path = yield* Path;
-		const commonPath = findCommonPath(
+		const treeRootPath = findTreeRootPath(
 			markdownFiles.map((file) => file.absoluteFilePath),
 			path,
 		);
-		const rootNode = createTreeNode(commonPath);
+		const rootNode = createTreeNode(treeRootPath);
 
 		markdownFiles.forEach((file) => {
-			const relativePath = path.relative(commonPath, file.absoluteFilePath);
+			const relativePath = path.relative(treeRootPath, file.absoluteFilePath);
 			addFileToTree(rootNode, file, relativePath, settings, path);
 		});
 
-		processNode(commonPath, rootNode, path);
+		processNode(treeRootPath, rootNode, path);
 
 		checkUniquePageTitle(rootNode);
 

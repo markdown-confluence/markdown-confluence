@@ -2,7 +2,7 @@ import { Path } from "effect/Path";
 import { NodePath } from "@effect/platform-node";
 import { Effect } from "effect";
 import { defineConfig } from "vite-plus";
-import { externalize, generatedBanner } from "../../vite.shared.ts";
+import { externalize, generatedBanner } from "../../vite.package-build.ts";
 
 const resolvePath = (...pathSegments: ReadonlyArray<string>) =>
 	Effect.runSync(

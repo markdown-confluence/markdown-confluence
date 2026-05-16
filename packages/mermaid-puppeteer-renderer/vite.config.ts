@@ -3,7 +3,7 @@ import { Path } from "effect/Path";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { build, defineConfig, type Plugin } from "vite-plus";
-import { packageDependencyExternals } from "../../vite.shared.ts";
+import { packageDependencyExternals } from "../../vite.package-build.ts";
 
 const NodePlatformLive = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
