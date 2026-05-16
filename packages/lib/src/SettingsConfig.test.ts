@@ -22,7 +22,7 @@ afterEach(async () => {
 });
 
 test("loads settings from Effect ConfigProviders with CLI, env, file, default precedence", async () => {
-	const configPath = await runEffect(
+	const { configPath, expectedCliContentRoot } = await runEffect(
 		Effect.gen(function* () {
 			const fs = yield* FileSystem;
 			const path = yield* Path;
@@ -43,7 +43,10 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 				}),
 			);
 
-			return filePath;
+			return {
+				configPath: filePath,
+				expectedCliContentRoot: `cli-root${path.sep}`,
+			};
 		}),
 	);
 
@@ -86,7 +89,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 		atlassianUserName: "env-user@example.com",
 		atlassianApiToken: "cli-token",
 		folderToPublish: "env-folder",
-		contentRoot: "cli-root/",
+		contentRoot: expectedCliContentRoot,
 		firstHeadingPageTitle: true,
 	});
 });
