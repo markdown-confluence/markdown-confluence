@@ -16,10 +16,13 @@ export default defineConfig({
 	},
 	lint: {
 		plugins: ["typescript", "unicorn", "oxc"],
+		jsPlugins: ["./scripts/oxlint-descriptive-rules.js"],
 		categories: {
 			correctness: "error",
 		},
 		rules: {
+			"descriptive/no-vague-names": "error",
+			"descriptive/no-re-exports": "error",
 			"jest/no-standalone-expect": "off",
 			"vitest/no-standalone-expect": "off",
 		},
@@ -32,8 +35,10 @@ export default defineConfig({
 		"package.json": "vp check --fix --no-error-on-unmatched-pattern",
 		"tsconfig.json": "vp check --fix --no-error-on-unmatched-pattern",
 		"vite.config.ts": "vp check --fix --no-error-on-unmatched-pattern",
-		"vite.shared.ts": "vp check --fix --no-error-on-unmatched-pattern",
+		"vite.package-build.ts": "vp check --fix --no-error-on-unmatched-pattern",
 		"vitest.config.ts": "vp check --fix --no-error-on-unmatched-pattern",
 		"packages/**/*.{json,js,ts,tsx}": "vp check --fix --no-error-on-unmatched-pattern",
+		"scripts/**/*.js": "vp check --fix --no-error-on-unmatched-pattern",
+		"**/*": "node scripts/check-descriptive-names.js",
 	},
 });

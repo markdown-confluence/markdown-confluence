@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build, defineConfig, type Plugin } from "vite-plus";
-import { packageDependencyExternals } from "../../vite.shared.ts";
+import { packageDependencyExternals } from "../../vite.package-build.ts";
 
 function mermaidRendererHtmlPlugin(): Plugin {
 	return {

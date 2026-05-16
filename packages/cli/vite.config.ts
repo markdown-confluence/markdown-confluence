@@ -1,7 +1,7 @@
 import { copyFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite-plus";
-import { generatedBanner, isNodeBuiltin } from "../../vite.shared.ts";
+import { generatedBanner, isNodeBuiltin } from "../../vite.package-build.ts";
 
 function copyRendererHtmlPlugin(): Plugin {
 	return {

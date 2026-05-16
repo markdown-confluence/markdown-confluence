@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite-plus";
-import { externalize, generatedBanner } from "../../vite.shared.ts";
+import { externalize, generatedBanner } from "../../vite.package-build.ts";
 
 const obsidianExternals = externalize([
 	"obsidian",

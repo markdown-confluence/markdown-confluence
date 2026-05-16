@@ -1,5 +1,5 @@
 import { defineConfig } from "vite-plus";
-import { packageDependencyExternals } from "../../vite.shared.ts";
+import { packageDependencyExternals } from "../../vite.package-build.ts";
 
 export default defineConfig({
 	build: {

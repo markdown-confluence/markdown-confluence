@@ -14,6 +14,9 @@ importers:
       husky:
         specifier: ^9.1.7
         version: 9.1.7
+      oxlint:
+        specifier: 1.63.0
+        version: 1.63.0(oxlint-tsgolint@0.22.1)
       tslib:
         specifier: 2.8.1
         version: 2.8.1

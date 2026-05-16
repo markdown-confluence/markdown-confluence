@@ -1,5 +1,6 @@
 import { Api } from "confluence.js";
 import { ConfluencePerPageAllValues } from "../ConniePageConfig";
+import { FileSystemAdaptor } from "./filesystem";
 export type FilesToUpload = Array<MarkdownFile>;
 
 export interface MarkdownFile {
@@ -38,4 +39,4 @@ export interface RequiredConfluenceClient {
 	users: Api.Users;
 }
 
-export * from "./filesystem";
+export { FileSystemAdaptor };
