@@ -251,7 +251,16 @@ function parseArgumentValues(
 		}
 
 		if (definition.type === "boolean") {
-			parsed[definition.name] = parseBooleanArgument(inlineValue);
+			const nextValue = inlineValue === undefined ? argv[index + 1] : undefined;
+			const usesSeparateValue =
+				inlineValue === undefined && nextValue !== undefined && !nextValue.startsWith("-");
+
+			parsed[definition.name] = parseBooleanArgument(
+				inlineValue ?? (usesSeparateValue ? nextValue : undefined),
+			);
+			if (usesSeparateValue) {
+				index += 1;
+			}
 			continue;
 		}
 

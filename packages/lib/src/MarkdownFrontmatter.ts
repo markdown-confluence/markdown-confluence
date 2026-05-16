@@ -16,13 +16,12 @@ export function parseMarkdownFrontmatter(fileContent: string): MarkdownFrontmatt
 	const frontmatterStart = openingDelimiter[0].length;
 	const remainingContent = fileContent.slice(frontmatterStart);
 	const closingDelimiter = delimiterPattern.exec(remainingContent);
+	if (!closingDelimiter) {
+		return { data: {}, content: fileContent };
+	}
 
-	const frontmatterContent = closingDelimiter
-		? remainingContent.slice(0, closingDelimiter.index)
-		: remainingContent;
-	const content = closingDelimiter
-		? remainingContent.slice(closingDelimiter.index + closingDelimiter[0].length)
-		: "";
+	const frontmatterContent = remainingContent.slice(0, closingDelimiter.index);
+	const content = remainingContent.slice(closingDelimiter.index + closingDelimiter[0].length);
 
 	return {
 		data: parseFrontmatterData(frontmatterContent),
@@ -52,10 +51,18 @@ function parseFrontmatterData(frontmatterContent: string): Record<string, unknow
 		return {};
 	}
 
-	const parsedData: unknown = parseYaml(frontmatterContent);
+	const parsedData = parseFrontmatterYaml(frontmatterContent);
 	if (parsedData && typeof parsedData === "object" && !Array.isArray(parsedData)) {
 		return parsedData as Record<string, unknown>;
 	}
 
 	return {};
+}
+
+function parseFrontmatterYaml(frontmatterContent: string): unknown {
+	try {
+		return parseYaml(frontmatterContent);
+	} catch {
+		return {};
+	}
 }

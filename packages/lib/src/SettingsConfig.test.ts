@@ -122,6 +122,54 @@ test("keeps explicit false values from config providers", async () => {
 	expect(settings.contentRoot).toBe(expectedContentRoot);
 });
 
+test("parses boolean CLI values passed as separate arguments", async () => {
+	const { settings, expectedContentRoot } = await runEffect(
+		Effect.gen(function* () {
+			const path = yield* Path;
+			const contentRoot = "docs";
+			const runtimeEnvironment = makeRuntimeEnvironment({
+				argv: [
+					"node",
+					"markdown-confluence",
+					"--baseUrl",
+					"https://cli.example.atlassian.net",
+					"--parentId",
+					"cli-parent",
+					"--userName",
+					"cli-user@example.com",
+					"--apiToken",
+					"cli-token",
+					"--enableFolder",
+					"docs",
+					"--contentRoot",
+					contentRoot,
+					"--fh",
+					"false",
+				],
+				cwd: ".",
+				env: {},
+			});
+			const settings = yield* loadConfluenceSettingsEffect().pipe(
+				Effect.provide(
+					Layer.mergeAll(
+						NodeFileSystem.layer,
+						NodePath.layer,
+						Layer.succeed(RuntimeEnvironmentService, runtimeEnvironment),
+					),
+				),
+			);
+
+			return {
+				settings,
+				expectedContentRoot: `${contentRoot}${path.sep}`,
+			};
+		}),
+	);
+
+	expect(settings.firstHeadingPageTitle).toBe(false);
+	expect(settings.contentRoot).toBe(expectedContentRoot);
+});
+
 function makeRuntimeEnvironment({
 	argv,
 	cwd,

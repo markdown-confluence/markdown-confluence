@@ -28,6 +28,25 @@ test("returns empty data when a file has no frontmatter", () => {
 	expect(parsed).toEqual({ data: {}, content: "# Hello\n" });
 });
 
+test("returns the full content when an opening delimiter is not closed", () => {
+	const content = `---
+title: Hello
+# Hello
+`;
+
+	expect(parseMarkdownFrontmatter(content)).toEqual({ data: {}, content });
+});
+
+test("returns empty data when frontmatter YAML is malformed", () => {
+	const parsed = parseMarkdownFrontmatter(`---
+title: [Hello
+---
+# Hello
+`);
+
+	expect(parsed).toEqual({ data: {}, content: "# Hello\n" });
+});
+
 test("stringifies merged frontmatter data", () => {
 	const parsed = parseMarkdownFrontmatter(`---
 title: Hello
