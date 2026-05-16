@@ -53,6 +53,80 @@ test("does not try to update generated folder placeholder pages", async () => {
 	expect(updateCalls).toEqual([]);
 });
 
+test("clears stale page ids and creates the page by title", async () => {
+	const updateCalls: UpdateCall[] = [];
+	const workspace = new TestMarkdownWorkspace(updateCalls);
+	const notFound = Object.assign(new Error("Not Found"), {
+		response: { status: 404 },
+	});
+	const confluenceClient = {
+		content: {
+			getContentById: async () => {
+				throw notFound;
+			},
+			getContent: async () => ({ results: [] }),
+			createContent: async () => ({
+				id: "new-child-page",
+				title: "Child",
+				type: "page",
+				version: {
+					number: 1,
+					by: {
+						accountId: "current-user",
+					},
+				},
+				body: {
+					// eslint-disable-next-line @typescript-eslint/naming-convention
+					atlas_doc_format: {
+						value: JSON.stringify(doc(p("Page not published yet"))),
+					},
+				},
+				ancestors: [{ id: "123456" }],
+			}),
+		},
+	} as unknown as RequiredConfluenceClient;
+
+	const pages = await ensureAllFilesExistInConfluence(
+		confluenceClient,
+		workspace,
+		createRootNode("docs/index.md", [
+			createRootNode("docs/child.md", {
+				pageId: "stale-child-page",
+				pageTitle: "Child",
+			}),
+		]),
+		"SPACE",
+		"123456",
+		"123456",
+		testSettings,
+	);
+
+	expect(pages.map((page) => page.file.pageId)).toEqual(["new-child-page"]);
+	expect(updateCalls).toEqual([
+		{
+			absoluteFilePath: "docs/index.md",
+			values: {
+				publish: true,
+				pageId: "123456",
+			},
+		},
+		{
+			absoluteFilePath: "docs/child.md",
+			values: {
+				publish: false,
+				pageId: undefined,
+			},
+		},
+		{
+			absoluteFilePath: "docs/child.md",
+			values: {
+				publish: true,
+				pageId: "new-child-page",
+			},
+		},
+	]);
+});
+
 type UpdateCall = {
 	absoluteFilePath: string;
 	values: Partial<ConfluencePerPageAllValues>;
@@ -86,10 +160,18 @@ class TestMarkdownWorkspace implements MarkdownWorkspace {
 	}
 }
 
-function createRootNode(absoluteFilePath: string): LocalAdfFileTreeNode {
+function createRootNode(
+	absoluteFilePath: string,
+	childrenOrOverrides:
+		| LocalAdfFileTreeNode[]
+		| Partial<NonNullable<LocalAdfFileTreeNode["file"]>> = [],
+): LocalAdfFileTreeNode {
+	const children = Array.isArray(childrenOrOverrides) ? childrenOrOverrides : [];
+	const overrides = Array.isArray(childrenOrOverrides) ? {} : childrenOrOverrides;
+
 	return {
 		name: "docs",
-		children: [],
+		children,
 		file: {
 			folderName: "docs",
 			absoluteFilePath,
@@ -102,6 +184,7 @@ function createRootNode(absoluteFilePath: string): LocalAdfFileTreeNode {
 			dontChangeParentPageId: false,
 			contentType: "page",
 			blogPostDate: undefined,
+			...overrides,
 		},
 	};
 }

@@ -22,26 +22,28 @@ function mermaidRendererHtmlPlugin(): Plugin {
 					const path = yield* Path;
 					const root = path.resolve(".");
 
-					const result = yield* Effect.promise(() =>
-						build({
-							build: {
-								emptyOutDir: false,
-								minify: true,
-								rollupOptions: {
-									input: "src/mermaid_renderer.js",
-									output: {
-										codeSplitting: false,
+					const result = yield* Effect.tryPromise({
+						try: () =>
+							build({
+								build: {
+									emptyOutDir: false,
+									minify: true,
+									rollupOptions: {
+										input: "src/mermaid_renderer.js",
+										output: {
+											codeSplitting: false,
+										},
 									},
+									sourcemap: false,
+									target: "chrome106",
+									write: false,
 								},
-								sourcemap: false,
-								target: "chrome106",
-								write: false,
-							},
-							configFile: false,
-							logLevel: "warn",
-							root,
-						}),
-					);
+								configFile: false,
+								logLevel: "warn",
+								root,
+							}),
+						catch: toError,
+					});
 
 					const output = Array.isArray(result) ? result[0]?.output : result.output;
 					const chunk = output.find((file) => file.type === "chunk");
@@ -97,3 +99,11 @@ export default defineConfig({
 		mainFields: ["module", "main"],
 	},
 });
+
+function toError(error: unknown): Error {
+	if (error instanceof Error) {
+		return error;
+	}
+
+	return new Error(typeof error === "string" ? error : JSON.stringify(error));
+}

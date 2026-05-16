@@ -2,8 +2,8 @@ import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { afterEach, expect, test } from "@effect/vitest";
-import { Effect, Layer } from "effect";
-import { loadConfluenceSettingsEffect } from "./SettingsConfig";
+import { ConfigProvider, Effect, Layer } from "effect";
+import { loadConfluenceSettingsEffect, parseConfluenceSettingsEffect } from "./SettingsConfig";
 import { RuntimeEnvironment, RuntimeEnvironmentService, runEffect } from "./effects";
 
 let tmpRoot: string | undefined;
@@ -92,6 +92,34 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 		contentRoot: expectedCliContentRoot,
 		firstHeadingPageTitle: true,
 	});
+});
+
+test("keeps explicit false values from config providers", async () => {
+	const { settings, expectedContentRoot } = await runEffect(
+		Effect.gen(function* () {
+			const path = yield* Path;
+			const contentRoot = "docs";
+			const settings = yield* parseConfluenceSettingsEffect(
+				ConfigProvider.fromUnknown({
+					confluenceBaseUrl: "https://file.example.atlassian.net",
+					confluenceParentId: "file-parent",
+					atlassianUserName: "file-user@example.com",
+					atlassianApiToken: "file-token",
+					folderToPublish: "file-folder",
+					contentRoot,
+					firstHeadingPageTitle: false,
+				}),
+			);
+
+			return {
+				settings,
+				expectedContentRoot: `${contentRoot}${path.sep}`,
+			};
+		}),
+	);
+
+	expect(settings.firstHeadingPageTitle).toBe(false);
+	expect(settings.contentRoot).toBe(expectedContentRoot);
 });
 
 function makeRuntimeEnvironment({

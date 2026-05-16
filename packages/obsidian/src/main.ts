@@ -437,8 +437,11 @@ export default class ConfluencePlugin extends Plugin {
 								const workspace = yield* MarkdownWorkspaceService;
 								yield* workspace.updateMarkdownValues(file.path, valuesToSet);
 							}),
-						);
-						close();
+						)
+							.then(() => close())
+							.catch((error) => {
+								new Notice(toError(error).message);
+							});
 					},
 				}).open();
 				return true;

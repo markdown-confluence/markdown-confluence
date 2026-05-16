@@ -80,6 +80,7 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 				const uploadedContent = yield* supportFunctions.uploadBufferEffect(
 					mermaidImage[0],
 					mermaidImage[1],
+					"image/png",
 				);
 
 				imageMap = {

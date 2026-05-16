@@ -263,7 +263,7 @@ function pickConfluenceSettings(config: Record<string, unknown>): Partial<Conflu
 		}
 
 		const value = config[key];
-		if (value && typeof value === typeof DEFAULT_SETTINGS[key]) {
+		if (typeof value === typeof DEFAULT_SETTINGS[key]) {
 			(result as Record<string, unknown>)[key] = value;
 		}
 	}

@@ -233,10 +233,13 @@ class InMemoryMarkdownWorkspace implements MarkdownWorkspace {
 	}
 
 	loadMarkdownFile(absoluteFilePath: string): Effect.Effect<MarkdownFile, Error> {
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		return Effect.succeed(
-			this.inMemoryFiles.find((t) => t.absoluteFilePath === absoluteFilePath)!,
-		);
+		const file = this.inMemoryFiles.find((item) => item.absoluteFilePath === absoluteFilePath);
+		if (!file) {
+			return Effect.fail(
+				new Error(`Missing markdown file in test workspace: ${absoluteFilePath}`),
+			);
+		}
+		return Effect.succeed(file);
 	}
 
 	readBinary(

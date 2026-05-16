@@ -13,10 +13,15 @@ import { MarkdownConfluencePlatform, runEffect } from "../effects";
 import { MarkdownWorkspace, MarkdownWorkspaceService } from "../MarkdownWorkspace";
 
 export interface PublisherFunctions {
-	uploadBuffer(uploadFilename: string, fileBuffer: Buffer): Promise<UploadedImageData | null>;
+	uploadBuffer(
+		uploadFilename: string,
+		fileBuffer: Buffer,
+		contentType?: string,
+	): Promise<UploadedImageData | null>;
 	uploadBufferEffect(
 		uploadFilename: string,
 		fileBuffer: Buffer,
+		contentType?: string,
 	): Effect.Effect<UploadedImageData | null, unknown, MarkdownConfluencePlatform>;
 	uploadFile(fileNameToUpload: string): Promise<UploadedImageData | null>;
 	uploadFileEffect(
@@ -63,18 +68,20 @@ export function createPublisherFunctions(
 			return uploadedContent;
 		},
 
-		uploadBufferEffect: (uploadFilename: string, fileBuffer: Buffer) =>
+		uploadBufferEffect: (uploadFilename: string, fileBuffer: Buffer, contentType?: string) =>
 			uploadBufferEffect(
 				confluenceClient,
 				pageId,
 				uploadFilename,
 				fileBuffer,
 				currentAttachments,
+				contentType,
 			),
 
 		uploadBuffer: async function (
 			uploadFilename: string,
 			fileBuffer: Buffer,
+			contentType?: string,
 		): Promise<UploadedImageData | null> {
 			const uploadedContent = await uploadBuffer(
 				confluenceClient,
@@ -82,6 +89,7 @@ export function createPublisherFunctions(
 				uploadFilename,
 				fileBuffer,
 				currentAttachments,
+				contentType,
 			);
 
 			return uploadedContent;

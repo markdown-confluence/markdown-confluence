@@ -1,13 +1,14 @@
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { Console, Effect, Layer } from "effect";
+import { Effect, Layer } from "effect";
 import { AlwaysADFProcessingPlugins } from "./ADFProcessingPlugins";
 import {
 	ADFProcessingPlugin,
 	createPublisherFunctions,
 	executeADFProcessingPipelineEffect,
+	PublisherFunctions,
 } from "./ADFProcessingPlugins/types";
 import { adfEqual } from "./AdfEqual";
-import { CurrentAttachments } from "./Attachments";
+import { CurrentAttachments, UploadedImageData } from "./Attachments";
 import { PageContentType } from "./ConniePageConfig";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
 import { createMissingSpaceKeyError } from "./ConfluenceErrors";
@@ -276,12 +277,20 @@ export class Publisher {
 				}, {});
 
 			const workspace = yield* MarkdownWorkspaceService;
-			const supportFunctions = createPublisherFunctions(
-				confluenceClient,
-				workspace,
-				adfFile.pageId,
-				adfFile.absoluteFilePath,
-				currentAttachments,
+			let processedAttachment = false;
+			const supportFunctions = trackProcessedAttachments(
+				createPublisherFunctions(
+					confluenceClient,
+					workspace,
+					adfFile.pageId,
+					adfFile.absoluteFilePath,
+					currentAttachments,
+				),
+				(uploaded) => {
+					if (uploaded) {
+						processedAttachment = true;
+					}
+				},
 			);
 			const adfToUpload = yield* executeADFProcessingPipelineEffect(
 				adfProcessingPlugins,
@@ -289,34 +298,9 @@ export class Publisher {
 				supportFunctions,
 			);
 
-			/*
-			const imageResult = Object.keys(imageUploadResult.imageMap).reduce(
-				(prev, curr) => {
-					const value = imageUploadResult.imageMap[curr];
-					if (!value) {
-						return prev;
-					}
-					const status = value.status;
-					return {
-						...prev,
-						[status]: (prev[status] ?? 0) + 1,
-					};
-				},
-				{
-					existing: 0,
-					uploaded: 0,
-				} as Record<string, number>
-			);
-			*/
-
-			/*
-			if (!adfEqual(adfFile.contents, imageUploadResult.adf)) {
-				result.imageResult =
-					(imageResult["uploaded"] ?? 0) > 0 ? "updated" : "same";
+			if (processedAttachment) {
+				result.imageResult = "updated";
 			}
-			*/
-
-			result.imageResult = "updated";
 
 			const existingPageDetails = {
 				title: existingPageData.pageTitle,
@@ -343,14 +327,6 @@ export class Publisher {
 				!isEqual(existingPageDetails, newPageDetails)
 			) {
 				result.contentResult = "updated";
-				yield* Console.log(`TESTING DIFF - ${adfFile.absoluteFilePath}`);
-
-				const replacer = (_key: unknown, value: unknown) =>
-					typeof value === "undefined" ? null : value;
-
-				yield* Console.log(JSON.stringify(existingPageData.adfContent, replacer));
-				yield* Console.log(JSON.stringify(adfToUpload, replacer));
-
 				const updateContentDetails = {
 					...newPageDetails,
 					id: adfFile.pageId,
@@ -418,6 +394,37 @@ export class Publisher {
 			return result;
 		});
 	}
+}
+
+function trackProcessedAttachments(
+	supportFunctions: PublisherFunctions,
+	onProcessedAttachment: (uploaded: UploadedImageData | null) => void,
+): PublisherFunctions {
+	return {
+		...supportFunctions,
+		uploadFile: async (fileNameToUpload) => {
+			const uploaded = await supportFunctions.uploadFile(fileNameToUpload);
+			onProcessedAttachment(uploaded);
+			return uploaded;
+		},
+		uploadFileEffect: (fileNameToUpload) =>
+			supportFunctions
+				.uploadFileEffect(fileNameToUpload)
+				.pipe(Effect.tap((uploaded) => Effect.sync(() => onProcessedAttachment(uploaded)))),
+		uploadBuffer: async (uploadFilename, fileBuffer, contentType) => {
+			const uploaded = await supportFunctions.uploadBuffer(
+				uploadFilename,
+				fileBuffer,
+				contentType,
+			);
+			onProcessedAttachment(uploaded);
+			return uploaded;
+		},
+		uploadBufferEffect: (uploadFilename, fileBuffer, contentType) =>
+			supportFunctions
+				.uploadBufferEffect(uploadFilename, fileBuffer, contentType)
+				.pipe(Effect.tap((uploaded) => Effect.sync(() => onProcessedAttachment(uploaded)))),
+	};
 }
 
 function identity(error: unknown): unknown {

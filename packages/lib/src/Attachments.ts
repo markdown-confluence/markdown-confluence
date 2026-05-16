@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import SparkMD5 from "spark-md5";
+import { lookup } from "mime-types";
 import { runEffect } from "./effects";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
 import { MarkdownWorkspace, MarkdownWorkspaceService } from "./MarkdownWorkspace";
@@ -38,6 +39,7 @@ export async function uploadBuffer(
 		string,
 		{ filehash: string; attachmentId: string; collectionName: string }
 	>,
+	contentType?: string,
 ): Promise<UploadedImageData | null> {
 	return runEffect(
 		uploadBufferEffect(
@@ -46,6 +48,7 @@ export async function uploadBuffer(
 			uploadFilename,
 			fileBuffer,
 			currentAttachments,
+			contentType,
 		),
 	);
 }
@@ -59,14 +62,12 @@ export function uploadBufferEffect(
 		string,
 		{ filehash: string; attachmentId: string; collectionName: string }
 	>,
+	contentType?: string,
 ): Effect.Effect<UploadedImageData | null, unknown, never> {
 	return Effect.gen(function* () {
 		const spark = new SparkMD5.ArrayBuffer();
 		const currentFileMd5 = spark.append(toArrayBuffer(fileBuffer)).end();
-		const imageSize = yield* Effect.try({
-			try: () => sizeOf(fileBuffer),
-			catch: identity,
-		});
+		const imageSize = getImageSize(fileBuffer);
 
 		const fileInCurrentAttachments = currentAttachments[uploadFilename];
 		if (fileInCurrentAttachments?.filehash === currentFileMd5) {
@@ -88,7 +89,7 @@ export function uploadBufferEffect(
 					filename: uploadFilename,
 					minorEdit: false,
 					comment: currentFileMd5,
-					contentType: "image/png",
+					contentType: resolveContentType(uploadFilename, contentType),
 				},
 			],
 		};
@@ -146,7 +147,7 @@ export function uploadFileEffect(
 		let fileNameForUpload = fileNameToUpload;
 		let testing = yield* workspace.readBinary(fileNameForUpload, pageFilePath);
 		if (!testing) {
-			fileNameForUpload = decodeURI(fileNameForUpload);
+			fileNameForUpload = decodeFileNameComponent(fileNameForUpload);
 			testing = yield* workspace.readBinary(fileNameForUpload, pageFilePath);
 		}
 		if (testing) {
@@ -159,10 +160,7 @@ export function uploadFileEffect(
 			const pathMd5 = SparkMD5.hash(testing.filePath);
 			const uploadFilename = `${pathMd5}-${testing.filename}`;
 			const imageBuffer = Buffer.from(binaryContents);
-			const imageSize = yield* Effect.try({
-				try: () => sizeOf(imageBuffer),
-				catch: identity,
-			});
+			const imageSize = getImageSize(imageBuffer);
 
 			const fileInCurrentAttachments = currentAttachments[uploadFilename];
 			if (fileInCurrentAttachments?.filehash === currentFileMd5) {
@@ -184,6 +182,7 @@ export function uploadFileEffect(
 						filename: uploadFilename,
 						minorEdit: false,
 						comment: currentFileMd5,
+						contentType: testing.mimeType,
 					},
 				],
 			};
@@ -213,6 +212,26 @@ export function uploadFileEffect(
 
 		return null;
 	});
+}
+
+function decodeFileNameComponent(fileName: string): string {
+	try {
+		return decodeURIComponent(fileName);
+	} catch {
+		return fileName;
+	}
+}
+
+function getImageSize(buffer: Buffer): { width?: number; height?: number } {
+	try {
+		return sizeOf(buffer);
+	} catch {
+		return {};
+	}
+}
+
+function resolveContentType(uploadFilename: string, contentType: string | undefined): string {
+	return contentType ?? (lookup(uploadFilename) || "application/octet-stream");
 }
 
 function identity(error: unknown): unknown {

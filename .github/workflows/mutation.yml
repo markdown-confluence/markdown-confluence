@@ -30,7 +30,7 @@ jobs:
       uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
     - name: Set up Vite+
-      uses: voidzero-dev/setup-vp@v1
+      uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
       with:
         node-version: "24"
         cache: true
@@ -40,7 +40,7 @@ jobs:
       run: vp install --frozen-lockfile
 
     - name: Restore Stryker incremental report
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
       with:
         path: reports/mutation/incremental.json
         key: stryker-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.config.mjs', 'packages/lib/src/**/*.ts') }}
@@ -52,7 +52,7 @@ jobs:
 
     - name: Upload mutation report
       if: ${{ always() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: mutation-report
         path: reports/mutation

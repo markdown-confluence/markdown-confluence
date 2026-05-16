@@ -253,7 +253,17 @@ function ensurePageExistsEffect(
 					return updateMarkdownValuesEffect(file.absoluteFilePath, {
 						publish: false,
 						pageId: undefined,
-					}).pipe(Effect.andThen(Effect.fail(error)));
+					}).pipe(
+						Effect.andThen(
+							findOrCreatePageByTitleEffect(
+								confluenceClient,
+								file,
+								spaceKey,
+								parentPageId,
+								topPageId,
+							),
+						),
+					);
 				}
 
 				return Effect.fail(error);
@@ -261,6 +271,16 @@ function ensurePageExistsEffect(
 		);
 	}
 
+	return findOrCreatePageByTitleEffect(confluenceClient, file, spaceKey, parentPageId, topPageId);
+}
+
+function findOrCreatePageByTitleEffect(
+	confluenceClient: RequiredConfluenceClient,
+	file: LocalAdfFile,
+	spaceKey: string,
+	parentPageId: string,
+	topPageId: string,
+): Effect.Effect<PageDetails, unknown, MarkdownConfluencePlatform | MarkdownWorkspaceService> {
 	const searchParams = {
 		type: file.contentType,
 		spaceKey,

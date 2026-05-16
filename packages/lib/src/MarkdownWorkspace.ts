@@ -206,8 +206,16 @@ export function makeMarkdownWorkspaceEffect(
 						) {
 							filesToPublish.push(file);
 						}
-					} catch {
-						// ignore
+					} catch (error) {
+						const errorMessage =
+							error instanceof Error ? error.message : JSON.stringify(error);
+						yield* Console.warn(
+							"Skipping markdown file",
+							JSON.stringify({
+								absoluteFilePath: file.absoluteFilePath,
+								errorMessage,
+							}),
+						);
 					}
 				}
 				return filesToPublish;

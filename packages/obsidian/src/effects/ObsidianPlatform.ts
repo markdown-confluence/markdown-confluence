@@ -13,7 +13,7 @@ export function ObsidianPlatformLive(app: App) {
 			cwd: Effect.succeed("/"),
 			chdir: () => Effect.void,
 			argv: Effect.succeed([]),
-			getEnv: () => Effect.succeed(undefined),
+			getEnv: (_name) => Effect.succeed(undefined),
 			setMaxListeners: () => Effect.void,
 			exit: (code) => Effect.die(new Error(`Unexpected Obsidian exit ${code}`)),
 		}),
@@ -54,15 +54,28 @@ function ObsidianFileSystemLive(app: App): Layer.Layer<EffectFileSystem.FileSyst
 				return folder.children.map((child) => child.name);
 			}),
 		readFile: (path) =>
-			Effect.tryPromise({
-				try: async () =>
-					new Uint8Array(await app.vault.readBinary(getFileOrThrow(app, path))),
-				catch: (cause) => toPlatformError("readFile", path, cause),
+			Effect.gen(function* () {
+				const file = getFile(app, path);
+				if (!file) {
+					return yield* Effect.fail(toNotFound("readFile", path));
+				}
+
+				return yield* Effect.tryPromise({
+					try: async () => new Uint8Array(await app.vault.readBinary(file)),
+					catch: (cause) => toPlatformError("readFile", path, cause),
+				});
 			}),
 		readFileString: (path) =>
-			Effect.tryPromise({
-				try: () => app.vault.cachedRead(getFileOrThrow(app, path)),
-				catch: (cause) => toPlatformError("readFileString", path, cause),
+			Effect.gen(function* () {
+				const file = getFile(app, path);
+				if (!file) {
+					return yield* Effect.fail(toNotFound("readFileString", path));
+				}
+
+				return yield* Effect.tryPromise({
+					try: () => app.vault.cachedRead(file),
+					catch: (cause) => toPlatformError("readFileString", path, cause),
+				});
 			}),
 		stat: (path) =>
 			Effect.gen(function* () {
@@ -122,15 +135,6 @@ function getFile(app: App, path: string): TFile | null {
 function getFolder(app: App, path: string): TFolder | null {
 	const file = getAbstractFile(app, path);
 	return file instanceof TFolder ? file : null;
-}
-
-function getFileOrThrow(app: App, path: string): TFile {
-	const file = getFile(app, path);
-	if (!file) {
-		throw toNotFound("getFile", path);
-	}
-
-	return file;
 }
 
 function toVaultPath(path: string): string {
