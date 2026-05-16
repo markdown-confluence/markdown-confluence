@@ -1,7 +1,6 @@
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { Console, Context, Effect, Layer } from "effect";
-import matter from "gray-matter";
 import { lookup } from "mime-types";
 import {
 	ConfluencePerPageAllValues,
@@ -9,6 +8,7 @@ import {
 	conniePerPageConfig,
 } from "./ConniePageConfig";
 import { runEffect } from "./effects";
+import { parseMarkdownFrontmatter, stringifyMarkdownFrontmatter } from "./MarkdownFrontmatter";
 import { ConfluenceSettings, ConfluenceSettingsService } from "./Settings";
 
 interface MarkdownContent {
@@ -85,10 +85,7 @@ export function makeMarkdownWorkspaceEffect(
 		const getFileContent = (absoluteFilePath: string): Effect.Effect<MarkdownContent, Error> =>
 			Effect.gen(function* () {
 				const fileContent = yield* fs.readFileString(absoluteFilePath, "utf-8");
-				const parsed = yield* Effect.try({
-					try: () => matter(fileContent),
-					catch: toError,
-				});
+				const parsed = parseMarkdownFrontmatter(fileContent);
 
 				return {
 					data: parsed.data,
@@ -144,7 +141,7 @@ export function makeMarkdownWorkspaceEffect(
 					}
 				}
 
-				const updatedData = matter.stringify(fileContent, fm);
+				const updatedData = stringifyMarkdownFrontmatter(fileContent, fm);
 				yield* fs.writeFileString(actualAbsoluteFilePath, updatedData);
 			}).pipe(Effect.mapError(toError));
 

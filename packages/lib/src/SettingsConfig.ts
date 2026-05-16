@@ -1,7 +1,6 @@
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { Config, ConfigProvider, Effect, Layer } from "effect";
-import yargs from "yargs";
 import {
 	MarkdownConfluencePlatform,
 	runEffect,
@@ -11,6 +10,14 @@ import {
 import { ConfluenceSettings, ConfluenceSettingsService, DEFAULT_SETTINGS } from "./Settings";
 
 const CONFLUENCE_SETTINGS_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof ConfluenceSettings)[];
+
+type ArgumentDefinition = {
+	name: string;
+	aliases?: string[];
+	type: "boolean" | "string";
+};
+
+type ArgumentValue = boolean | string | undefined;
 
 export const confluenceSettingsConfig = Config.all({
 	confluenceBaseUrl: Config.string("confluenceBaseUrl"),
@@ -133,15 +140,12 @@ function getConfigPath(
 	cwd: string,
 	path: Path,
 ): string {
-	return yargs([...argv])
-		.option("config", {
-			alias: "c",
-			describe: "Path to the config file",
-			type: "string",
-			default: envConfigPath ?? path.join(cwd, ".markdown-confluence.json"),
-			demandOption: false,
-		})
-		.parseSync().config;
+	const options = parseArgumentValues(argv, [{ name: "config", aliases: ["c"], type: "string" }]);
+	const config = options["config"];
+
+	return typeof config === "string"
+		? config
+		: (envConfigPath ?? path.join(cwd, ".markdown-confluence.json"));
 }
 
 function makeConfigFileProvider(
@@ -194,64 +198,83 @@ function makeEnvironmentProvider(
 }
 
 function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.ConfigProvider {
-	const options = yargs([...argv])
-		.usage("Usage: $0 [options]")
-		.option("baseUrl", {
-			alias: "b",
-			describe: "Confluence base URL",
-			type: "string",
-			demandOption: false,
-		})
-		.option("parentId", {
-			alias: "p",
-			describe: "Confluence parent ID",
-			type: "string",
-			demandOption: false,
-		})
-		.option("userName", {
-			alias: "u",
-			describe: "Atlassian user name",
-			type: "string",
-			demandOption: false,
-		})
-		.option("apiToken", {
-			describe: "Atlassian API token",
-			type: "string",
-			demandOption: false,
-		})
-		.option("enableFolder", {
-			alias: "f",
-			describe: "Folder enable to publish",
-			type: "string",
-			demandOption: false,
-		})
-		.option("contentRoot", {
-			alias: "cr",
-			describe:
-				"Root to search for files to publish. All files must be part of this directory.",
-			type: "string",
-			demandOption: false,
-		})
-		.option("firstHeaderPageTitle", {
-			alias: "fh",
-			describe:
-				"Replace page title with first header element when 'connie-title' isn't specified.",
-			type: "boolean",
-			demandOption: false,
-		})
-		.parseSync();
+	const options = parseArgumentValues(argv, [
+		{ name: "baseUrl", aliases: ["b"], type: "string" },
+		{ name: "parentId", aliases: ["p"], type: "string" },
+		{ name: "userName", aliases: ["u"], type: "string" },
+		{ name: "apiToken", type: "string" },
+		{ name: "enableFolder", aliases: ["f"], type: "string" },
+		{ name: "contentRoot", aliases: ["cr"], type: "string" },
+		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
+	]);
 
 	return ConfigProvider.fromUnknown(
 		compactRecord({
-			confluenceBaseUrl: options.baseUrl,
-			confluenceParentId: options.parentId,
-			atlassianUserName: options.userName,
-			atlassianApiToken: options.apiToken,
-			folderToPublish: options.enableFolder,
-			contentRoot: options.contentRoot,
-			firstHeadingPageTitle: options.firstHeaderPageTitle ? true : undefined,
+			confluenceBaseUrl: options["baseUrl"],
+			confluenceParentId: options["parentId"],
+			atlassianUserName: options["userName"],
+			atlassianApiToken: options["apiToken"],
+			folderToPublish: options["enableFolder"],
+			contentRoot: options["contentRoot"],
+			firstHeadingPageTitle: options["firstHeaderPageTitle"],
 		}),
 	);
+}
+
+function parseArgumentValues(
+	argv: readonly string[],
+	definitions: ArgumentDefinition[],
+): Record<string, ArgumentValue> {
+	const definitionsByFlag = new Map<string, ArgumentDefinition>();
+
+	for (const definition of definitions) {
+		definitionsByFlag.set(`--${definition.name}`, definition);
+		for (const alias of definition.aliases ?? []) {
+			definitionsByFlag.set(`--${alias}`, definition);
+			definitionsByFlag.set(`-${alias}`, definition);
+		}
+	}
+
+	const parsed: Record<string, ArgumentValue> = {};
+	for (let index = 2; index < argv.length; index += 1) {
+		const rawArgument = argv[index];
+		if (!rawArgument || rawArgument === "--") {
+			break;
+		}
+
+		const equalsIndex = rawArgument.indexOf("=");
+		const flag = equalsIndex >= 0 ? rawArgument.slice(0, equalsIndex) : rawArgument;
+		const inlineValue = equalsIndex >= 0 ? rawArgument.slice(equalsIndex + 1) : undefined;
+		const definition = definitionsByFlag.get(flag);
+		if (!definition) {
+			continue;
+		}
+
+		if (definition.type === "boolean") {
+			parsed[definition.name] = parseBooleanArgument(inlineValue);
+			continue;
+		}
+
+		const value = inlineValue ?? argv[index + 1];
+		if (value === undefined || value.startsWith("-")) {
+			continue;
+		}
+
+		parsed[definition.name] = value;
+		if (inlineValue === undefined) {
+			index += 1;
+		}
+	}
+
+	return parsed;
+}
+
+function parseBooleanArgument(value: string | undefined): boolean {
+	if (value === undefined) {
+		return true;
+	}
+
+	return !["0", "false", "no", "off"].includes(value.toLowerCase());
 }
 
 function pickConfluenceSettings(config: Record<string, unknown>): Partial<ConfluenceSettings> {
@@ -275,7 +298,7 @@ function compactRecord<T extends Record<string, unknown>>(record: T): Record<str
 	const compacted: Record<string, string> = {};
 
 	for (const [key, value] of Object.entries(record)) {
-		if (value) {
+		if (value !== undefined && value !== "") {
 			compacted[key] = String(value);
 		}
 	}

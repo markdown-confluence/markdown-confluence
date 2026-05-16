@@ -32,7 +32,7 @@ jobs:
     - name: Set up Vite+
       uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
       with:
-        node-version: "24"
+        node-version: "24.15.0"
         cache: true
         run-install: false
 

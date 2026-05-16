@@ -41,7 +41,7 @@ jobs:
         if: ${{ steps.release-please.outputs.release_created }}
         uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "24"
+          node-version: "24.15.0"
           cache: true
           run-install: false
 
