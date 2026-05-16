@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { expect, test } from "vite-plus/test";
-import { MarkdownFile } from "./adaptors";
+import { expect, test } from "@effect/vitest";
+import { MarkdownFile } from "./MarkdownWorkspace";
 import { convertMDtoADF } from "./MdToADF";
 import { ConfluenceSettings } from "./Settings";
 

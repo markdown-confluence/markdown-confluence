@@ -1,6 +1,6 @@
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { ConfluenceSettings } from "./Settings";
-import { MarkdownFile } from "./adaptors";
+import { MarkdownFile } from "./MarkdownWorkspace";
 import { parseMarkdownToADF } from "./MdToADF";
 
 export type PageContentType = "page" | "blogpost";

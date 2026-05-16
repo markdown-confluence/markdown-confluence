@@ -30,7 +30,10 @@
 		"fmt:check": "vp fmt --check \"src/**/*.{ts,tsx,js}\"",
 		"lint": "vp lint src"
 	},
-	"dependencies": {},
+	"dependencies": {
+		"@effect/platform-node": "4.0.0-beta.66",
+		"effect": "4.0.0-beta.66"
+	},
 	"devDependencies": {
 		"@markdown-confluence/lib": "workspace:5.5.2",
 		"@markdown-confluence/mermaid-puppeteer-renderer": "workspace:5.5.2",

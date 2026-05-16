@@ -1,3 +1,5 @@
+import { Context } from "effect";
+
 export type ConfluenceSettings = {
 	confluenceBaseUrl: string;
 	confluenceParentId: string;
@@ -14,6 +16,11 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	atlassianUserName: "",
 	atlassianApiToken: "",
 	folderToPublish: "Confluence Pages",
-	contentRoot: process.cwd(),
+	contentRoot: ".",
 	firstHeadingPageTitle: false,
 };
+
+export class ConfluenceSettingsService extends Context.Service<
+	ConfluenceSettingsService,
+	ConfluenceSettings
+>()("@markdown-confluence/ConfluenceSettings") {}

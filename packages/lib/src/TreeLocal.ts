@@ -1,12 +1,14 @@
-import path from "path";
-import { MarkdownFile } from "./adaptors";
-import { convertMDtoADF } from "./MdToADF";
-import { folderFile } from "./FolderFile";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
+import { Path } from "effect/Path";
+import { NodePath } from "@effect/platform-node";
+import { Effect } from "effect";
+import { folderFile } from "./FolderFile";
+import { convertMDtoADF } from "./MdToADF";
 import { LocalAdfFileTreeNode } from "./Publisher";
 import { ConfluenceSettings } from "./Settings";
+import { MarkdownFile } from "./MarkdownWorkspace";
 
-const findCommonPath = (paths: string[]): string => {
+const findCommonPath = (paths: string[], path: Path): string => {
 	const [firstPath, ...rest] = paths;
 	if (!firstPath) {
 		throw new Error("No Paths Provided");
@@ -36,6 +38,7 @@ const addFileToTree = (
 	file: MarkdownFile,
 	relativePath: string,
 	settings: ConfluenceSettings,
+	path: Path,
 ) => {
 	const [folderName, ...remainingPath] = relativePath.split(path.sep);
 	if (folderName === undefined) {
@@ -56,11 +59,11 @@ const addFileToTree = (
 			treeNode.children.push(childNode);
 		}
 
-		addFileToTree(childNode, file, remainingPath.join(path.sep), settings);
+		addFileToTree(childNode, file, remainingPath.join(path.sep), settings, path);
 	}
 };
 
-const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
+const processNode = (commonPath: string, node: LocalAdfFileTreeNode, path: Path) => {
 	if (!node.file) {
 		let indexFile = node.children.find((child) => path.parse(child.name).name === node.name);
 		if (!indexFile) {
@@ -92,27 +95,41 @@ const processNode = (commonPath: string, node: LocalAdfFileTreeNode) => {
 
 	const childCommonPath = path.parse(node?.file?.absoluteFilePath ?? commonPath).dir;
 
-	node.children.forEach((childNode) => processNode(childCommonPath, childNode));
+	node.children.forEach((childNode) => processNode(childCommonPath, childNode, path));
 };
 
 export const createFolderStructure = (
 	markdownFiles: MarkdownFile[],
 	settings: ConfluenceSettings,
 ): LocalAdfFileTreeNode => {
-	const commonPath = findCommonPath(markdownFiles.map((file) => file.absoluteFilePath));
-	const rootNode = createTreeNode(commonPath);
-
-	markdownFiles.forEach((file) => {
-		const relativePath = path.relative(commonPath, file.absoluteFilePath);
-		addFileToTree(rootNode, file, relativePath, settings);
-	});
-
-	processNode(commonPath, rootNode);
-
-	checkUniquePageTitle(rootNode);
-
-	return rootNode;
+	return Effect.runSync(
+		createFolderStructureEffect(markdownFiles, settings).pipe(Effect.provide(NodePath.layer)),
+	);
 };
+
+export const createFolderStructureEffect = (
+	markdownFiles: MarkdownFile[],
+	settings: ConfluenceSettings,
+): Effect.Effect<LocalAdfFileTreeNode, Error, Path> =>
+	Effect.gen(function* () {
+		const path = yield* Path;
+		const commonPath = findCommonPath(
+			markdownFiles.map((file) => file.absoluteFilePath),
+			path,
+		);
+		const rootNode = createTreeNode(commonPath);
+
+		markdownFiles.forEach((file) => {
+			const relativePath = path.relative(commonPath, file.absoluteFilePath);
+			addFileToTree(rootNode, file, relativePath, settings, path);
+		});
+
+		processNode(commonPath, rootNode, path);
+
+		checkUniquePageTitle(rootNode);
+
+		return rootNode;
+	}).pipe(Effect.mapError(toError));
 
 function checkUniquePageTitle(
 	rootNode: LocalAdfFileTreeNode,
@@ -125,4 +142,12 @@ function checkUniquePageTitle(
 	}
 	pageTitles.add(currentPageTitle);
 	rootNode.children.forEach((child) => checkUniquePageTitle(child, pageTitles));
+}
+
+function toError(error: unknown): Error {
+	if (error instanceof Error) {
+		return error;
+	}
+
+	return new Error(typeof error === "string" ? error : JSON.stringify(error));
 }

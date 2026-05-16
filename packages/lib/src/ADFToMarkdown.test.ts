@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { expect, test } from "vite-plus/test";
+import { expect, test } from "@effect/vitest";
 import { renderADFDoc } from "./ADFToMarkdown";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 

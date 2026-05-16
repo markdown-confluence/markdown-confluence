@@ -1,7 +1,7 @@
 import { JSONDocNode, JSONTransformer } from "@atlaskit/editor-json-transformer";
 import { MarkdownTransformer } from "./MarkdownTransformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
-import { MarkdownFile } from "./adaptors";
+import { MarkdownFile } from "./MarkdownWorkspace";
 import { LocalAdfFile } from "./Publisher";
 import { processConniePerPageConfig } from "./ConniePageConfig";
 import { p } from "@atlaskit/adf-utils/builders";

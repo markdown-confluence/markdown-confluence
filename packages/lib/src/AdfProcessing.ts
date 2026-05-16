@@ -5,6 +5,7 @@ import { ConfluenceSettings } from "./Settings";
 import { adfEqual, marksEqual } from "./AdfEqual";
 import { ADFEntity } from "@atlaskit/adf-utils/types";
 import { heading, li, ol, p, text } from "@atlaskit/adf-utils/builders";
+import { Console, Effect } from "effect";
 import { v4 as uuidv4 } from "uuid";
 import { TextDefinition } from "@atlaskit/adf-schema";
 
@@ -665,7 +666,7 @@ function removeEmptyProperties(adf: JSONDocNode) {
 					delete node.marks;
 				}
 			} catch (e: unknown) {
-				console.warn({ marks: node.marks, e });
+				Effect.runSync(Console.warn({ marks: node.marks, e }));
 			}
 			return node;
 		},

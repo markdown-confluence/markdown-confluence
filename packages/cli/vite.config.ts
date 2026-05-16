@@ -1,18 +1,34 @@
-import { copyFile, mkdir } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { FileSystem } from "effect/FileSystem";
+import { Path } from "effect/Path";
+import { NodeFileSystem, NodePath } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { defineConfig, type Plugin } from "vite-plus";
 import { generatedBanner, isNodeBuiltin } from "../../vite.shared.ts";
+
+const NodePlatformLive = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+
+function runNodePlatform<A>(effect: Effect.Effect<A, unknown, FileSystem | Path>) {
+	return Effect.runPromise(effect.pipe(Effect.provide(NodePlatformLive)));
+}
 
 function copyRendererHtmlPlugin(): Plugin {
 	return {
 		apply: "build",
 		name: "copy-mermaid-renderer-html",
 		async closeBundle() {
-			const source = resolve("../mermaid-puppeteer-renderer/dist/mermaid_renderer.html");
-			const target = resolve("dist/mermaid_renderer.html");
+			await runNodePlatform(
+				Effect.gen(function* () {
+					const fs = yield* FileSystem;
+					const path = yield* Path;
+					const source = path.resolve(
+						"../mermaid-puppeteer-renderer/dist/mermaid_renderer.html",
+					);
+					const target = path.resolve("dist/mermaid_renderer.html");
 
-			await mkdir(dirname(target), { recursive: true });
-			await copyFile(source, target);
+					yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+					yield* fs.copyFile(source, target);
+				}),
+			);
 		},
 	};
 }

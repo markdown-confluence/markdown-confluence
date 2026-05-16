@@ -3,14 +3,16 @@ import {
 	ConfluenceUploadSettings,
 	Publisher,
 	ConfluencePageConfig,
-	StaticSettingsLoader,
 	renderADFDoc,
 	MermaidRendererPlugin,
 	UploadAdfFileResult,
+	MarkdownConfluencePlatform,
+	MarkdownWorkspaceLive,
+	MarkdownWorkspaceService,
 } from "@markdown-confluence/lib";
+import { Effect, Layer } from "effect";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
-import ObsidianAdaptor from "./adaptors/obsidian";
 import { CompletedModal } from "./CompletedModal";
 import { ObsidianConfluenceClient } from "./MyBaseClient";
 import {
@@ -18,6 +20,7 @@ import {
 	ConfluencePerPageUIValues,
 	mapFrontmatterToConfluencePerPageUIValues,
 } from "./ConfluencePerPageForm";
+import { ObsidianPlatformLive } from "./effects/ObsidianPlatform";
 import type { Mermaid } from "mermaid";
 
 export interface ObsidianPluginSettings extends ConfluenceUploadSettings.ConfluenceSettings {
@@ -45,9 +48,10 @@ interface UploadResults {
 export default class ConfluencePlugin extends Plugin {
 	settings!: ObsidianPluginSettings;
 	private isSyncing = false;
+	private platform!: Layer.Layer<MarkdownConfluencePlatform>;
+	private settingsLayer!: Layer.Layer<ConfluenceUploadSettings.ConfluenceSettingsService>;
 	workspace!: Workspace;
 	publisher!: Publisher;
-	adaptor!: ObsidianAdaptor;
 
 	activeLeafPath(workspace: Workspace) {
 		return workspace.getActiveViewOfType(MarkdownView)?.file?.path;
@@ -55,9 +59,13 @@ export default class ConfluencePlugin extends Plugin {
 
 	async init() {
 		await this.loadSettings();
-		const { vault, metadataCache, workspace } = this.app;
+		const { workspace } = this.app;
+		this.platform = ObsidianPlatformLive(this.app);
+		this.settingsLayer = Layer.succeed(
+			ConfluenceUploadSettings.ConfluenceSettingsService,
+			this.settings,
+		);
 		this.workspace = workspace;
-		this.adaptor = new ObsidianAdaptor(vault, metadataCache, this.settings, this.app);
 
 		const mermaidItems = await this.getMermaidItems();
 		const mermaidRenderer = new ElectronMermaidRenderer(
@@ -86,8 +94,7 @@ export default class ConfluencePlugin extends Plugin {
 			},
 		});
 
-		const settingsLoader = new StaticSettingsLoader(this.settings);
-		this.publisher = new Publisher(this.adaptor, settingsLoader, confluenceClient, [
+		this.publisher = new Publisher(this.settings, confluenceClient, [
 			new MermaidRendererPlugin(mermaidRenderer),
 		]);
 	}
@@ -162,7 +169,7 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	async doPublish(publishFilter?: string): Promise<UploadResults> {
-		const adrFiles = await this.publisher.publish(publishFilter);
+		const adrFiles = await this.runObsidianEffect(this.publisher.publishEffect(publishFilter));
 
 		const returnVal: UploadResults = {
 			errorMessage: null,
@@ -425,7 +432,12 @@ export default class ConfluencePlugin extends Plugin {
 								}
 							}
 						}
-						this.adaptor.updateMarkdownValues(file.path, valuesToSet);
+						void this.runObsidianEffect(
+							Effect.gen(function* () {
+								const workspace = yield* MarkdownWorkspaceService;
+								yield* workspace.updateMarkdownValues(file.path, valuesToSet);
+							}),
+						);
 						close();
 					},
 				}).open();
@@ -451,4 +463,31 @@ export default class ConfluencePlugin extends Plugin {
 		await this.saveData(this.settings);
 		await this.init();
 	}
+
+	private runObsidianEffect<A, E>(
+		effect: Effect.Effect<
+			A,
+			E,
+			| MarkdownConfluencePlatform
+			| MarkdownWorkspaceService
+			| ConfluenceUploadSettings.ConfluenceSettingsService
+		>,
+	): Promise<A> {
+		return Effect.runPromise(
+			effect.pipe(
+				Effect.provide(MarkdownWorkspaceLive),
+				Effect.provide(this.settingsLayer),
+				Effect.provide(this.platform),
+				Effect.mapError(toError),
+			),
+		);
+	}
+}
+
+function toError(error: unknown): Error {
+	if (error instanceof Error) {
+		return error;
+	}
+
+	return new Error(typeof error === "string" ? error : JSON.stringify(error));
 }

@@ -19,14 +19,22 @@
 		"fmt": "vp fmt --write",
 		"fmt:check": "vp fmt --check",
 		"lint": "vp lint --vitest-plugin --react-plugin .",
+		"mutation": "stryker run",
+		"mutation:dry-run": "stryker run --dryRunOnly",
 		"test": "vp test run"
 	},
 	"devDependencies": {
+		"@effect-oxlint/effect-oxlint": "jsr:^0.2.0",
+		"@effect/vitest": "4.0.0-beta.66",
+		"@stryker-mutator/core": "9.6.1",
+		"@stryker-mutator/typescript-checker": "9.6.1",
 		"@types/node": "^25.8.0",
+		"effect": "4.0.0-beta.66",
 		"husky": "^9.1.7",
 		"tslib": "2.8.1",
 		"typescript": "^6.0.3",
-		"vite-plus": "^0.1.21"
+		"vite-plus": "^0.1.21",
+		"vitest": "npm:@voidzero-dev/vite-plus-test@0.1.21"
 	},
 	"packageManager": "pnpm@11.1.2"
 }

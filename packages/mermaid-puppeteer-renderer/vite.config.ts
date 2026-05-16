@@ -1,39 +1,57 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { FileSystem } from "effect/FileSystem";
+import { Path } from "effect/Path";
+import { NodeFileSystem, NodePath } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { build, defineConfig, type Plugin } from "vite-plus";
 import { packageDependencyExternals } from "../../vite.shared.ts";
+
+const NodePlatformLive = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+
+function runNodePlatform<A>(effect: Effect.Effect<A, unknown, FileSystem | Path>) {
+	return Effect.runPromise(effect.pipe(Effect.provide(NodePlatformLive)));
+}
 
 function mermaidRendererHtmlPlugin(): Plugin {
 	return {
 		apply: "build",
 		name: "mermaid-renderer-html",
 		async closeBundle() {
-			const result = await build({
-				build: {
-					emptyOutDir: false,
-					minify: true,
-					rollupOptions: {
-						input: "src/mermaid_renderer.js",
-						output: {
-							codeSplitting: false,
-						},
-					},
-					sourcemap: false,
-					target: "chrome106",
-					write: false,
-				},
-				configFile: false,
-				logLevel: "warn",
-				root: process.cwd(),
-			});
+			await runNodePlatform(
+				Effect.gen(function* () {
+					const fs = yield* FileSystem;
+					const path = yield* Path;
+					const root = path.resolve(".");
 
-			const output = Array.isArray(result) ? result[0]?.output : result.output;
-			const chunk = output.find((file) => file.type === "chunk");
-			if (!chunk || !("code" in chunk)) {
-				throw new Error("Vite did not produce the Mermaid renderer chunk");
-			}
+					const result = yield* Effect.promise(() =>
+						build({
+							build: {
+								emptyOutDir: false,
+								minify: true,
+								rollupOptions: {
+									input: "src/mermaid_renderer.js",
+									output: {
+										codeSplitting: false,
+									},
+								},
+								sourcemap: false,
+								target: "chrome106",
+								write: false,
+							},
+							configFile: false,
+							logLevel: "warn",
+							root,
+						}),
+					);
 
-			const fileContents = `
+					const output = Array.isArray(result) ? result[0]?.output : result.output;
+					const chunk = output.find((file) => file.type === "chunk");
+					if (!chunk || !("code" in chunk)) {
+						return yield* Effect.fail(
+							new Error("Vite did not produce the Mermaid renderer chunk"),
+						);
+					}
+
+					const fileContents = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -49,8 +67,13 @@ ${chunk.code}
 </html>
 `;
 
-			await mkdir("dist", { recursive: true });
-			await writeFile(resolve("dist", "mermaid_renderer.html"), fileContents);
+					yield* fs.makeDirectory("dist", { recursive: true });
+					yield* fs.writeFileString(
+						path.resolve("dist", "mermaid_renderer.html"),
+						fileContents,
+					);
+				}),
+			);
 		},
 	};
 }

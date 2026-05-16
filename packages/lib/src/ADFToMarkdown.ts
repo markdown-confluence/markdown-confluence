@@ -1,5 +1,6 @@
 import { ADFEntity } from "@atlaskit/adf-utils/dist/types/types";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
+import { Console, Effect } from "effect";
 import { markdownTable } from "markdown-table";
 
 export function renderADFDoc(adfDoc: JSONDocNode) {
@@ -195,7 +196,7 @@ function renderADFContent(
 			return renderChildrenResult;
 		}
 		default:
-			console.warn(`Unknown ADFEntity Type ${element.type}`);
+			Effect.runSync(Console.warn(`Unknown ADFEntity Type ${element.type}`));
 			return new Error(`Unknown ADFEntity Type ${element.type}`);
 	}
 }

@@ -1,24 +1,27 @@
 #!/usr/bin/env node
 
-process.setMaxListeners(Infinity);
-
+import { NodeRuntime } from "@effect/platform-node";
 import chalk from "chalk";
 import boxen from "boxen";
+import { Console, Effect } from "effect";
 import {
-	AutoSettingsLoader,
-	FileSystemAdaptor,
+	ConfluenceSettingsLive,
+	ConfluenceUploadSettings,
+	MarkdownWorkspaceLive,
+	MarkdownConfluencePlatformLive,
 	Publisher,
 	MermaidRendererPlugin,
+	RuntimeEnvironmentService,
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
 import { ConfluenceClient } from "confluence.js";
 
-// Define the main function
-async function main() {
-	const settingLoader = new AutoSettingsLoader();
-	const settings = settingLoader.load();
+const program = Effect.gen(function* () {
+	const runtimeEnvironment = yield* RuntimeEnvironmentService;
+	yield* runtimeEnvironment.setMaxListeners(Infinity);
 
-	const adaptor = new FileSystemAdaptor(settings); // Make sure this is identical as possible between Obsidian and CLI
+	const settings = yield* ConfluenceUploadSettings.ConfluenceSettingsService;
+
 	const confluenceClient = new ConfluenceClient({
 		host: settings.confluenceBaseUrl,
 		authentication: {
@@ -39,31 +42,47 @@ async function main() {
 		},
 	});
 
-	const publisher = new Publisher(adaptor, settingLoader, confluenceClient, [
+	const publisher = new Publisher(settings, confluenceClient, [
 		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),
 	]);
 
 	const publishFilter = "";
-	const results = await publisher.publish(publishFilter);
-	results.forEach((file) => {
+	const results = yield* publisher.publishEffect(publishFilter);
+
+	for (const file of results) {
 		if (file.successfulUploadResult) {
-			console.log(
+			yield* Console.log(
 				chalk.green(
 					`SUCCESS: ${file.node.file.absoluteFilePath} Content: ${file.successfulUploadResult.contentResult}, Images: ${file.successfulUploadResult.imageResult}, Labels: ${file.successfulUploadResult.labelResult}, Page URL: ${file.node.file.pageUrl}`,
 				),
 			);
-			return;
+			continue;
 		}
-		console.error(
+		yield* Console.error(
 			chalk.red(
 				`FAILED:  ${file.node.file.absoluteFilePath} publish failed. Error is: ${file.reason}`,
 			),
 		);
-	});
-}
-
-// Call the main function
-main().catch((error) => {
-	console.error(chalk.red(boxen(`Error: ${error.message}`, { padding: 1 })));
-	process.exit(1);
+	}
 });
+
+NodeRuntime.runMain(
+	program.pipe(
+		Effect.provide(MarkdownWorkspaceLive),
+		Effect.provide(ConfluenceSettingsLive),
+		Effect.catch((error) =>
+			Effect.gen(function* () {
+				const runtimeEnvironment = yield* RuntimeEnvironmentService;
+				yield* Console.error(
+					chalk.red(boxen(`Error: ${getErrorMessage(error)}`, { padding: 1 })),
+				);
+				return yield* runtimeEnvironment.exit(1);
+			}),
+		),
+		Effect.provide(MarkdownConfluencePlatformLive),
+	),
+);
+
+function getErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : JSON.stringify(error);
+}

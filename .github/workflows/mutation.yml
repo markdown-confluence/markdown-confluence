@@ -1,0 +1,59 @@
+name: Mutation Testing
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - name: Check out repository code
+      uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+    - name: Set up Vite+
+      uses: voidzero-dev/setup-vp@v1
+      with:
+        node-version: "24"
+        cache: true
+        run-install: false
+
+    - name: Install dependencies
+      run: vp install --frozen-lockfile
+
+    - name: Restore Stryker incremental report
+      uses: actions/cache@v4
+      with:
+        path: reports/mutation/incremental.json
+        key: stryker-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.config.mjs', 'packages/lib/src/**/*.ts') }}
+        restore-keys: |
+          stryker-${{ runner.os }}-
+
+    - name: Run mutation tests
+      run: vp run mutation
+
+    - name: Upload mutation report
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: mutation-report
+        path: reports/mutation
+        if-no-files-found: ignore

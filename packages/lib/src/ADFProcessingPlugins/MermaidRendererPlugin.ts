@@ -4,6 +4,8 @@ import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { ADFProcessingPlugin, PublisherFunctions } from "./types";
 import { ADFEntity } from "@atlaskit/adf-utils/types";
 import SparkMD5 from "spark-md5";
+import { Effect } from "effect";
+import { MarkdownConfluencePlatform, runEffect } from "../effects";
 
 export function getMermaidFileName(mermaidContent: string | undefined) {
 	const mermaidText = mermaidContent ?? "flowchart LR\nid1[Missing Chart]";
@@ -50,28 +52,44 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 		mermaidNodesToUpload: ChartData[],
 		supportFunctions: PublisherFunctions,
 	): Promise<Record<string, UploadedImageData | null>> {
-		let imageMap: Record<string, UploadedImageData | null> = {};
-		if (mermaidNodesToUpload.length === 0) {
+		return runEffect(this.transformEffect(mermaidNodesToUpload, supportFunctions));
+	}
+
+	transformEffect(
+		mermaidNodesToUpload: ChartData[],
+		supportFunctions: PublisherFunctions,
+	): Effect.Effect<
+		Record<string, UploadedImageData | null>,
+		unknown,
+		MarkdownConfluencePlatform
+	> {
+		const mermaidRenderer = this.mermaidRenderer;
+
+		return Effect.gen(function* () {
+			let imageMap: Record<string, UploadedImageData | null> = {};
+			if (mermaidNodesToUpload.length === 0) {
+				return imageMap;
+			}
+
+			const mermaidChartsAsImages = yield* Effect.tryPromise({
+				try: () => mermaidRenderer.captureMermaidCharts([...mermaidNodesToUpload]),
+				catch: identity,
+			});
+
+			for (const mermaidImage of mermaidChartsAsImages) {
+				const uploadedContent = yield* supportFunctions.uploadBufferEffect(
+					mermaidImage[0],
+					mermaidImage[1],
+				);
+
+				imageMap = {
+					...imageMap,
+					[mermaidImage[0]]: uploadedContent,
+				};
+			}
+
 			return imageMap;
-		}
-
-		const mermaidChartsAsImages = await this.mermaidRenderer.captureMermaidCharts([
-			...mermaidNodesToUpload,
-		]);
-
-		for (const mermaidImage of mermaidChartsAsImages) {
-			const uploadedContent = await supportFunctions.uploadBuffer(
-				mermaidImage[0],
-				mermaidImage[1],
-			);
-
-			imageMap = {
-				...imageMap,
-				[mermaidImage[0]]: uploadedContent,
-			};
-		}
-
-		return imageMap;
+		});
 	}
 	load(adf: JSONDocNode, imageMap: Record<string, UploadedImageData | null>): JSONDocNode {
 		let afterAdf = adf as ADFEntity;
@@ -117,4 +135,8 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 
 		return afterAdf as JSONDocNode;
 	}
+}
+
+function identity(error: unknown): unknown {
+	return error;
 }

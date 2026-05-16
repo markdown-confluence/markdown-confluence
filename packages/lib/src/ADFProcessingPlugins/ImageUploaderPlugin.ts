@@ -4,6 +4,8 @@ import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { ADFEntity } from "@atlaskit/adf-utils/dist/types/types";
 import { p } from "@atlaskit/adf-utils/builders";
 import { ADFProcessingPlugin, PublisherFunctions } from "./types";
+import { Effect } from "effect";
+import { MarkdownConfluencePlatform, runEffect } from "../effects";
 
 export const ImageUploaderPlugin: ADFProcessingPlugin<
 	string[],
@@ -24,22 +26,35 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 		imagesToUpload: string[],
 		supportFunctions: PublisherFunctions,
 	): Promise<Record<string, UploadedImageData | null>> {
-		let imageMap: Record<string, UploadedImageData | null> = {};
+		return runEffect(ImageUploaderPlugin.transformEffect!(imagesToUpload, supportFunctions));
+	},
 
-		for (const imageUrl of imagesToUpload.values()) {
-			const filename = imageUrl.split("://")[1];
-			if (!filename) {
-				continue;
+	transformEffect(
+		imagesToUpload: string[],
+		supportFunctions: PublisherFunctions,
+	): Effect.Effect<
+		Record<string, UploadedImageData | null>,
+		unknown,
+		MarkdownConfluencePlatform
+	> {
+		return Effect.gen(function* () {
+			let imageMap: Record<string, UploadedImageData | null> = {};
+
+			for (const imageUrl of imagesToUpload.values()) {
+				const filename = imageUrl.split("://")[1];
+				if (!filename) {
+					continue;
+				}
+				const uploadedContent = yield* supportFunctions.uploadFileEffect(filename);
+
+				imageMap = {
+					...imageMap,
+					[imageUrl]: uploadedContent,
+				};
 			}
-			const uploadedContent = await supportFunctions.uploadFile(filename);
 
-			imageMap = {
-				...imageMap,
-				[imageUrl]: uploadedContent,
-			};
-		}
-
-		return imageMap;
+			return imageMap;
+		});
 	},
 
 	load(adf: JSONDocNode, imageMap: Record<string, UploadedImageData | null>): JSONDocNode {

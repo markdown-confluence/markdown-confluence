@@ -16,10 +16,19 @@ export default defineConfig({
 	},
 	lint: {
 		plugins: ["typescript", "unicorn", "oxc"],
+		jsPlugins: [{ name: "effect", specifier: "./config/oxlint-effect-rules.js" }],
 		categories: {
 			correctness: "error",
 		},
 		rules: {
+			"effect/no-direct-node-platform": [
+				"error",
+				{
+					allowedProcessFileEndings: ["/packages/lib/src/effects/index.ts"],
+				},
+			],
+			"effect/no-vitest-imports": "error",
+			"effect/require-effect-all-concurrency": "error",
 			"jest/no-standalone-expect": "off",
 			"vitest/no-standalone-expect": "off",
 		},

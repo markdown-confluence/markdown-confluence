@@ -1,6 +1,16 @@
-import { resolve } from "node:path";
+import { Path } from "effect/Path";
+import { NodePath } from "@effect/platform-node";
+import { Effect } from "effect";
 import { defineConfig } from "vite-plus";
 import { externalize, generatedBanner } from "../../vite.shared.ts";
+
+const resolvePath = (...pathSegments: ReadonlyArray<string>) =>
+	Effect.runSync(
+		Effect.gen(function* () {
+			const path = yield* Path;
+			return path.resolve(...pathSegments);
+		}).pipe(Effect.provide(NodePath.layer)),
+	);
 
 const obsidianExternals = externalize([
 	"obsidian",
@@ -46,8 +56,8 @@ export default defineConfig(({ mode }) => {
 		},
 		resolve: {
 			alias: {
-				"@markdown-confluence/lib": resolve("../lib/src/index.ts"),
-				"@markdown-confluence/mermaid-electron-renderer": resolve(
+				"@markdown-confluence/lib": resolvePath("../lib/src/index.ts"),
+				"@markdown-confluence/mermaid-electron-renderer": resolvePath(
 					"../mermaid-electron-renderer/src/index.ts",
 				),
 			},

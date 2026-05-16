@@ -1,8 +1,10 @@
 export * from "./Publisher";
 export * from "./MdToADF";
-export * from "./adaptors";
+export * from "./ConfluenceClient";
+export * from "./MarkdownWorkspace";
 export * as ConfluenceUploadSettings from "./Settings";
+export * from "./SettingsConfig";
 export * as ConfluencePageConfig from "./ConniePageConfig";
-export * from "./SettingsLoader";
 export * from "./ADFToMarkdown";
 export * from "./ADFProcessingPlugins";
+export * from "./effects";

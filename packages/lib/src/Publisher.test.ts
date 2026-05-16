@@ -1,26 +1,34 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { expect, test } from "vite-plus/test";
+import { expect, test } from "@effect/vitest";
 import { ConfluenceClient } from "confluence.js";
-import { BinaryFile, FilesToUpload, LoaderAdaptor, MarkdownFile } from "./adaptors";
+import { Effect } from "effect";
 import { orderMarks } from "./AdfEqual";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
 import { Publisher } from "./Publisher";
-import {
-	AutoSettingsLoader,
-	DefaultSettingsLoader,
-	EnvironmentVariableSettingsLoader,
-	StaticSettingsLoader,
-} from "./SettingsLoader";
+import { loadConfluenceSettings } from "./SettingsConfig";
 import {
 	ChartData,
 	MermaidRenderer,
 	MermaidRendererPlugin,
 } from "./ADFProcessingPlugins/MermaidRendererPlugin";
+import { RuntimeEnvironmentLive, RuntimeEnvironmentService, runEffect } from "./effects";
+import {
+	BinaryFile,
+	FilesToUpload,
+	MarkdownFile,
+	MarkdownWorkspace,
+	MarkdownWorkspaceService,
+} from "./MarkdownWorkspace";
 
-const settingsLoader = new AutoSettingsLoader();
-const confluenceIntegrationTest =
-	process.env["CONFLUENCE_INTEGRATION_TESTS"] === "true" ? test : test.skip;
+const confluenceIntegrationTestsEnabled = Effect.runSync(
+	Effect.gen(function* () {
+		const runtimeEnvironment = yield* RuntimeEnvironmentService;
+		const enabled = yield* runtimeEnvironment.getEnv("CONFLUENCE_INTEGRATION_TESTS");
+		return enabled === "true";
+	}).pipe(Effect.provide(RuntimeEnvironmentLive)),
+);
+const confluenceIntegrationTest = confluenceIntegrationTestsEnabled ? test : test.skip;
 
 const markdownTestCases: MarkdownFile[] = [
 	{
@@ -210,35 +218,40 @@ class TestMermaidRenderer implements MermaidRenderer {
 	}
 }
 
-class InMemoryAdaptor implements LoaderAdaptor {
-	private inMemoryFiles: MarkdownFile[];
+class InMemoryMarkdownWorkspace implements MarkdownWorkspace {
+	readonly getMarkdownFilesToUpload: Effect.Effect<FilesToUpload, Error>;
 
-	constructor(inMemoryFiles: MarkdownFile[]) {
-		this.inMemoryFiles = inMemoryFiles;
+	constructor(private readonly inMemoryFiles: MarkdownFile[]) {
+		this.getMarkdownFilesToUpload = Effect.succeed(inMemoryFiles);
 	}
-	async updateMarkdownValues(
+
+	updateMarkdownValues(
 		_absoluteFilePath: string,
 		_values: Partial<ConfluencePerPageAllValues>,
-	): Promise<void> {}
+	): Effect.Effect<void, Error> {
+		return Effect.void;
+	}
 
-	async loadMarkdownFile(absoluteFilePath: string): Promise<MarkdownFile> {
+	loadMarkdownFile(absoluteFilePath: string): Effect.Effect<MarkdownFile, Error> {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		return this.inMemoryFiles.find((t) => t.absoluteFilePath === absoluteFilePath)!;
-	}
-	async getMarkdownFilesToUpload(): Promise<FilesToUpload> {
-		return this.inMemoryFiles;
+		return Effect.succeed(
+			this.inMemoryFiles.find((t) => t.absoluteFilePath === absoluteFilePath)!,
+		);
 	}
 
-	async readBinary(_path: string, _referencedFromFilePath: string): Promise<false | BinaryFile> {
-		throw new Error("Method not implemented.");
+	readBinary(
+		_path: string,
+		_referencedFromFilePath: string,
+	): Effect.Effect<false | BinaryFile, Error> {
+		return Effect.fail(new Error("Method not implemented."));
 	}
 }
 
 confluenceIntegrationTest(
 	"Upload to Confluence",
 	async () => {
-		const settings = settingsLoader.load();
-		const filesystemAdaptor = new InMemoryAdaptor(markdownTestCases);
+		const settings = await loadConfluenceSettings();
+		const workspace = new InMemoryMarkdownWorkspace(markdownTestCases);
 		const mermaidRenderer = new TestMermaidRenderer();
 		const confluenceClient = new ConfluenceClient({
 			host: settings.confluenceBaseUrl,
@@ -264,23 +277,15 @@ confluenceIntegrationTest(
 		}
 		settings.confluenceParentId = pageResult.id;
 
-		const settingLoaders = [
-			new EnvironmentVariableSettingsLoader(),
-			new StaticSettingsLoader({
-				confluenceParentId: pageResult.id,
-			}),
-			new DefaultSettingsLoader(),
-		];
-		const publisherSettingsLoader = new AutoSettingsLoader(settingLoaders);
+		const publisher = new Publisher(settings, confluenceClient, [
+			new MermaidRendererPlugin(mermaidRenderer),
+		]);
 
-		const publisher = new Publisher(
-			filesystemAdaptor,
-			publisherSettingsLoader,
-			confluenceClient,
-			[new MermaidRendererPlugin(mermaidRenderer)],
+		const result = await runEffect(
+			publisher
+				.publishEffect()
+				.pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
 		);
-
-		const result = await publisher.publish();
 
 		for (const uploadResult of result) {
 			const afterUpload = await confluenceClient.content.getContentById({
