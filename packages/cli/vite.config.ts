@@ -3,6 +3,11 @@ import { dirname, resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite-plus";
 import { generatedBanner, isNodeBuiltin } from "../../vite.package-build.ts";
 
+/**
+ * Creates a Vite plugin that copies the prebuilt mermaid renderer HTML into the build output.
+ *
+ * @returns A Vite plugin object that applies during the build and, on closeBundle, copies the prebuilt `mermaid_renderer.html` into the `dist` output (creating the target directory if needed).
+ */
 function copyRendererHtmlPlugin(): Plugin {
 	return {
 		apply: "build",

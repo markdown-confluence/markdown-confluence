@@ -12,10 +12,24 @@ const blockedTerms = new Set([
 	"generic",
 ]);
 
+/**
+ * Remove the final file extension from a filename, also stripping an optional `.d` prefix before that extension.
+ * @param {string} fileName - The filename to normalize (may include extensions like `.js` or `.d.ts`).
+ * @returns {string} The filename with the trailing extension removed (e.g., `foo.d.ts` -> `foo`, `bar.js` -> `bar`).
+ */
 function stripKnownExtensions(fileName) {
 	return fileName.replace(/(\.d)?\.[^.]+$/u, "");
 }
 
+/**
+ * Split an identifier or filename into normalized lowercase terms.
+ *
+ * Breaks camelCase/PascalCase and acronym boundaries, splits on non-alphanumeric
+ * characters, removes empty parts, and lowercases each resulting term.
+ *
+ * @param {string} name - The input identifier or filename to split.
+ * @returns {string[]} An array of lowercase terms extracted from the input.
+ */
 function splitNameIntoTerms(name) {
 	return name
 		.replace(/([a-z0-9])([A-Z])/gu, "$1 $2")
@@ -25,10 +39,23 @@ function splitNameIntoTerms(name) {
 		.map((term) => term.toLowerCase());
 }
 
+/**
+ * Finds the first blocked term present in a name.
+ * @param {*} name - Value to inspect; converted to string and split into normalized terms.
+ * @returns {string|undefined} The first blocked term if found, `undefined` otherwise.
+ */
 function findBlockedTerm(name) {
 	return splitNameIntoTerms(String(name)).find((term) => blockedTerms.has(term));
 }
 
+/**
+ * Reports a "vagueName" violation if `name` contains a blocked generic term.
+ *
+ * @param {RuleContext} context - ESLint rule context used to report the violation.
+ * @param {ASTNode} node - The AST node to associate with the reported problem.
+ * @param {string} name - The identifier or key value to inspect for blocked terms.
+ * @param {string} kind - Human-readable kind used in the message (e.g., "Variable", "Function").
+ */
 function reportName(context, node, name, kind) {
 	const blockedTerm = findBlockedTerm(name);
 	if (!blockedTerm) {
@@ -46,6 +73,15 @@ function reportName(context, node, name, kind) {
 	});
 }
 
+/**
+ * Traverse a binding pattern or identifier and report any blocked terms used in declared names.
+ *
+ * Traverses Identifier, ObjectPattern, ArrayPattern, and RestElement nodes to locate binding identifiers
+ * and delegates reporting of vague names using the provided rule context and kind label.
+ * @param {import("eslint").Rule.RuleContext} context - ESLint rule context used to report violations.
+ * @param {import("estree").Node|null|undefined} node - The binding node or identifier to inspect.
+ * @param {string} kind - Human-readable kind label (e.g., "Variable", "Parameter") used in report messages.
+ */
 function checkBindingName(context, node, kind) {
 	if (!node) {
 		return;
@@ -79,12 +115,25 @@ function checkBindingName(context, node, kind) {
 	}
 }
 
+/**
+ * Report a blocked identifier name found on a declaration node.
+ *
+ * @param {import("eslint").RuleContext} context - ESLint rule context used to report violations.
+ * @param {object} node - AST declaration node (may contain an `id` Identifier).
+ * @param {string} kind - Human-readable kind label for the reported node (e.g., "Function", "Class").
+ */
 function checkDeclarationId(context, node, kind) {
 	if (node?.id?.type === "Identifier") {
 		reportName(context, node.id, node.id.name, kind);
 	}
 }
 
+/**
+ * Reports a vague/member name when the provided AST node's key is an identifier or a string literal.
+ * @param {RuleContext} context - ESLint rule context.
+ * @param {ASTNode} node - AST node containing a `key` property (e.g., Property, MethodDefinition, TSPropertySignature).
+ * @param {string} kind - Human-readable kind label used in the reported message.
+ */
 function checkNamedKey(context, node, kind) {
 	const key = node?.key;
 	if (!key) {
@@ -101,6 +150,11 @@ function checkNamedKey(context, node, kind) {
 	}
 }
 
+/**
+ * Determines whether an AST top-level statement should be treated as implementation code rather than a pure import/re-export.
+ * @param {object} statement - An ESTree statement node (e.g., ImportDeclaration, ExportNamedDeclaration, ExportAllDeclaration).
+ * @returns {boolean} `true` if the statement is considered implementation code; `false` for imports, `export *` declarations, or named exports that re-export from another module.
+ */
 function isImplementationStatement(statement) {
 	if (statement.type === "ImportDeclaration") {
 		return false;
