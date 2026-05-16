@@ -104,11 +104,17 @@ function makeConfluenceClient(uploadRequests: unknown[]): RequiredConfluenceClie
 }
 
 function getUploadedAttachment(uploadRequests: unknown[]): { contentType: string } {
-	const request = uploadRequests[0] as {
-		attachments: Array<{
-			contentType: string;
-		}>;
-	};
+	const request = uploadRequests[0] as
+		| {
+				attachments: Array<{
+					contentType: string;
+				}>;
+		  }
+		| undefined;
+	if (!request) {
+		throw new Error("Missing upload request");
+	}
+
 	const attachment = request.attachments[0];
 	if (!attachment) {
 		throw new Error("Missing upload attachment");
