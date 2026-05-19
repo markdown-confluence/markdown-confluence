@@ -30,7 +30,7 @@
 		"@effect/vitest": "4.0.0-beta.66",
 		"@stryker-mutator/core": "9.6.1",
 		"@stryker-mutator/typescript-checker": "9.6.1",
-		"@types/node": "^25.8.0",
+		"@types/node": "^25.9.0",
 		"effect": "4.0.0-beta.66",
 		"husky": "^9.1.7",
 		"oxlint": "1.63.0",
