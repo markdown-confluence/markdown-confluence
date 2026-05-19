@@ -78,7 +78,7 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         if: ${{ steps.release-please.outputs.release_created }}
         id: meta
-        uses: docker/metadata-action@9dc751fe249ad99385a2583ee0d084c400eee04e
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
