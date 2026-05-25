@@ -9,13 +9,13 @@ export function ObsidianPlatformLive(app: App) {
 	return Layer.mergeAll(
 		ObsidianFileSystemLive(app),
 		ObsidianPathLive,
-		Layer.succeed(RuntimeEnvironmentService, {
+		Layer.succeed(RuntimeEnvironmentService as never, {
 			cwd: Effect.succeed("/"),
 			chdir: () => Effect.void,
 			argv: Effect.succeed([]),
-			getEnv: (_name) => Effect.succeed(undefined),
+			getEnv: (_name: string) => Effect.succeed(undefined),
 			setMaxListeners: () => Effect.void,
-			exit: (code) => Effect.die(new Error(`Unexpected Obsidian exit ${code}`)),
+			exit: (code: number) => Effect.die(new Error(`Unexpected Obsidian exit ${code}`)),
 		}),
 	);
 }
