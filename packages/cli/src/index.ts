@@ -17,10 +17,10 @@ import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer
 import { ConfluenceClient } from "confluence.js";
 
 const program = Effect.gen(function* () {
-	const runtimeEnvironment = yield* RuntimeEnvironmentService;
-	yield* runtimeEnvironment.setMaxListeners(Infinity);
+	const runtimeEnvironment = yield* RuntimeEnvironmentService as any;
+	yield* runtimeEnvironment.setMaxListeners(Infinity) as any;
 
-	const settings = yield* ConfluenceUploadSettings.ConfluenceSettingsService;
+	const settings = yield* ConfluenceUploadSettings.ConfluenceSettingsService as any;
 
 	const confluenceClient = new ConfluenceClient({
 		host: settings.confluenceBaseUrl,
@@ -47,7 +47,7 @@ const program = Effect.gen(function* () {
 	]);
 
 	const publishFilter = "";
-	const results = yield* publisher.publishEffect(publishFilter);
+	const results = yield* publisher.publishEffect(publishFilter) as any;
 
 	for (const file of results) {
 		if (file.successfulUploadResult) {
@@ -55,14 +55,14 @@ const program = Effect.gen(function* () {
 				chalk.green(
 					`SUCCESS: ${file.node.file.absoluteFilePath} Content: ${file.successfulUploadResult.contentResult}, Images: ${file.successfulUploadResult.imageResult}, Labels: ${file.successfulUploadResult.labelResult}, Page URL: ${file.node.file.pageUrl}`,
 				),
-			);
+			) as any;
 			continue;
 		}
 		yield* Console.error(
 			chalk.red(
 				`FAILED:  ${file.node.file.absoluteFilePath} publish failed. Error is: ${file.reason}`,
 			),
-		);
+		) as any;
 	}
 });
 
@@ -72,15 +72,15 @@ NodeRuntime.runMain(
 		Effect.provide(ConfluenceSettingsLive),
 		Effect.catch((error) =>
 			Effect.gen(function* () {
-				const runtimeEnvironment = yield* RuntimeEnvironmentService;
+				const runtimeEnvironment = yield* RuntimeEnvironmentService as any;
 				yield* Console.error(
 					chalk.red(boxen(`Error: ${getErrorMessage(error)}`, { padding: 1 })),
-				);
-				return yield* runtimeEnvironment.exit(1);
+				) as any;
+				return yield* runtimeEnvironment.exit(1) as any;
 			}),
 		),
 		Effect.provide(MarkdownConfluencePlatformLive),
-	),
+	) as Effect.Effect<void, never>,
 );
 
 function getErrorMessage(error: unknown): string {
