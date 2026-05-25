@@ -19,8 +19,8 @@ importers:
         specifier: 4.0.0-beta.70
         version: 4.0.0-beta.70(effect@4.0.0-beta.70)(ioredis@5.10.1)
       '@effect/vitest':
-        specifier: 4.0.0-beta.66
-        version: 4.0.0-beta.66(@voidzero-dev/vite-plus-test@0.1.21(@opentelemetry/api@1.9.1)(@types/node@25.9.0)(typescript@6.0.3)(vite@8.0.13(@types/node@25.9.0)(yaml@2.9.0))(yaml@2.9.0))(effect@4.0.0-beta.70)
+        specifier: 4.0.0-beta.70
+        version: 4.0.0-beta.70(@voidzero-dev/vite-plus-test@0.1.21(@opentelemetry/api@1.9.1)(@types/node@25.9.0)(typescript@6.0.3)(vite@8.0.13(@types/node@25.9.0)(yaml@2.9.0))(yaml@2.9.0))(effect@4.0.0-beta.70)
       '@stryker-mutator/core':
         specifier: 9.6.1
         version: 9.6.1(@types/node@25.9.0)
@@ -495,10 +495,10 @@ packages:
       effect: ^4.0.0-beta.70
       ioredis: ^5.7.0
 
-  '@effect/vitest@4.0.0-beta.66':
-    resolution: {integrity: sha512-UHPNtU0xXkKtNgyRQEh2c8jh4nIIm8Mzp3xc4j2ZdFU4nq5ZSySnpovjPMdoWbVClg1ki8UbpNGEZUfxEJo+6Q==}
+  '@effect/vitest@4.0.0-beta.70':
+    resolution: {integrity: sha512-XDteNN0xfOgoMauAVoN5iylxVgEjp7kFsGFq18tZ5XYjek0eOZa0nOoes5s7Bs71VvwjnCeCbFMD7IhxswEt8A==}
     peerDependencies:
-      effect: ^4.0.0-beta.66
+      effect: ^4.0.0-beta.70
       vitest: ^3.0.0 || ^4.0.0
 
   '@electron/get@5.0.0':
@@ -3673,7 +3673,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/vitest@4.0.0-beta.66(@voidzero-dev/vite-plus-test@0.1.21(@opentelemetry/api@1.9.1)(@types/node@25.9.0)(typescript@6.0.3)(vite@8.0.13(@types/node@25.9.0)(yaml@2.9.0))(yaml@2.9.0))(effect@4.0.0-beta.70)':
+  '@effect/vitest@4.0.0-beta.70(@voidzero-dev/vite-plus-test@0.1.21(@opentelemetry/api@1.9.1)(@types/node@25.9.0)(typescript@6.0.3)(vite@8.0.13(@types/node@25.9.0)(yaml@2.9.0))(yaml@2.9.0))(effect@4.0.0-beta.70)':
     dependencies:
       effect: 4.0.0-beta.70
       vitest: '@voidzero-dev/vite-plus-test@0.1.21(@opentelemetry/api@1.9.1)(@types/node@25.9.0)(typescript@6.0.3)(vite@8.0.13(@types/node@25.9.0)(yaml@2.9.0))(yaml@2.9.0)'
