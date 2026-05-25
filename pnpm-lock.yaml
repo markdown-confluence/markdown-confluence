@@ -172,13 +172,13 @@ importers:
     dependencies:
       '@effect/platform-node':
         specifier: 4.0.0-beta.70
-        version: 4.0.0-beta.70(effect@4.0.0-beta.66)(ioredis@5.10.1)
+        version: 4.0.0-beta.70(effect@4.0.0-beta.70)(ioredis@5.10.1)
       '@markdown-confluence/lib':
         specifier: workspace:5.5.2
         version: link:../lib
       effect:
-        specifier: 4.0.0-beta.66
-        version: 4.0.0-beta.66
+        specifier: 4.0.0-beta.70
+        version: 4.0.0-beta.70
       mermaid:
         specifier: 11.15.0
         version: 11.15.0
@@ -3631,15 +3631,6 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node-shared@4.0.0-beta.70(effect@4.0.0-beta.66)':
-    dependencies:
-      '@types/ws': 8.18.1
-      effect: 4.0.0-beta.66
-      ws: 8.20.1
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   '@effect/platform-node-shared@4.0.0-beta.70(effect@4.0.0-beta.70)':
     dependencies:
       '@types/ws': 8.18.1
@@ -3664,17 +3655,6 @@ snapshots:
     dependencies:
       '@effect/platform-node-shared': 4.0.0-beta.66(effect@4.0.0-beta.68)
       effect: 4.0.0-beta.68
-      ioredis: 5.10.1
-      mime: 4.1.0
-      undici: 8.3.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@effect/platform-node@4.0.0-beta.70(effect@4.0.0-beta.66)(ioredis@5.10.1)':
-    dependencies:
-      '@effect/platform-node-shared': 4.0.0-beta.70(effect@4.0.0-beta.66)
-      effect: 4.0.0-beta.66
       ioredis: 5.10.1
       mime: 4.1.0
       undici: 8.3.0
