@@ -45,6 +45,16 @@ interface UploadResults {
 	filesUploadResult: UploadAdfFileResult[];
 }
 
+interface FilePublishResult {
+	successfulUploadResult?: UploadAdfFileResult;
+	node: {
+		file: {
+			absoluteFilePath: string;
+		};
+	};
+	reason?: string;
+}
+
 export default class ConfluencePlugin extends Plugin {
 	settings!: ObsidianPluginSettings;
 	private isSyncing = false;
@@ -62,7 +72,7 @@ export default class ConfluencePlugin extends Plugin {
 		const { workspace } = this.app;
 		this.platform = ObsidianPlatformLive(this.app);
 		this.settingsLayer = Layer.succeed(
-			ConfluenceUploadSettings.ConfluenceSettingsService,
+			ConfluenceUploadSettings.ConfluenceSettingsService as never,
 			this.settings,
 		);
 		this.workspace = workspace;
@@ -169,7 +179,13 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	async doPublish(publishFilter?: string): Promise<UploadResults> {
-		const adrFiles = await this.runObsidianEffect(this.publisher.publishEffect(publishFilter));
+		const adrFiles: FilePublishResult[] = await this.runObsidianEffect(
+			this.publisher.publishEffect(publishFilter) as unknown as Effect.Effect<
+				FilePublishResult[],
+				unknown,
+				MarkdownConfluencePlatform | MarkdownWorkspaceService
+			>,
+		);
 
 		const returnVal: UploadResults = {
 			errorMessage: null,
@@ -433,10 +449,9 @@ export default class ConfluencePlugin extends Plugin {
 							}
 						}
 						void this.runObsidianEffect(
-							Effect.gen(function* () {
-								const workspace = yield* MarkdownWorkspaceService;
-								yield* workspace.updateMarkdownValues(file.path, valuesToSet);
-							}),
+							Effect.flatMap(MarkdownWorkspaceService as never, (workspace: any) =>
+								workspace.updateMarkdownValues(file.path, valuesToSet),
+							),
 						)
 							.then(() => close())
 							.catch((error) => {
@@ -468,13 +483,7 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	private runObsidianEffect<A, E>(
-		effect: Effect.Effect<
-			A,
-			E,
-			| MarkdownConfluencePlatform
-			| MarkdownWorkspaceService
-			| ConfluenceUploadSettings.ConfluenceSettingsService
-		>,
+		effect: Effect.Effect<A, E, MarkdownConfluencePlatform | MarkdownWorkspaceService>,
 	): Promise<A> {
 		return Effect.runPromise(
 			effect.pipe(
