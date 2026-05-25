@@ -50,7 +50,7 @@
 		"@atlaskit/editor-prosemirror": "^7.3.0",
 		"@effect/platform-node": "4.0.0-beta.66",
 		"confluence.js": "^2.1.0",
-		"effect": "4.0.0-beta.66",
+		"effect": "4.0.0-beta.70",
 		"formdata-node": "^6.0.3",
 		"glob": "^13.0.6",
 		"image-size": "^2.0.2",
