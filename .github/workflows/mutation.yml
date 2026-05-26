@@ -40,7 +40,7 @@ jobs:
       run: vp install --frozen-lockfile
 
     - name: Restore Stryker incremental report
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: reports/mutation/incremental.json
         key: stryker-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.config.mjs', 'packages/lib/src/**/*.ts') }}
