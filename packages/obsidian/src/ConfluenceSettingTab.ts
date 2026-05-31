@@ -1,4 +1,5 @@
 import { App, Setting, PluginSettingTab } from "obsidian";
+import { validateConfluenceSettings } from "@markdown-confluence/lib";
 import ConfluencePlugin from "./main";
 
 export class ConfluenceSettingTab extends PluginSettingTab {
@@ -18,6 +19,30 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			text: "Settings for connecting to Atlassian Confluence",
 		});
 
+		const validationContainer = containerEl.createDiv({
+			cls: "markdown-confluence-settings-validation",
+		});
+		const renderValidationResult = () => {
+			validationContainer.empty();
+			const validationResult = validateConfluenceSettings(this.plugin.settings);
+			if (validationResult.valid) {
+				return;
+			}
+
+			validationContainer.createEl("p", {
+				text: "Settings need attention before publishing:",
+			});
+			const validationList = validationContainer.createEl("ul");
+			for (const issue of validationResult.issues) {
+				validationList.createEl("li", { text: issue.message });
+			}
+		};
+		const saveSettingsAndRenderValidation = async () => {
+			await this.plugin.saveSettings();
+			renderValidationResult();
+		};
+		renderValidationResult();
+
 		new Setting(containerEl)
 			.setName("Confluence Domain")
 			.setDesc('Confluence Domain eg "https://mysite.atlassian.net"')
@@ -27,7 +52,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.confluenceBaseUrl)
 					.onChange(async (value) => {
 						this.plugin.settings.confluenceBaseUrl = value;
-						await this.plugin.saveSettings();
+						await saveSettingsAndRenderValidation();
 					}),
 			);
 
@@ -40,7 +65,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.atlassianUserName)
 					.onChange(async (value) => {
 						this.plugin.settings.atlassianUserName = value;
-						await this.plugin.saveSettings();
+						await saveSettingsAndRenderValidation();
 					}),
 			);
 
@@ -53,7 +78,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.atlassianApiToken)
 					.onChange(async (value) => {
 						this.plugin.settings.atlassianApiToken = value;
-						await this.plugin.saveSettings();
+						await saveSettingsAndRenderValidation();
 					}),
 			);
 
@@ -66,7 +91,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.confluenceParentId)
 					.onChange(async (value) => {
 						this.plugin.settings.confluenceParentId = value;
-						await this.plugin.saveSettings();
+						await saveSettingsAndRenderValidation();
 					}),
 			);
 
@@ -79,7 +104,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.folderToPublish)
 					.onChange(async (value) => {
 						this.plugin.settings.folderToPublish = value;
-						await this.plugin.saveSettings();
+						await saveSettingsAndRenderValidation();
 					}),
 			);
 

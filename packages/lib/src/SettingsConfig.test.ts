@@ -4,6 +4,7 @@ import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { afterEach, expect, test } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
 import { loadConfluenceSettingsEffect, parseConfluenceSettingsEffect } from "./SettingsConfig";
+import { type ConfluenceSettings, validateConfluenceSettings } from "./Settings";
 import { RuntimeEnvironment, RuntimeEnvironmentService, runEffect } from "./effects";
 
 let tmpRoot: string | undefined;
@@ -170,6 +171,41 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 	expect(settings.contentRoot).toBe(expectedContentRoot);
 });
 
+test("reports shared settings validation issues", () => {
+	const validationResult = validateConfluenceSettings({
+		...validSettings,
+		confluenceBaseUrl: "https://example.atlassian.net/",
+		atlassianApiToken: " ",
+	});
+
+	expect(validationResult).toEqual({
+		valid: false,
+		issues: [
+			{
+				field: "atlassianApiToken",
+				message: "Atlassian API token is required",
+			},
+			{
+				field: "confluenceBaseUrl",
+				message: "Confluence base URL must not end with a slash",
+			},
+		],
+	});
+});
+
+test("rejects invalid settings from config providers", async () => {
+	await expect(
+		runEffect(
+			parseConfluenceSettingsEffect(
+				ConfigProvider.fromUnknown({
+					...validSettings,
+					confluenceBaseUrl: "https://example.atlassian.net/",
+				}),
+			),
+		),
+	).rejects.toThrow("Confluence base URL must not end with a slash");
+});
+
 function makeRuntimeEnvironment({
 	argv,
 	cwd,
@@ -188,3 +224,13 @@ function makeRuntimeEnvironment({
 		exit: (code) => Effect.die(new Error(`Unexpected exit ${code}`)) as Effect.Effect<never>,
 	};
 }
+
+const validSettings: ConfluenceSettings = {
+	confluenceBaseUrl: "https://example.atlassian.net",
+	confluenceParentId: "file-parent",
+	atlassianUserName: "file-user@example.com",
+	atlassianApiToken: "file-token",
+	folderToPublish: "file-folder",
+	contentRoot: "docs",
+	firstHeadingPageTitle: false,
+};

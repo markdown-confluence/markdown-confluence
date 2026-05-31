@@ -44,6 +44,11 @@ import {
 	type UploadAdfFileResult,
 } from "./Publisher";
 import {
+	validateConfluenceSettings,
+	type ConfluenceSettingsValidationIssue,
+	type ConfluenceSettingsValidationResult,
+} from "./Settings";
+import {
 	ConfluenceSettingsLive,
 	confluenceSettingsConfig,
 	loadConfluenceSettings,
@@ -81,11 +86,14 @@ export {
 	renderADFDoc,
 	runEffect,
 	stripMarkdownHtmlComments,
+	validateConfluenceSettings,
 	type ADFProcessingPlugin,
 	type BinaryFile,
 	type ChartData,
 	type ConfluenceAdfFile,
 	type ConfluenceNode,
+	type ConfluenceSettingsValidationIssue,
+	type ConfluenceSettingsValidationResult,
 	type ConfluenceTreeNode,
 	type FilesToUpload,
 	type LocalAdfFile,
