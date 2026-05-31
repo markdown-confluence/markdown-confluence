@@ -31,8 +31,33 @@ export function orderMarks(adf: ADFEntity) {
 	});
 }
 
+export function normalizeAdfForComparison(adf: ADFEntity): ADFEntity {
+	return traverse(cloneAdf(adf), {
+		any: (node, __parent) => {
+			if (node.marks) {
+				node.marks = sortDeep(node.marks);
+			}
+
+			const parameters = node.attrs?.["parameters"];
+			if (
+				isRecord(parameters) &&
+				Object.prototype.hasOwnProperty.call(parameters, "macroMetadata")
+			) {
+				const semanticParameters = { ...parameters };
+				delete semanticParameters["macroMetadata"];
+				node.attrs = {
+					...node.attrs,
+					parameters: semanticParameters,
+				};
+			}
+
+			return node;
+		},
+	}) as ADFEntity;
+}
+
 export function adfEqual(first: ADFEntity, second: ADFEntity): boolean {
-	return isEqual(orderMarks(first), orderMarks(second));
+	return isEqual(normalizeAdfForComparison(first), normalizeAdfForComparison(second));
 }
 
 export function marksEqual(
@@ -44,4 +69,12 @@ export function marksEqual(
 	}
 
 	return isEqual(sortDeep(first), sortDeep(second));
+}
+
+function cloneAdf(adf: ADFEntity): ADFEntity {
+	return JSON.parse(JSON.stringify(adf)) as ADFEntity;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }

@@ -96,6 +96,16 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Force Overwrite")
+			.setDesc("Publish over pages last updated by another user")
+			.addToggle((toggle) =>
+				toggle.setValue(this.plugin.settings.forceOverwrite).onChange(async (value) => {
+					this.plugin.settings.forceOverwrite = value;
+					await this.plugin.saveSettings();
+				}),
+			);
+
+		new Setting(containerEl)
 			.setName("Show Publish Results Dialog")
 			.setDesc("Show a dialog after publishing finishes")
 			.addToggle((toggle) =>

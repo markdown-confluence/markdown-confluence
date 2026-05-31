@@ -96,4 +96,5 @@ const testSettings: ConfluenceSettings = {
 	folderToPublish: "Confluence Pages",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
+	forceOverwrite: false,
 };

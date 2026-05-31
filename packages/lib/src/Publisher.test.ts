@@ -3,10 +3,16 @@
 import { expect, test } from "@effect/vitest";
 import { ConfluenceClient } from "confluence.js";
 import { Effect } from "effect";
+import SparkMD5 from "spark-md5";
 import { orderMarks } from "./AdfEqual";
+import { ADFProcessingPlugin, PublisherFunctions } from "./ADFProcessingPlugins";
+import { UploadedImageData } from "./Attachments";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
+import { RequiredConfluenceClient } from "./ConfluenceClient";
 import { Publisher } from "./Publisher";
 import { loadConfluenceSettings } from "./SettingsConfig";
+import { ConfluenceSettings } from "./Settings";
+import { parseMarkdownToADF } from "./MdToADF";
 import {
 	ChartData,
 	MermaidRenderer,
@@ -250,6 +256,93 @@ class InMemoryMarkdownWorkspace implements MarkdownWorkspace {
 	}
 }
 
+test("reports reused attachments as unchanged without uploading them again", async () => {
+	const attachmentBuffer = Buffer.from("unchanged attachment");
+	const attachmentHash = md5(attachmentBuffer);
+	const uploadRequests: unknown[] = [];
+
+	const { result, updateContentRequests } = await publishSinglePage({
+		plugins: [new UploadBufferPlugin("diagram.txt", attachmentBuffer, "text/plain")],
+		attachments: [
+			{
+				title: "diagram.txt",
+				filehash: attachmentHash,
+				fileId: "existing-file-id",
+				collectionName: "contentId-page-id",
+			},
+		],
+		uploadRequests,
+	});
+
+	expect(result[0]?.successfulUploadResult?.imageResult).toBe("same");
+	expect(uploadRequests).toEqual([]);
+	expect(updateContentRequests).toEqual([]);
+});
+
+test("keeps the default last-updated-by guard when force overwrite is disabled", async () => {
+	const { result, updateContentRequests } = await publishSinglePage({
+		markdown: "Local content",
+		existingAdf: parseMarkdownToADF("Remote content", testPublishSettings.confluenceBaseUrl),
+		lastUpdatedBy: "other-user",
+	});
+
+	expect(result[0]?.reason).toContain("Page last updated by another user");
+	expect(updateContentRequests).toEqual([]);
+});
+
+test("allows publishing over another user's update when force overwrite is enabled", async () => {
+	const { result, updateContentRequests } = await publishSinglePage({
+		settings: {
+			...testPublishSettings,
+			forceOverwrite: true,
+		},
+		markdown: "Local content",
+		existingAdf: parseMarkdownToADF("Remote content", testPublishSettings.confluenceBaseUrl),
+		lastUpdatedBy: "other-user",
+	});
+
+	expect(result[0]?.successfulUploadResult?.contentResult).toBe("updated");
+	expect(updateContentRequests).toHaveLength(1);
+	expect(updateContentRequests[0]?.version).toEqual({ number: 2 });
+});
+
+test("preserves the current page space when the parent page should not change", async () => {
+	const { updateContentRequests } = await publishSinglePage({
+		markdown: "Local content",
+		existingAdf: parseMarkdownToADF("Remote content", testPublishSettings.confluenceBaseUrl),
+		pageSpaceKey: "SHARED",
+		dontChangeParentPageId: true,
+	});
+
+	expect(updateContentRequests).toHaveLength(1);
+	expect(updateContentRequests[0]?.ancestors).toBeUndefined();
+	expect(updateContentRequests[0]?.space).toEqual({ key: "SHARED" });
+});
+
+test("refetches the page version and retries content updates after a conflict", async () => {
+	let latestVersion = 2;
+	let shouldConflict = true;
+	const { updateContentRequests } = await publishSinglePage({
+		markdown: "Local content",
+		existingAdf: parseMarkdownToADF("Remote content", testPublishSettings.confluenceBaseUrl),
+		initialVersion: latestVersion,
+		getLatestVersion: () => latestVersion,
+		updateContent: async (request) => {
+			if (shouldConflict) {
+				shouldConflict = false;
+				latestVersion = 3;
+				throw Object.assign(new Error("Version conflict"), {
+					response: { status: 409 },
+				});
+			}
+			latestVersion = request.version.number;
+			return request;
+		},
+	});
+
+	expect(updateContentRequests.map((request) => request.version.number)).toEqual([3, 4]);
+});
+
 confluenceIntegrationTest(
 	"Upload to Confluence",
 	async () => {
@@ -306,3 +399,222 @@ confluenceIntegrationTest(
 	},
 	300000,
 );
+
+class UploadBufferPlugin implements ADFProcessingPlugin<undefined, UploadedImageData | null> {
+	constructor(
+		private readonly uploadFilename: string,
+		private readonly buffer: Buffer,
+		private readonly contentType: string,
+	) {}
+
+	extract(): undefined {
+		return undefined;
+	}
+
+	async transform(
+		_items: undefined,
+		supportFunctions: PublisherFunctions,
+	): Promise<UploadedImageData | null> {
+		return supportFunctions.uploadBuffer(this.uploadFilename, this.buffer, this.contentType);
+	}
+
+	load(adf: JSONDocNode): JSONDocNode {
+		return adf;
+	}
+}
+
+type AttachmentFixture = {
+	title: string;
+	filehash: string;
+	fileId: string;
+	collectionName: string;
+};
+
+type UpdateContentRequest = {
+	id: string;
+	title: string;
+	type: string;
+	version: { number: number };
+	body: {
+		atlas_doc_format: {
+			value: string;
+			representation: string;
+		};
+	};
+	ancestors?: { id: string }[];
+	space?: { key: string };
+};
+
+async function publishSinglePage({
+	settings = testPublishSettings,
+	markdown = "Hello",
+	existingAdf = parseMarkdownToADF(markdown, settings.confluenceBaseUrl),
+	lastUpdatedBy = "current-user",
+	initialVersion = 1,
+	pageSpaceKey = "SPACE",
+	dontChangeParentPageId = false,
+	plugins = [],
+	attachments = [],
+	uploadRequests = [],
+	getLatestVersion = () => initialVersion,
+	updateContent = async (request) => request,
+}: {
+	settings?: ConfluenceSettings;
+	markdown?: string;
+	existingAdf?: JSONDocNode;
+	lastUpdatedBy?: string;
+	initialVersion?: number;
+	pageSpaceKey?: string;
+	dontChangeParentPageId?: boolean;
+	plugins?: ADFProcessingPlugin<unknown, unknown>[];
+	attachments?: AttachmentFixture[];
+	uploadRequests?: unknown[];
+	getLatestVersion?: () => number;
+	updateContent?: (request: UpdateContentRequest) => Promise<unknown>;
+} = {}) {
+	const updateContentRequests: UpdateContentRequest[] = [];
+	const confluenceClient = makePublisherTestConfluenceClient({
+		existingAdf,
+		lastUpdatedBy,
+		initialVersion,
+		pageSpaceKey,
+		attachments,
+		uploadRequests,
+		getLatestVersion,
+		updateContent: async (request) => {
+			updateContentRequests.push(request);
+			return updateContent(request);
+		},
+	});
+	const workspace = new InMemoryMarkdownWorkspace([
+		{
+			folderName: "docs",
+			absoluteFilePath: "/docs/page.md",
+			fileName: "page.md",
+			contents: markdown,
+			pageTitle: "Page",
+			frontmatter: {
+				"connie-page-id": "page-id",
+				"connie-dont-change-parent-page": dontChangeParentPageId,
+			},
+		},
+	]);
+	const publisher = new Publisher(settings, confluenceClient, plugins);
+
+	const result = await runEffect(
+		publisher.publishEffect().pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
+	);
+
+	return {
+		result,
+		updateContentRequests,
+	};
+}
+
+function makePublisherTestConfluenceClient({
+	existingAdf,
+	lastUpdatedBy,
+	initialVersion,
+	pageSpaceKey,
+	attachments,
+	uploadRequests,
+	getLatestVersion,
+	updateContent,
+}: {
+	existingAdf: JSONDocNode;
+	lastUpdatedBy: string;
+	initialVersion: number;
+	pageSpaceKey: string;
+	attachments: AttachmentFixture[];
+	uploadRequests: unknown[];
+	getLatestVersion: () => number;
+	updateContent: (request: UpdateContentRequest) => Promise<unknown>;
+}): RequiredConfluenceClient {
+	return {
+		users: {
+			getCurrentUser: async () => ({ accountId: "current-user" }),
+		},
+		content: {
+			getContentById: async ({ id, expand }: { id: string; expand?: string[] }) => {
+				if (id === "parent-id") {
+					return {
+						id: "parent-id",
+						space: { key: "SPACE" },
+					};
+				}
+
+				const versionNumber =
+					expand?.length === 1 && expand[0] === "version"
+						? getLatestVersion()
+						: initialVersion;
+
+				return {
+					id: "page-id",
+					title: "Page",
+					type: "page",
+					version: {
+						number: versionNumber,
+						by: { accountId: lastUpdatedBy },
+					},
+					body: {
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						atlas_doc_format: {
+							value: JSON.stringify(existingAdf),
+						},
+					},
+					ancestors: [{ id: "parent-id" }],
+					space: { key: pageSpaceKey },
+				};
+			},
+			updateContent,
+		},
+		contentAttachments: {
+			getAttachments: async () => ({
+				results: attachments.map((attachment) => ({
+					title: attachment.title,
+					metadata: { comment: attachment.filehash },
+					extensions: {
+						fileId: attachment.fileId,
+						collectionName: attachment.collectionName,
+					},
+				})),
+			}),
+			createOrUpdateAttachments: async (request: unknown) => {
+				uploadRequests.push(request);
+				return {
+					results: [
+						{
+							extensions: {
+								fileId: "new-file-id",
+							},
+							container: {
+								id: "page-id",
+							},
+						},
+					],
+				};
+			},
+		},
+		contentLabels: {
+			getLabelsForContent: async () => ({ results: [] }),
+			removeLabelFromContentUsingQueryParameter: async () => undefined,
+			addLabelsToContent: async () => undefined,
+		},
+	} as unknown as RequiredConfluenceClient;
+}
+
+function md5(contents: Buffer): string {
+	const spark = new SparkMD5.ArrayBuffer();
+	return spark.append(Uint8Array.from(contents).buffer).end();
+}
+
+const testPublishSettings: ConfluenceSettings = {
+	confluenceBaseUrl: "https://example.atlassian.net",
+	confluenceParentId: "parent-id",
+	atlassianUserName: "user@example.com",
+	atlassianApiToken: "token",
+	folderToPublish: ".",
+	contentRoot: ".",
+	firstHeadingPageTitle: false,
+	forceOverwrite: false,
+};

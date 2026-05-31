@@ -254,6 +254,7 @@ test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
 		folderToPublish: ".",
 		contentRoot: "./",
 		firstHeadingPageTitle: false,
+		forceOverwrite: false,
 	};
 	const adfFile = convertMDtoADF(markdown, settings);
 	expect(adfFile).toMatchSnapshot();
@@ -285,6 +286,7 @@ test("parses callout with adjacent wikilink image", () => {
 		folderToPublish: ".",
 		contentRoot: "./",
 		firstHeadingPageTitle: false,
+		forceOverwrite: false,
 	};
 
 	const adfFile = convertMDtoADF(markdown, settings);

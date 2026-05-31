@@ -74,6 +74,11 @@ interface ConfluencePageExistingData {
 	contentType: string;
 }
 
+type UpdateContentDetails = Omit<
+	Parameters<RequiredConfluenceClient["content"]["updateContent"]>[0],
+	"version"
+>;
+
 export interface ConfluenceNode {
 	file: ConfluenceAdfFile;
 	version: number;
@@ -231,14 +236,13 @@ export class Publisher {
 	> {
 		const confluenceClient = this.confluenceClient;
 		const adfProcessingPlugins = this.adfProcessingPlugins;
+		const settings = this.settings;
 		const getMyAccountId = () => this.myAccountId;
 
 		return Effect.gen(function* () {
-			if (lastUpdatedBy !== getMyAccountId()) {
+			if (!settings.forceOverwrite && lastUpdatedBy !== getMyAccountId()) {
 				return yield* Effect.fail(
-					new Error(
-						`Page last updated by another user. Won't publish over their changes. MyAccountId: ${getMyAccountId()}, Last Updated By: ${lastUpdatedBy}`,
-					),
+					createUpdatedByAnotherUserError(getMyAccountId(), lastUpdatedBy),
 				);
 			}
 			if (existingPageData.contentType !== adfFile.contentType) {
@@ -277,7 +281,7 @@ export class Publisher {
 				}, {});
 
 			const workspace = yield* MarkdownWorkspaceService;
-			let processedAttachment = false;
+			let uploadedAttachment = false;
 			const supportFunctions = trackProcessedAttachments(
 				createPublisherFunctions(
 					confluenceClient,
@@ -287,8 +291,8 @@ export class Publisher {
 					currentAttachments,
 				),
 				(uploaded) => {
-					if (uploaded) {
-						processedAttachment = true;
+					if (uploaded?.status === "uploaded") {
+						uploadedAttachment = true;
 					}
 				},
 			);
@@ -298,22 +302,27 @@ export class Publisher {
 				supportFunctions,
 			);
 
-			if (processedAttachment) {
+			if (uploadedAttachment) {
 				result.imageResult = "updated";
 			}
 
+			const shouldPreserveParent =
+				adfFile.contentType === "blogpost" || adfFile.dontChangeParentPageId;
+			const currentSpaceDetails = adfFile.dontChangeParentPageId
+				? { space: { key: adfFile.spaceKey } }
+				: {};
 			const existingPageDetails = {
 				title: existingPageData.pageTitle,
 				type: existingPageData.contentType,
-				...(adfFile.contentType === "blogpost" || adfFile.dontChangeParentPageId
-					? {}
-					: { ancestors: existingPageData.ancestors }),
+				...currentSpaceDetails,
+				...(shouldPreserveParent ? {} : { ancestors: existingPageData.ancestors }),
 			};
 
 			const newPageDetails = {
 				title: adfFile.pageTitle,
 				type: adfFile.contentType,
-				...(adfFile.contentType === "blogpost" || adfFile.dontChangeParentPageId
+				...currentSpaceDetails,
+				...(shouldPreserveParent
 					? {}
 					: {
 							ancestors: ancestors.map((ancestor) => ({
@@ -330,7 +339,6 @@ export class Publisher {
 				const updateContentDetails = {
 					...newPageDetails,
 					id: adfFile.pageId,
-					version: { number: pageVersionNumber + 1 },
 					body: {
 						// eslint-disable-next-line @typescript-eslint/naming-convention
 						atlas_doc_format: {
@@ -339,10 +347,15 @@ export class Publisher {
 						},
 					},
 				};
-				yield* Effect.tryPromise({
-					try: () => confluenceClient.content.updateContent(updateContentDetails),
-					catch: identity,
-				});
+				yield* updateContentWithLatestVersionEffect(
+					confluenceClient,
+					updateContentDetails,
+					adfFile.pageId,
+					pageVersionNumber,
+					lastUpdatedBy,
+					getMyAccountId(),
+					settings.forceOverwrite,
+				);
 			}
 
 			const getLabelsForContent = {
@@ -425,6 +438,125 @@ function trackProcessedAttachments(
 				.uploadBufferEffect(uploadFilename, fileBuffer, contentType)
 				.pipe(Effect.tap((uploaded) => Effect.sync(() => onProcessedAttachment(uploaded)))),
 	};
+}
+
+function updateContentWithLatestVersionEffect(
+	confluenceClient: RequiredConfluenceClient,
+	updateContentDetails: UpdateContentDetails,
+	pageId: string,
+	fallbackVersionNumber: number,
+	fallbackLastUpdatedBy: string,
+	myAccountId: string | undefined,
+	forceOverwrite: boolean,
+	attemptsRemaining = 2,
+): Effect.Effect<unknown, unknown, never> {
+	return getLatestPageVersionDetailsEffect(
+		confluenceClient,
+		pageId,
+		fallbackVersionNumber,
+		fallbackLastUpdatedBy,
+	).pipe(
+		Effect.flatMap((versionDetails) => {
+			if (
+				!forceOverwrite &&
+				versionDetails.lastUpdatedBy &&
+				versionDetails.lastUpdatedBy !== myAccountId
+			) {
+				return Effect.fail(
+					createUpdatedByAnotherUserError(myAccountId, versionDetails.lastUpdatedBy),
+				);
+			}
+
+			return Effect.tryPromise({
+				try: () =>
+					confluenceClient.content.updateContent({
+						...updateContentDetails,
+						version: { number: versionDetails.number + 1 },
+					}),
+				catch: identity,
+			}).pipe(
+				Effect.catch((error) => {
+					if (attemptsRemaining > 0 && isVersionConflictError(error)) {
+						return updateContentWithLatestVersionEffect(
+							confluenceClient,
+							updateContentDetails,
+							pageId,
+							fallbackVersionNumber,
+							fallbackLastUpdatedBy,
+							myAccountId,
+							forceOverwrite,
+							attemptsRemaining - 1,
+						);
+					}
+
+					return Effect.fail(error);
+				}),
+			);
+		}),
+	);
+}
+
+function getLatestPageVersionDetailsEffect(
+	confluenceClient: RequiredConfluenceClient,
+	pageId: string,
+	fallbackVersionNumber: number,
+	fallbackLastUpdatedBy: string,
+): Effect.Effect<{ number: number; lastUpdatedBy: string }, unknown, never> {
+	return Effect.tryPromise({
+		try: () =>
+			confluenceClient.content.getContentById({
+				id: pageId,
+				expand: ["version"],
+			}),
+		catch: identity,
+	}).pipe(
+		Effect.map((pageDetails) => ({
+			number: pageDetails.version?.number ?? fallbackVersionNumber,
+			lastUpdatedBy: pageDetails.version?.by?.accountId ?? fallbackLastUpdatedBy,
+		})),
+	);
+}
+
+function createUpdatedByAnotherUserError(
+	myAccountId: string | undefined,
+	lastUpdatedBy: string,
+): Error {
+	return new Error(
+		`Page last updated by another user. Won't publish over their changes. MyAccountId: ${myAccountId}, Last Updated By: ${lastUpdatedBy}`,
+	);
+}
+
+function isVersionConflictError(error: unknown): boolean {
+	const status = getErrorStatus(error);
+	return status === 409;
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+	if (!error || typeof error !== "object") {
+		return undefined;
+	}
+
+	if ("status" in error && typeof error.status === "number") {
+		return error.status;
+	}
+
+	if ("statusCode" in error && typeof error.statusCode === "number") {
+		return error.statusCode;
+	}
+
+	if ("response" in error) {
+		const response = error.response;
+		if (response && typeof response === "object") {
+			if ("status" in response && typeof response.status === "number") {
+				return response.status;
+			}
+			if ("statusCode" in response && typeof response.statusCode === "number") {
+				return response.statusCode;
+			}
+		}
+	}
+
+	return undefined;
 }
 
 function identity(error: unknown): unknown {

@@ -27,6 +27,7 @@ export const confluenceSettingsConfig = Config.all({
 	folderToPublish: Config.string("folderToPublish"),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
+	forceOverwrite: Config.boolean("forceOverwrite"),
 });
 
 export const ConfluenceSettingsLive: Layer.Layer<
@@ -181,6 +182,7 @@ function makeEnvironmentProvider(
 		const firstHeadingPageTitle = yield* runtimeEnvironment.getEnv(
 			"CONFLUENCE_FIRST_HEADING_PAGE_TITLE",
 		);
+		const forceOverwrite = yield* runtimeEnvironment.getEnv("CONFLUENCE_FORCE_OVERWRITE");
 
 		return ConfigProvider.fromEnv({
 			env: compactRecord({
@@ -192,6 +194,7 @@ function makeEnvironmentProvider(
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
 				firstHeadingPageTitle:
 					firstHeadingPageTitle === "true" ? firstHeadingPageTitle : undefined,
+				forceOverwrite: forceOverwrite === "true" ? forceOverwrite : undefined,
 			}),
 		});
 	});
@@ -206,6 +209,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
+		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
 	]);
 
 	return ConfigProvider.fromUnknown(
@@ -217,6 +221,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			folderToPublish: options["enableFolder"],
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
+			forceOverwrite: options["forceOverwrite"],
 		}),
 	);
 }
