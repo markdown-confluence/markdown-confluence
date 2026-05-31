@@ -69,10 +69,28 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 						}
 						const mappedImage = imageMap[node.attrs["url"]];
 						if (mappedImage) {
+							const requestedWidth = node.attrs["width"];
+							const requestedHeight = node.attrs["height"];
+							const hasRequestedDimensions =
+								hasMediaDimension(requestedWidth) ||
+								hasMediaDimension(requestedHeight);
+
 							node.attrs["collection"] = mappedImage.collection;
 							node.attrs["id"] = mappedImage.id;
-							node.attrs["width"] = mappedImage.width;
-							node.attrs["height"] = mappedImage.height;
+							if (hasMediaDimension(requestedWidth)) {
+								node.attrs["width"] = requestedWidth;
+							} else if (hasRequestedDimensions) {
+								delete node.attrs["width"];
+							} else {
+								node.attrs["width"] = mappedImage.width;
+							}
+							if (hasMediaDimension(requestedHeight)) {
+								node.attrs["height"] = requestedHeight;
+							} else if (hasRequestedDimensions) {
+								delete node.attrs["height"];
+							} else {
+								node.attrs["height"] = mappedImage.height;
+							}
 							delete node.attrs["url"];
 							return node;
 						}
@@ -98,3 +116,7 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 		return afterAdf as JSONDocNode;
 	},
 };
+
+function hasMediaDimension(value: unknown): boolean {
+	return value !== undefined && value !== null && value !== "";
+}

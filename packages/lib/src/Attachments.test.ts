@@ -60,6 +60,56 @@ test("derives upload buffer content type from the filename", async () => {
 	expect(getUploadedAttachment(uploadRequests).contentType).toBe("text/plain");
 });
 
+test("falls back to octet-stream for unknown upload buffer file types", async () => {
+	const uploadRequests: unknown[] = [];
+
+	const result = await Effect.runPromise(
+		uploadBufferEffect(
+			makeConfluenceClient(uploadRequests),
+			"page-id",
+			"profile.not-a-known-type",
+			Buffer.from("profile data"),
+			{},
+		),
+	);
+
+	expect(result?.status).toBe("uploaded");
+	expect(getUploadedAttachment(uploadRequests).contentType).toBe("application/octet-stream");
+});
+
+test("uploads non-image files without requiring image dimensions", async () => {
+	const uploadRequests: unknown[] = [];
+	const workspace = new TestMarkdownWorkspace((searchPath) =>
+		searchPath === "movie.mp4"
+			? {
+					filename: "movie.mp4",
+					filePath: "assets/movie.mp4",
+					mimeType: "video/mp4",
+					contents: Buffer.from("not an image"),
+				}
+			: false,
+	);
+
+	const result = await Effect.runPromise(
+		uploadFileEffect(
+			makeConfluenceClient(uploadRequests),
+			"page-id",
+			"page.md",
+			"movie.mp4",
+			{},
+		).pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
+	);
+
+	expect(result).toMatchObject({
+		filename: "movie.mp4",
+		height: 0,
+		id: "file-id",
+		status: "uploaded",
+		width: 0,
+	});
+	expect(getUploadedAttachment(uploadRequests).contentType).toBe("video/mp4");
+});
+
 class TestMarkdownWorkspace implements MarkdownWorkspace {
 	readonly getMarkdownFilesToUpload: Effect.Effect<FilesToUpload, Error> = Effect.succeed([]);
 
