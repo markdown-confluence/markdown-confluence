@@ -8,6 +8,9 @@ export type ConfluenceSettings = {
 	folderToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
+	pageHeaderMarkdown?: string;
+	pageFooterMarkdown?: string;
+	ignoredCodeBlockLanguages?: readonly string[];
 };
 
 export const DEFAULT_SETTINGS: ConfluenceSettings = {
@@ -18,6 +21,9 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	folderToPublish: "Confluence Pages",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
+	pageHeaderMarkdown: "",
+	pageFooterMarkdown: "",
+	ignoredCodeBlockLanguages: [],
 };
 
 export class ConfluenceSettingsService extends Context.Service<

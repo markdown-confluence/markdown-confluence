@@ -1,6 +1,6 @@
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
-import { Config, ConfigProvider, Effect, Layer } from "effect";
+import { Config, ConfigProvider, Effect, Layer, Schema } from "effect";
 import {
 	MarkdownConfluencePlatform,
 	runEffect,
@@ -27,6 +27,12 @@ export const confluenceSettingsConfig = Config.all({
 	folderToPublish: Config.string("folderToPublish"),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
+	pageHeaderMarkdown: Config.string("pageHeaderMarkdown"),
+	pageFooterMarkdown: Config.string("pageFooterMarkdown"),
+	ignoredCodeBlockLanguages: Config.schema(
+		Schema.Array(Schema.String),
+		"ignoredCodeBlockLanguages",
+	),
 });
 
 export const ConfluenceSettingsLive: Layer.Layer<
@@ -192,6 +198,12 @@ function makeEnvironmentProvider(
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
 				firstHeadingPageTitle:
 					firstHeadingPageTitle === "true" ? firstHeadingPageTitle : undefined,
+				pageHeaderMarkdown: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_PAGE_HEADER_MARKDOWN",
+				),
+				pageFooterMarkdown: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_PAGE_FOOTER_MARKDOWN",
+				),
 			}),
 		});
 	});
@@ -206,6 +218,8 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
+		{ name: "pageHeaderMarkdown", type: "string" },
+		{ name: "pageFooterMarkdown", type: "string" },
 	]);
 
 	return ConfigProvider.fromUnknown(
@@ -217,6 +231,8 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			folderToPublish: options["enableFolder"],
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
+			pageHeaderMarkdown: options["pageHeaderMarkdown"],
+			pageFooterMarkdown: options["pageFooterMarkdown"],
 		}),
 	);
 }
@@ -295,7 +311,15 @@ function pickConfluenceSettings(config: Record<string, unknown>): Partial<Conflu
 		}
 
 		const value = config[key];
-		if (typeof value === typeof DEFAULT_SETTINGS[key]) {
+		const defaultValue = DEFAULT_SETTINGS[key];
+		if (Array.isArray(defaultValue)) {
+			if (Array.isArray(value) && value.every((item) => typeof item === "string")) {
+				(result as Record<string, unknown>)[key] = value;
+			}
+			continue;
+		}
+
+		if (typeof value === typeof defaultValue) {
 			(result as Record<string, unknown>)[key] = value;
 		}
 	}

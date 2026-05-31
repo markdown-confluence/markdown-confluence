@@ -292,3 +292,78 @@ test("parses callout with adjacent wikilink image", () => {
 	expect(adfFile.contents.content?.[0]?.type).toBe("panel");
 	expect(JSON.stringify(adfFile.contents)).toContain("file://Pasted image 20231006155212.png");
 });
+
+test("converts toc code fences and wiki markup to Confluence TOC macros", () => {
+	const markdown: MarkdownFile = {
+		folderName: "macros",
+		absoluteFilePath: "/path/to/macros.md",
+		fileName: "macros.md",
+		contents: ["```toc", "```", "", "{toc:printable=true|maxLevel=3}", "", "# Body"].join("\n"),
+		pageTitle: "Macros",
+		frontmatter: {},
+	};
+
+	const adfFile = convertMDtoADF(markdown, createTestSettings());
+	const [tocFenceMacro, wikiTocMacro] = adfFile.contents.content ?? [];
+
+	expect(tocFenceMacro?.type).toBe("paragraph");
+	expect(JSON.stringify(tocFenceMacro)).toContain('"extensionKey":"toc"');
+	expect(JSON.stringify(tocFenceMacro)).toContain('"title":"Table of Contents"');
+	expect(JSON.stringify(wikiTocMacro)).toContain('"printable":{"value":"true"}');
+	expect(JSON.stringify(wikiTocMacro)).toContain('"maxLevel":{"value":"3"}');
+});
+
+test("adds configured page header and footer while ignoring configured code blocks", () => {
+	const markdown: MarkdownFile = {
+		folderName: "transforms",
+		absoluteFilePath: "/path/to/transforms.md",
+		fileName: "transforms.md",
+		contents: [
+			"# Body",
+			"",
+			"```dataview",
+			"LIST FROM #project",
+			"```",
+			"",
+			"```button",
+			"name Publish",
+			"```",
+			"",
+			"```ts",
+			"const keep = true;",
+			"```",
+		].join("\n"),
+		pageTitle: "Transforms",
+		frontmatter: {},
+	};
+
+	const adfFile = convertMDtoADF(
+		markdown,
+		createTestSettings({
+			pageHeaderMarkdown: "Generated from source",
+			pageFooterMarkdown: "_End of synced content_",
+			ignoredCodeBlockLanguages: ["dataview", "button"],
+		}),
+	);
+	const serializedAdf = JSON.stringify(adfFile.contents);
+
+	expect(serializedAdf).toContain("Generated from source");
+	expect(serializedAdf).toContain("End of synced content");
+	expect(serializedAdf).not.toContain("LIST FROM #project");
+	expect(serializedAdf).not.toContain("name Publish");
+	expect(serializedAdf).toContain("const keep = true;");
+	expect(adfFile.contents.content?.[0]?.content?.[0]?.text).toBe("Generated from source");
+});
+
+function createTestSettings(overrides: Partial<ConfluenceSettings> = {}): ConfluenceSettings {
+	return {
+		confluenceBaseUrl: "https://example.com",
+		confluenceParentId: "asdf",
+		atlassianUserName: "asdf@asdf.com",
+		atlassianApiToken: "asdfasdf",
+		folderToPublish: ".",
+		contentRoot: "./",
+		firstHeadingPageTitle: false,
+		...overrides,
+	};
+}

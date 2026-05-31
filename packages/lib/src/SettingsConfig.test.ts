@@ -40,6 +40,9 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 					folderToPublish: "file-folder",
 					contentRoot: "file-root",
 					firstHeadingPageTitle: true,
+					pageHeaderMarkdown: "File header",
+					pageFooterMarkdown: "File footer",
+					ignoredCodeBlockLanguages: ["dataview"],
 				}),
 			);
 
@@ -68,6 +71,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 			CONFLUENCE_BASE_URL: "https://env.example.atlassian.net",
 			ATLASSIAN_USERNAME: "env-user@example.com",
 			FOLDER_TO_PUBLISH: "env-folder",
+			CONFLUENCE_PAGE_HEADER_MARKDOWN: "Env header",
 		},
 	});
 
@@ -91,6 +95,9 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 		folderToPublish: "env-folder",
 		contentRoot: expectedCliContentRoot,
 		firstHeadingPageTitle: true,
+		pageHeaderMarkdown: "Env header",
+		pageFooterMarkdown: "File footer",
+		ignoredCodeBlockLanguages: ["dataview"],
 	});
 });
 
@@ -108,6 +115,9 @@ test("keeps explicit false values from config providers", async () => {
 					folderToPublish: "file-folder",
 					contentRoot,
 					firstHeadingPageTitle: false,
+					pageHeaderMarkdown: "",
+					pageFooterMarkdown: "",
+					ignoredCodeBlockLanguages: [],
 				}),
 			);
 
@@ -145,6 +155,8 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 					contentRoot,
 					"--fh",
 					"false",
+					"--pageFooterMarkdown",
+					"CLI footer",
 				],
 				cwd: ".",
 				env: {},
@@ -167,6 +179,7 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 	);
 
 	expect(settings.firstHeadingPageTitle).toBe(false);
+	expect(settings.pageFooterMarkdown).toBe("CLI footer");
 	expect(settings.contentRoot).toBe(expectedContentRoot);
 });
 
