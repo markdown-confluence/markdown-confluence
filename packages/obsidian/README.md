@@ -62,6 +62,14 @@ connie-publish: true
 3. Add notes to this folder or add the connie-publish frontmatter to other notes.
 4. Click the cloud icon in the ribbon or use the "Publish All to Confluence" command to publish your notes to Confluence.
 
+### Publishing hierarchy
+
+The configured `Confluence Parent Id` is the Confluence page that represents the root of the local publishing tree. The `Folder To Publish` folder is not created as an extra child page under that parent.
+
+To publish the root parent page's content from Obsidian, add a folder note at the root of `Folder To Publish`. The folder note can be named the same as the folder, `index.md`, `README.md`, or `readme.md`. Subfolders use the same folder-note names for their folder pages.
+
+Pages created directly in Confluence are not imported into Obsidian or published automatically. To manage an existing Confluence page from Obsidian, create a local note and set its `connie-page-id` frontmatter to the Confluence page ID.
+
 ### Contributing
 Contributions are welcome! If you have a feature request, bug report, or want to improve the plugin, please open an issue or submit a pull request on the GitHub repository.
 

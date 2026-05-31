@@ -61,7 +61,116 @@ test("preserves nested synthetic folder paths", async () => {
 	expect(subsection?.file?.absoluteFilePath).toBe(result.expectedSubsectionPath);
 });
 
-function createMarkdownFile(filesystemPath: Path, absoluteFilePath: string): MarkdownFile {
+test("uses folder names for README folder notes without explicit titles", async () => {
+	const result = await runEffect(
+		Effect.gen(function* () {
+			const filesystemPath = yield* Path;
+			const tree = createFolderStructure(
+				[
+					createMarkdownFile(
+						filesystemPath,
+						filesystemPath.join("docs", "folder-one", "README.md"),
+					),
+					createMarkdownFile(
+						filesystemPath,
+						filesystemPath.join("docs", "folder-two", "README.md"),
+					),
+				],
+				testSettings,
+			);
+
+			return tree;
+		}),
+	);
+
+	expect(result.children.map((child) => child.file?.pageTitle)).toEqual([
+		"folder-one",
+		"folder-two",
+	]);
+});
+
+test("preserves explicit README folder note titles", async () => {
+	const result = await runEffect(
+		Effect.gen(function* () {
+			const filesystemPath = yield* Path;
+			const tree = createFolderStructure(
+				[
+					createMarkdownFile(
+						filesystemPath,
+						filesystemPath.join("docs", "folder-one", "README.md"),
+						{
+							contents: "# Explicit Title",
+							frontmatter: { "connie-title": "Explicit Title" },
+						},
+					),
+					createMarkdownFile(filesystemPath, filesystemPath.join("docs", "sibling.md")),
+				],
+				testSettings,
+			);
+
+			return tree;
+		}),
+	);
+
+	expect(result.children[0]?.file?.pageTitle).toBe("Explicit Title");
+});
+
+test("allows duplicate page titles when every duplicate has an explicit page id", async () => {
+	const tree = await runEffect(
+		Effect.gen(function* () {
+			const filesystemPath = yield* Path;
+			return createFolderStructure(
+				[
+					createMarkdownFile(filesystemPath, filesystemPath.join("docs", "one.md"), {
+						frontmatter: {
+							"connie-title": "Shared Title",
+							"connie-page-id": "111",
+						},
+					}),
+					createMarkdownFile(filesystemPath, filesystemPath.join("docs", "two.md"), {
+						frontmatter: {
+							"connie-title": "Shared Title",
+							"connie-page-id": "222",
+						},
+					}),
+				],
+				testSettings,
+			);
+		}),
+	);
+
+	expect(tree.children.map((child) => child.file?.pageTitle)).toEqual([
+		"Shared Title",
+		"Shared Title",
+	]);
+});
+
+test("rejects duplicate page titles without explicit page ids", async () => {
+	await expect(
+		runEffect(
+			Effect.gen(function* () {
+				const filesystemPath = yield* Path;
+				return createFolderStructure(
+					[
+						createMarkdownFile(filesystemPath, filesystemPath.join("docs", "one.md"), {
+							frontmatter: { "connie-title": "Shared Title" },
+						}),
+						createMarkdownFile(filesystemPath, filesystemPath.join("docs", "two.md"), {
+							frontmatter: { "connie-title": "Shared Title" },
+						}),
+					],
+					testSettings,
+				);
+			}),
+		),
+	).rejects.toThrow('Page title "Shared Title" is not unique across all files.');
+});
+
+function createMarkdownFile(
+	filesystemPath: Path,
+	absoluteFilePath: string,
+	overrides: Partial<MarkdownFile> = {},
+): MarkdownFile {
 	const parsedFilePath = filesystemPath.parse(absoluteFilePath);
 
 	return {
@@ -71,6 +180,7 @@ function createMarkdownFile(filesystemPath: Path, absoluteFilePath: string): Mar
 		contents: `# ${parsedFilePath.name}`,
 		pageTitle: parsedFilePath.name,
 		frontmatter: {},
+		...overrides,
 	};
 }
 

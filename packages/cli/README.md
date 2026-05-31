@@ -147,6 +147,16 @@ This scans `phil` and publishes only files under `phil/thingy`:
 }
 ```
 
+### Publishing Hierarchy and Folder Notes
+
+Markdown Confluence builds the Confluence page tree from the relative paths of the Markdown files it publishes. The common local root maps to `confluenceParentId`; it is not created as an extra child page.
+
+To publish each repository under a repo-named sub-page such as `parent-page/hello-world`, either set `confluenceParentId` to the existing `hello-world` page ID for that repository run, or keep a `hello-world` folder in the scanned Markdown tree so the folder becomes the sub-page under `confluenceParentId`. There is no separate global "sub-parent page name" setting.
+
+A folder can provide its own page content with a folder note. The folder note can be named the same as the folder, `index.md`, `README.md`, or `readme.md`. When an `index.md` or `README.md` folder note has no explicit `connie-title` and no first-heading title, the folder name is used as the Confluence page title. At the publishing root, an `index.md` or `README.md` folder note updates the configured parent page's content instead of creating a child page named `index` or `README`.
+
+Only local Markdown files are published. Pages created directly in Confluence are not pulled into the local tree or published automatically. To manage an existing Confluence page from Markdown, create a local Markdown file and set `connie-page-id` to that page ID.
+
 ### Per-page Frontmatter
 
 Individual Markdown files can override publishing behavior with frontmatter:
