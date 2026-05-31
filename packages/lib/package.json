@@ -44,7 +44,7 @@
 		"test": "vitest run --root ../.. --config vitest.config.ts"
 	},
 	"dependencies": {
-		"@atlaskit/adf-schema": "^52.11.4",
+		"@atlaskit/adf-schema": "^52.14.1",
 		"@atlaskit/adf-utils": "^19.29.6",
 		"@atlaskit/editor-json-transformer": "^8.32.0",
 		"@atlaskit/editor-prosemirror": "^7.3.0",
@@ -55,7 +55,7 @@
 		"glob": "^13.0.6",
 		"image-size": "^2.0.2",
 		"lodash-es": "^4.18.1",
-		"markdown-it": "^14.1.1",
+		"markdown-it": "^14.2.0",
 		"markdown-it-table": "^4.1.1",
 		"markdown-table": "^3.0.4",
 		"mime-types": "^3.0.2",

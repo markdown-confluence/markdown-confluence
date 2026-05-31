@@ -22,12 +22,12 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - name: Check out repository code
-      uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: Set up Vite+
       uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
@@ -40,7 +40,7 @@ jobs:
       run: vp install --frozen-lockfile
 
     - name: Restore Stryker incremental report
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: reports/mutation/incremental.json
         key: stryker-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.config.mjs', 'packages/lib/src/**/*.ts') }}
@@ -52,7 +52,7 @@ jobs:
 
     - name: Upload mutation report
       if: ${{ always() }}
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: mutation-report
         path: reports/mutation

@@ -23,9 +23,9 @@
 		"react-dom": "^19.2.6"
 	},
 	"devDependencies": {
-		"@effect/platform-node": "4.0.0-beta.68",
+		"@effect/platform-node": "4.0.0-beta.70",
 		"@types/mime-types": "^3.0.1",
-		"@types/react": "^19.2.14",
+		"@types/react": "^19.2.15",
 		"@types/react-dom": "^19.2.3",
 		"csstype": "^3.2.3",
 		"effect": "4.0.0-beta.70",
