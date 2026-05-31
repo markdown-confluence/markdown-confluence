@@ -50,6 +50,8 @@ vp dlx @markdown-confluence/cli
 docker run -it --rm -v "$(pwd):/content" -e ATLASSIAN_API_TOKEN ghcr.io/markdown-confluence/publish:latest
 ```
 
+The published image includes `linux/amd64` and `linux/arm64` variants. Docker Desktop on Apple Silicon should select the `linux/arm64` image automatically.
+
 ### GitHub Actions
 
 **Example setup**
