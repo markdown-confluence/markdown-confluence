@@ -9,6 +9,7 @@ import {
 	MarkdownConfluencePlatform,
 	MarkdownWorkspaceLive,
 	MarkdownWorkspaceService,
+	shouldPublishMarkdownFile,
 } from "@markdown-confluence/lib";
 import { Effect, Layer } from "effect";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
@@ -213,19 +214,7 @@ export default class ConfluencePlugin extends Plugin {
 		await this.init();
 
 		this.addRibbonIcon("cloud", "Publish to Confluence", async () => {
-			if (this.isSyncing) {
-				new Notice("Syncing already on going");
-				return;
-			}
-			this.isSyncing = true;
-			try {
-				const stats = await this.doPublish();
-				this.showPublishResults(stats);
-			} catch (error) {
-				this.showPublishError(error);
-			} finally {
-				this.isSyncing = false;
-			}
+			await this.runPublish();
 		});
 
 		this.addCommand({
@@ -262,21 +251,8 @@ export default class ConfluencePlugin extends Plugin {
 			id: "publish-current",
 			name: "Publish Current File to Confluence",
 			checkCallback: (checking: boolean) => {
-				if (!this.isSyncing) {
-					if (!checking) {
-						this.isSyncing = true;
-						this.doPublish(this.activeLeafPath(this.workspace))
-							.then((stats) => {
-								this.showPublishResults(stats);
-							})
-							.catch((error) => {
-								this.showPublishError(error);
-							})
-							.finally(() => {
-								this.isSyncing = false;
-							});
-					}
-					return true;
+				if (!checking) {
+					void this.runPublish(this.activeLeafPath(this.workspace));
 				}
 				return true;
 			},
@@ -286,20 +262,8 @@ export default class ConfluencePlugin extends Plugin {
 			id: "publish-all",
 			name: "Publish All to Confluence",
 			checkCallback: (checking: boolean) => {
-				if (!this.isSyncing) {
-					if (!checking) {
-						this.isSyncing = true;
-						this.doPublish()
-							.then((stats) => {
-								this.showPublishResults(stats);
-							})
-							.catch((error) => {
-								this.showPublishError(error);
-							})
-							.finally(() => {
-								this.isSyncing = false;
-							});
-					}
+				if (!checking) {
+					void this.runPublish();
 				}
 				return true;
 			},
@@ -318,10 +282,11 @@ export default class ConfluencePlugin extends Plugin {
 						view.file.path,
 					)?.frontmatter;
 					const file = view.file;
-					const enabledForPublishing =
-						(file.path.startsWith(this.settings.folderToPublish) &&
-							(!frontMatter || frontMatter["connie-publish"] !== false)) ||
-						(frontMatter && frontMatter["connie-publish"] === true);
+					const enabledForPublishing = shouldPublishMarkdownFile(
+						file.path,
+						frontMatter,
+						this.settings,
+					);
 					return !enabledForPublishing;
 				}
 
@@ -349,10 +314,11 @@ export default class ConfluencePlugin extends Plugin {
 						view.file.path,
 					)?.frontmatter;
 					const file = view.file;
-					const enabledForPublishing =
-						(file.path.startsWith(this.settings.folderToPublish) &&
-							(!frontMatter || frontMatter["connie-publish"] !== false)) ||
-						(frontMatter && frontMatter["connie-publish"] === true);
+					const enabledForPublishing = shouldPublishMarkdownFile(
+						file.path,
+						frontMatter,
+						this.settings,
+					);
 					return enabledForPublishing;
 				}
 
@@ -440,6 +406,23 @@ export default class ConfluencePlugin extends Plugin {
 				Effect.mapError(toError),
 			),
 		);
+	}
+
+	private async runPublish(publishFilter?: string): Promise<void> {
+		if (this.isSyncing) {
+			new Notice("A Confluence publish is already in progress.");
+			return;
+		}
+
+		this.isSyncing = true;
+		try {
+			const stats = await this.doPublish(publishFilter);
+			this.showPublishResults(stats);
+		} catch (error) {
+			this.showPublishError(error);
+		} finally {
+			this.isSyncing = false;
+		}
 	}
 
 	private showPublishError(error: unknown) {

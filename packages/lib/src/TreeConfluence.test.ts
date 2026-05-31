@@ -30,6 +30,7 @@ test("writes the parent page id back to a markdown-backed root page", async () =
 			values: {
 				publish: true,
 				pageId: "123456",
+				pageUrl: "https://example.atlassian.net/wiki/spaces/SPACE/pages/123456/",
 			},
 		},
 	]);
@@ -108,6 +109,7 @@ test("clears stale page ids and creates the page by title", async () => {
 			values: {
 				publish: true,
 				pageId: "123456",
+				pageUrl: "https://example.atlassian.net/wiki/spaces/SPACE/pages/123456/",
 			},
 		},
 		{
@@ -115,6 +117,7 @@ test("clears stale page ids and creates the page by title", async () => {
 			values: {
 				publish: false,
 				pageId: undefined,
+				pageUrl: undefined,
 			},
 		},
 		{
@@ -122,6 +125,7 @@ test("clears stale page ids and creates the page by title", async () => {
 			values: {
 				publish: true,
 				pageId: "new-child-page",
+				pageUrl: "https://example.atlassian.net/wiki/spaces/SPACE/pages/new-child-page/",
 			},
 		},
 	]);
@@ -195,6 +199,7 @@ const testSettings: ConfluenceSettings = {
 	atlassianUserName: "user@example.com",
 	atlassianApiToken: "token",
 	folderToPublish: ".",
+	tagsToPublish: "",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
 };

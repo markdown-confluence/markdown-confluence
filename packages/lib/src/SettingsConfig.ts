@@ -25,6 +25,7 @@ export const confluenceSettingsConfig = Config.all({
 	atlassianUserName: Config.string("atlassianUserName"),
 	atlassianApiToken: Config.string("atlassianApiToken"),
 	folderToPublish: Config.string("folderToPublish"),
+	tagsToPublish: Config.string("tagsToPublish"),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
 });
@@ -189,6 +190,7 @@ function makeEnvironmentProvider(
 				atlassianUserName: yield* runtimeEnvironment.getEnv("ATLASSIAN_USERNAME"),
 				atlassianApiToken: yield* runtimeEnvironment.getEnv("ATLASSIAN_API_TOKEN"),
 				folderToPublish: yield* runtimeEnvironment.getEnv("FOLDER_TO_PUBLISH"),
+				tagsToPublish: yield* runtimeEnvironment.getEnv("CONFLUENCE_TAGS_TO_PUBLISH"),
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
 				firstHeadingPageTitle:
 					firstHeadingPageTitle === "true" ? firstHeadingPageTitle : undefined,
@@ -204,6 +206,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "userName", aliases: ["u"], type: "string" },
 		{ name: "apiToken", type: "string" },
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
+		{ name: "tagsToPublish", aliases: ["t"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
 	]);
@@ -215,6 +218,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			atlassianUserName: options["userName"],
 			atlassianApiToken: options["apiToken"],
 			folderToPublish: options["enableFolder"],
+			tagsToPublish: options["tagsToPublish"],
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
 		}),

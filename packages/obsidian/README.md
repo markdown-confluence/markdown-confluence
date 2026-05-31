@@ -28,6 +28,7 @@ Please log issues to https://github.com/markdown-confluence/markdown-confluence/
 - `Atlassian User Name`: Your Atlassian account's email address
 - `Atlassian API Token`: Your Atlassian API token. You can generate one from your [Atlassian Account Settings](https://id.atlassian.com/manage-profile/security/api-tokens).
 - `Folder To Publish`: The name of the folder in Obsidian containing the notes you want to publish (default: "Confluence Pages")
+- `Tags to publish`: Optional comma-separated YAML tags. Notes with a matching `tags` value are published even when they are outside the configured folder.
 
 ![Settings](./docs/screenshots/settings.png)
 
@@ -54,6 +55,27 @@ To publish pages outside the `folderToPublish`, add the `connie-publish` YAML fr
 ---
 connie-publish: true
 ---
+```
+
+Publishing also writes the generated Confluence URL to `connie-page-url`, next to the existing `connie-page-id`, so you can navigate back to the published page from the note properties.
+
+### Publishing by Tag
+
+Set `Tags to publish` to a comma-separated list such as `docs, public` to publish notes whose YAML `tags` frontmatter contains one of those tags. `connie-publish: false` still excludes a note, even if it has a matching tag.
+
+```yaml
+---
+tags:
+  - public
+---
+```
+
+### Embedded Notes
+
+Obsidian note embeds are expanded before publishing, so a published note can include content from another Markdown note that lives outside the configured publish folder:
+
+```markdown
+![[Shared Notes/Release Checklist]]
 ```
 
 ### Example Workflow

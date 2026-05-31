@@ -38,6 +38,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 					atlassianUserName: "file-user@example.com",
 					atlassianApiToken: "file-token",
 					folderToPublish: "file-folder",
+					tagsToPublish: "file-tag",
 					contentRoot: "file-root",
 					firstHeadingPageTitle: true,
 				}),
@@ -68,6 +69,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 			CONFLUENCE_BASE_URL: "https://env.example.atlassian.net",
 			ATLASSIAN_USERNAME: "env-user@example.com",
 			FOLDER_TO_PUBLISH: "env-folder",
+			CONFLUENCE_TAGS_TO_PUBLISH: "env-tag",
 		},
 	});
 
@@ -89,6 +91,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 		atlassianUserName: "env-user@example.com",
 		atlassianApiToken: "cli-token",
 		folderToPublish: "env-folder",
+		tagsToPublish: "env-tag",
 		contentRoot: expectedCliContentRoot,
 		firstHeadingPageTitle: true,
 	});
@@ -106,6 +109,7 @@ test("keeps explicit false values from config providers", async () => {
 					atlassianUserName: "file-user@example.com",
 					atlassianApiToken: "file-token",
 					folderToPublish: "file-folder",
+					tagsToPublish: "",
 					contentRoot,
 					firstHeadingPageTitle: false,
 				}),
@@ -141,6 +145,8 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 					"cli-token",
 					"--enableFolder",
 					"docs",
+					"--tagsToPublish",
+					"public,docs",
 					"--contentRoot",
 					contentRoot,
 					"--fh",
@@ -167,6 +173,7 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 	);
 
 	expect(settings.firstHeadingPageTitle).toBe(false);
+	expect(settings.tagsToPublish).toBe("public,docs");
 	expect(settings.contentRoot).toBe(expectedContentRoot);
 });
 

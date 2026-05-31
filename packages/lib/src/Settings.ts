@@ -6,6 +6,7 @@ export type ConfluenceSettings = {
 	atlassianUserName: string;
 	atlassianApiToken: string;
 	folderToPublish: string;
+	tagsToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
 };
@@ -16,6 +17,7 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	atlassianUserName: "",
 	atlassianApiToken: "",
 	folderToPublish: "Confluence Pages",
+	tagsToPublish: "",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
 };

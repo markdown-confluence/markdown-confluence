@@ -94,6 +94,7 @@ const testSettings: ConfluenceSettings = {
 	atlassianUserName: "test@example.com",
 	atlassianApiToken: "token",
 	folderToPublish: "Confluence Pages",
+	tagsToPublish: "",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
 };

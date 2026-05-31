@@ -252,6 +252,7 @@ test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
 		atlassianUserName: "asdf@asdf.com",
 		atlassianApiToken: "asdfasdf",
 		folderToPublish: ".",
+		tagsToPublish: "",
 		contentRoot: "./",
 		firstHeadingPageTitle: false,
 	};
@@ -283,6 +284,7 @@ test("parses callout with adjacent wikilink image", () => {
 		atlassianUserName: "asdf@asdf.com",
 		atlassianApiToken: "asdfasdf",
 		folderToPublish: ".",
+		tagsToPublish: "",
 		contentRoot: "./",
 		firstHeadingPageTitle: false,
 	};
