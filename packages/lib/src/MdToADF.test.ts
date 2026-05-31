@@ -292,3 +292,104 @@ test("parses callout with adjacent wikilink image", () => {
 	expect(adfFile.contents.content?.[0]?.type).toBe("panel");
 	expect(JSON.stringify(adfFile.contents)).toContain("file://Pasted image 20231006155212.png");
 });
+
+test("parses multiple image paragraphs without dropping later images", () => {
+	const adfFile = convertMDtoADF(
+		createMarkdownFile(
+			[
+				"Intro",
+				"![First image](first.png)",
+				"",
+				"Middle",
+				"![Second image](second.png)",
+				"",
+				"Done",
+			].join("\n"),
+		),
+		testSettings,
+	);
+
+	const contents = JSON.stringify(adfFile.contents);
+	expect(contents).toContain("file://first.png");
+	expect(contents).toContain("file://second.png");
+	expect(contents).toContain("Done");
+});
+
+test("parses wikilink images adjacent to lists and headings", () => {
+	const adfFile = convertMDtoADF(
+		createMarkdownFile(
+			[
+				"- something",
+				"![[list-image.png]]",
+				"",
+				"### Header3",
+				"![[heading-image.png]]",
+			].join("\n"),
+		),
+		testSettings,
+	);
+
+	const contents = JSON.stringify(adfFile.contents);
+	expect(contents).toContain("file://list-image.png");
+	expect(contents).toContain("file://heading-image.png");
+});
+
+test("converts markdown highlights to bold text", () => {
+	const adfFile = convertMDtoADF(
+		createMarkdownFile("This is ==highlighted== text"),
+		testSettings,
+	);
+	const paragraph = adfFile.contents.content?.[0];
+	const highlightedText = paragraph?.content?.find((node) => node.text === "highlighted");
+
+	expect(highlightedText?.marks?.[0]?.type).toBe("strong");
+});
+
+test("normalizes local heading and relative markdown links", () => {
+	const adfFile = convertMDtoADF(
+		createMarkdownFile(
+			[
+				"[[#Overview |Overview of Feature]]",
+				"[[#How to Use|How to Use Feature]]",
+				"[Context](context/README.md#How%20to%20Use)",
+				"",
+				"# Overview",
+				"## How to use",
+			].join("\n"),
+		),
+		testSettings,
+	);
+	const links = JSON.stringify(adfFile.contents);
+
+	expect(links).toContain("wikilinks:#Overview");
+	expect(links).toContain("wikilinks:#How-to-use");
+	expect(links).toContain("wikilinks:context/README#How-to-use");
+	expect(links).not.toContain('"href":"#"');
+});
+
+test("keeps indented wikilink-like image text parseable", () => {
+	const adfFile = convertMDtoADF(createMarkdownFile("\t[[!image.png]]"), testSettings);
+
+	expect(adfFile.contents.content?.[0]?.type).toBe("codeBlock");
+});
+
+function createMarkdownFile(contents: string): MarkdownFile {
+	return {
+		folderName: "edge-cases",
+		absoluteFilePath: "/path/to/edge-cases.md",
+		fileName: "edge-cases.md",
+		contents,
+		pageTitle: "Edge Cases",
+		frontmatter: {},
+	};
+}
+
+const testSettings: ConfluenceSettings = {
+	confluenceBaseUrl: "https://example.com",
+	confluenceParentId: "asdf",
+	atlassianUserName: "asdf@asdf.com",
+	atlassianApiToken: "asdfasdf",
+	folderToPublish: ".",
+	contentRoot: "./",
+	firstHeadingPageTitle: false,
+};

@@ -8,6 +8,7 @@ import { Schema, Node as PMNode } from "@atlaskit/editor-prosemirror/model";
 import { markdownItMedia } from "./media";
 import myTokenizer from "./callout";
 import wikilinksPlugin from "./wikilinks";
+import highlightPlugin from "./highlight";
 
 interface Transformer<T> {
 	encode(node: PMNode): T;
@@ -160,6 +161,7 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 		}
 
 		tokenizer.use(wikilinksPlugin);
+		tokenizer.use(highlightPlugin);
 
 		(["nodes", "marks"] as (keyof SchemaMapping)[]).forEach((key) => {
 			for (const idx in pmSchemaToMdMapping[key]) {
