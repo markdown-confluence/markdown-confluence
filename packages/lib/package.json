@@ -51,6 +51,7 @@
 		"@effect/platform-node": "4.0.0-beta.70",
 		"confluence.js": "^2.1.0",
 		"effect": "4.0.0-beta.70",
+		"form-data": "^4.0.4",
 		"formdata-node": "^6.0.3",
 		"glob": "^13.0.6",
 		"image-size": "^2.0.2",

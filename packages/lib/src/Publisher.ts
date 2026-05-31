@@ -327,10 +327,17 @@ export class Publisher {
 				!isEqual(existingPageDetails, newPageDetails)
 			) {
 				result.contentResult = "updated";
+				const currentPageVersionNumber = processedAttachment
+					? yield* getCurrentPageVersionNumberEffect(
+							confluenceClient,
+							adfFile.pageId,
+							pageVersionNumber,
+						)
+					: pageVersionNumber;
 				const updateContentDetails = {
 					...newPageDetails,
 					id: adfFile.pageId,
-					version: { number: pageVersionNumber + 1 },
+					version: { number: currentPageVersionNumber + 1 },
 					body: {
 						// eslint-disable-next-line @typescript-eslint/naming-convention
 						atlas_doc_format: {
@@ -425,6 +432,25 @@ function trackProcessedAttachments(
 				.uploadBufferEffect(uploadFilename, fileBuffer, contentType)
 				.pipe(Effect.tap((uploaded) => Effect.sync(() => onProcessedAttachment(uploaded)))),
 	};
+}
+
+function getCurrentPageVersionNumberEffect(
+	confluenceClient: RequiredConfluenceClient,
+	pageId: string,
+	fallbackVersionNumber: number,
+): Effect.Effect<number, unknown, never> {
+	return Effect.gen(function* () {
+		const currentPage = yield* Effect.tryPromise({
+			try: () =>
+				confluenceClient.content.getContentById({
+					id: pageId,
+					expand: ["version"],
+				}),
+			catch: identity,
+		});
+
+		return currentPage.version?.number ?? fallbackVersionNumber;
+	});
 }
 
 function identity(error: unknown): unknown {

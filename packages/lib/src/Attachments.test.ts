@@ -40,7 +40,14 @@ test("fully decodes file URL components before reading binary files", async () =
 	);
 
 	expect(result?.status).toBe("uploaded");
-	expect(getUploadedAttachment(uploadRequests).contentType).toBe("image/png");
+	const uploadRequestBody = getUploadRequestBody(uploadRequests);
+	expect(uploadRequestBody).toContain('name="file"; filename="');
+	expect(uploadRequestBody).toContain('file#name.png"');
+	expect(uploadRequestBody).toContain("Content-Type: image/png");
+	expect(uploadRequestBody).toContain('name="minorEdit"\r\n\r\nfalse');
+	expect(uploadRequestBody).toContain('name="comment"\r\n\r\n');
+	expect(uploadRequestBody).not.toContain('name="minorEdit"; filename=');
+	expect(uploadRequestBody).not.toContain('name="comment"; filename=');
 });
 
 test("derives upload buffer content type from the filename", async () => {
@@ -57,7 +64,7 @@ test("derives upload buffer content type from the filename", async () => {
 	);
 
 	expect(result?.status).toBe("uploaded");
-	expect(getUploadedAttachment(uploadRequests).contentType).toBe("text/plain");
+	expect(getUploadRequestBody(uploadRequests)).toContain("Content-Type: text/plain");
 });
 
 class TestMarkdownWorkspace implements MarkdownWorkspace {
@@ -83,42 +90,35 @@ class TestMarkdownWorkspace implements MarkdownWorkspace {
 
 function makeConfluenceClient(uploadRequests: unknown[]): RequiredConfluenceClient {
 	return {
-		contentAttachments: {
-			createOrUpdateAttachments: async (attachmentDetails: unknown) => {
-				uploadRequests.push(attachmentDetails);
-				return {
-					results: [
-						{
-							extensions: {
-								fileId: "file-id",
-							},
-							container: {
-								id: "page-id",
-							},
+		sendRequest: async (request: unknown) => {
+			uploadRequests.push(request);
+			return {
+				results: [
+					{
+						extensions: {
+							fileId: "file-id",
 						},
-					],
-				};
-			},
+						container: {
+							id: "page-id",
+						},
+					},
+				],
+			};
 		},
 	} as unknown as RequiredConfluenceClient;
 }
 
-function getUploadedAttachment(uploadRequests: unknown[]): { contentType: string } {
+function getUploadRequestBody(uploadRequests: unknown[]): string {
 	const request = uploadRequests[0] as
 		| {
-				attachments: Array<{
-					contentType: string;
-				}>;
+				data: {
+					getBuffer(): Buffer;
+				};
 		  }
 		| undefined;
 	if (!request) {
 		throw new Error("Missing upload request");
 	}
 
-	const attachment = request.attachments[0];
-	if (!attachment) {
-		throw new Error("Missing upload attachment");
-	}
-
-	return attachment;
+	return request.data.getBuffer().toString();
 }

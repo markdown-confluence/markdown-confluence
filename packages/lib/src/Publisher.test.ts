@@ -5,14 +5,20 @@ import { ConfluenceClient } from "confluence.js";
 import { Effect } from "effect";
 import { orderMarks } from "./AdfEqual";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
-import { Publisher } from "./Publisher";
+import { RequiredConfluenceClient } from "./ConfluenceClient";
+import { ConfluenceAdfFile, Publisher, UploadAdfFileResult } from "./Publisher";
 import { loadConfluenceSettings } from "./SettingsConfig";
 import {
 	ChartData,
 	MermaidRenderer,
 	MermaidRendererPlugin,
 } from "./ADFProcessingPlugins/MermaidRendererPlugin";
-import { RuntimeEnvironmentLive, RuntimeEnvironmentService, runEffect } from "./effects";
+import {
+	MarkdownConfluencePlatform,
+	RuntimeEnvironmentLive,
+	RuntimeEnvironmentService,
+	runEffect,
+} from "./effects";
 import {
 	BinaryFile,
 	FilesToUpload,
@@ -29,6 +35,11 @@ const confluenceIntegrationTestsEnabled = Effect.runSync(
 	}).pipe(Effect.provide(RuntimeEnvironmentLive)),
 );
 const confluenceIntegrationTest = confluenceIntegrationTestsEnabled ? test : test.skip;
+
+const pngBytes = Buffer.from(
+	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=",
+	"base64",
+);
 
 const markdownTestCases: MarkdownFile[] = [
 	{
@@ -212,8 +223,17 @@ const markdownTestCases: MarkdownFile[] = [
 ];
 
 class TestMermaidRenderer implements MermaidRenderer {
-	async captureMermaidCharts(_charts: ChartData[]): Promise<Map<string, Buffer>> {
+	constructor(private readonly imageBuffer?: Buffer) {}
+
+	async captureMermaidCharts(charts: ChartData[]): Promise<Map<string, Buffer>> {
 		const capturedCharts = new Map<string, Buffer>();
+		if (!this.imageBuffer) {
+			return capturedCharts;
+		}
+
+		for (const chart of charts) {
+			capturedCharts.set(chart.name, this.imageBuffer);
+		}
 		return capturedCharts;
 	}
 }
@@ -248,6 +268,137 @@ class InMemoryMarkdownWorkspace implements MarkdownWorkspace {
 	): Effect.Effect<false | BinaryFile, Error> {
 		return Effect.fail(new Error("Method not implemented."));
 	}
+}
+
+test("refreshes page version after rendering and uploading Mermaid attachments", async () => {
+	const contentUpdates: unknown[] = [];
+	const uploadRequests: unknown[] = [];
+	const confluenceClient = {
+		content: {
+			getContentById: async () => ({
+				version: {
+					number: 7,
+				},
+			}),
+			updateContent: async (details: unknown) => {
+				contentUpdates.push(details);
+				return {};
+			},
+		},
+		contentAttachments: {
+			getAttachments: async () => ({ results: [] }),
+		},
+		contentLabels: {
+			getLabelsForContent: async () => ({ results: [] }),
+		},
+		sendRequest: async (request: unknown) => {
+			uploadRequests.push(request);
+			return {
+				results: [
+					{
+						extensions: {
+							fileId: "file-id",
+						},
+						container: {
+							id: "page-id",
+						},
+					},
+				],
+			};
+		},
+	} as unknown as RequiredConfluenceClient;
+
+	const publisher = new Publisher(
+		{
+			confluenceBaseUrl: "https://example.atlassian.net",
+		} as never,
+		confluenceClient,
+		[new MermaidRendererPlugin(new TestMermaidRenderer(pngBytes))],
+	);
+	(publisher as unknown as { myAccountId: string }).myAccountId = "me";
+
+	const updatePageContentEffect = (
+		publisher as unknown as {
+			updatePageContentEffect(
+				ancestors: string[],
+				pageVersionNumber: number,
+				existingPageData: {
+					adfContent: unknown;
+					pageTitle: string;
+					ancestors: { id: string }[];
+					contentType: string;
+				},
+				adfFile: ConfluenceAdfFile,
+				lastUpdatedBy: string,
+			): Effect.Effect<
+				UploadAdfFileResult,
+				unknown,
+				MarkdownConfluencePlatform | MarkdownWorkspaceService
+			>;
+		}
+	).updatePageContentEffect.bind(publisher);
+
+	const result = await runEffect(
+		updatePageContentEffect(
+			[],
+			3,
+			{
+				adfContent: {
+					type: "doc",
+					version: 1,
+					content: [],
+				},
+				pageTitle: "Mermaid Page",
+				ancestors: [],
+				contentType: "page",
+			},
+			{
+				folderName: "",
+				absoluteFilePath: "/page.md",
+				fileName: "page.md",
+				contents: {
+					type: "doc",
+					version: 1,
+					content: [
+						{
+							type: "codeBlock",
+							attrs: {
+								language: "mermaid",
+							},
+							content: [
+								{
+									type: "text",
+									text: "flowchart LR\nA-->B",
+								},
+							],
+						},
+					],
+				},
+				pageTitle: "Mermaid Page",
+				frontmatter: {},
+				tags: [],
+				dontChangeParentPageId: false,
+				pageId: "page-id",
+				spaceKey: "SPACE",
+				pageUrl: "https://example.atlassian.net/wiki/spaces/SPACE/pages/page-id/",
+				contentType: "page",
+				blogPostDate: undefined,
+			},
+			"me",
+		).pipe(Effect.provideService(MarkdownWorkspaceService, new InMemoryMarkdownWorkspace([]))),
+	);
+
+	expect(result.imageResult).toBe("updated");
+	expect(uploadRequests.length).toBe(1);
+	expect(getContentUpdate(contentUpdates).version.number).toBe(8);
+});
+
+function getContentUpdate(contentUpdates: unknown[]): { version: { number: number } } {
+	const update = contentUpdates[0] as { version: { number: number } } | undefined;
+	if (!update) {
+		throw new Error("Missing content update");
+	}
+	return update;
 }
 
 confluenceIntegrationTest(
