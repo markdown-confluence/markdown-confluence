@@ -13,6 +13,11 @@ import {
 	type PublisherFunctions,
 } from "./ADFProcessingPlugins";
 import { renderADFDoc } from "./ADFToMarkdown";
+import {
+	createConfluenceClientConfig,
+	DEFAULT_CONFLUENCE_API_PREFIX,
+	normalizeConfluenceApiPrefix,
+} from "./ConfluenceClientConfig";
 import { type RequiredConfluenceClient } from "./ConfluenceClient";
 import {
 	MarkdownConfluencePlatformLive,
@@ -57,6 +62,7 @@ export {
 	ConfluencePageConfig,
 	ConfluenceSettingsLive,
 	ConfluenceUploadSettings,
+	DEFAULT_CONFLUENCE_API_PREFIX,
 	MarkdownConfluencePlatformLive,
 	MarkdownConfluenceRuntime,
 	MarkdownWorkspaceLive,
@@ -67,6 +73,7 @@ export {
 	RuntimeEnvironmentService,
 	confluenceSettingsConfig,
 	convertMDtoADF,
+	createConfluenceClientConfig,
 	createPublisherFunctions,
 	executeADFProcessingPipeline,
 	executeADFProcessingPipelineEffect,
@@ -76,6 +83,7 @@ export {
 	loadMarkdownWorkspace,
 	makeConfluenceSettingsConfigProvider,
 	makeMarkdownWorkspaceEffect,
+	normalizeConfluenceApiPrefix,
 	parseConfluenceSettingsEffect,
 	parseMarkdownToADF,
 	renderADFDoc,

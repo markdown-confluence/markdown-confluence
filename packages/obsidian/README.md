@@ -27,6 +27,9 @@ Please log issues to https://github.com/markdown-confluence/markdown-confluence/
 - `Confluence Parent Id`: The Confluence page ID where your notes will be published as child pages
 - `Atlassian User Name`: Your Atlassian account's email address
 - `Atlassian API Token`: Your Atlassian API token. You can generate one from your [Atlassian Account Settings](https://id.atlassian.com/manage-profile/security/api-tokens).
+- `Authentication Type`: Basic for Confluence Cloud API tokens, or Bearer / PAT for bearer-token endpoints.
+- `Confluence API Prefix`: The REST API prefix, defaulting to `/wiki/rest`.
+- `Custom Request Headers`: Optional JSON object of extra headers to send with Confluence requests.
 - `Folder To Publish`: The name of the folder in Obsidian containing the notes you want to publish (default: "Confluence Pages")
 
 ![Settings](./docs/screenshots/settings.png)

@@ -58,6 +58,57 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Authentication Type")
+			.setDesc("Use basic for Confluence Cloud API tokens or bearer for PAT-style tokens")
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOptions({
+						basic: "Basic",
+						bearer: "Bearer / PAT",
+					})
+					.setValue(this.plugin.settings.confluenceAuthType)
+					.onChange(async (value) => {
+						if (!isConfluenceAuthType(value)) {
+							return;
+						}
+
+						this.plugin.settings.confluenceAuthType = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Confluence API Prefix")
+			.setDesc('API route prefix eg "/wiki/rest" or "/rest"')
+			.addText((text) =>
+				text
+					.setPlaceholder("/wiki/rest")
+					.setValue(this.plugin.settings.confluenceApiPrefix)
+					.onChange(async (value) => {
+						this.plugin.settings.confluenceApiPrefix = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Custom Request Headers")
+			.setDesc('JSON object eg {"X-Custom-Header":"value"}')
+			.addTextArea((text) =>
+				text
+					.setPlaceholder('{"X-Custom-Header":"value"}')
+					.setValue(formatRequestHeaders(this.plugin.settings.confluenceRequestHeaders))
+					.onChange(async (value) => {
+						const requestHeaders = parseRequestHeaders(value);
+						if (!requestHeaders) {
+							return;
+						}
+
+						this.plugin.settings.confluenceRequestHeaders = requestHeaders;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Confluence Parent Page ID")
 			.setDesc("Page ID to publish files under")
 			.addText((text) =>
@@ -131,4 +182,35 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 	}
+}
+
+function isConfluenceAuthType(value: string): value is "basic" | "bearer" {
+	return value === "basic" || value === "bearer";
+}
+
+function formatRequestHeaders(headers: Record<string, string>): string {
+	return Object.keys(headers).length === 0 ? "" : JSON.stringify(headers, null, 2);
+}
+
+function parseRequestHeaders(value: string): Record<string, string> | undefined {
+	const trimmedValue = value.trim();
+	if (!trimmedValue) {
+		return {};
+	}
+
+	try {
+		const headers = JSON.parse(trimmedValue) as unknown;
+		if (
+			headers !== null &&
+			!Array.isArray(headers) &&
+			typeof headers === "object" &&
+			Object.values(headers).every((entry) => typeof entry === "string")
+		) {
+			return headers as Record<string, string>;
+		}
+	} catch {
+		return undefined;
+	}
+
+	return undefined;
 }
