@@ -333,10 +333,10 @@ export class Publisher {
 				!isEqual(existingPageDetails, newPageDetails)
 			) {
 				result.contentResult = "updated";
-				const updateContentDetails = {
+				const buildUpdateContentDetails = (versionNumber: number) => ({
 					...newPageDetails,
 					id: adfFile.pageId,
-					version: { number: pageVersionNumber + 1 },
+					version: { number: versionNumber + 1 },
 					body: {
 						// eslint-disable-next-line @typescript-eslint/naming-convention
 						atlas_doc_format: {
@@ -344,11 +344,45 @@ export class Publisher {
 							representation: "atlas_doc_format",
 						},
 					},
-				};
-				yield* Effect.tryPromise({
-					try: () => confluenceClient.content.updateContent(updateContentDetails),
-					catch: identity,
 				});
+
+				const fetchCurrentVersion = () =>
+					Effect.tryPromise({
+						try: () =>
+							confluenceClient.content.getContentById({
+								id: adfFile.pageId,
+								expand: ["version"],
+							}),
+						catch: identity,
+					}).pipe(Effect.map((page) => page.version?.number ?? pageVersionNumber));
+
+				// Each attachment upload bumps the page version on the server, so
+				// pageVersionNumber (captured before the uploads) is stale here.
+				// Confluence Cloud's read replica can also lag, so on a version
+				// conflict we re-fetch the authoritative version and retry.
+				const VERSION_CONFLICT = Symbol("version-conflict");
+				let nextVersion = pageVersionNumber;
+				for (let attempt = 0; ; attempt += 1) {
+					const conflicted = yield* Effect.tryPromise({
+						try: () =>
+							confluenceClient.content.updateContent(
+								buildUpdateContentDetails(nextVersion),
+							),
+						catch: identity,
+					}).pipe(
+						Effect.map(() => false as const),
+						Effect.catch((error: unknown) =>
+							isVersionConflict(error) && attempt < 3
+								? Effect.succeed(VERSION_CONFLICT)
+								: Effect.fail(error),
+						),
+					);
+
+					if (conflicted !== VERSION_CONFLICT) {
+						break;
+					}
+					nextVersion = yield* fetchCurrentVersion();
+				}
 			}
 
 			const getLabelsForContent = {
@@ -435,4 +469,25 @@ function trackProcessedAttachments(
 
 function identity(error: unknown): unknown {
 	return error;
+}
+
+// Confluence Cloud reports an optimistic-lock failure on the page row in a few
+// shapes: the confluence.js client surfaces it on `error.message`, while the
+// Obsidian custom client wraps it as `{ response: { data } }` with the JSON
+// payload as a string. Check both.
+function isVersionConflict(error: unknown): boolean {
+	const blobs: string[] = [];
+	if (error instanceof Error) {
+		blobs.push(error.message);
+	}
+	const maybeResponse = (error as { response?: { data?: unknown } }).response;
+	if (maybeResponse && typeof maybeResponse.data === "string") {
+		blobs.push(maybeResponse.data);
+	}
+	const blob = blobs.join(" ");
+	return (
+		blob.includes("StaleObjectStateException") ||
+		blob.includes("more than the previous version") ||
+		blob.includes("optimistic lock")
+	);
 }
