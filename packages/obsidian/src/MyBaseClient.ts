@@ -100,14 +100,42 @@ export class MyBaseClient implements Client {
 				delete requestConfig?.headers["content-type"];
 			}
 
-			const params = this.paramSerializer(requestConfig.params);
+			const params = requestConfig.params ? this.paramSerializer(requestConfig.params) : "";
 
 			const requestContentType =
 				(requestConfig.headers ?? {})["Content-Type"]?.toString() ?? "application/json";
 
-			const requestBody = requestContentType.startsWith("multipart/form-data")
-				? [requestConfig.data.getHeaders(), requestConfig.data.getBuffer().buffer]
-				: [{}, JSON.stringify(requestConfig.data)];
+			const isMultipart = requestContentType.startsWith("multipart/form-data");
+			const data = requestConfig.data;
+			let requestBody: [Record<string, string>, ArrayBuffer | string];
+			if (isMultipart) {
+				if (data instanceof ArrayBuffer) {
+					requestBody = [{}, data];
+				} else if (
+					data &&
+					typeof (data as { getBuffer?: () => Buffer }).getBuffer === "function"
+				) {
+					// confluence.js form-data instance (legacy path).
+					const fd = data as {
+						getHeaders: () => Record<string, string>;
+						getBuffer: () => Buffer;
+					};
+					const copy = Uint8Array.from(fd.getBuffer());
+					requestBody = [fd.getHeaders(), copy.buffer];
+				} else if (
+					data &&
+					typeof (data as { buffer?: ArrayBufferLike }).buffer === "object"
+				) {
+					// Raw Buffer / Uint8Array — copy so the backing store is a
+					// concrete ArrayBuffer, which is what requestUrl needs as body.
+					const copy = Uint8Array.from(data as Uint8Array);
+					requestBody = [{}, copy.buffer];
+				} else {
+					throw new Error("Obsidian client received multipart data of unsupported shape");
+				}
+			} else {
+				requestBody = [{}, JSON.stringify(data)];
+			}
 
 			const modifiedRequestConfig = {
 				...requestConfig,

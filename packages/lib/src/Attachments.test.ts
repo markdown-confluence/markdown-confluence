@@ -85,44 +85,48 @@ class TestMarkdownWorkspace implements MarkdownWorkspace {
 	}
 }
 
+type SendRequestConfig = {
+	url: string;
+	method: string;
+	headers?: Record<string, string>;
+	data?: unknown;
+};
+
 function makeConfluenceClient(uploadRequests: unknown[]): RequiredConfluenceClient {
 	return {
 		contentAttachments: {
-			createOrUpdateAttachments: async (attachmentDetails: unknown) => {
-				uploadRequests.push(attachmentDetails);
-				return {
-					results: [
-						{
-							extensions: {
-								fileId: "file-id",
+			// Attachments.ts dispatches through the private transport's
+			// sendRequest with a hand-built multipart body, bypassing
+			// createOrUpdateAttachments. Mock that path.
+			client: {
+				sendRequest: async (config: SendRequestConfig) => {
+					uploadRequests.push(config);
+					return {
+						results: [
+							{
+								extensions: { fileId: "file-id" },
+								container: { id: "page-id" },
 							},
-							container: {
-								id: "page-id",
-							},
-						},
-					],
-				};
+						],
+					};
+				},
 			},
 		},
 	} as unknown as RequiredConfluenceClient;
 }
 
+// The attachment file part's Content-Type is embedded in the multipart body.
+// Parse it back out so tests can assert content-type detection.
 function getUploadedAttachment(uploadRequests: unknown[]): { contentType: string } {
-	const request = uploadRequests[0] as
-		| {
-				attachments: Array<{
-					contentType: string;
-				}>;
-		  }
-		| undefined;
+	const request = uploadRequests[0] as SendRequestConfig | undefined;
 	if (!request) {
 		throw new Error("Missing upload request");
 	}
-
-	const attachment = request.attachments[0];
-	if (!attachment) {
-		throw new Error("Missing upload attachment");
+	const body = request.data;
+	const bodyText = Buffer.isBuffer(body) ? body.toString("utf-8") : String(body);
+	const match = bodyText.match(/Content-Type: ([^\r\n]+)/);
+	if (!match || !match[1]) {
+		throw new Error("Missing Content-Type in multipart body");
 	}
-
-	return attachment;
+	return { contentType: match[1] };
 }
