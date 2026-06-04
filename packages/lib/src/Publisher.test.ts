@@ -248,6 +248,10 @@ class InMemoryMarkdownWorkspace implements MarkdownWorkspace {
 	): Effect.Effect<false | BinaryFile, Error> {
 		return Effect.fail(new Error("Method not implemented."));
 	}
+
+	readText(_path: string, _referencedFromFilePath: string): Effect.Effect<string | false, Error> {
+		return Effect.fail(new Error("Method not implemented."));
+	}
 }
 
 confluenceIntegrationTest(
