@@ -1,5 +1,10 @@
 import { Context } from "effect";
 
+export type PlantumlSettings = {
+	enabled: boolean;
+	serverUrl: string;
+};
+
 export type ConfluenceSettings = {
 	confluenceBaseUrl: string;
 	confluenceParentId: string;
@@ -8,6 +13,7 @@ export type ConfluenceSettings = {
 	folderToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
+	plantuml: PlantumlSettings;
 };
 
 export const DEFAULT_SETTINGS: ConfluenceSettings = {
@@ -18,6 +24,10 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	folderToPublish: "Confluence Pages",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
+	plantuml: {
+		enabled: true,
+		serverUrl: "https://www.plantuml.com/plantuml",
+	},
 };
 
 export class ConfluenceSettingsService extends Context.Service<
