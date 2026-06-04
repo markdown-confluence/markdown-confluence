@@ -1,0 +1,8 @@
+@startuml
+
+class HelloWorld
+class HelloJB
+
+HelloJB --> HelloWorld
+
+@enduml
