@@ -30,6 +30,9 @@
       "packages/mermaid-puppeteer-renderer": {
         "component": "@markdown-confluence/mermaid-puppeteer-renderer"
       },
+      "packages/plantuml-renderer": {
+        "component": "@markdown-confluence/plantuml-renderer"
+      },
       ".": {
         "component": "obsidian-confluence-root",
         "extra-files": [
@@ -49,7 +52,7 @@
     {
       "type": "linked-versions",
       "groupName": "obsidian packages",
-      "components": ["obsidian-confluence", "obsidian-confluence-root", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer", "@markdown-confluence/cli", "@markdown-confluence/mermaid-puppeteer-renderer"]
+      "components": ["obsidian-confluence", "obsidian-confluence-root", "@markdown-confluence/lib", "@markdown-confluence/mermaid-electron-renderer", "@markdown-confluence/cli", "@markdown-confluence/mermaid-puppeteer-renderer", "@markdown-confluence/plantuml-renderer"]
     }
   ]
 }
