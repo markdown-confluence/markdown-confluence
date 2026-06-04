@@ -1,9 +1,10 @@
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { Effect, Layer } from "effect";
-import { AlwaysADFProcessingPlugins } from "./ADFProcessingPlugins";
+import { AlwaysADFPreprocessors, AlwaysADFProcessingPlugins } from "./ADFProcessingPlugins";
 import {
 	ADFProcessingPlugin,
 	createPublisherFunctions,
+	executeADFPreprocessorsEffect,
 	executeADFProcessingPipelineEffect,
 	PublisherFunctions,
 } from "./ADFProcessingPlugins/types";
@@ -292,9 +293,14 @@ export class Publisher {
 					}
 				},
 			);
+			const preprocessedAdf = yield* executeADFPreprocessorsEffect(
+				AlwaysADFPreprocessors,
+				adfFile.contents,
+				{ workspace, pageFilePath: adfFile.absoluteFilePath },
+			);
 			const adfToUpload = yield* executeADFProcessingPipelineEffect(
 				adfProcessingPlugins,
-				adfFile.contents,
+				preprocessedAdf,
 				supportFunctions,
 			);
 

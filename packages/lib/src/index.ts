@@ -1,14 +1,19 @@
 import * as ConfluencePageConfig from "./ConniePageConfig";
 import * as ConfluenceUploadSettings from "./Settings";
 import {
+	AlwaysADFPreprocessors,
 	AlwaysADFProcessingPlugins,
 	createPublisherFunctions,
+	executeADFPreprocessorsEffect,
 	executeADFProcessingPipeline,
 	executeADFProcessingPipelineEffect,
 	getMermaidFileName,
 	getPlantumlFileName,
 	MermaidRendererPlugin,
+	PlantumlEmbedResolverPlugin,
 	PlantumlRendererPlugin,
+	type ADFPreprocessor,
+	type ADFPreprocessorContext,
 	type ADFProcessingPlugin,
 	type ChartData,
 	type MermaidRenderer,
@@ -56,6 +61,7 @@ import {
 } from "./SettingsConfig";
 
 export {
+	AlwaysADFPreprocessors,
 	AlwaysADFProcessingPlugins,
 	ConfluencePageConfig,
 	ConfluenceSettingsLive,
@@ -65,6 +71,7 @@ export {
 	MarkdownWorkspaceLive,
 	MarkdownWorkspaceService,
 	MermaidRendererPlugin,
+	PlantumlEmbedResolverPlugin,
 	PlantumlRendererPlugin,
 	Publisher,
 	RuntimeEnvironmentLive,
@@ -72,6 +79,7 @@ export {
 	confluenceSettingsConfig,
 	convertMDtoADF,
 	createPublisherFunctions,
+	executeADFPreprocessorsEffect,
 	executeADFProcessingPipeline,
 	executeADFProcessingPipelineEffect,
 	getMermaidFileName,
@@ -86,6 +94,8 @@ export {
 	renderADFDoc,
 	runEffect,
 	stripMarkdownHtmlComments,
+	type ADFPreprocessor,
+	type ADFPreprocessorContext,
 	type ADFProcessingPlugin,
 	type BinaryFile,
 	type ChartData,
