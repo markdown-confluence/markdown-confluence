@@ -1,10 +1,12 @@
 import { Plugin, Notice, MarkdownView, Workspace, loadMermaid } from "obsidian";
 import {
+	ADFProcessingPlugin,
 	ConfluenceUploadSettings,
 	Publisher,
 	ConfluencePageConfig,
 	renderADFDoc,
 	MermaidRendererPlugin,
+	PlantumlRendererPlugin,
 	UploadAdfFileResult,
 	MarkdownConfluencePlatform,
 	MarkdownWorkspaceLive,
@@ -12,6 +14,7 @@ import {
 } from "@markdown-confluence/lib";
 import { Effect, Layer } from "effect";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
+import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
 import { CompletedModal } from "./CompletedModal";
 import { ObsidianConfluenceClient } from "./MyBaseClient";
@@ -105,9 +108,27 @@ export default class ConfluencePlugin extends Plugin {
 			},
 		});
 
-		this.publisher = new Publisher(this.settings, confluenceClient, [
+		const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
 			new MermaidRendererPlugin(mermaidRenderer),
-		]);
+		];
+
+		if (this.settings.plantuml.enabled) {
+			if (this.settings.plantuml.serverUrl) {
+				plugins.push(
+					new PlantumlRendererPlugin(
+						new HttpPlantumlRenderer({
+							serverUrl: this.settings.plantuml.serverUrl,
+						}),
+					),
+				);
+			} else {
+				new Notice(
+					"PlantUML rendering is enabled but the PlantUML server URL is empty. Configure it in the plugin settings.",
+				);
+			}
+		}
+
+		this.publisher = new Publisher(this.settings, confluenceClient, plugins);
 	}
 
 	async getMermaidItems() {
@@ -416,11 +437,20 @@ export default class ConfluencePlugin extends Plugin {
 	override async onunload() {}
 
 	async loadSettings() {
+		const loaded = ((await this.loadData()) ?? {}) as Partial<ObsidianPluginSettings>;
 		this.settings = Object.assign(
 			{},
 			ConfluenceUploadSettings.DEFAULT_SETTINGS,
 			{ mermaidTheme: "match-obsidian", showPublishResultsModal: true },
-			await this.loadData(),
+			loaded,
+			{
+				// Deep-merge the nested plantuml object so a persisted partial (or
+				// an older settings file missing it) keeps the defaults.
+				plantuml: {
+					...ConfluenceUploadSettings.DEFAULT_SETTINGS.plantuml,
+					...loaded.plantuml,
+				},
+			},
 		);
 	}
 

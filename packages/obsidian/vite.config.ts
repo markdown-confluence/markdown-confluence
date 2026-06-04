@@ -60,6 +60,9 @@ export default defineConfig(({ mode }) => {
 				"@markdown-confluence/mermaid-electron-renderer": resolvePath(
 					"../mermaid-electron-renderer/src/index.ts",
 				),
+				"@markdown-confluence/plantuml-renderer": resolvePath(
+					"../plantuml-renderer/src/index.ts",
+				),
 			},
 			mainFields: ["module", "main"],
 		},

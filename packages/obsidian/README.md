@@ -12,8 +12,13 @@ Copyright (c) 2022 Atlassian US, Inc.
 
 - Publish Obsidian notes to Atlassian Confluence
 - Support for Obsidian markdown extensions
+- Mermaid and PlantUML diagram rendering
 - CLI for pushing markdown files from disk
 - Commands and ribbon icon for easy access
+
+## PlantUML support
+
+Fenced code blocks tagged `plantuml`, `puml`, or `uml` are rendered to PNG via a PlantUML server and uploaded as page attachments, followed by a collapsible "source" section with the raw diagram text. `![[diagram.puml]]` wikilink embeds are resolved too. The plugin defaults to the public server at `https://www.plantuml.com/plantuml`, which means **diagram source is sent to a third party** — for private diagrams run a local PlantUML server (`docker run -d -p 8080:8080 plantuml/plantuml-server:jetty`) and set the URL in the plugin's settings tab. PlantUML rendering can be turned off with the "Enable PlantUML rendering" toggle.
 
 ## Issues
 Please log issues to https://github.com/markdown-confluence/markdown-confluence/issues as this is where the code is being developed. 

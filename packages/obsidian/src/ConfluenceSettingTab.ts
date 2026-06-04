@@ -130,5 +130,34 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					});
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
+
+		containerEl.createEl("h2", { text: "PlantUML diagrams" });
+
+		new Setting(containerEl)
+			.setName("Enable PlantUML rendering")
+			.setDesc(
+				"Render fenced code blocks tagged plantuml/puml/uml as images via the PlantUML server below.",
+			)
+			.addToggle((toggle) =>
+				toggle.setValue(this.plugin.settings.plantuml.enabled).onChange(async (value) => {
+					this.plugin.settings.plantuml.enabled = value;
+					await this.plugin.saveSettings();
+				}),
+			);
+
+		new Setting(containerEl)
+			.setName("PlantUML server URL")
+			.setDesc(
+				"Default sends diagram source to plantuml.com. For private content, run plantuml/plantuml-server in Docker and point this here (e.g. http://localhost:8080).",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("https://www.plantuml.com/plantuml")
+					.setValue(this.plugin.settings.plantuml.serverUrl)
+					.onChange(async (value) => {
+						this.plugin.settings.plantuml.serverUrl = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 	}
 }

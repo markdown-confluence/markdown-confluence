@@ -70,6 +70,9 @@ importers:
       '@markdown-confluence/mermaid-puppeteer-renderer':
         specifier: workspace:5.5.2
         version: link:../mermaid-puppeteer-renderer
+      '@markdown-confluence/plantuml-renderer':
+        specifier: workspace:5.5.2
+        version: link:../plantuml-renderer
       boxen:
         specifier: 8.0.1
         version: 8.0.1
@@ -194,6 +197,9 @@ importers:
       '@markdown-confluence/mermaid-electron-renderer':
         specifier: workspace:5.5.2
         version: link:../mermaid-electron-renderer
+      '@markdown-confluence/plantuml-renderer':
+        specifier: workspace:5.5.2
+        version: link:../plantuml-renderer
       confluence.js:
         specifier: ^2.1.0
         version: 2.1.0
