@@ -48,7 +48,7 @@
 		"@atlaskit/adf-utils": "^19.29.6",
 		"@atlaskit/editor-json-transformer": "^8.32.0",
 		"@atlaskit/editor-prosemirror": "^7.3.0",
-		"@effect/platform-node": "4.0.0-beta.70",
+		"@effect/platform-node": "4.0.0-beta.83",
 		"confluence.js": "^2.1.0",
 		"effect": "4.0.0-beta.70",
 		"formdata-node": "^6.0.3",
