@@ -17,7 +17,7 @@
 	"dependencies": {
 		"@markdown-confluence/lib": "workspace:5.5.2",
 		"@markdown-confluence/mermaid-electron-renderer": "workspace:5.5.2",
-		"confluence.js": "^2.1.0",
+		"confluence.js": "^3.0.3",
 		"mime-types": "^3.0.2",
 		"react": "^19.2.6",
 		"react-dom": "^19.2.6"
