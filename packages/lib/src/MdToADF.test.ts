@@ -313,6 +313,39 @@ test("converts toc code fences and wiki markup to Confluence TOC macros", () => 
 	expect(JSON.stringify(wikiTocMacro)).toContain('"maxLevel":{"value":"3"}');
 });
 
+test("assigns distinct IDs to identical macros parsed in separate page fragments", () => {
+	type MacroAttributes = {
+		localId?: string;
+		parameters?: {
+			macroMetadata?: {
+				macroId?: { value?: string };
+			};
+		};
+	};
+
+	const markdown: MarkdownFile = {
+		folderName: "macros",
+		absoluteFilePath: "/path/to/duplicate-macro-ids.md",
+		fileName: "duplicate-macro-ids.md",
+		contents: ["```toc", "```"].join("\n"),
+		pageTitle: "Duplicate macro IDs",
+		frontmatter: {},
+	};
+
+	const adfFile = convertMDtoADF(
+		markdown,
+		createTestSettings({ pageHeaderMarkdown: ["```toc", "```"].join("\n") }),
+	);
+	const [headerMacro, bodyMacro] = adfFile.contents.content ?? [];
+	const headerMacroAttributes = headerMacro?.content?.[0]?.attrs as MacroAttributes | undefined;
+	const bodyMacroAttributes = bodyMacro?.content?.[0]?.attrs as MacroAttributes | undefined;
+
+	expect(headerMacroAttributes?.localId).not.toBe(bodyMacroAttributes?.localId);
+	expect(headerMacroAttributes?.parameters?.macroMetadata?.macroId?.value).not.toBe(
+		bodyMacroAttributes?.parameters?.macroMetadata?.macroId?.value,
+	);
+});
+
 test("adds configured page header and footer while ignoring configured code blocks", () => {
 	const markdown: MarkdownFile = {
 		folderName: "transforms",

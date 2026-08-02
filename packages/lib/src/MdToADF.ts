@@ -16,6 +16,8 @@ const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 const transformer = new MarkdownTransformer();
 const serializer = new JSONTransformer();
 
+type PageFragment = "header" | "body" | "footer";
+
 export function stripMarkdownHtmlComments(markdown: string): string {
 	const lines = markdown.split("\n");
 	const strippedLines: string[] = [];
@@ -102,10 +104,18 @@ function countBacktickRun(line: string, position: number): number {
 }
 
 export function parseMarkdownToADF(markdown: string, confluenceBaseUrl: string) {
+	return parsePageFragmentToADF(markdown, confluenceBaseUrl, "body");
+}
+
+function parsePageFragmentToADF(
+	markdown: string,
+	confluenceBaseUrl: string,
+	pageFragment: PageFragment,
+) {
 	const prosenodes = transformer.parse(stripMarkdownHtmlComments(markdown));
 	const adfNodes = serializer.encode(prosenodes);
 	const nodes = processADF(adfNodes, confluenceBaseUrl);
-	return replaceSupportedMacroPlaceholders(nodes);
+	return replaceSupportedMacroPlaceholders(nodes, pageFragment);
 }
 
 function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
@@ -245,7 +255,10 @@ type ADFNode = {
 	marks?: unknown[];
 };
 
-function replaceSupportedMacroPlaceholders(adf: JSONDocNode): JSONDocNode {
+function replaceSupportedMacroPlaceholders(
+	adf: JSONDocNode,
+	pageFragment: PageFragment,
+): JSONDocNode {
 	if (!adf.content) {
 		return adf;
 	}
@@ -258,6 +271,7 @@ function replaceSupportedMacroPlaceholders(adf: JSONDocNode): JSONDocNode {
 				"Table of Contents",
 				{},
 				macroIndex,
+				pageFragment,
 			);
 			macroIndex++;
 			return macroNode;
@@ -270,6 +284,7 @@ function replaceSupportedMacroPlaceholders(adf: JSONDocNode): JSONDocNode {
 				"Table of Contents",
 				tocParameters,
 				macroIndex,
+				pageFragment,
 			);
 			macroIndex++;
 			return macroNode;
@@ -337,8 +352,9 @@ function createConfluenceMacroParagraph(
 	title: string,
 	parameters: Record<string, string>,
 	index: number,
+	pageFragment: PageFragment, // required to generate unique macro IDs
 ): ADFNode {
-	const seed = `${extensionKey}:${JSON.stringify(parameters)}:${index}`;
+	const seed = `${pageFragment}:${extensionKey}:${JSON.stringify(parameters)}:${index}`;
 	const macroId = SparkMD5.hash(seed);
 
 	return {
@@ -400,10 +416,12 @@ function addConfiguredPageChrome(adfContent: JSONDocNode, settings: ConfluenceSe
 	const headerContent = parseConfiguredPageChromeMarkdown(
 		settings.pageHeaderMarkdown,
 		settings.confluenceBaseUrl,
+		"header",
 	);
 	const footerContent = parseConfiguredPageChromeMarkdown(
 		settings.pageFooterMarkdown,
 		settings.confluenceBaseUrl,
+		"footer",
 	);
 
 	if (headerContent.length === 0 && footerContent.length === 0) {
@@ -416,12 +434,14 @@ function addConfiguredPageChrome(adfContent: JSONDocNode, settings: ConfluenceSe
 function parseConfiguredPageChromeMarkdown(
 	markdown: string | undefined,
 	confluenceBaseUrl: string,
+	pageFragment: PageFragment,
 ): ADFNode[] {
 	if (!markdown?.trim()) {
 		return [];
 	}
 
-	return (parseMarkdownToADF(markdown, confluenceBaseUrl).content ?? []) as ADFNode[];
+	return (parsePageFragmentToADF(markdown, confluenceBaseUrl, pageFragment).content ??
+		[]) as ADFNode[];
 }
 
 function getCodeBlockText(node: ADFNode): string {
