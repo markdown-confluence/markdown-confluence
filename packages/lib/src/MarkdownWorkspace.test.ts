@@ -4,7 +4,15 @@ import { afterEach, expect, test } from "@effect/vitest";
 import { Effect } from "effect";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 import { RuntimeEnvironmentService, runEffect } from "./effects";
-import { loadMarkdownWorkspace } from "./MarkdownWorkspace";
+import { loadMarkdownWorkspace, shouldPublishMarkdownFile } from "./MarkdownWorkspace";
+
+test("folder selection respects directory boundaries on all platforms", () => {
+	const settings = { ...DEFAULT_SETTINGS, folderToPublish: "docs" };
+	expect(shouldPublishMarkdownFile("docs/page.md", {}, settings)).toBe(true);
+	expect(shouldPublishMarkdownFile("docs\\page.md", {}, settings)).toBe(true);
+	expect(shouldPublishMarkdownFile("docs-private/page.md", {}, settings)).toBe(false);
+	expect(shouldPublishMarkdownFile("docs.md", {}, settings)).toBe(false);
+});
 
 let tmpRoot: string | undefined;
 let originalWorkingDirectory: string | undefined;

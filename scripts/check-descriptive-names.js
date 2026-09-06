@@ -42,6 +42,7 @@ const allowedRepeatedFilePaths = new Set([
 	"packages/lib/src/index.ts",
 	"packages/mermaid-electron-renderer/src/index.ts",
 	"packages/mermaid-puppeteer-renderer/src/index.ts",
+	"packages/plantuml-renderer/src/index.ts",
 	"packages/obsidian/src/custom.d.ts",
 	"packages/lib/src/custom.d.ts",
 	"packages/mermaid-electron-renderer/src/custom.d.ts",

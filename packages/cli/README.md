@@ -134,6 +134,8 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 | `pageHeaderMarkdown` | `CONFLUENCE_PAGE_HEADER_MARKDOWN` | `--pageHeaderMarkdown` | Markdown inserted at the top of every generated Confluence page. |
 | `pageFooterMarkdown` | `CONFLUENCE_PAGE_FOOTER_MARKDOWN` | `--pageFooterMarkdown` | Markdown inserted at the bottom of every generated Confluence page. |
 | `ignoredCodeBlockLanguages` | n/a | n/a | Fenced code block languages to remove from generated pages, configured as a JSON array in `.markdown-confluence.json`. |
+| `plantuml.enabled` | `CONFLUENCE_PLANTUML_ENABLED` | `--plantumlEnabled` | When `true` (default: `false`), code blocks tagged `plantuml`, `puml`, or `uml` are rendered to images via the configured PlantUML server. |
+| `plantuml.serverUrl` | `CONFLUENCE_PLANTUML_SERVER_URL` | `--plantumlServerUrl` | PlantUML server base URL. Required when enabled. Diagram source is sent to this server; use a self-hosted server for private content (see [PlantUML support](#plantuml-support)). |
 
 ### OAuth 2.0 Service Account Authentication
 
@@ -208,6 +210,30 @@ To publish each repository under a repo-named sub-page such as `parent-page/hell
 A folder can provide its own page content with a folder note. The folder note can be named the same as the folder, `index.md`, `README.md`, or `readme.md`. When an `index.md` or `README.md` folder note has no explicit `connie-title` and no first-heading title, the folder name is used as the Confluence page title. At the publishing root, an `index.md` or `README.md` folder note updates the configured parent page's content instead of creating a child page named `index` or `README`.
 
 Only local Markdown files are published. Pages created directly in Confluence are not pulled into the local tree or published automatically. To manage an existing Confluence page from Markdown, create a local Markdown file and set `connie-page-id` to that page ID.
+### PlantUML support
+
+Fenced code blocks tagged `plantuml`, `puml`, or `uml` are rendered to PNG via a PlantUML server and uploaded as page attachments. Each rendered diagram is followed by a collapsible "source" section containing the raw `@startuml…@enduml`. Obsidian-style `![[diagram.puml]]` wikilink embeds are also resolved and rendered.
+
+PlantUML rendering is disabled by default. Enable it and configure a server you trust to receive diagram source. For example, run a local server:
+
+```bash
+docker run -d --name plantuml -p 8080:8080 plantuml/plantuml-server:jetty
+export CONFLUENCE_PLANTUML_ENABLED=true
+export CONFLUENCE_PLANTUML_SERVER_URL=http://localhost:8080
+```
+
+In `.markdown-confluence.json` the PlantUML options are nested:
+
+```json
+{
+  "plantuml": {
+    "enabled": true,
+    "serverUrl": "http://localhost:8080"
+  }
+}
+```
+
+To disable PlantUML rendering entirely (leaving the source as a code block on the page), set `plantuml.enabled: false` or `CONFLUENCE_PLANTUML_ENABLED=false`.
 
 ### Per-page Frontmatter
 

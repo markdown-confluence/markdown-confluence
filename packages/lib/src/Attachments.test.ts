@@ -169,6 +169,10 @@ class TestMarkdownWorkspace implements MarkdownWorkspace {
 	readBinary(searchPath: string): Effect.Effect<BinaryFile | false, Error> {
 		return Effect.succeed(this.binaryForPath(searchPath));
 	}
+
+	readText(_searchPath: string): Effect.Effect<string | false, Error> {
+		return Effect.fail(new Error("Method not implemented."));
+	}
 }
 
 function makeConfluenceClient(uploadRequests: unknown[]): RequiredConfluenceClient {

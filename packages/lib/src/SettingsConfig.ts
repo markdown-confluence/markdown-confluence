@@ -61,6 +61,14 @@ export const confluenceSettingsConfig = Config.all({
 		Schema.Array(Schema.String),
 		"ignoredCodeBlockLanguages",
 	).pipe(Config.withDefault([])),
+	plantuml: Config.all({
+		enabled: Config.boolean("enabled").pipe(
+			Config.withDefault(DEFAULT_SETTINGS.plantuml.enabled),
+		),
+		serverUrl: Config.string("serverUrl").pipe(
+			Config.withDefault(DEFAULT_SETTINGS.plantuml.serverUrl),
+		),
+	}).pipe(Config.nested("plantuml")),
 });
 
 export const ConfluenceSettingsLive: Layer.Layer<
@@ -199,6 +207,10 @@ function makeEnvironmentProvider(
 			"CONFLUENCE_FIRST_HEADING_PAGE_TITLE",
 		);
 		const forceOverwrite = yield* runtimeEnvironment.getEnv("CONFLUENCE_FORCE_OVERWRITE");
+		const plantumlEnabled = yield* runtimeEnvironment.getEnv("CONFLUENCE_PLANTUML_ENABLED");
+		const plantumlServerUrl = yield* runtimeEnvironment.getEnv(
+			"CONFLUENCE_PLANTUML_SERVER_URL",
+		);
 
 		return ConfigProvider.fromEnv({
 			env: compactRecord({
@@ -225,6 +237,11 @@ function makeEnvironmentProvider(
 				pageFooterMarkdown: yield* runtimeEnvironment.getEnv(
 					"CONFLUENCE_PAGE_FOOTER_MARKDOWN",
 				),
+				// fromEnv splits nested config paths on "_", so plantuml.enabled
+				// and plantuml.serverUrl are supplied as plantuml_enabled /
+				// plantuml_serverUrl here.
+				plantuml_enabled: plantumlEnabled,
+				plantuml_serverUrl: plantumlServerUrl,
 			}),
 		});
 	});
@@ -249,10 +266,17 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
 		{ name: "pageHeaderMarkdown", type: "string" },
 		{ name: "pageFooterMarkdown", type: "string" },
+		{ name: "plantumlEnabled", type: "boolean" },
+		{ name: "plantumlServerUrl", type: "string" },
 	]);
 
-	return ConfigProvider.fromUnknown(
-		compactRecord({
+	const plantuml = compactRecord({
+		enabled: options["plantumlEnabled"],
+		serverUrl: options["plantumlServerUrl"],
+	});
+
+	return ConfigProvider.fromUnknown({
+		...compactRecord({
 			confluenceBaseUrl: options["baseUrl"],
 			confluenceSiteUrl: options["siteUrl"],
 			confluenceParentId: options["parentId"],
@@ -271,7 +295,8 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			pageHeaderMarkdown: options["pageHeaderMarkdown"],
 			pageFooterMarkdown: options["pageFooterMarkdown"],
 		}),
-	);
+		...(Object.keys(plantuml).length > 0 ? { plantuml } : {}),
+	});
 }
 
 function parseArgumentValues(
@@ -344,6 +369,26 @@ function pickConfluenceSettings(config: Record<string, unknown>): Partial<Conflu
 
 	for (const key of CONFLUENCE_SETTINGS_KEYS) {
 		if (!Object.prototype.hasOwnProperty.call(config, key)) {
+			continue;
+		}
+
+		// `plantuml` is a nested object; copy its known sub-keys through with
+		// the right types so a partial config file still merges cleanly.
+		if (key === "plantuml") {
+			const value = config[key];
+			if (value && typeof value === "object" && !Array.isArray(value)) {
+				const plantuml = value as Record<string, unknown>;
+				const picked: Partial<ConfluenceSettings["plantuml"]> = {};
+				if (typeof plantuml["enabled"] === "boolean") {
+					picked.enabled = plantuml["enabled"];
+				}
+				if (typeof plantuml["serverUrl"] === "string") {
+					picked.serverUrl = plantuml["serverUrl"];
+				}
+				if (Object.keys(picked).length > 0) {
+					result.plantuml = picked as ConfluenceSettings["plantuml"];
+				}
+			}
 			continue;
 		}
 

@@ -47,6 +47,10 @@ export interface MarkdownWorkspace {
 		searchPath: string,
 		referencedFromFilePath: string,
 	): Effect.Effect<BinaryFile | false, Error>;
+	readText(
+		searchPath: string,
+		referencedFromFilePath: string,
+	): Effect.Effect<string | false, Error>;
 }
 
 export class MarkdownWorkspaceService extends Context.Service<
@@ -379,11 +383,29 @@ export function makeMarkdownWorkspaceEffect(
 				return false;
 			}).pipe(Effect.mapError(toError));
 
+		const readText = (
+			searchPath: string,
+			referencedFromFilePath: string,
+		): Effect.Effect<string | false, Error> =>
+			Effect.gen(function* () {
+				const absoluteFilePath = yield* findClosestFile(
+					searchPath,
+					path.dirname(path.join(workspaceSettings.contentRoot, referencedFromFilePath)),
+				);
+
+				if (absoluteFilePath) {
+					return yield* fs.readFileString(absoluteFilePath, "utf-8");
+				}
+
+				return false;
+			}).pipe(Effect.mapError(toError));
+
 		return {
 			updateMarkdownValues,
 			loadMarkdownFile,
 			getMarkdownFilesToUpload,
 			readBinary,
+			readText,
 		};
 	});
 }
@@ -462,7 +484,9 @@ export function shouldPublishMarkdownFile(
 		return true;
 	}
 
-	if (settings.folderToPublish === "." || absoluteFilePath.startsWith(settings.folderToPublish)) {
+	const filePath = absoluteFilePath.replaceAll("\\", "/");
+	const folder = settings.folderToPublish.replaceAll("\\", "/").replace(/\/$/, "");
+	if (folder === "." || filePath.startsWith(`${folder}/`)) {
 		return true;
 	}
 

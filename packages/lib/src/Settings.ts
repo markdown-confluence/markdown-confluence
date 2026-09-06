@@ -1,6 +1,10 @@
 import { Context } from "effect";
 
 export type ConfluenceAuthType = "basic" | "bearer" | "oauth2";
+export type PlantumlSettings = {
+	enabled: boolean;
+	serverUrl: string;
+};
 
 export type ConfluenceSettings = {
 	confluenceBaseUrl: string;
@@ -21,6 +25,7 @@ export type ConfluenceSettings = {
 	pageFooterMarkdown?: string;
 	ignoredCodeBlockLanguages?: readonly string[];
 	forceOverwrite: boolean;
+	plantuml: PlantumlSettings;
 };
 
 export type ConfluenceSettingsValidationIssue = {
@@ -52,6 +57,10 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	pageHeaderMarkdown: "",
 	pageFooterMarkdown: "",
 	ignoredCodeBlockLanguages: [],
+	plantuml: {
+		enabled: false,
+		serverUrl: "",
+	},
 };
 
 /**

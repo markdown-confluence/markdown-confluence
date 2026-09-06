@@ -65,6 +65,7 @@ jobs:
           vp pm publish --filter @markdown-confluence/lib --access public --no-git-checks
           vp pm publish --filter @markdown-confluence/mermaid-electron-renderer --access public --no-git-checks
           vp pm publish --filter @markdown-confluence/mermaid-puppeteer-renderer --access public --no-git-checks
+          vp pm publish --filter @markdown-confluence/plantuml-renderer --access public --no-git-checks
           vp pm publish --filter @markdown-confluence/cli --access public --no-git-checks
 
       - name: Log in to the Container registry

@@ -2,15 +2,23 @@ import * as ConfluencePageConfig from "./ConniePageConfig";
 import { createAuthenticatedConfluenceClient } from "./AuthenticatedConfluenceClient";
 import * as ConfluenceUploadSettings from "./Settings";
 import {
+	AlwaysADFPreprocessors,
 	AlwaysADFProcessingPlugins,
 	createPublisherFunctions,
+	executeADFPreprocessorsEffect,
 	executeADFProcessingPipeline,
 	executeADFProcessingPipelineEffect,
 	getMermaidFileName,
+	getPlantumlFileName,
 	MermaidRendererPlugin,
+	PlantumlEmbedResolverPlugin,
+	PlantumlRendererPlugin,
+	type ADFPreprocessor,
+	type ADFPreprocessorContext,
 	type ADFProcessingPlugin,
 	type ChartData,
 	type MermaidRenderer,
+	type PlantumlRenderer,
 	type PublisherFunctions,
 } from "./ADFProcessingPlugins";
 import { renderADFDoc } from "./ADFToMarkdown";
@@ -71,6 +79,7 @@ import {
 } from "./SettingsConfig";
 
 export {
+	AlwaysADFPreprocessors,
 	AlwaysADFProcessingPlugins,
 	ATLASSIAN_OAUTH_AUDIENCE,
 	ATLASSIAN_OAUTH_TOKEN_URL,
@@ -85,6 +94,8 @@ export {
 	MarkdownWorkspaceLive,
 	MarkdownWorkspaceService,
 	MermaidRendererPlugin,
+	PlantumlEmbedResolverPlugin,
+	PlantumlRendererPlugin,
 	Publisher,
 	RuntimeEnvironmentLive,
 	RuntimeEnvironmentService,
@@ -93,10 +104,12 @@ export {
 	createConfluenceClientConfig,
 	createAuthenticatedConfluenceClient,
 	createPublisherFunctions,
+	executeADFPreprocessorsEffect,
 	executeADFProcessingPipeline,
 	executeADFProcessingPipelineEffect,
 	fetchOAuthAccessToken,
 	getMermaidFileName,
+	getPlantumlFileName,
 	loadConfluenceSettings,
 	loadConfluenceSettingsEffect,
 	loadMarkdownWorkspace,
@@ -110,6 +123,8 @@ export {
 	shouldPublishMarkdownFile,
 	stripMarkdownHtmlComments,
 	validateConfluenceSettings,
+	type ADFPreprocessor,
+	type ADFPreprocessorContext,
 	type ADFProcessingPlugin,
 	type BinaryFile,
 	type ChartData,
@@ -125,6 +140,7 @@ export {
 	type MarkdownFile,
 	type MarkdownWorkspace,
 	type MermaidRenderer,
+	type PlantumlRenderer,
 	type PublisherFunctions,
 	type RequiredConfluenceClient,
 	type RuntimeEnvironment,

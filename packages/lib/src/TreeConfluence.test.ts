@@ -255,6 +255,10 @@ class TestMarkdownWorkspace implements MarkdownWorkspace {
 	): Effect.Effect<BinaryFile | false, Error> {
 		return Effect.fail(new Error("Method not implemented."));
 	}
+
+	readText(_path: string, _referencedFromFilePath: string): Effect.Effect<string | false, Error> {
+		return Effect.fail(new Error("Method not implemented."));
+	}
 }
 
 function createRootNode(

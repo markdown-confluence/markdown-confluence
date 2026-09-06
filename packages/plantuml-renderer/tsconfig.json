@@ -1,0 +1,13 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "dist",
+		"declarationDir": "dist",
+		"skipLibCheck": true,
+		"module": "ESNext",
+		"target": "ESNext"
+	},
+	"include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js"],
+	"exclude": ["node_modules", "dist", "src/**/*.test.ts"]
+}

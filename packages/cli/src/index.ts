@@ -5,17 +5,20 @@ import chalk from "chalk";
 import boxen from "boxen";
 import { Console, Effect } from "effect";
 import {
+	ADFProcessingPlugin,
 	ConfluenceSettingsLive,
 	ConfluenceUploadSettings,
 	MarkdownWorkspaceLive,
 	MarkdownConfluencePlatformLive,
 	Publisher,
 	MermaidRendererPlugin,
+	PlantumlRendererPlugin,
 	RuntimeEnvironmentService,
 	createAuthenticatedConfluenceClient,
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
 import { getErrorMessage } from "./errorMessage";
+import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 
 const program = Effect.gen(function* () {
 	const runtimeEnvironment = yield* RuntimeEnvironmentService as any;
@@ -25,9 +28,24 @@ const program = Effect.gen(function* () {
 
 	const confluenceClient = yield* createAuthenticatedConfluenceClient(settings);
 
-	const publisher = new Publisher(settings, confluenceClient, [
+	const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
 		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),
-	]);
+	];
+
+	if (settings.plantuml.enabled) {
+		if (!settings.plantuml.serverUrl) {
+			throw new Error(
+				"PlantUML rendering is enabled but plantuml.serverUrl is empty. Set CONFLUENCE_PLANTUML_SERVER_URL, --plantumlServerUrl, or plantuml.serverUrl in .markdown-confluence.json — or set plantuml.enabled to false.",
+			);
+		}
+		plugins.push(
+			new PlantumlRendererPlugin(
+				new HttpPlantumlRenderer({ serverUrl: settings.plantuml.serverUrl }),
+			),
+		);
+	}
+
+	const publisher = new Publisher(settings, confluenceClient, plugins);
 
 	const publishFilter = "";
 	const results = yield* publisher.publishEffect(publishFilter) as any;

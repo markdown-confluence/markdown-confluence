@@ -8,6 +8,7 @@ export default defineConfig({
 			"packages/obsidian/src/**/*.test.ts",
 			"packages/lib/src/**/*.test.ts",
 			"packages/mermaid-electron-renderer/src/**/*.test.ts",
+			"packages/plantuml-renderer/src/**/*.test.ts",
 			"scripts/**/*.test.js",
 		],
 		testTimeout: 300000,
