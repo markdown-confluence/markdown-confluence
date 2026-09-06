@@ -289,10 +289,113 @@ const program = Effect.scoped(
 				`CLI republishing changed an unchanged page: ${page.title}`,
 			);
 		}
+
+		const duplicatePath = path.join(root, "Release Tests/Duplicate.md");
+		yield* fs.writeFileString(
+			duplicatePath,
+			`---\nconnie-title: ${formatting.pageTitle}\n---\nDuplicate title without a page ID.\n`,
+		);
+		requestedBodies.clear();
+		yield* Effect.tryPromise(() =>
+			assert.rejects(() => publisher.publish(), /is not unique across all files/),
+		);
+		assert.equal(requestedBodies.size, 0, "Duplicate titles must fail before page updates");
+		yield* fs.remove(duplicatePath);
+
+		const validFormatting = yield* fs.readFileString(formattingPath);
+		yield* fs.writeFileString(
+			formattingPath,
+			`${validFormatting}\n![[Source Notes/Reusable#Missing release-test heading]]\n`,
+		);
+		yield* Effect.tryPromise(() =>
+			assert.rejects(
+				() => publisher.publish(),
+				/Embedded Markdown section or block not found/,
+			),
+		);
+		assert.equal(
+			requestedBodies.size,
+			0,
+			"Missing embed headings must fail before page updates",
+		);
+		yield* fs.writeFileString(formattingPath, validFormatting);
+		for (const [pageId, version] of versions) {
+			const page = yield* fetchPage(pageId);
+			assert.equal(
+				page.version.number,
+				version,
+				`Rejected notes changed page: ${page.title}`,
+			);
+		}
+
+		// Inject a transport failure against a real fixture, then reuse the same publisher.
+		const recoveryMarkdown = `${validFormatting}\nRECOVERED AFTER UPLOAD FAILURE.\n`;
+		yield* fs.writeFileString(formattingPath, recoveryMarkdown);
+		let injectedFailures = 0;
+		client.content.updateContent = async (parameters) => {
+			assert.equal(parameters.id, formatting.pageId);
+			injectedFailures++;
+			throw new Error("Injected release-test transport failure");
+		};
+		const failedUpload = yield* Effect.tryPromise(() => publisher.publish(formattingPath));
+		assert.equal(injectedFailures, 1);
+		assert.equal(failedUpload.length, 1);
+		assert.equal(failedUpload[0].successfulUploadResult, undefined);
+		assert.match(failedUpload[0].reason, /Injected release-test transport failure/);
+		const afterFailure = yield* fetchPage(formatting.pageId);
+		assert.equal(afterFailure.version.number, versions.get(formatting.pageId));
+		assert.ok(
+			!afterFailure.body.atlas_doc_format.value.includes("RECOVERED AFTER UPLOAD FAILURE."),
+		);
+		client.content.updateContent = updateContent;
+		const recovered = yield* Effect.tryPromise(() => publisher.publish(formattingPath));
+		assert.equal(recovered[0].successfulUploadResult?.contentResult, "updated");
+		const recoveredPage = yield* fetchPage(formatting.pageId);
+		assert.ok(
+			recoveredPage.body.atlas_doc_format.value.includes("RECOVERED AFTER UPLOAD FAILURE."),
+		);
+
+		// Advance the real page between the version read and write to provoke an HTTP 409.
+		yield* fs.writeFileString(
+			formattingPath,
+			`${recoveryMarkdown}\nRECOVERED AFTER VERSION CONFLICT.\n`,
+		);
+		let conflictAttempts = 0;
+		client.content.updateContent = async (parameters) => {
+			assert.equal(parameters.id, formatting.pageId);
+			conflictAttempts++;
+			if (conflictAttempts === 1) {
+				await updateContent({
+					...parameters,
+					body: {
+						atlas_doc_format: {
+							representation: "atlas_doc_format",
+							value: recoveredPage.body.atlas_doc_format.value,
+						},
+					},
+				});
+			}
+			return updateContent(parameters);
+		};
+		const conflictRecovery = yield* Effect.tryPromise(() => publisher.publish(formattingPath));
+		assert.equal(conflictAttempts, 2, "Publishing must retry the stale version once");
+		assert.equal(conflictRecovery[0].successfulUploadResult?.contentResult, "updated");
+		client.content.updateContent = updateContent;
+		const conflictPage = yield* fetchPage(formatting.pageId);
+		assert.equal(conflictPage.version.number, recoveredPage.version.number + 2);
+		assert.ok(
+			conflictPage.body.atlas_doc_format.value.includes("RECOVERED AFTER VERSION CONFLICT."),
+		);
+		const finalPublish = yield* Effect.tryPromise(() => publisher.publish(formattingPath));
+		assert.equal(finalPublish[0].successfulUploadResult?.contentResult, "same");
+		assert.equal(
+			(yield* fetchPage(formatting.pageId)).version.number,
+			conflictPage.version.number,
+		);
 		const pageLinks = first
 			.map((result) => `- [${result.node.file.pageTitle}](${result.node.file.pageUrl})`)
 			.join("\n");
-		const summary = `## Confluence release verification passed\n\nCreated/verified ${first.length} pages; unchanged publishing preserved content, attachments, labels and versions; one changed note updated successfully; the built CLI republished without further changes.\n\n${pageLinks}\n`;
+		const summary = `## Confluence release verification passed\n\nCreated/verified ${first.length} pages; unchanged publishing preserved content, attachments, labels and versions; one changed note updated successfully; the built CLI republished without further changes. Duplicate titles and missing embed headings were rejected without page updates. The same publisher recovered from an injected transport failure and a real HTTP version conflict, then preserved the unchanged page version.\n\n${pageLinks}\n`;
 		const summaryPath = yield* runtime.getEnv("GITHUB_STEP_SUMMARY");
 		if (summaryPath) yield* fs.writeFileString(summaryPath, summary);
 		yield* Console.log(summary);
