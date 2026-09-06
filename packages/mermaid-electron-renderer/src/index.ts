@@ -2,6 +2,7 @@ import { BrowserWindow } from "@electron/remote";
 import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
 import mermaid, { MermaidConfig } from "mermaid";
 import { v4 as uuidv4 } from "uuid";
+import { sanitizeMermaidConfig } from "./mermaidConfig";
 
 let mermaidRenderHtml: string;
 
@@ -59,7 +60,9 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 
 			await chartWindow.loadURL(mermaidRenderHtml);
 
-			const { themeVariables, ...mermaidInitConfig } = this.mermaidConfig;
+			const { themeVariables, ...mermaidInitConfig } = sanitizeMermaidConfig(
+				this.mermaidConfig,
+			);
 
 			mermaid.initialize({ ...mermaidInitConfig, startOnLoad: false });
 
