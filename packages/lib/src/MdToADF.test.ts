@@ -245,17 +245,19 @@ const markdownTestCases: MarkdownFile[] = [
 		},
 	},
 ];
+
+const testSettings: ConfluenceSettings = {
+	confluenceBaseUrl: "https://example.com",
+	confluenceParentId: "asdf",
+	atlassianUserName: "asdf@asdf.com",
+	atlassianApiToken: "asdfasdf",
+	folderToPublish: ".",
+	contentRoot: "./",
+	firstHeadingPageTitle: false,
+};
+
 test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
-	const settings: ConfluenceSettings = {
-		confluenceBaseUrl: "https://example.com",
-		confluenceParentId: "asdf",
-		atlassianUserName: "asdf@asdf.com",
-		atlassianApiToken: "asdfasdf",
-		folderToPublish: ".",
-		contentRoot: "./",
-		firstHeadingPageTitle: false,
-	};
-	const adfFile = convertMDtoADF(markdown, settings);
+	const adfFile = convertMDtoADF(markdown, testSettings);
 	expect(adfFile).toMatchSnapshot();
 });
 
@@ -334,17 +336,8 @@ test("parses callout with adjacent wikilink image", () => {
 		pageTitle: "Callouts",
 		frontmatter: {},
 	};
-	const settings: ConfluenceSettings = {
-		confluenceBaseUrl: "https://example.com",
-		confluenceParentId: "asdf",
-		atlassianUserName: "asdf@asdf.com",
-		atlassianApiToken: "asdfasdf",
-		folderToPublish: ".",
-		contentRoot: "./",
-		firstHeadingPageTitle: false,
-	};
 
-	const adfFile = convertMDtoADF(markdown, settings);
+	const adfFile = convertMDtoADF(markdown, testSettings);
 
 	expect(adfFile.contents.content?.[0]?.type).toBe("panel");
 	expect(JSON.stringify(adfFile.contents)).toContain("file://Pasted image 20231006155212.png");
@@ -441,12 +434,96 @@ function createMarkdownFile(contents: string): MarkdownFile {
 	};
 }
 
-const testSettings: ConfluenceSettings = {
-	confluenceBaseUrl: "https://example.com",
-	confluenceParentId: "asdf",
-	atlassianUserName: "asdf@asdf.com",
-	atlassianApiToken: "asdfasdf",
-	folderToPublish: ".",
-	contentRoot: "./",
-	firstHeadingPageTitle: false,
-};
+test("parses wikilink images inside nested lists without dropping later images", () => {
+	const markdown: MarkdownFile = {
+		folderName: "lists",
+		absoluteFilePath: "/path/to/lists.md",
+		fileName: "lists.md",
+		contents: [
+			"## Main",
+			"Word paragraph",
+			"1. List 1",
+			"2. List 2",
+			"\t1. Sub list (images)",
+			"\t   ",
+			"\t\t![[Pasted image 20231010114953.png]]",
+			"\t\t",
+			"\t\t![[Pasted image 20231010115214.png]]",
+		].join("\n"),
+		pageTitle: "Nested List Images",
+		frontmatter: {},
+	};
+
+	const adfFile = convertMDtoADF(markdown, testSettings);
+
+	expect(collectMediaUrls(adfFile.contents)).toEqual([
+		"file://Pasted image 20231010114953.png",
+		"file://Pasted image 20231010115214.png",
+	]);
+});
+
+test("parses image size hints from wikilink and markdown image syntax", () => {
+	const markdown: MarkdownFile = {
+		folderName: "images",
+		absoluteFilePath: "/path/to/images.md",
+		fileName: "images.md",
+		contents: [
+			"![[./img/chewbacca.png|111]]",
+			"",
+			"![chewy|222x333](./img/chewbacca.png)",
+		].join("\n"),
+		pageTitle: "Sized Images",
+		frontmatter: {},
+	};
+
+	const adfFile = convertMDtoADF(markdown, testSettings);
+	const mediaAttrs = collectMediaAttrs(adfFile.contents);
+
+	expect(mediaAttrs[0]).toMatchObject({
+		type: "file",
+		url: "file://./img/chewbacca.png",
+		width: 111,
+	});
+	expect(mediaAttrs[1]).toMatchObject({
+		height: 333,
+		type: "file",
+		url: "file://./img/chewbacca.png",
+		width: 222,
+	});
+});
+
+test("parses non-image wikilink embeds as uploadable file media", () => {
+	const markdown: MarkdownFile = {
+		folderName: "attachments",
+		absoluteFilePath: "/path/to/attachments.md",
+		fileName: "attachments.md",
+		contents: "![[profiles/render.cpuprofile]]",
+		pageTitle: "Profile",
+		frontmatter: {},
+	};
+
+	const adfFile = convertMDtoADF(markdown, testSettings);
+
+	expect(collectMediaUrls(adfFile.contents)).toEqual(["file://profiles/render.cpuprofile"]);
+});
+
+function collectMediaUrls(node: unknown): string[] {
+	return collectMediaAttrs(node)
+		.map((attrs) => attrs["url"])
+		.filter((url): url is string => typeof url === "string");
+}
+
+function collectMediaAttrs(node: unknown): Record<string, unknown>[] {
+	if (!node || typeof node !== "object") {
+		return [];
+	}
+
+	const record = node as Record<string, unknown>;
+	const attrs =
+		record["type"] === "media" && record["attrs"] && typeof record["attrs"] === "object"
+			? [record["attrs"] as Record<string, unknown>]
+			: [];
+	const content = Array.isArray(record["content"]) ? record["content"] : [];
+
+	return [...attrs, ...content.flatMap(collectMediaAttrs)];
+}

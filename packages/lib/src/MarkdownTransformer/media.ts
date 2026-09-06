@@ -57,6 +57,22 @@ function createRule() {
 	 * remaining inline content (bold, links, etc.) is kept intact!
 	 */
 	return function media(State: MdState) {
+		const createSizeAttrs = (sizeText: string | undefined): string[][] => {
+			const match = sizeText?.trim().match(/^(?<width>\d+)(?:x(?<height>\d+))?$/);
+			if (!match?.groups) {
+				return [];
+			}
+
+			const { width, height } = match.groups;
+			return [...(width ? [["width", width]] : []), ...(height ? [["height", height]] : [])];
+		};
+
+		const getAltSize = (str: string): string | undefined => {
+			const altEnd = str.indexOf("]");
+			const alt = altEnd > 2 ? str.slice(2, altEnd) : "";
+			return alt.includes("|") ? alt.split("|").at(-1) : undefined;
+		};
+
 		const createUrlAttrs = (href: string) => {
 			if (href.startsWith("http")) {
 				return [
@@ -79,7 +95,7 @@ function createRule() {
 			if (res.ok) {
 				const href = State.md.normalizeLink(res.str);
 				if (State.md.validateLink(href)) {
-					return createUrlAttrs(href);
+					return [...createUrlAttrs(href), ...createSizeAttrs(getAltSize(str))];
 				}
 			}
 
@@ -97,7 +113,10 @@ function createRule() {
 			const href = State.env?.references?.[normalizedReference]?.href;
 
 			if (href && State.md.validateLink(href)) {
-				return createUrlAttrs(State.md.normalizeLink(href));
+				return [
+					...createUrlAttrs(State.md.normalizeLink(href)),
+					...createSizeAttrs(getAltSize(str)),
+				];
 			}
 
 			return [
@@ -111,15 +130,11 @@ function createRule() {
 			const contentSplit = content.split("|");
 
 			const filename = contentSplit[0];
-			const widthHeight = contentSplit[1]?.split("x");
-			const width = widthHeight ? widthHeight[0] : undefined;
-			const height = !!widthHeight && widthHeight.length > 1 ? widthHeight[1] : undefined;
 
 			return [
 				["url", `file://${filename}`],
 				["type", "file"],
-				...(width ? [["width", `${width}`]] : []),
-				...(height ? [["height", `${height}`]] : []),
+				...createSizeAttrs(contentSplit[1]),
 			];
 		};
 
