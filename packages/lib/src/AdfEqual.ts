@@ -38,6 +38,21 @@ export function normalizeAdfForComparison(adf: ADFEntity): ADFEntity {
 				node.marks = sortDeep(node.marks);
 			}
 
+			for (const mark of node.marks ?? []) {
+				if (mark.type === "link" && typeof mark.attrs?.["href"] === "string") {
+					mark.attrs["href"] = canonicalConfluencePageLink(mark.attrs["href"]);
+				}
+			}
+			// Confluence writes the default pixel display width onto media wrappers.
+			if (
+				node.type === "mediaSingle" &&
+				node.attrs?.["widthType"] === "pixel" &&
+				node.attrs["width"] === node.content?.[0]?.attrs?.["width"]
+			) {
+				delete node.attrs["width"];
+				delete node.attrs["widthType"];
+			}
+
 			const parameters = node.attrs?.["parameters"];
 			if (
 				isRecord(parameters) &&
@@ -77,4 +92,17 @@ function cloneAdf(adf: ADFEntity): ADFEntity {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function canonicalConfluencePageLink(href: string): string {
+	try {
+		const url = new URL(href);
+		if (url.protocol !== "https:" && url.protocol !== "http:") return href;
+		const match = url.pathname.match(/^(\/wiki\/spaces\/[^/]+\/pages\/\d+)(?:\/[^/]*)?$/);
+		if (!match?.[1]) return href;
+		url.pathname = match[1];
+		return url.href;
+	} catch {
+		return href;
+	}
 }

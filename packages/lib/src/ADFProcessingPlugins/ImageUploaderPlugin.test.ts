@@ -20,9 +20,9 @@ test("keeps requested media width after uploading an image", () => {
 		collection: "contentId-page-id",
 		id: "attachment-id",
 		type: "file",
-		width: "111",
+		width: 111,
 	});
-	expect(mediaAttrs?.["height"]).toBeUndefined();
+	expect(mediaAttrs?.["height"]).toBe(480);
 	expect(mediaAttrs?.["url"]).toBeUndefined();
 });
 
@@ -84,3 +84,18 @@ function getFirstMediaAttrs(adf: JSONDocNode): Record<string, unknown> | undefin
 	const media = mediaSingle?.content?.[0];
 	return media?.attrs as Record<string, unknown> | undefined;
 }
+
+test("non-image attachments use Confluence media groups without image dimensions", () => {
+	const result = ImageUploaderPlugin.load(
+		docWithMedia({ type: "file", url: "file://sample.txt" }),
+		{
+			"file://sample.txt": { ...uploadedImage, filename: "sample.txt", width: 0, height: 0 },
+		},
+	);
+	expect(result.content[0]?.type).toBe("mediaGroup");
+	expect(getFirstMediaAttrs(result)).toEqual({
+		type: "file",
+		id: "attachment-id",
+		collection: "contentId-page-id",
+	});
+});

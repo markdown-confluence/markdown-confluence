@@ -69,28 +69,12 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 						}
 						const mappedImage = imageMap[node.attrs["url"]];
 						if (mappedImage) {
-							const requestedWidth = node.attrs["width"];
-							const requestedHeight = node.attrs["height"];
-							const hasRequestedDimensions =
-								hasMediaDimension(requestedWidth) ||
-								hasMediaDimension(requestedHeight);
-
+							node.attrs["width"] =
+								mediaDimension(node.attrs["width"]) ?? mappedImage.width;
+							node.attrs["height"] =
+								mediaDimension(node.attrs["height"]) ?? mappedImage.height;
 							node.attrs["collection"] = mappedImage.collection;
 							node.attrs["id"] = mappedImage.id;
-							if (hasMediaDimension(requestedWidth)) {
-								node.attrs["width"] = requestedWidth;
-							} else if (hasRequestedDimensions) {
-								delete node.attrs["width"];
-							} else {
-								node.attrs["width"] = mappedImage.width;
-							}
-							if (hasMediaDimension(requestedHeight)) {
-								node.attrs["height"] = requestedHeight;
-							} else if (hasRequestedDimensions) {
-								delete node.attrs["height"];
-							} else {
-								node.attrs["height"] = mappedImage.height;
-							}
 							delete node.attrs["url"];
 							return node;
 						}
@@ -105,6 +89,12 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 					if (!node || !node.content) {
 						return;
 					}
+					const media = node.content.at(0);
+					if (media?.attrs?.["width"] === 0 && media.attrs["height"] === 0) {
+						delete media.attrs["width"];
+						delete media.attrs["height"];
+						return { type: "mediaGroup", content: [media] };
+					}
 					const url = node.content.at(0)?.attrs?.["url"];
 					if (typeof url === "string" && url.startsWith("file://")) {
 						return p("Invalid Image Path");
@@ -117,6 +107,8 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 	},
 };
 
-function hasMediaDimension(value: unknown): boolean {
-	return value !== undefined && value !== null && value !== "";
+function mediaDimension(value: unknown): number | undefined {
+	if (typeof value !== "number" && typeof value !== "string") return undefined;
+	const dimension = Number(value);
+	return Number.isFinite(dimension) && dimension > 0 ? dimension : undefined;
 }

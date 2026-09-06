@@ -76,3 +76,53 @@ function getMacroParameters(adf: ADFEntity): Record<string, unknown> {
 
 	return parameters as Record<string, unknown>;
 }
+
+test("ignores Confluence page-title slugs while retaining page, anchor and origin differences", () => {
+	const link = (href: string): ADFEntity => ({
+		type: "doc",
+		version: 1,
+		content: [
+			{
+				type: "paragraph",
+				content: [
+					{ type: "text", text: "Page", marks: [{ type: "link", attrs: { href } }] },
+				],
+			},
+		],
+	});
+	const base = "https://example.atlassian.net/wiki/spaces/DOCS/pages/123";
+	expect(adfEqual(link(base + "/Page+Title#Heading"), link(base + "#Heading"))).toBe(true);
+	expect(adfEqual(link(base + "#One"), link(base + "#Two"))).toBe(false);
+	expect(adfEqual(link(base), link(base.replace("123", "124")))).toBe(false);
+	expect(adfEqual(link(base), link(base.replace("example", "different")))).toBe(false);
+});
+
+test("ignores redundant server image width while retaining explicit resizing", () => {
+	const media = (width?: number): ADFEntity => ({
+		type: "doc",
+		version: 1,
+		content: [
+			{
+				type: "mediaSingle",
+				attrs: {
+					layout: "center",
+					...(width === undefined ? {} : { width, widthType: "pixel" }),
+				},
+				content: [
+					{
+						type: "media",
+						attrs: {
+							type: "file",
+							id: "image",
+							collection: "page",
+							width: 160,
+							height: 80,
+						},
+					},
+				],
+			},
+		],
+	});
+	expect(adfEqual(media(160), media())).toBe(true);
+	expect(adfEqual(media(80), media())).toBe(false);
+});
