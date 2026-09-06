@@ -9,12 +9,20 @@ import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
 import { LocalAdfFileTreeNode } from "./Publisher";
 import { BinaryFile, FilesToUpload, MarkdownFile, MarkdownWorkspace } from "./MarkdownWorkspace";
 
-test("writes the parent page id back to a markdown-backed root page", async () => {
+test("publishes a markdown-backed root page as the configured parent page", async () => {
 	const updateCalls: UpdateCall[] = [];
 	const workspace = new TestMarkdownWorkspace(updateCalls);
+	const confluenceClient = createConfluenceClientWithPages({
+		"123456": createContentPage({
+			id: "123456",
+			title: "Docs Home",
+			spaceKey: "SPACE",
+			ancestors: [{ id: "space-root" }],
+		}),
+	});
 
 	const pages = await ensureAllFilesExistInConfluence(
-		{} as RequiredConfluenceClient,
+		confluenceClient,
 		workspace,
 		createRootNode("docs/index.md"),
 		"SPACE",
@@ -23,7 +31,9 @@ test("writes the parent page id back to a markdown-backed root page", async () =
 		testSettings,
 	);
 
-	expect(pages).toEqual([]);
+	expect(pages.map((page) => page.file.pageId)).toEqual(["123456"]);
+	expect(pages[0]?.file.pageTitle).toBe("Docs Home");
+	expect(pages[0]?.ancestors).toEqual(["space-root"]);
 	expect(updateCalls).toEqual([
 		{
 			absoluteFilePath: "docs/index.md",
@@ -59,9 +69,18 @@ test("clears stale page ids and creates the page by title", async () => {
 	const notFound = Object.assign(new Error("Not Found"), {
 		response: { status: 404 },
 	});
+	const parentPage = createContentPage({
+		id: "123456",
+		title: "Docs Home",
+		spaceKey: "SPACE",
+		ancestors: [{ id: "space-root" }],
+	});
 	const confluenceClient = {
 		content: {
-			getContentById: async () => {
+			getContentById: async ({ id }: { id: string }) => {
+				if (id === parentPage.id) {
+					return parentPage;
+				}
 				throw notFound;
 			},
 			getContent: async () => ({ results: [] }),
@@ -101,7 +120,7 @@ test("clears stale page ids and creates the page by title", async () => {
 		testSettings,
 	);
 
-	expect(pages.map((page) => page.file.pageId)).toEqual(["new-child-page"]);
+	expect(pages.map((page) => page.file.pageId)).toEqual(["123456", "new-child-page"]);
 	expect(updateCalls).toEqual([
 		{
 			absoluteFilePath: "docs/index.md",
@@ -123,6 +142,80 @@ test("clears stale page ids and creates the page by title", async () => {
 				publish: true,
 				pageId: "new-child-page",
 			},
+		},
+	]);
+});
+
+test("creates children in the space resolved from an explicit parent page id", async () => {
+	const updateCalls: UpdateCall[] = [];
+	const workspace = new TestMarkdownWorkspace(updateCalls);
+	const createContentCalls: unknown[] = [];
+	const confluenceClient = {
+		content: {
+			getContentById: async ({ id }: { id: string }) => {
+				if (id === "123456") {
+					return createContentPage({
+						id: "123456",
+						title: "Docs Home",
+						spaceKey: "SPACE",
+					});
+				}
+				return createContentPage({
+					id: "other-space-parent",
+					title: "Other Space Parent",
+					spaceKey: "OTHER",
+				});
+			},
+			getContent: async () => ({ results: [] }),
+			createContent: async (request: unknown) => {
+				createContentCalls.push(request);
+				return createContentPage({
+					id: "other-space-child",
+					title: "Child",
+					spaceKey: "OTHER",
+					ancestors: [{ id: "other-space-parent" }],
+				});
+			},
+		},
+	} as unknown as RequiredConfluenceClient;
+
+	const pages = await ensureAllFilesExistInConfluence(
+		confluenceClient,
+		workspace,
+		createRootNode("docs/index.md", [
+			createRootNode(
+				"docs/other-parent.md",
+				[
+					createRootNode("docs/child.md", {
+						absoluteFilePath: "docs/child.md",
+						pageTitle: "Child",
+					}),
+				],
+				{
+					absoluteFilePath: "docs/other-parent.md",
+					pageId: "other-space-parent",
+					pageTitle: "Other Space Parent",
+				},
+			),
+		]),
+		"SPACE",
+		"123456",
+		"123456",
+		testSettings,
+	);
+
+	expect(pages.map((page) => [page.file.pageId, page.file.spaceKey])).toEqual([
+		["123456", "SPACE"],
+		["other-space-parent", "OTHER"],
+		["other-space-child", "OTHER"],
+	]);
+	expect(pages[1]?.ancestors).toEqual([]);
+	expect(pages[2]?.ancestors).toEqual(["other-space-parent"]);
+	expect(createContentCalls).toMatchObject([
+		{
+			space: { key: "OTHER" },
+			ancestors: [{ id: "other-space-parent" }],
+			title: "Child",
 		},
 	]);
 });
@@ -165,9 +258,12 @@ function createRootNode(
 	childrenOrOverrides:
 		| LocalAdfFileTreeNode[]
 		| Partial<NonNullable<LocalAdfFileTreeNode["file"]>> = [],
+	overridesWhenChildren: Partial<NonNullable<LocalAdfFileTreeNode["file"]>> = {},
 ): LocalAdfFileTreeNode {
 	const children = Array.isArray(childrenOrOverrides) ? childrenOrOverrides : [];
-	const overrides = Array.isArray(childrenOrOverrides) ? {} : childrenOrOverrides;
+	const overrides = Array.isArray(childrenOrOverrides)
+		? overridesWhenChildren
+		: childrenOrOverrides;
 
 	return {
 		name: "docs",
@@ -185,6 +281,50 @@ function createRootNode(
 			contentType: "page",
 			blogPostDate: undefined,
 			...overrides,
+		},
+	};
+}
+
+function createConfluenceClientWithPages(
+	pagesById: Record<string, ReturnType<typeof createContentPage>>,
+): RequiredConfluenceClient {
+	return {
+		content: {
+			getContentById: async ({ id }: { id: string }) => pagesById[id],
+		},
+	} as unknown as RequiredConfluenceClient;
+}
+
+function createContentPage({
+	id,
+	title,
+	spaceKey,
+	ancestors = [],
+}: {
+	id: string;
+	title: string;
+	spaceKey: string;
+	ancestors?: { id: string }[];
+}) {
+	return {
+		id,
+		title,
+		type: "page",
+		version: {
+			number: 1,
+			by: {
+				accountId: "current-user",
+			},
+		},
+		body: {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			atlas_doc_format: {
+				value: JSON.stringify(doc(p("Existing page"))),
+			},
+		},
+		ancestors,
+		space: {
+			key: spaceKey,
 		},
 	};
 }
