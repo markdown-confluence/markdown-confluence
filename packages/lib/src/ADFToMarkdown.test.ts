@@ -80,10 +80,6 @@ const ADFToMDTest = {
 						timestamp: "1683244800000",
 					},
 				},
-				{
-					text: " ",
-					type: "text",
-				},
 			],
 		},
 		{

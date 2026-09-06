@@ -1505,34 +1505,45 @@ exports[`parses 'tasks.md' 1`] = `
             ],
             "type": "listItem",
           },
+        ],
+        "type": "bulletList",
+      },
+      {
+        "attrs": {
+          "localId": "task-list-1",
+        },
+        "content": [
           {
+            "attrs": {
+              "localId": "task-1",
+              "state": "TODO",
+            },
             "content": [
               {
-                "content": [
-                  {
-                    "text": "🔲 Unchecked item",
-                    "type": "text",
-                  },
-                ],
-                "type": "paragraph",
+                "text": "Unchecked item",
+                "type": "text",
               },
             ],
-            "type": "listItem",
+            "type": "taskItem",
           },
           {
+            "attrs": {
+              "localId": "task-2",
+              "state": "DONE",
+            },
             "content": [
               {
-                "content": [
-                  {
-                    "text": "✅ Checked item",
-                    "type": "text",
-                  },
-                ],
-                "type": "paragraph",
+                "text": "Checked item",
+                "type": "text",
               },
             ],
-            "type": "listItem",
+            "type": "taskItem",
           },
+        ],
+        "type": "taskList",
+      },
+      {
+        "content": [
           {
             "content": [
               {

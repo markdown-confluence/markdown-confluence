@@ -15,6 +15,20 @@ const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 const transformer = new MarkdownTransformer();
 const serializer = new JSONTransformer();
 
+type AdfNode = {
+	type: string;
+	attrs?: Record<string, unknown>;
+	content?: AdfNode[];
+	text?: string;
+	marks?: unknown[];
+	[key: string]: unknown;
+};
+
+type TaskListCounters = {
+	taskItem: number;
+	taskList: number;
+};
+
 export function stripMarkdownHtmlComments(markdown: string): string {
 	const lines = markdown.split("\n");
 	const strippedLines: string[] = [];
@@ -108,7 +122,8 @@ export function parseMarkdownToADF(markdown: string, confluenceBaseUrl: string) 
 }
 
 function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
-	const olivia = traverse(adf, {
+	const adfWithTaskLists = transformMarkdownTaskLists(adf as AdfNode) as JSONDocNode;
+	const olivia = traverse(adfWithTaskLists, {
 		text: (node, _parent) => {
 			if (_parent.parent?.node?.type == "listItem" && node.text) {
 				node.text = node.text
@@ -218,6 +233,138 @@ function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 	}
 
 	return olivia as JSONDocNode;
+}
+
+function transformMarkdownTaskLists(
+	node: AdfNode,
+	counters: TaskListCounters = { taskItem: 1, taskList: 1 },
+): AdfNode {
+	const content = node.content;
+	if (!content) {
+		return node;
+	}
+
+	const transformedContent = content.flatMap((child) => {
+		const transformedChild = transformMarkdownTaskLists(child, counters);
+		if (transformedChild.type === "bulletList") {
+			return splitBulletListTaskItems(transformedChild, counters);
+		}
+		return [transformedChild];
+	});
+
+	return {
+		...node,
+		content: transformedContent,
+	};
+}
+
+function splitBulletListTaskItems(bulletList: AdfNode, counters: TaskListCounters): AdfNode[] {
+	const result: AdfNode[] = [];
+	let bulletItems: AdfNode[] = [];
+	let taskItems: AdfNode[] = [];
+
+	const flushBulletItems = () => {
+		if (bulletItems.length === 0) {
+			return;
+		}
+		result.push({
+			...bulletList,
+			content: bulletItems,
+		});
+		bulletItems = [];
+	};
+
+	const flushTaskItems = () => {
+		if (taskItems.length === 0) {
+			return;
+		}
+		result.push({
+			type: "taskList",
+			attrs: {
+				localId: `task-list-${counters.taskList}`,
+			},
+			content: taskItems,
+		});
+		counters.taskList += 1;
+		taskItems = [];
+	};
+
+	for (const listItem of bulletList.content ?? []) {
+		const taskItem = convertListItemToTaskItem(listItem, counters);
+		if (taskItem) {
+			flushBulletItems();
+			taskItems.push(taskItem);
+			continue;
+		}
+
+		flushTaskItems();
+		bulletItems.push(listItem);
+	}
+
+	flushTaskItems();
+	flushBulletItems();
+
+	return result;
+}
+
+function convertListItemToTaskItem(
+	listItem: AdfNode,
+	counters: TaskListCounters,
+): AdfNode | undefined {
+	if (listItem.type !== "listItem" || listItem.content?.length !== 1) {
+		return undefined;
+	}
+
+	const paragraph = listItem.content[0];
+	if (!paragraph || paragraph.type !== "paragraph") {
+		return undefined;
+	}
+
+	const paragraphContent = paragraph.content ?? [];
+	const firstChild = paragraphContent[0];
+	if (!firstChild || firstChild.type !== "text" || typeof firstChild.text !== "string") {
+		return undefined;
+	}
+
+	const taskMarker = parseTaskMarker(firstChild.text);
+	if (!taskMarker) {
+		return undefined;
+	}
+
+	const firstTaskContent = taskMarker.text
+		? [
+				{
+					...firstChild,
+					text: taskMarker.text,
+				},
+			]
+		: [];
+
+	const taskItem = {
+		type: "taskItem",
+		attrs: {
+			localId: `task-${counters.taskItem}`,
+			state: taskMarker.state,
+		},
+		content: [...firstTaskContent, ...paragraphContent.slice(1)],
+	};
+	counters.taskItem += 1;
+
+	return taskItem;
+}
+
+function parseTaskMarker(
+	textContent: string,
+): { state: "TODO" | "DONE"; text: string } | undefined {
+	const markerMatch = textContent.match(/^\[( |x|X)\]\s?(.*)$/u);
+	if (!markerMatch) {
+		return undefined;
+	}
+
+	return {
+		state: markerMatch[1] === " " ? "TODO" : "DONE",
+		text: markerMatch[2] ?? "",
+	};
 }
 
 export function convertMDtoADF(file: MarkdownFile, settings: ConfluenceSettings): LocalAdfFile {

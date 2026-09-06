@@ -259,6 +259,63 @@ test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
 	expect(adfFile).toMatchSnapshot();
 });
 
+test("converts markdown task list items to ADF task nodes", () => {
+	const markdown: MarkdownFile = {
+		folderName: "tasks",
+		absoluteFilePath: "/path/to/tasks.md",
+		fileName: "tasks.md",
+		contents: "- [ ] Draft the page\n- [x] Publish it",
+		pageTitle: "Tasks",
+		frontmatter: {},
+	};
+	const settings: ConfluenceSettings = {
+		confluenceBaseUrl: "https://example.com",
+		confluenceParentId: "asdf",
+		atlassianUserName: "asdf@asdf.com",
+		atlassianApiToken: "asdfasdf",
+		folderToPublish: ".",
+		contentRoot: "./",
+		firstHeadingPageTitle: false,
+	};
+
+	const adfFile = convertMDtoADF(markdown, settings);
+
+	expect(adfFile.contents.content?.[0]).toEqual({
+		type: "taskList",
+		attrs: {
+			localId: "task-list-1",
+		},
+		content: [
+			{
+				type: "taskItem",
+				attrs: {
+					localId: "task-1",
+					state: "TODO",
+				},
+				content: [
+					{
+						type: "text",
+						text: "Draft the page",
+					},
+				],
+			},
+			{
+				type: "taskItem",
+				attrs: {
+					localId: "task-2",
+					state: "DONE",
+				},
+				content: [
+					{
+						type: "text",
+						text: "Publish it",
+					},
+				],
+			},
+		],
+	});
+});
+
 test("parses callout with adjacent wikilink image", () => {
 	const markdown: MarkdownFile = {
 		folderName: "callouts",
