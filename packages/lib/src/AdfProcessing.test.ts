@@ -28,6 +28,48 @@ test("resolves wikilinks that include a path under the publish root", () => {
 	);
 });
 
+test("resolves relative markdown links from the current file directory", () => {
+	const pages = [
+		createNode({
+			fileName: "README.md",
+			absoluteFilePath: "Confluence Pages/docs/guidebook/README.md",
+			contents: docWithLink("Context", "wikilinks:context/README"),
+		}),
+		createNode({
+			fileName: "README.md",
+			absoluteFilePath: "Confluence Pages/docs/guidebook/context/README.md",
+			pageId: "222222",
+			spaceKey: "SPACE",
+		}),
+	];
+
+	prepareAdfToUpload(pages, testSettings);
+
+	const link = pages[0]!.file.contents.content[0]!.content![0] as TextDefinition;
+	expect(link.marks?.[0]?.attrs?.href).toBe(
+		"https://example.atlassian.net/wiki/spaces/SPACE/pages/222222",
+	);
+});
+
+test("resolves same-page heading wikilinks to the current page", () => {
+	const pages = [
+		createNode({
+			fileName: "source.md",
+			absoluteFilePath: "Confluence Pages/source.md",
+			pageId: "111111",
+			spaceKey: "SPACE",
+			contents: docWithLink("Overview", "wikilinks:#Overview"),
+		}),
+	];
+
+	prepareAdfToUpload(pages, testSettings);
+
+	const link = pages[0]!.file.contents.content[0]!.content![0] as TextDefinition;
+	expect(link.marks?.[0]?.attrs?.href).toBe(
+		"https://example.atlassian.net/wiki/spaces/SPACE/pages/111111#Overview",
+	);
+});
+
 function docWithLink(text: string, href: string): JSONDocNode {
 	return {
 		version: 1,

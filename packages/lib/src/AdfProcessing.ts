@@ -51,7 +51,7 @@ export function prepareAdfToUpload(
 		}
 
 		result = processWikilinkToActualLink(
-			confluenceNode.file.fileName,
+			confluenceNode.file,
 			result,
 			fileToPageIdMap,
 			settings,
@@ -556,7 +556,7 @@ function extractInlineComments(adf: JSONDocNode) {
 }
 
 function processWikilinkToActualLink(
-	currentFileName: string,
+	currentFile: ConfluenceAdfFile,
 	adf: JSONDocNode,
 	fileToPageIdMap: Record<string, ConfluenceAdfFile>,
 	settings: ConfluenceSettings,
@@ -578,9 +578,10 @@ function processWikilinkToActualLink(
 					const pathName = normalizeWikilinkPath(decodeURI(wikilinkUrl.pathname));
 					const pathNameParts = pathName.split("/");
 					const displayFileName = pathNameParts[pathNameParts.length - 1] ?? pathName;
-					const pagename =
-						wikilinkUrl.pathname !== "" ? `${pathName}.md` : currentFileName;
-					const linkPage = fileToPageIdMap[pagename];
+					const linkPage =
+						wikilinkUrl.pathname !== ""
+							? findLinkedPage(pathName, currentFile, fileToPageIdMap, settings)
+							: currentFile;
 
 					if (linkPage) {
 						const confluenceUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
@@ -644,8 +645,84 @@ function getWikilinkLookupKeys(file: ConfluenceAdfFile, settings: ConfluenceSett
 	return keys;
 }
 
+function findLinkedPage(
+	pathName: string,
+	currentFile: ConfluenceAdfFile,
+	fileToPageIdMap: Record<string, ConfluenceAdfFile>,
+	settings: ConfluenceSettings,
+) {
+	for (const candidate of getWikilinkPathCandidates(pathName, currentFile, settings)) {
+		const page = fileToPageIdMap[candidate];
+		if (page) {
+			return page;
+		}
+	}
+
+	return undefined;
+}
+
+function getWikilinkPathCandidates(
+	pathName: string,
+	currentFile: ConfluenceAdfFile,
+	settings: ConfluenceSettings,
+) {
+	const pathCandidates = [
+		withMarkdownExtension(pathName),
+		normalizePathSegments(pathName),
+		joinPaths(dirname(currentFile.absoluteFilePath), withMarkdownExtension(pathName)),
+		joinPaths(dirname(currentFile.absoluteFilePath), pathName),
+	];
+	const folderToPublish = normalizePathSegments(settings.folderToPublish);
+
+	if (folderToPublish && folderToPublish !== ".") {
+		pathCandidates.push(
+			...pathCandidates
+				.filter((candidate) => candidate.startsWith(`${folderToPublish}/`))
+				.map((candidate) => candidate.slice(folderToPublish.length + 1)),
+		);
+	}
+
+	return [...new Set(pathCandidates.filter(Boolean))];
+}
+
+function withMarkdownExtension(pathName: string) {
+	return /\.(md|markdown)$/i.test(pathName) ? normalizePathSegments(pathName) : `${pathName}.md`;
+}
+
+function dirname(pathName: string) {
+	const normalizedPath = normalizePathSegments(pathName);
+	const parts = normalizedPath.split("/");
+	parts.pop();
+	return parts.join("/");
+}
+
+function joinPaths(...paths: string[]) {
+	return normalizePathSegments(paths.filter(Boolean).join("/"));
+}
+
 function normalizeWikilinkPath(value: string) {
-	return value.replace(/\\/g, "/").replace(/^\/+/, "");
+	return normalizePathSegments(value);
+}
+
+function normalizePathSegments(value: string) {
+	const segments: string[] = [];
+
+	for (const segment of value.replace(/\\/g, "/").replace(/^\/+/, "").split("/")) {
+		if (segment === "" || segment === ".") {
+			continue;
+		}
+		if (segment === "..") {
+			if (segments.length > 0 && segments.at(-1) !== "..") {
+				segments.pop();
+			} else {
+				segments.push(segment);
+			}
+			continue;
+		}
+		segments.push(segment);
+	}
+
+	return segments.join("/");
 }
 
 function removeEmptyProperties(adf: JSONDocNode) {

@@ -21,7 +21,9 @@ export interface MdState {
 }
 
 function createRule() {
-	const regx = /!\[[^\]]*\]\([^)]+\)|!\[[^\]]*\]\[[^\]]*]|!\[\[.*\..*]]/g;
+	const imagePattern = String.raw`!\[[^\]]*\]\([^)]+\)|!\[[^\]]*\]\[[^\]]*]|!\[\[[^\]\n]*\.[^\]\n]*\]\]`;
+	const imageRegex = new RegExp(imagePattern);
+	const imageMatchRegex = new RegExp(imagePattern, "g");
 	const referenceImageRegex = /^!\[(?<alt>[^\]]*)]\[(?<label>[^\]]*)]$/;
 	const validParentTokens = [
 		"blockquote_open",
@@ -151,72 +153,64 @@ function createRule() {
 		};
 
 		let processedTokens: string[] = [];
-		const newTokens = State.tokens.reduce(
-			(tokens: Token[], token: Token, i: number, arr: Token[]) => {
-				if (token.type === "inline" && regx.test(token.content)) {
-					const openingTokens: Token[] = [];
-					let cursor = i - 1;
-					let previousToken = arr[cursor];
-					let subTree: Token[] = [];
+		const newTokens = State.tokens.reduce((tokens: Token[], token: Token) => {
+			if (token.type === "inline" && imageRegex.test(token.content)) {
+				const openingTokens: Token[] = [];
+				const precedingTokens = [...tokens];
+				let previousToken = precedingTokens.at(-1);
+				let subTree: Token[] = [];
 
-					while (previousToken && previousToken.nesting === 1) {
-						if (validParentTokens.indexOf(previousToken.type) !== -1) {
-							break;
-						}
-
-						openingTokens.unshift(previousToken);
-						cursor--;
-						previousToken = arr[cursor];
-					}
-					cursor++;
-
-					const closingTokens = openingTokens
-						.map(
-							(token) =>
-								new State.Token(
-									token.type.replace("_open", "_close"),
-									token.tag,
-									-1,
-								),
-						)
-						.reverse();
-
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					const matches = token.content.match(regx)!;
-					let inlineContentStack = token.content;
-					matches.forEach((match) => {
-						const start = inlineContentStack.indexOf(match);
-						const contentBefore = inlineContentStack.substr(0, start);
-						inlineContentStack = inlineContentStack.substr(start + match.length);
-
-						subTree = [
-							...subTree,
-							...createInlineTokens(contentBefore, openingTokens, closingTokens),
-							...createMediaTokens(match),
-						];
-					});
-
-					if (inlineContentStack.length) {
-						subTree = [
-							...subTree,
-							...createInlineTokens(inlineContentStack, openingTokens, closingTokens),
-						];
+				while (previousToken && previousToken.nesting === 1) {
+					if (validParentTokens.indexOf(previousToken.type) !== -1) {
+						break;
 					}
 
-					processedTokens = [...processedTokens, ...closingTokens.map((c) => c.type)];
-
-					tokens = [...tokens.slice(0, cursor), ...subTree];
-				} else if (processedTokens.indexOf(token.type) !== -1) {
-					// Ignore token if it's already processed
-					processedTokens.splice(processedTokens.indexOf(token.type), 1);
-				} else {
-					tokens.push(token);
+					openingTokens.unshift(previousToken);
+					precedingTokens.pop();
+					previousToken = precedingTokens.at(-1);
 				}
 
-				return tokens;
-			},
-			[],
-		);
+				const closingTokens = openingTokens
+					.map(
+						(token) =>
+							new State.Token(token.type.replace("_open", "_close"), token.tag, -1),
+					)
+					.reverse();
+
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				const matches = token.content.match(imageMatchRegex)!;
+				let inlineContentStack = token.content;
+				matches.forEach((match) => {
+					const start = inlineContentStack.indexOf(match);
+					const contentBefore = inlineContentStack.substr(0, start);
+					inlineContentStack = inlineContentStack.substr(start + match.length);
+
+					subTree = [
+						...subTree,
+						...createInlineTokens(contentBefore, openingTokens, closingTokens),
+						...createMediaTokens(match),
+					];
+				});
+
+				if (inlineContentStack.length) {
+					subTree = [
+						...subTree,
+						...createInlineTokens(inlineContentStack, openingTokens, closingTokens),
+					];
+				}
+
+				processedTokens = [...processedTokens, ...closingTokens.map((c) => c.type)];
+
+				tokens = [...precedingTokens, ...subTree];
+			} else if (processedTokens.indexOf(token.type) !== -1) {
+				// Ignore token if it's already processed
+				processedTokens.splice(processedTokens.indexOf(token.type), 1);
+			} else {
+				tokens.push(token);
+			}
+
+			return tokens;
+		}, []);
 
 		State.tokens = newTokens;
 		return true;

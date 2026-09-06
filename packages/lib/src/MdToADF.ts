@@ -122,6 +122,7 @@ export function parseMarkdownToADF(markdown: string, confluenceBaseUrl: string) 
 }
 
 function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
+	const headingFragments = collectHeadingFragments(adf);
 	const adfWithTaskLists = transformMarkdownTaskLists(adf as AdfNode) as JSONDocNode;
 	const olivia = traverse(adfWithTaskLists, {
 		text: (node, _parent) => {
@@ -144,11 +145,20 @@ function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 				return node;
 			}
 
-			if (
-				node.marks[0].attrs["href"] === "" ||
-				(!isSafeUrl(node.marks[0].attrs["href"]) &&
-					!(node.marks[0].attrs["href"] as string).startsWith("wikilinks:") &&
-					!(node.marks[0].attrs["href"] as string).startsWith("mention:"))
+			const href = node.marks[0].attrs["href"];
+			if (typeof href !== "string") {
+				return node;
+			}
+
+			const markdownWikilinkHref = markdownLinkToWikilinkHref(href, headingFragments);
+			if (markdownWikilinkHref) {
+				node.marks[0].attrs["href"] = markdownWikilinkHref;
+			} else if (href.startsWith("wikilinks:#")) {
+				node.marks[0].attrs["href"] =
+					`wikilinks:${normalizeHashFragment(href.slice("wikilinks:".length), headingFragments)}`;
+			} else if (
+				href === "" ||
+				(!isSafeUrl(href) && !href.startsWith("wikilinks:") && !href.startsWith("mention:"))
 			) {
 				node.marks[0].attrs["href"] = "#";
 			}
@@ -193,7 +203,7 @@ function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 		},
 		codeBlock: (node, _parent) => {
 			if (!node || !node.attrs) {
-				return;
+				return node;
 			}
 
 			if (Object.keys(node.attrs).length === 0) {
@@ -365,6 +375,133 @@ function parseTaskMarker(
 		state: markerMatch[1] === " " ? "TODO" : "DONE",
 		text: markerMatch[2] ?? "",
 	};
+}
+
+function markdownLinkToWikilinkHref(
+	href: string,
+	headingFragments: Map<string, string>,
+): string | undefined {
+	if (href.startsWith("#")) {
+		return `wikilinks:${normalizeHashFragment(href, headingFragments)}`;
+	}
+
+	if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")) {
+		return undefined;
+	}
+
+	const hashIndex = href.indexOf("#");
+	const rawPath = hashIndex === -1 ? href : href.slice(0, hashIndex);
+	const rawHash = hashIndex === -1 ? "" : href.slice(hashIndex);
+	const pathWithoutQuery = rawPath.split("?")[0] ?? "";
+
+	if (!pathWithoutQuery) {
+		return rawHash
+			? `wikilinks:${normalizeHashFragment(rawHash, headingFragments)}`
+			: undefined;
+	}
+
+	const markdownPath = markdownPathToWikilinkPath(pathWithoutQuery);
+	if (!markdownPath) {
+		return undefined;
+	}
+
+	return `wikilinks:${markdownPath}${normalizeHashFragment(rawHash, headingFragments)}`;
+}
+
+function markdownPathToWikilinkPath(path: string): string | undefined {
+	const normalizedPath = normalizeMarkdownPath(path);
+
+	if (normalizedPath.endsWith("/")) {
+		return `${normalizedPath}README`;
+	}
+
+	if (/\.(md|markdown)$/i.test(normalizedPath)) {
+		return normalizedPath.replace(/\.(md|markdown)$/i, "");
+	}
+
+	return undefined;
+}
+
+function normalizeMarkdownPath(path: string): string {
+	const decodedPath = safeDecodeURI(path).replace(/\\/g, "/");
+	const segments: string[] = [];
+
+	for (const segment of decodedPath.split("/")) {
+		if (segment === "" || segment === ".") {
+			continue;
+		}
+		if (segment === "..") {
+			if (segments.length > 0 && segments.at(-1) !== "..") {
+				segments.pop();
+			} else {
+				segments.push(segment);
+			}
+			continue;
+		}
+		segments.push(segment);
+	}
+
+	return segments.join("/") + (decodedPath.endsWith("/") ? "/" : "");
+}
+
+function normalizeHashFragment(hash: string, headingFragments: Map<string, string>): string {
+	if (!hash) {
+		return "";
+	}
+
+	const hashText = safeDecodeURIComponent(hash.slice(1)).trim();
+	const headingFragment = headingFragments.get(normalizeHeadingLookupKey(hashText));
+	return headingFragment ?? `#${hashText.replace(/\s+/g, "-")}`;
+}
+
+function collectHeadingFragments(adf: JSONDocNode) {
+	const headingFragments = new Map<string, string>();
+
+	traverse(adf, {
+		heading: (node) => {
+			const headingText = collectText(node).trim();
+			if (headingText) {
+				headingFragments.set(
+					normalizeHeadingLookupKey(headingText),
+					`#${headingText.replace(/\s+/g, "-")}`,
+				);
+			}
+			return node;
+		},
+	});
+
+	return headingFragments;
+}
+
+function collectText(node: {
+	text?: string;
+	content?: Array<{ text?: string } | undefined>;
+}): string {
+	return (node.content ?? []).map((child) => child?.text ?? "").join("");
+}
+
+function normalizeHeadingLookupKey(value: string): string {
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/[^\w\s-]/g, "")
+		.replace(/\s+/g, "-");
+}
+
+function safeDecodeURI(value: string): string {
+	try {
+		return decodeURI(value);
+	} catch {
+		return value;
+	}
+}
+
+function safeDecodeURIComponent(value: string): string {
+	try {
+		return decodeURIComponent(value);
+	} catch {
+		return value;
+	}
 }
 
 export function convertMDtoADF(file: MarkdownFile, settings: ConfluenceSettings): LocalAdfFile {
