@@ -20,4 +20,5 @@ WORKDIR "/content"
 
 USER pptruser
 
-CMD ["node", "/app/index.js"]
+ENTRYPOINT ["node", "/app/index.js"]
+CMD []

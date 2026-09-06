@@ -50,10 +50,11 @@ export default defineConfig({
 			},
 		},
 		sourcemap: true,
-		target: "node16",
+		target: "node24",
 	},
 	plugins: [copyRendererHtmlPlugin()],
 	resolve: {
+		conditions: ["node", "module"],
 		mainFields: ["module", "main"],
 	},
 });

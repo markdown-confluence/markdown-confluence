@@ -44,7 +44,7 @@ Add `MermaidRendererPlugin` and a renderer when publishing Mermaid diagrams. `Pl
 
 The npm CLI executable remains `cli`; `npx @markdown-confluence/cli` also runs it. The new `to-adf` command converts a file or stdin without Confluence credentials. Publish failures now exit unsuccessfully with a useful, redacted error.
 
-The container uses Node 24.15.0 and Debian Chromium and supports AMD64 and ARM64. Mount the source directory writable when publishing because frontmatter is updated. The standalone image runs as an unprivileged user; ensure that user can write the mounted notes.
+The CLI requires Node 24.15.0 or newer. The container uses Node 24.15.0 and Debian Chromium and supports AMD64 and ARM64. Its entry point is the CLI: pass `to-adf` directly after the image name for offline conversion. Mount the source directory writable when publishing because frontmatter is updated. The standalone image runs as an unprivileged user; ensure that user can write the mounted notes.
 
 Basic API-token authentication remains the default. Bearer tokens, extra request headers and a configurable REST prefix are available. Those settings do not imply full Confluence Data Center compatibility.
 
