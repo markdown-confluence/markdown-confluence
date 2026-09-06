@@ -73,6 +73,10 @@ test("getContentById fetches ancestors when expand includes ancestors", async ()
 			match: "/wiki/api/v2/pages/123/ancestors",
 			response: () => jsonResponse({ results: [{ id: "100", type: "page" }] }),
 		},
+		{
+			match: "/wiki/api/v2/pages/100/ancestors",
+			response: () => jsonResponse({ results: [] }),
+		},
 		{ match: "/wiki/api/v2/pages/123", response: () => jsonResponse(PAGE) },
 		{
 			match: "/wiki/api/v2/spaces/900",
@@ -241,4 +245,99 @@ test("unsupported methods throw not-implemented errors", async () => {
 	const client = new ConfluenceV2Client(BASE, TOKEN);
 	expect(() => client.searchContentByCQL()).toThrow(/not implemented/);
 	expect(() => client.deleteContent()).toThrow(/not implemented/);
+});
+
+test("collects attachments and labels across gateway-relative and absolute cursor links", async () => {
+	const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+		const url = String(input);
+		expect(new Headers(init?.headers).get("X-Route")).toBe("release");
+		expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${TOKEN}`);
+		if (url.endsWith("/attachments?limit=250"))
+			return jsonResponse({
+				results: [{ id: "1", title: "first.png", fileId: "f1", comment: "hash1" }],
+				_links: { next: "/wiki/api/v2/pages/123/attachments?cursor=next" },
+			});
+		if (url.endsWith("/attachments?cursor=next"))
+			return jsonResponse({
+				results: [{ id: "2", title: "second.png", fileId: "f2", comment: "hash2" }],
+			});
+		if (url.endsWith("/labels?limit=250"))
+			return jsonResponse({
+				results: [{ id: "3", name: "first" }],
+				_links: { next: `${BASE}/wiki/api/v2/pages/123/labels?cursor=next` },
+			});
+		if (url.endsWith("/labels?cursor=next"))
+			return jsonResponse({ results: [{ id: "4", name: "second" }] });
+		throw new Error(`Unexpected URL ${url}`);
+	});
+	globalThis.fetch = fetchMock as unknown as typeof fetch;
+	const client = new ConfluenceV2Client(BASE, TOKEN, {
+		"X-Route": "release",
+		authorization: "stale",
+	});
+	const attachments = await client.getAttachments({ id: "123" });
+	expect(attachments.results.map((item) => item.title)).toEqual(["first.png", "second.png"]);
+	expect(attachments.results[1]?.extensions).toMatchObject({
+		fileId: "f2",
+		collectionName: "contentId-123",
+	});
+	const labels = await client.getLabelsForContent({ id: "123" });
+	expect(labels.results.map((item) => item.name)).toEqual(["first", "second"]);
+	expect(fetchMock).toHaveBeenCalledTimes(4);
+});
+
+test("rejects foreign and repeated pagination links before sending credentials", async () => {
+	for (const next of [
+		"https://other.test/wiki/api/v2/pages/123/labels",
+		"/ex/confluence/other-cloud/wiki/api/v2/pages/123/labels",
+		"/wiki/api/v2/pages/123/labels?limit=250",
+	]) {
+		const fetchMock = vi.fn(async () => jsonResponse({ results: [], _links: { next } }));
+		globalThis.fetch = fetchMock as unknown as typeof fetch;
+		await expect(
+			new ConfluenceV2Client(BASE, TOKEN).getLabelsForContent({ id: "123" }),
+		).rejects.toThrow(/outside|repeated/);
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+	}
+});
+
+test("reads the complete ancestor chain beyond a partial response in root-to-parent order", async () => {
+	globalThis.fetch = routedFetch([
+		{
+			match: "/pages/123/ancestors",
+			response: () => jsonResponse({ results: [{ id: "100", type: "page" }] }),
+		},
+		{
+			match: "/pages/100/ancestors",
+			response: () =>
+				jsonResponse({
+					results: [
+						{ id: "1", type: "page" },
+						{ id: "50", type: "page" },
+					],
+				}),
+		},
+		{ match: "/pages/1/ancestors", response: () => jsonResponse({ results: [] }) },
+		{ match: "/pages/123", response: () => jsonResponse(PAGE) },
+		{ match: "/spaces/900", response: () => jsonResponse({ id: "900", key: "PCBF" }) },
+	]) as unknown as typeof fetch;
+	const result = await new ConfluenceV2Client(BASE, TOKEN).getContentById({
+		id: "123",
+		expand: ["ancestors"],
+	});
+	expect(result.ancestors).toEqual([{ id: "1" }, { id: "50" }, { id: "100" }]);
+});
+
+test("does not weaken the publishing boundary when ancestor permission is missing", async () => {
+	globalThis.fetch = routedFetch([
+		{
+			match: "/pages/123/ancestors",
+			response: () => jsonResponse({ message: "Scope required" }, 403),
+		},
+		{ match: "/pages/123", response: () => jsonResponse(PAGE) },
+		{ match: "/spaces/900", response: () => jsonResponse({ id: "900", key: "PCBF" }) },
+	]) as unknown as typeof fetch;
+	await expect(
+		new ConfluenceV2Client(BASE, TOKEN).getContentById({ id: "123", expand: ["ancestors"] }),
+	).rejects.toMatchObject({ response: { status: 403 } });
 });

@@ -26,7 +26,11 @@ export function createAuthenticatedConfluenceClient(
 			}),
 		);
 		if (oauth) {
-			const content = new ConfluenceV2Client(settings.confluenceBaseUrl, accessToken);
+			const content = new ConfluenceV2Client(
+				settings.confluenceBaseUrl,
+				accessToken,
+				settings.confluenceRequestHeaders,
+			);
 			client.content = content as unknown as Api.Content;
 			client.contentAttachments.getAttachments = content.getAttachments.bind(
 				content,

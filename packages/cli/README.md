@@ -175,6 +175,8 @@ export ATLASSIAN_CLIENT_ID="YOUR CLIENT ID"
 export ATLASSIAN_CLIENT_SECRET="YOUR CLIENT SECRET"
 ```
 
+Grant the service account the page, attachment, label and space permissions required by its publishing scope, including `read:content.metadata:confluence` for the full ancestor chain. Publishing stops if that chain cannot be read, so a missing permission cannot bypass the parent-page boundary. See the [Confluence ancestors API](https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-ancestors/).
+
 The CLI exchanges these credentials for a bearer token against the Atlassian token endpoint (`https://auth.atlassian.com/oauth/token`) and uses it for all Confluence API requests.
 
 > **Note:** The bearer token is fetched once at startup and is short-lived. This is sufficient for normal publishes, but a very large publish run could exceed the token lifetime and begin failing partway through. If you hit this, split the publish into smaller runs.
