@@ -3,8 +3,9 @@ import { packageDependencyExternals } from "../../vite.package-build.ts";
 
 const external = packageDependencyExternals(import.meta.url);
 
-function shouldBundleDependencySubpath(id: string): boolean {
-	return id === "image-size" || (id.startsWith("@atlaskit/") && id.split("/").length > 2);
+function shouldBundleConversionDependency(id: string): boolean {
+	// Bundle conversion dependencies so the patched parser resolutions reach npm consumers.
+	return id === "image-size" || id.startsWith("@atlaskit/");
 }
 
 export default defineConfig({
@@ -16,7 +17,7 @@ export default defineConfig({
 			formats: ["es"],
 		},
 		rollupOptions: {
-			external: (id) => (shouldBundleDependencySubpath(id) ? false : external(id)),
+			external: (id) => (shouldBundleConversionDependency(id) ? false : external(id)),
 		},
 		sourcemap: true,
 		target: "es2022",

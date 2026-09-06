@@ -37,7 +37,7 @@ All projects within this mono repo use the core package library [@markdown-confl
 
 ## Documentation
 
-For detailed installation and usage instructions, please visit our [documentation](https://markdown-confluence.com/).
+For detailed installation and usage instructions, please visit our [documentation](https://markdown-confluence.com/). Before upgrading from 5.5.2, read the [version 6 migration guide](documentation/MIGRATING_TO_6.md). Current [CLI](packages/cli/README.md), [library](packages/lib/README.md) and [Obsidian installation](packages/obsidian/README.md) instructions are maintained with the source.
 
 ## Contributing
 Contributions are welcome! If you have a feature request, bug report, or want to improve the plugin, please open an issue or submit a pull request on the GitHub repository.

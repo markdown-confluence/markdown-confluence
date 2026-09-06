@@ -21,6 +21,10 @@ The initial audit reported 65 findings. Compatible updates and targeted override
 
 The image-size fix has bounded-worker regression tests and is bundled into the library as well as the CLI/Obsidian builds, because workspace patches do not propagate to npm consumers. A direct test of the built library's public upload adapter confirms malformed ICNS terminates and preserves the attachment fallback. See `patches/README.md` for the fix and upstream advisory references.
 
+A clean consumer installation reports five dependency-metadata advisories (two linkify-it, two qs and one UUID). Atlaskit conversion code is now bundled with the patched linkify-it resolution, and the built library no longer imports Atlaskit runtime packages. Those dependencies remain installed for the public TypeScript declarations. The qs findings are in the Express/body-parser dependency chain of confluence.js's JWT support; the publisher does not start an Express server. These consumer findings are documented rather than suppressed. The isolated package installation, ESM/CommonJS imports, conversion and real renderer checks pass.
+
+The rebuilt ARM64 container accepts `to-adf` directly through its CLI entry point. Offline task and TOC conversion pass. Local npm authentication returns 401; the release workflow's trusted-publishing configuration must still be verified by actual publication.
+
 A real PlantUML PNG was generated successfully from synthetic test content (230 × 158 pixels). Live publication and browser inspection also pass for fenced and embedded PlantUML diagrams.
 
 ## Dedicated live fixtures
@@ -33,7 +37,7 @@ A real PlantUML PNG was generated successfully from synthetic test content (230 
 
 The local vault token field is still empty, and Obsidian remains in Restricted Mode pending the requested approval. Existing GitHub repository secrets enabled a separate successful live publishing test without exposing credentials locally.
 
-The [live Confluence verification run](https://github.com/markdown-confluence/markdown-confluence/actions/runs/34066365424) at `4358288` created/verified eight pages, checked remote ADF, attachments, labels, hierarchy, source frontmatter and exclusions, confirmed an unchanged run preserved every page version, and updated only the modified note. Browser inspection confirmed formatting, callouts, tables, Unicode, task checkboxes, TOC, PNG/SVG images, nested images, file attachments, Mermaid and PlantUML rendering. Subsequent CI also exercises the built CLI executable; that result remains pending.
+The [live Confluence verification run](https://github.com/markdown-confluence/markdown-confluence/actions/runs/34066365424) at `4358288` created/verified eight pages, checked remote ADF, attachments, labels, hierarchy, source frontmatter and exclusions, confirmed an unchanged run preserved every page version, and updated only the modified note. Browser inspection confirmed formatting, callouts, tables, Unicode, task checkboxes, TOC, PNG/SVG images, nested images, file attachments, Mermaid and PlantUML rendering. The [built CLI verification](https://github.com/markdown-confluence/markdown-confluence/actions/runs/34066860979) at `61dd133` also passes. It republishes the same fixture tree through the actual executable, configuration file and environment credentials without advancing page versions. This exposed and fixed a browser WebSocket export accidentally bundled into the Node CLI.
 
 Live testing found and fixed three round-trip differences: TOC inline-to-block rewriting, title slugs added to Confluence page links, and default image dimensions/display metadata. Non-image attachments now use the media-group representation Confluence stores. Regression tests retain detection of real page/anchor/origin and image-resizing changes.
 
@@ -45,7 +49,7 @@ The companion Action update is prepared in [publish-action PR #11](https://githu
 
 ## Remaining release gates
 
-1. Complete the built CLI check and the separate Obsidian create → inspect → unchanged publish → update flow. The library-based live Confluence flow passes. Obsidian still needs its local API token and the requested Restricted Mode approval.
+1. Complete the separate Obsidian create → inspect → unchanged publish → update flow. The library and built CLI live Confluence flows pass. Obsidian still needs its local API token and the requested Restricted Mode approval.
 2. Exercise overwrite protection, failure recovery, duplicate titles, missing references and OAuth/v2 behavior. Keep issues with insufficient reproduction evidence open.
 3. PlantUML rendering, publication and browser inspection pass with explicit synthetic-fixture opt-in.
 4. Pass the branch's Linux/Windows verification, CodeQL and dependency review; verify both container architectures.
