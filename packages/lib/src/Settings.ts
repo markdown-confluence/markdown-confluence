@@ -14,6 +14,9 @@ export type ConfluenceSettings = {
 	tagsToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
+	pageHeaderMarkdown?: string;
+	pageFooterMarkdown?: string;
+	ignoredCodeBlockLanguages?: readonly string[];
 	forceOverwrite: boolean;
 };
 
@@ -40,6 +43,9 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,
+	pageHeaderMarkdown: "",
+	pageFooterMarkdown: "",
+	ignoredCodeBlockLanguages: [],
 };
 
 export class ConfluenceSettingsService extends Context.Service<

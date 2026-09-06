@@ -106,7 +106,10 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
   "folderToPublish": "docs",
   "contentRoot": ".",
   "firstHeadingPageTitle": false,
-  "forceOverwrite": false
+  "forceOverwrite": false,
+  "pageHeaderMarkdown": "",
+  "pageFooterMarkdown": "",
+  "ignoredCodeBlockLanguages": ["dataview", "button"]
 }
 ```
 
@@ -125,6 +128,9 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 | `contentRoot` | `CONFLUENCE_CONTENT_ROOT` | `--contentRoot`, `--cr` | The root directory to scan for Markdown files and referenced content. |
 | `firstHeadingPageTitle` | `CONFLUENCE_FIRST_HEADING_PAGE_TITLE` | `--firstHeaderPageTitle`, `--fh` | When `true`, use the first heading as the page title when `connie-title` is not set. |
 | `forceOverwrite` | `CONFLUENCE_FORCE_OVERWRITE` | `--forceOverwrite`, `--fo` | When `true`, publish over pages last updated by another user. Leave this `false` to preserve Confluence-side edits. |
+| `pageHeaderMarkdown` | `CONFLUENCE_PAGE_HEADER_MARKDOWN` | `--pageHeaderMarkdown` | Markdown inserted at the top of every generated Confluence page. |
+| `pageFooterMarkdown` | `CONFLUENCE_PAGE_FOOTER_MARKDOWN` | `--pageFooterMarkdown` | Markdown inserted at the bottom of every generated Confluence page. |
+| `ignoredCodeBlockLanguages` | n/a | n/a | Fenced code block languages to remove from generated pages, configured as a JSON array in `.markdown-confluence.json`. |
 
 ### `folderToPublish` vs `contentRoot`
 
@@ -187,3 +193,50 @@ tags:
 ```
 
 These keys apply to one Markdown file at a time and are not global `.markdown-confluence.json` settings.
+
+### Markdown Extensions And Macros
+
+To publish a Confluence table of contents, put an empty `toc` fence where the macro should appear:
+
+````markdown
+```toc
+```
+````
+
+The converter also accepts standalone Confluence wiki-style TOC macro markup:
+
+```markdown
+{toc:printable=true|maxLevel=3}
+```
+
+For advanced macro or ADF templates, use an `adf` fenced code block containing the ADF JSON that should be inserted into the page:
+
+````markdown
+```adf
+{
+  "type": "paragraph",
+  "content": [
+    {
+      "type": "inlineExtension",
+      "attrs": {
+        "extensionType": "com.atlassian.confluence.macro.core",
+        "extensionKey": "status",
+        "parameters": {
+          "macroParams": {
+            "title": { "value": "Draft" }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+````
+
+Use `ignoredCodeBlockLanguages` to drop source-only Obsidian plugin blocks from published pages:
+
+```json
+{
+  "ignoredCodeBlockLanguages": ["dataview", "button"]
+}
+```

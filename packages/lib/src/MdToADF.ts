@@ -9,6 +9,7 @@ import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap
 import { isSafeUrl } from "@atlaskit/adf-schema";
 import { ConfluenceSettings } from "./Settings";
 import { cleanUpUrlIfConfluence } from "./ConfluenceUrlParser";
+import SparkMD5 from "spark-md5";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 
@@ -28,6 +29,7 @@ type TaskListCounters = {
 	taskItem: number;
 	taskList: number;
 };
+type PageFragment = "header" | "body" | "footer";
 
 export function stripMarkdownHtmlComments(markdown: string): string {
 	const lines = markdown.split("\n");
@@ -115,10 +117,18 @@ function countBacktickRun(line: string, position: number): number {
 }
 
 export function parseMarkdownToADF(markdown: string, confluenceBaseUrl: string) {
+	return parsePageFragmentToADF(markdown, confluenceBaseUrl, "body");
+}
+
+function parsePageFragmentToADF(
+	markdown: string,
+	confluenceBaseUrl: string,
+	pageFragment: PageFragment,
+) {
 	const prosenodes = transformer.parse(stripMarkdownHtmlComments(markdown));
 	const adfNodes = serializer.encode(prosenodes);
 	const nodes = processADF(adfNodes, confluenceBaseUrl);
-	return nodes;
+	return replaceSupportedMacroPlaceholders(nodes, pageFragment);
 }
 
 function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
@@ -510,10 +520,217 @@ export function convertMDtoADF(file: MarkdownFile, settings: ConfluenceSettings)
 	const adfContent = parseMarkdownToADF(file.contents, settings.confluenceBaseUrl);
 
 	const results = processConniePerPageConfig(file, settings, adfContent);
+	stripIgnoredCodeBlocks(adfContent as ADFNode, settings.ignoredCodeBlockLanguages ?? []);
+	addConfiguredPageChrome(adfContent, settings);
 
 	return {
 		...file,
 		...results,
 		contents: adfContent,
 	};
+}
+
+type ADFNode = {
+	type: string;
+	attrs?: Record<string, unknown>;
+	content?: ADFNode[];
+	text?: string;
+	marks?: unknown[];
+};
+
+function replaceSupportedMacroPlaceholders(
+	adf: JSONDocNode,
+	pageFragment: PageFragment,
+): JSONDocNode {
+	if (!adf.content) {
+		return adf;
+	}
+
+	let macroIndex = 0;
+	adf.content = adf.content.map((node) => {
+		if (isEmptyTocCodeBlock(node as ADFNode)) {
+			const macroNode = createConfluenceMacroParagraph(
+				"toc",
+				"Table of Contents",
+				{},
+				macroIndex,
+				pageFragment,
+			);
+			macroIndex++;
+			return macroNode;
+		}
+
+		const tocParameters = getStandaloneTocWikiMacroParameters(node as ADFNode);
+		if (tocParameters) {
+			const macroNode = createConfluenceMacroParagraph(
+				"toc",
+				"Table of Contents",
+				tocParameters,
+				macroIndex,
+				pageFragment,
+			);
+			macroIndex++;
+			return macroNode;
+		}
+
+		return node;
+	});
+
+	return adf;
+}
+
+function isEmptyTocCodeBlock(node: ADFNode): boolean {
+	return (
+		node.type === "codeBlock" &&
+		normalizeCodeBlockLanguage(node.attrs?.["language"]) === "toc" &&
+		getCodeBlockText(node).trim() === ""
+	);
+}
+
+function getStandaloneTocWikiMacroParameters(node: ADFNode): Record<string, string> | undefined {
+	if (node.type !== "paragraph" || node.content?.length !== 1) {
+		return undefined;
+	}
+
+	const [textNode] = node.content;
+	if (textNode?.type !== "text" || typeof textNode.text !== "string" || textNode.marks?.length) {
+		return undefined;
+	}
+
+	const match = textNode.text.trim().match(/^\{toc(?::(?<parameters>[^}]+))?}$/i);
+	if (!match) {
+		return undefined;
+	}
+
+	return parseWikiMacroParameters(match.groups?.["parameters"] ?? "");
+}
+
+function parseWikiMacroParameters(parameters: string): Record<string, string> {
+	const parsed: Record<string, string> = {};
+
+	for (const parameter of parameters.split("|")) {
+		const trimmedParameter = parameter.trim();
+		if (!trimmedParameter) {
+			continue;
+		}
+
+		const equalsIndex = trimmedParameter.indexOf("=");
+		if (equalsIndex === -1) {
+			parsed[trimmedParameter] = "true";
+			continue;
+		}
+
+		const key = trimmedParameter.slice(0, equalsIndex).trim();
+		const value = trimmedParameter.slice(equalsIndex + 1).trim();
+		if (key) {
+			parsed[key] = value;
+		}
+	}
+
+	return parsed;
+}
+
+function createConfluenceMacroParagraph(
+	extensionKey: string,
+	title: string,
+	parameters: Record<string, string>,
+	index: number,
+	pageFragment: PageFragment, // required to generate unique macro IDs
+): ADFNode {
+	const seed = `${pageFragment}:${extensionKey}:${JSON.stringify(parameters)}:${index}`;
+	const macroId = SparkMD5.hash(seed);
+
+	return {
+		type: "paragraph",
+		content: [
+			{
+				type: "inlineExtension",
+				attrs: {
+					extensionType: "com.atlassian.confluence.macro.core",
+					extensionKey,
+					parameters: {
+						macroParams: Object.fromEntries(
+							Object.entries(parameters).map(([key, value]) => [key, { value }]),
+						),
+						macroMetadata: {
+							macroId: { value: macroId },
+							schemaVersion: { value: "1" },
+							title,
+						},
+					},
+					localId: formatHashAsUuid(SparkMD5.hash(`local:${seed}`)),
+				},
+			},
+		],
+	};
+}
+
+function formatHashAsUuid(hash: string): string {
+	return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+}
+
+function stripIgnoredCodeBlocks(
+	node: ADFNode,
+	ignoredCodeBlockLanguages: readonly string[],
+): ADFNode {
+	const ignoredLanguages = new Set(
+		ignoredCodeBlockLanguages.map(normalizeCodeBlockLanguage).filter(Boolean),
+	);
+
+	if (ignoredLanguages.size === 0 || !node.content) {
+		return node;
+	}
+
+	node.content = node.content.flatMap((child) => {
+		if (
+			child.type === "codeBlock" &&
+			ignoredLanguages.has(normalizeCodeBlockLanguage(child.attrs?.["language"]))
+		) {
+			return [];
+		}
+
+		return [stripIgnoredCodeBlocks(child, ignoredCodeBlockLanguages)];
+	});
+
+	return node;
+}
+
+function addConfiguredPageChrome(adfContent: JSONDocNode, settings: ConfluenceSettings): void {
+	const headerContent = parseConfiguredPageChromeMarkdown(
+		settings.pageHeaderMarkdown,
+		settings.confluenceBaseUrl,
+		"header",
+	);
+	const footerContent = parseConfiguredPageChromeMarkdown(
+		settings.pageFooterMarkdown,
+		settings.confluenceBaseUrl,
+		"footer",
+	);
+
+	if (headerContent.length === 0 && footerContent.length === 0) {
+		return;
+	}
+
+	adfContent.content = [...headerContent, ...(adfContent.content ?? []), ...footerContent];
+}
+
+function parseConfiguredPageChromeMarkdown(
+	markdown: string | undefined,
+	confluenceBaseUrl: string,
+	pageFragment: PageFragment,
+): ADFNode[] {
+	if (!markdown?.trim()) {
+		return [];
+	}
+
+	return (parsePageFragmentToADF(markdown, confluenceBaseUrl, pageFragment).content ??
+		[]) as ADFNode[];
+}
+
+function getCodeBlockText(node: ADFNode): string {
+	return node.content?.map((child) => child.text ?? "").join("") ?? "";
+}
+
+function normalizeCodeBlockLanguage(language: unknown): string {
+	return typeof language === "string" ? language.trim().toLowerCase() : "";
 }

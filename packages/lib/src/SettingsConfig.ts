@@ -51,6 +51,12 @@ export const confluenceSettingsConfig = Config.all({
 	forceOverwrite: Config.boolean("forceOverwrite").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.forceOverwrite),
 	),
+	pageHeaderMarkdown: Config.string("pageHeaderMarkdown").pipe(Config.withDefault("")),
+	pageFooterMarkdown: Config.string("pageFooterMarkdown").pipe(Config.withDefault("")),
+	ignoredCodeBlockLanguages: Config.schema(
+		Schema.Array(Schema.String),
+		"ignoredCodeBlockLanguages",
+	).pipe(Config.withDefault([])),
 });
 
 export const ConfluenceSettingsLive: Layer.Layer<
@@ -204,9 +210,14 @@ function makeEnvironmentProvider(
 				folderToPublish: yield* runtimeEnvironment.getEnv("FOLDER_TO_PUBLISH"),
 				tagsToPublish: yield* runtimeEnvironment.getEnv("CONFLUENCE_TAGS_TO_PUBLISH"),
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
-				firstHeadingPageTitle:
-					firstHeadingPageTitle === "true" ? firstHeadingPageTitle : undefined,
-				forceOverwrite: forceOverwrite === "true" ? forceOverwrite : undefined,
+				firstHeadingPageTitle: firstHeadingPageTitle,
+				forceOverwrite,
+				pageHeaderMarkdown: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_PAGE_HEADER_MARKDOWN",
+				),
+				pageFooterMarkdown: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_PAGE_FOOTER_MARKDOWN",
+				),
 			}),
 		});
 	});
@@ -226,6 +237,8 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
 		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
+		{ name: "pageHeaderMarkdown", type: "string" },
+		{ name: "pageFooterMarkdown", type: "string" },
 	]);
 
 	return ConfigProvider.fromUnknown(
@@ -242,6 +255,8 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
 			forceOverwrite: options["forceOverwrite"],
+			pageHeaderMarkdown: options["pageHeaderMarkdown"],
+			pageFooterMarkdown: options["pageFooterMarkdown"],
 		}),
 	);
 }
@@ -333,6 +348,9 @@ function isConfluenceSettingValue(key: keyof ConfluenceSettings, value: unknown)
 		return isStringRecord(value);
 	}
 
+	if (Array.isArray(DEFAULT_SETTINGS[key])) {
+		return Array.isArray(value) && value.every((item) => typeof item === "string");
+	}
 	return typeof value === typeof DEFAULT_SETTINGS[key];
 }
 

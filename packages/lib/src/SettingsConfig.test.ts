@@ -48,6 +48,9 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 					contentRoot: "file-root",
 					firstHeadingPageTitle: true,
 					forceOverwrite: false,
+					pageHeaderMarkdown: "File header",
+					pageFooterMarkdown: "File footer",
+					ignoredCodeBlockLanguages: ["dataview"],
 				}),
 			);
 
@@ -85,6 +88,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 			FOLDER_TO_PUBLISH: "env-folder",
 			CONFLUENCE_FORCE_OVERWRITE: "true",
 			CONFLUENCE_TAGS_TO_PUBLISH: "env-tag",
+			CONFLUENCE_PAGE_HEADER_MARKDOWN: "Env header",
 		},
 	});
 
@@ -115,6 +119,9 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 		contentRoot: expectedCliContentRoot,
 		firstHeadingPageTitle: true,
 		forceOverwrite: true,
+		pageHeaderMarkdown: "Env header",
+		pageFooterMarkdown: "File footer",
+		ignoredCodeBlockLanguages: ["dataview"],
 	});
 });
 
@@ -137,6 +144,9 @@ test("keeps explicit false values from config providers", async () => {
 					contentRoot,
 					firstHeadingPageTitle: false,
 					forceOverwrite: false,
+					pageHeaderMarkdown: "",
+					pageFooterMarkdown: "",
+					ignoredCodeBlockLanguages: [],
 				}),
 			);
 
@@ -201,6 +211,8 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 					"false",
 					"--forceOverwrite",
 					"false",
+					"--pageFooterMarkdown",
+					"CLI footer",
 				],
 				cwd: ".",
 				env: {},
@@ -225,6 +237,7 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 	expect(settings.firstHeadingPageTitle).toBe(false);
 	expect(settings.forceOverwrite).toBe(false);
 	expect(settings.tagsToPublish).toBe("public,docs");
+	expect(settings.pageFooterMarkdown).toBe("CLI footer");
 	expect(settings.contentRoot).toBe(expectedContentRoot);
 });
 
