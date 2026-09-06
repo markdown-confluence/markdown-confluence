@@ -95,7 +95,8 @@ export function validateConfluenceSettings(
 		message: "Content root is required",
 	});
 
-	const confluenceBaseUrl = settings.confluenceBaseUrl.trim();
+	const confluenceBaseUrl =
+		typeof settings.confluenceBaseUrl === "string" ? settings.confluenceBaseUrl.trim() : "";
 	if (confluenceBaseUrl) {
 		const parsedUrl = parseUrl(confluenceBaseUrl);
 		if (!parsedUrl) {
@@ -126,10 +127,10 @@ export function validateConfluenceSettings(
 
 function addRequiredSettingIssue(
 	issues: ConfluenceSettingsValidationIssue[],
-	value: string,
+	value: unknown,
 	issue: ConfluenceSettingsValidationIssue,
 ) {
-	if (value.trim()) {
+	if (typeof value === "string" && value.trim()) {
 		return;
 	}
 

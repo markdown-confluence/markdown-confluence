@@ -4,7 +4,7 @@ import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { afterEach, expect, test } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
 import { loadConfluenceSettingsEffect, parseConfluenceSettingsEffect } from "./SettingsConfig";
-import { type ConfluenceSettings, validateConfluenceSettings } from "./Settings";
+import { DEFAULT_SETTINGS, type ConfluenceSettings, validateConfluenceSettings } from "./Settings";
 import { RuntimeEnvironment, RuntimeEnvironmentService, runEffect } from "./effects";
 
 let tmpRoot: string | undefined;
@@ -296,6 +296,7 @@ function makeRuntimeEnvironment({
 }
 
 const validSettings: ConfluenceSettings = {
+	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
 	confluenceParentId: "file-parent",
 	atlassianUserName: "file-user@example.com",

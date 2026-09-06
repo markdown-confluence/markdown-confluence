@@ -98,7 +98,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 						}
 
 						this.plugin.settings.confluenceAuthType = value;
-						await this.plugin.saveSettings();
+						await saveSettingsAndRenderValidation();
 					}),
 			);
 
@@ -111,7 +111,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.confluenceApiPrefix)
 					.onChange(async (value) => {
 						this.plugin.settings.confluenceApiPrefix = value;
-						await this.plugin.saveSettings();
+						await saveSettingsAndRenderValidation();
 					}),
 			);
 
