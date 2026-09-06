@@ -337,7 +337,8 @@ const program = Effect.scoped(
 			injectedFailures++;
 			throw new Error("Injected release-test transport failure");
 		};
-		const failedUpload = yield* Effect.tryPromise(() => publisher.publish(formattingPath));
+		const publishFormatting = () => publisher.publish(formatting.absoluteFilePath);
+		const failedUpload = yield* Effect.tryPromise(publishFormatting);
 		assert.equal(injectedFailures, 1);
 		assert.equal(failedUpload.length, 1);
 		assert.equal(failedUpload[0].successfulUploadResult, undefined);
@@ -348,7 +349,7 @@ const program = Effect.scoped(
 			!afterFailure.body.atlas_doc_format.value.includes("RECOVERED AFTER UPLOAD FAILURE."),
 		);
 		client.content.updateContent = updateContent;
-		const recovered = yield* Effect.tryPromise(() => publisher.publish(formattingPath));
+		const recovered = yield* Effect.tryPromise(publishFormatting);
 		assert.equal(recovered[0].successfulUploadResult?.contentResult, "updated");
 		const recoveredPage = yield* fetchPage(formatting.pageId);
 		assert.ok(
@@ -377,7 +378,7 @@ const program = Effect.scoped(
 			}
 			return updateContent(parameters);
 		};
-		const conflictRecovery = yield* Effect.tryPromise(() => publisher.publish(formattingPath));
+		const conflictRecovery = yield* Effect.tryPromise(publishFormatting);
 		assert.equal(conflictAttempts, 2, "Publishing must retry the stale version once");
 		assert.equal(conflictRecovery[0].successfulUploadResult?.contentResult, "updated");
 		client.content.updateContent = updateContent;
@@ -386,7 +387,7 @@ const program = Effect.scoped(
 		assert.ok(
 			conflictPage.body.atlas_doc_format.value.includes("RECOVERED AFTER VERSION CONFLICT."),
 		);
-		const finalPublish = yield* Effect.tryPromise(() => publisher.publish(formattingPath));
+		const finalPublish = yield* Effect.tryPromise(publishFormatting);
 		assert.equal(finalPublish[0].successfulUploadResult?.contentResult, "same");
 		assert.equal(
 			(yield* fetchPage(formatting.pageId)).version.number,
