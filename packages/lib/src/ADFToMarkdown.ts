@@ -170,7 +170,7 @@ function renderADFContent(
 			return `- [${taskStateMarkdown}] ${renderChildrenResult}\n`;
 		}
 		case "decisionItem": {
-			return `- ${renderChildrenResult}\n`;
+			return `- ${renderChildrenResult.trimEnd()}\n`;
 		}
 		case "date": {
 			const timestamp = element.attrs && element.attrs["timestamp"];
@@ -251,7 +251,8 @@ function renderDate(timestamp: unknown) {
 		return "";
 	}
 
-	return new Date(timestampNumber).toISOString().slice(0, 10);
+	const date = new Date(timestampNumber);
+	return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : "";
 }
 
 function renderChildren(element: ADFEntity) {

@@ -32,7 +32,9 @@ export const confluenceSettingsConfig = Config.all({
 	folderToPublish: Config.string("folderToPublish"),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
-	forceOverwrite: Config.boolean("forceOverwrite"),
+	forceOverwrite: Config.boolean("forceOverwrite").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.forceOverwrite),
+	),
 });
 
 export const ConfluenceSettingsLive: Layer.Layer<
