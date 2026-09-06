@@ -11,9 +11,9 @@ Core library for converting Markdown to Atlassian Document Format (ADF) and publ
 ## ESM Usage
 
 ```ts
-import { convertMDtoADF } from "@markdown-confluence/lib";
+import { parseMarkdownToADF } from "@markdown-confluence/lib";
 
-const adf = convertMDtoADF("# Release notes");
+const adf = parseMarkdownToADF("# Release notes", "https://example.atlassian.net");
 console.log(adf);
 ```
 
@@ -23,8 +23,8 @@ CommonJS `require("@markdown-confluence/lib")` is not supported because the pack
 
 ```js
 async function main() {
-	const { convertMDtoADF } = await import("@markdown-confluence/lib");
-	const adf = convertMDtoADF("# Release notes");
+	const { parseMarkdownToADF } = await import("@markdown-confluence/lib");
+	const adf = parseMarkdownToADF("# Release notes", "https://example.atlassian.net");
 	console.log(adf);
 }
 

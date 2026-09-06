@@ -8,6 +8,7 @@ import {
 } from "confluence.js";
 import { requestUrl } from "obsidian";
 import { RequiredConfluenceClient } from "@markdown-confluence/lib";
+import { toRequestArrayBuffer } from "./requestBody";
 
 const ATLASSIAN_TOKEN_CHECK_FLAG = "X-Atlassian-Token";
 const ATLASSIAN_TOKEN_CHECK_NOCHECK_VALUE = "no-check";
@@ -106,7 +107,10 @@ export class MyBaseClient implements Client {
 				(requestConfig.headers ?? {})["Content-Type"]?.toString() ?? "application/json";
 
 			const requestBody = requestContentType.startsWith("multipart/form-data")
-				? [requestConfig.data.getHeaders(), requestConfig.data.getBuffer().buffer]
+				? [
+						requestConfig.data.getHeaders(),
+						toRequestArrayBuffer(requestConfig.data.getBuffer()),
+					]
 				: [{}, JSON.stringify(requestConfig.data)];
 
 			const modifiedRequestConfig = {

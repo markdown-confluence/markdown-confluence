@@ -4,6 +4,8 @@ export default defineConfig({
 	test: {
 		environment: "node",
 		include: [
+			"packages/cli/src/**/*.test.ts",
+			"packages/obsidian/src/**/*.test.ts",
 			"packages/lib/src/**/*.test.ts",
 			"packages/mermaid-electron-renderer/src/**/*.test.ts",
 			"scripts/**/*.test.js",
