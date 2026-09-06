@@ -7,7 +7,12 @@ import {
 	RuntimeEnvironment,
 	RuntimeEnvironmentService,
 } from "./effects";
-import { ConfluenceSettings, ConfluenceSettingsService, DEFAULT_SETTINGS } from "./Settings";
+import {
+	ConfluenceSettings,
+	ConfluenceSettingsService,
+	DEFAULT_SETTINGS,
+	validateConfluenceSettings,
+} from "./Settings";
 
 const CONFLUENCE_SETTINGS_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof ConfluenceSettings)[];
 
@@ -101,29 +106,12 @@ function validateConfluenceSettingsEffect(
 ): Effect.Effect<ConfluenceSettings, Error, Path> {
 	return Effect.gen(function* () {
 		const path = yield* Path;
+		const validationResult = validateConfluenceSettings(settings);
 
-		if (!settings.confluenceBaseUrl) {
-			return yield* Effect.fail(new Error("Confluence base URL is required"));
-		}
-
-		if (!settings.confluenceParentId) {
-			return yield* Effect.fail(new Error("Confluence parent ID is required"));
-		}
-
-		if (!settings.atlassianUserName) {
-			return yield* Effect.fail(new Error("Atlassian user name is required"));
-		}
-
-		if (!settings.atlassianApiToken) {
-			return yield* Effect.fail(new Error("Atlassian API token is required"));
-		}
-
-		if (!settings.folderToPublish) {
-			return yield* Effect.fail(new Error("Folder to publish is required"));
-		}
-
-		if (!settings.contentRoot) {
-			return yield* Effect.fail(new Error("Content root is required"));
+		if (!validationResult.valid) {
+			return yield* Effect.fail(
+				new Error(validationResult.issues.map((issue) => issue.message).join("\n")),
+			);
 		}
 
 		return {
