@@ -48,12 +48,12 @@
 		"fmt": "vp fmt --write \"src/**/*.{ts,tsx,js}\"",
 		"fmt:check": "vp fmt --check \"src/**/*.{ts,tsx,js}\"",
 		"lint": "vp lint --vitest-plugin src",
-		"test": "vitest run --root ../.. --config vitest.config.ts"
+		"test": "vp test run --root ../.. --config vitest.config.ts"
 	},
 	"dependencies": {
-		"@atlaskit/adf-schema": "^52.14.1",
+		"@atlaskit/adf-schema": "^52.16.0",
 		"@atlaskit/adf-utils": "^19.29.6",
-		"@atlaskit/editor-json-transformer": "^8.32.0",
+		"@atlaskit/editor-json-transformer": "^8.33.0",
 		"@atlaskit/editor-prosemirror": "^7.3.0",
 		"@effect/platform-node": "4.0.0-beta.70",
 		"confluence.js": "^2.1.0",
