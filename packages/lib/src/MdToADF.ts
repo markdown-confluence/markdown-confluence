@@ -561,7 +561,7 @@ function replaceSupportedMacroPlaceholders(
 	let macroIndex = 0;
 	adf.content = adf.content.map((node) => {
 		if (isEmptyTocCodeBlock(node as ADFNode)) {
-			const macroNode = createConfluenceMacroParagraph(
+			const macroNode = createConfluenceMacroBlock(
 				"toc",
 				"Table of Contents",
 				{},
@@ -574,7 +574,7 @@ function replaceSupportedMacroPlaceholders(
 
 		const tocParameters = getStandaloneTocWikiMacroParameters(node as ADFNode);
 		if (tocParameters) {
-			const macroNode = createConfluenceMacroParagraph(
+			const macroNode = createConfluenceMacroBlock(
 				"toc",
 				"Table of Contents",
 				tocParameters,
@@ -642,7 +642,7 @@ function parseWikiMacroParameters(parameters: string): Record<string, string> {
 	return parsed;
 }
 
-function createConfluenceMacroParagraph(
+function createConfluenceMacroBlock(
 	extensionKey: string,
 	title: string,
 	parameters: Record<string, string>,
@@ -653,27 +653,22 @@ function createConfluenceMacroParagraph(
 	const macroId = SparkMD5.hash(seed);
 
 	return {
-		type: "paragraph",
-		content: [
-			{
-				type: "inlineExtension",
-				attrs: {
-					extensionType: "com.atlassian.confluence.macro.core",
-					extensionKey,
-					parameters: {
-						macroParams: Object.fromEntries(
-							Object.entries(parameters).map(([key, value]) => [key, { value }]),
-						),
-						macroMetadata: {
-							macroId: { value: macroId },
-							schemaVersion: { value: "1" },
-							title,
-						},
-					},
-					localId: formatHashAsUuid(SparkMD5.hash(`local:${seed}`)),
+		type: "extension",
+		attrs: {
+			extensionType: "com.atlassian.confluence.macro.core",
+			extensionKey,
+			parameters: {
+				macroParams: Object.fromEntries(
+					Object.entries(parameters).map(([key, value]) => [key, { value }]),
+				),
+				macroMetadata: {
+					macroId: { value: macroId },
+					schemaVersion: { value: "1" },
+					title,
 				},
 			},
-		],
+			localId: formatHashAsUuid(SparkMD5.hash(`local:${seed}`)),
+		},
 	};
 }
 

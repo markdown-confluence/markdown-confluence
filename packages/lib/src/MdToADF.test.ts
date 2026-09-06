@@ -583,7 +583,7 @@ test("converts toc code fences and wiki markup to Confluence TOC macros", () => 
 	const adfFile = convertMDtoADF(markdown, createTestSettings());
 	const [tocFenceMacro, wikiTocMacro] = adfFile.contents.content ?? [];
 
-	expect(tocFenceMacro?.type).toBe("paragraph");
+	expect(tocFenceMacro?.type).toBe("extension");
 	expect(JSON.stringify(tocFenceMacro)).toContain('"extensionKey":"toc"');
 	expect(JSON.stringify(tocFenceMacro)).toContain('"title":"Table of Contents"');
 	expect(JSON.stringify(wikiTocMacro)).toContain('"printable":{"value":"true"}');
@@ -614,8 +614,8 @@ test("assigns distinct IDs to identical macros parsed in separate page fragments
 		createTestSettings({ pageHeaderMarkdown: ["```toc", "```"].join("\n") }),
 	);
 	const [headerMacro, bodyMacro] = adfFile.contents.content ?? [];
-	const headerMacroAttributes = headerMacro?.content?.[0]?.attrs as MacroAttributes | undefined;
-	const bodyMacroAttributes = bodyMacro?.content?.[0]?.attrs as MacroAttributes | undefined;
+	const headerMacroAttributes = headerMacro?.attrs as MacroAttributes | undefined;
+	const bodyMacroAttributes = bodyMacro?.attrs as MacroAttributes | undefined;
 
 	expect(headerMacroAttributes?.localId).not.toBe(bodyMacroAttributes?.localId);
 	expect(headerMacroAttributes?.parameters?.macroMetadata?.macroId?.value).not.toBe(

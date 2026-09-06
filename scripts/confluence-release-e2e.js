@@ -230,7 +230,8 @@ const program = Effect.scoped(
 					}),
 				);
 			}
-
+		}
+		for (const result of second) {
 			assert.equal(
 				result.successfulUploadResult.contentResult,
 				"same",
