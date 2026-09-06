@@ -25,7 +25,7 @@ Please log issues to https://github.com/markdown-confluence/markdown-confluence/
 
 ## Getting Started
 
-1. Install the `confluence-integration` plugin from Obsidian's community plugins browser.
+1. Download `main.js` and `manifest.json` from the [Obsidian integration releases](https://github.com/markdown-confluence/obsidian-integration/releases). Create `.obsidian/plugins/confluence-integration` inside your vault and place both files there. Restart Obsidian, enable community plugins for the vault, and enable **Confluence Integration**. This plugin is currently absent from the community catalog; a GitHub release does not restore that listing.
 2. Open the plugin settings and configure the following fields:
 
 - `Confluence Base URL`: The base URL of your Atlassian Confluence instance (e.g., `https://your-domain.atlassian.net`)
@@ -94,7 +94,7 @@ Obsidian note embeds are expanded before publishing, so a published note can inc
 
 ### Publishing hierarchy
 
-The configured `Confluence Parent Id` is the Confluence page that represents the root of the local publishing tree. The `Folder To Publish` folder is not created as an extra child page under that parent.
+The configured `Confluence Parent Id` represents the root of the selected local publishing tree. When all selected notes are inside `Folder To Publish`, that folder is not created as an extra child page. Selecting notes in other folders through tags or `connie-publish: true` expands the tree root to their common parent, so the selected folders become child pages.
 
 To publish the root parent page's content from Obsidian, add a folder note at the root of `Folder To Publish`. The folder note can be named the same as the folder, `index.md`, `README.md`, or `readme.md`. Subfolders use the same folder-note names for their folder pages.
 

@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { Console, Effect } from "effect";
-import { NodeRuntime } from "@effect/platform-node";
+import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { ChildProcess } from "effect/unstable/process";
 import {
 	ConfluenceUploadSettings,
 	MarkdownConfluencePlatformLive,
@@ -266,10 +267,32 @@ const program = Effect.scoped(
 		const updated = yield* fetchPage(formatting.pageId);
 		assert.ok(updated.version.number > versions.get(formatting.pageId));
 		assert.ok(updated.body.atlas_doc_format.value.includes("UPDATED END TO END SENTINEL."));
+		versions.set(formatting.pageId, updated.version.number);
+		const cliConfig = path.join(root, ".markdown-confluence.json");
+		yield* fs.writeFileString(
+			cliConfig,
+			JSON.stringify({ ...settings, atlassianApiToken: undefined }),
+		);
+		const cliPath = fileURLToPath(new URL("../packages/cli/dist/index.js", import.meta.url));
+		const cliProcess = yield* ChildProcess.make("node", [cliPath, "--config", cliConfig], {
+			cwd: root,
+			extendEnv: true,
+			stdout: "inherit",
+			stderr: "inherit",
+		});
+		assert.equal(yield* cliProcess.exitCode, 0, "The built CLI must publish successfully");
+		for (const [pageId, version] of versions) {
+			const page = yield* fetchPage(pageId);
+			assert.equal(
+				page.version.number,
+				version,
+				`CLI republishing changed an unchanged page: ${page.title}`,
+			);
+		}
 		const pageLinks = first
 			.map((result) => `- [${result.node.file.pageTitle}](${result.node.file.pageUrl})`)
 			.join("\n");
-		const summary = `## Confluence release verification passed\n\nCreated/verified ${first.length} pages; unchanged publishing preserved content, attachments, labels and versions; one changed note updated successfully.\n\n${pageLinks}\n`;
+		const summary = `## Confluence release verification passed\n\nCreated/verified ${first.length} pages; unchanged publishing preserved content, attachments, labels and versions; one changed note updated successfully; the built CLI republished without further changes.\n\n${pageLinks}\n`;
 		const summaryPath = yield* runtime.getEnv("GITHUB_STEP_SUMMARY");
 		if (summaryPath) yield* fs.writeFileString(summaryPath, summary);
 		yield* Console.log(summary);
@@ -288,6 +311,7 @@ if (import.meta.main) {
 					),
 				),
 			),
+			Effect.provide(NodeServices.layer),
 			Effect.provide(MarkdownConfluencePlatformLive),
 		),
 	);
