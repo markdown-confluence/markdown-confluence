@@ -4,7 +4,7 @@ import { packageDependencyExternals } from "../../vite.package-build.ts";
 const external = packageDependencyExternals(import.meta.url);
 
 function shouldBundleDependencySubpath(id: string): boolean {
-	return id.startsWith("@atlaskit/") && id.split("/").length > 2;
+	return id === "image-size" || (id.startsWith("@atlaskit/") && id.split("/").length > 2);
 }
 
 export default defineConfig({

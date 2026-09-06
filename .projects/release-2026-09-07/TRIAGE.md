@@ -15,7 +15,7 @@ Inventory: **162 issues (67 open)** and **721 PRs (52 open)**. All 883 records a
 - Local main fast-forwarded 64 commits to `32306a8`; work branch: `andymac4182/c/release-readiness-20260907`.
 - Rust port and cache discarded at user request.
 - Selected feature PRs integrated locally: #695, #708, #752–#765, #795/#830 and #866, with regression repairs for overlapping changes.
-- Node 24.15.0 is pinned through `.node-version`; pnpm 11.1.2 and Vite+ 0.1.24 are aligned. A clean frozen install, lint/format, 166 tests and the full build pass; one opt-in live test remains skipped.
+- Node 24.15.0 is pinned through `.node-version`; pnpm 11.1.2 and Vite+ 0.1.24 are aligned. A clean frozen install, lint/format, 169 tests and the full build pass; one opt-in live test remains skipped.
 - Five public npm packages pack and install in a clean project. ESM/CJS library imports, the installed offline CLI and real Puppeteer rendering pass.
 - Native ARM64 Docker build, offline conversion and Chromium diagram rendering pass. AMD64 and remote CI remain to be verified.
 - Release Please migrated to the maintained Node 24 action. Artifact preparation rejects missing files/version mismatches; upload smoke checks prove build failures publish nothing, retries are idempotent and differing assets are rejected.

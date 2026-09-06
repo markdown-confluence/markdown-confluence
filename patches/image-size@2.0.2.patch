@@ -1,0 +1,983 @@
+diff --git a/dist/detector.cjs b/dist/detector.cjs
+index 0898608dbeca36722dfd795341b1c3c1448f58aa..0cd09163b9bfa8680601822f0df80ab90786a0aa 100644
+--- a/dist/detector.cjs
++++ b/dist/detector.cjs
+@@ -4,7 +4,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -28,9 +28,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -250,7 +251,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize = getImageSize2(imageHeader[0]);
+       images.push(imageSize);
+       imageOffset += imageHeader[1];
+diff --git a/dist/detector.mjs b/dist/detector.mjs
+index 67afcab02d627f95e98c938499e07a934b832a26..6906e3d6ea84f196430bfa3d9c1f4e976eae0b0b 100644
+--- a/dist/detector.mjs
++++ b/dist/detector.mjs
+@@ -2,7 +2,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -26,9 +26,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -248,7 +249,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize = getImageSize2(imageHeader[0]);
+       images.push(imageSize);
+       imageOffset += imageHeader[1];
+diff --git a/dist/fromFile.cjs b/dist/fromFile.cjs
+index c226d3dac07f235db456c774b26cca88f655e1af..782dbc1c7aba41940ed3b3cbe5b54311e7b8d87d 100644
+--- a/dist/fromFile.cjs
++++ b/dist/fromFile.cjs
+@@ -30,7 +30,7 @@ var path__namespace = /*#__PURE__*/_interopNamespace(path);
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -54,9 +54,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -276,7 +277,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize2 = getImageSize2(imageHeader[0]);
+       images.push(imageSize2);
+       imageOffset += imageHeader[1];
+diff --git a/dist/fromFile.mjs b/dist/fromFile.mjs
+index 4a3c44432982397204f7a9d04fc66ef65a8e7ba4..507dff6ac99c6e6339edb038dd44af4c7fa5bfdb 100644
+--- a/dist/fromFile.mjs
++++ b/dist/fromFile.mjs
+@@ -7,7 +7,7 @@ import * as path from 'node:path';
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -31,9 +31,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -253,7 +254,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize2 = getImageSize2(imageHeader[0]);
+       images.push(imageSize2);
+       imageOffset += imageHeader[1];
+diff --git a/dist/index.cjs b/dist/index.cjs
+index bde0210eb131db06ccca30a5c466c7252a03af50..6a71ede19693263eaac4b3a0e34a7520c39bdfec 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -6,7 +6,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -30,9 +30,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -252,7 +253,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize2 = getImageSize2(imageHeader[0]);
+       images.push(imageSize2);
+       imageOffset += imageHeader[1];
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 22c17afad4e406eba013fff7858366cb5f8e3ba4..affb0206f27ba99c1ccf0834d3deac9fa3d3eb03 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -2,7 +2,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -26,9 +26,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -248,7 +249,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize2 = getImageSize2(imageHeader[0]);
+       images.push(imageSize2);
+       imageOffset += imageHeader[1];
+diff --git a/dist/lookup.cjs b/dist/lookup.cjs
+index 9731ad8bb0949f8fdf9297851bdb312e91282f01..3bc56c59cc4aa086d7dab370b716b44823ee14a2 100644
+--- a/dist/lookup.cjs
++++ b/dist/lookup.cjs
+@@ -4,7 +4,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -28,9 +28,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -250,7 +251,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize2 = getImageSize2(imageHeader[0]);
+       images.push(imageSize2);
+       imageOffset += imageHeader[1];
+diff --git a/dist/lookup.mjs b/dist/lookup.mjs
+index f787d1c8408d7b681fec8617595d058f66959869..a8458b41f788bb51e243c0a76de0a8ed41418ceb 100644
+--- a/dist/lookup.mjs
++++ b/dist/lookup.mjs
+@@ -2,7 +2,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -26,9 +26,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -248,7 +249,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize2 = getImageSize2(imageHeader[0]);
+       images.push(imageSize2);
+       imageOffset += imageHeader[1];
+diff --git a/dist/types/bmp.cjs b/dist/types/bmp.cjs
+index 3fd9cfac57b81efee27ac0abd6db5255789dc997..0430e4f0014236d37b8886a8e2b0c3501601b9a0 100644
+--- a/dist/types/bmp.cjs
++++ b/dist/types/bmp.cjs
+@@ -3,7 +3,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt32LE = (input, offset = 0) => getView(input, offset).getInt32(0, true);
+ var readUInt32LE = (input, offset = 0) => getView(input, offset).getUint32(0, true);
+ 
+diff --git a/dist/types/bmp.mjs b/dist/types/bmp.mjs
+index efc23bf2738884e9e19e65c54eea4aab4fff882a..549d6b12addde9d52a31a80545e2d4b6c8cc39f8 100644
+--- a/dist/types/bmp.mjs
++++ b/dist/types/bmp.mjs
+@@ -1,7 +1,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt32LE = (input, offset = 0) => getView(input, offset).getInt32(0, true);
+ var readUInt32LE = (input, offset = 0) => getView(input, offset).getUint32(0, true);
+ 
+diff --git a/dist/types/cur.cjs b/dist/types/cur.cjs
+index 9ddffcd31f2ac51b69f4e41bd87e259bc87e9359..06f6b8e8b8ca24eba5b73aa93b31f74305e03553 100644
+--- a/dist/types/cur.cjs
++++ b/dist/types/cur.cjs
+@@ -2,7 +2,7 @@
+ 
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ 
+ // lib/types/ico.ts
+diff --git a/dist/types/cur.mjs b/dist/types/cur.mjs
+index f84af76950dfd7a0bcb0a698b243532e7473792f..f0294bcf045c7a2b4367e2c21fd165edf8cd27f4 100644
+--- a/dist/types/cur.mjs
++++ b/dist/types/cur.mjs
+@@ -1,6 +1,6 @@
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ 
+ // lib/types/ico.ts
+diff --git a/dist/types/dds.cjs b/dist/types/dds.cjs
+index 56e4a953b3611d9f16d1b1d317b3d9da84ef80b7..7a7d872b9e89fd943c439fe9508fa0b5dcabdf35 100644
+--- a/dist/types/dds.cjs
++++ b/dist/types/dds.cjs
+@@ -2,7 +2,7 @@
+ 
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32LE = (input, offset = 0) => getView(input, offset).getUint32(0, true);
+ 
+ // lib/types/dds.ts
+diff --git a/dist/types/dds.mjs b/dist/types/dds.mjs
+index bdec6846ecf02b635625b3c7e2ec11a17db4355a..6208f42851a13881510ab718916462134a9dae74 100644
+--- a/dist/types/dds.mjs
++++ b/dist/types/dds.mjs
+@@ -1,6 +1,6 @@
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32LE = (input, offset = 0) => getView(input, offset).getUint32(0, true);
+ 
+ // lib/types/dds.ts
+diff --git a/dist/types/gif.cjs b/dist/types/gif.cjs
+index 64fa0ba0a407b8a9cf2b902ad8da4c66c4693237..bb0138fc41d5764c304e97e92020bc7e6464946f 100644
+--- a/dist/types/gif.cjs
++++ b/dist/types/gif.cjs
+@@ -3,7 +3,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ 
+ // lib/types/gif.ts
+diff --git a/dist/types/gif.mjs b/dist/types/gif.mjs
+index 918dc2bcd7a0630d9c1f57e4a111b6a584ccacac..1ddfb5c3d6c6685d59b88ff981db8f06f91b3112 100644
+--- a/dist/types/gif.mjs
++++ b/dist/types/gif.mjs
+@@ -1,7 +1,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ 
+ // lib/types/gif.ts
+diff --git a/dist/types/heif.cjs b/dist/types/heif.cjs
+index 1f490788ea654ea9896060a5c0253d81e348af92..68f0be3876664f3275db7ba47ae72c41ff447876 100644
+--- a/dist/types/heif.cjs
++++ b/dist/types/heif.cjs
+@@ -3,12 +3,13 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+diff --git a/dist/types/heif.mjs b/dist/types/heif.mjs
+index 01330919e01b3c034a96a7b4b1dbf5a7f658bb2d..a0b1c84743fc9e79a190bd75bf12e8b3ef3c4b31 100644
+--- a/dist/types/heif.mjs
++++ b/dist/types/heif.mjs
+@@ -1,12 +1,13 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+diff --git a/dist/types/icns.cjs b/dist/types/icns.cjs
+index 32c8d370dcf80a10f14a6deebfdbe04d3c70585c..053e97daa6f5b9ed18fb0cc0a4e4af90e30acafd 100644
+--- a/dist/types/icns.cjs
++++ b/dist/types/icns.cjs
+@@ -3,7 +3,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ 
+ // lib/types/icns.ts
+@@ -71,7 +71,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < SIZE_HEADER) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < SIZE_HEADER || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize = getImageSize(imageHeader[0]);
+       images.push(imageSize);
+       imageOffset += imageHeader[1];
+diff --git a/dist/types/icns.mjs b/dist/types/icns.mjs
+index 8710027bc5890a79d05a7fdb87de3018e556729e..22bec594c5f72df6f618e2ed941df2fa01d0da44 100644
+--- a/dist/types/icns.mjs
++++ b/dist/types/icns.mjs
+@@ -1,7 +1,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ 
+ // lib/types/icns.ts
+@@ -69,7 +69,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < SIZE_HEADER) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < SIZE_HEADER || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize = getImageSize(imageHeader[0]);
+       images.push(imageSize);
+       imageOffset += imageHeader[1];
+diff --git a/dist/types/ico.cjs b/dist/types/ico.cjs
+index 972dbd60fc2d441bb670239c0fdd106c43484363..32f71fea89feb45f54b711c31ee416282a22716d 100644
+--- a/dist/types/ico.cjs
++++ b/dist/types/ico.cjs
+@@ -2,7 +2,7 @@
+ 
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ 
+ // lib/types/ico.ts
+diff --git a/dist/types/ico.mjs b/dist/types/ico.mjs
+index a2a0a7e9cf5fb4daec8b13a92ef7f67a29e31f0f..0c1f0987594a9c87fa4590460d71089be8887654 100644
+--- a/dist/types/ico.mjs
++++ b/dist/types/ico.mjs
+@@ -1,6 +1,6 @@
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ 
+ // lib/types/ico.ts
+diff --git a/dist/types/index.cjs b/dist/types/index.cjs
+index 6949cd134db7ab59dae7b804b36c7bacb4e387cf..fa39bc2a1f66294380df9a168f131fe41cbb775a 100644
+--- a/dist/types/index.cjs
++++ b/dist/types/index.cjs
+@@ -4,7 +4,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -28,9 +28,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -250,7 +251,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize = getImageSize2(imageHeader[0]);
+       images.push(imageSize);
+       imageOffset += imageHeader[1];
+diff --git a/dist/types/index.mjs b/dist/types/index.mjs
+index b026dda4aa16c6077a76e4b3cfe3f54fe1d6d1d0..a608d7a7f794607c0f0a3dc7454919ec9caafb79 100644
+--- a/dist/types/index.mjs
++++ b/dist/types/index.mjs
+@@ -2,7 +2,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -26,9 +26,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+@@ -248,7 +249,13 @@ var ICNS = {
+     let imageOffset = SIZE_HEADER2;
+     const images = [];
+     while (imageOffset < fileLength && imageOffset < inputLength) {
++      if (inputLength - imageOffset < 8) {
++        throw new TypeError("Invalid ICNS entry header");
++      }
+       const imageHeader = readImageHeader(input, imageOffset);
++      if (imageHeader[1] < 8 || imageHeader[1] > fileLength - imageOffset) {
++        throw new TypeError("Invalid ICNS entry length");
++      }
+       const imageSize = getImageSize2(imageHeader[0]);
+       images.push(imageSize);
+       imageOffset += imageHeader[1];
+diff --git a/dist/types/j2c.cjs b/dist/types/j2c.cjs
+index 7f0fc129af3d4cc453d9084d1087b876b7357b90..34b2ba5cdfc5ded76661622ae4f361c41840ad63 100644
+--- a/dist/types/j2c.cjs
++++ b/dist/types/j2c.cjs
+@@ -2,7 +2,7 @@
+ 
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ 
+ // lib/types/j2c.ts
+diff --git a/dist/types/j2c.mjs b/dist/types/j2c.mjs
+index 74ebe7e4f839a64e24c89902bfe22a12f7c5a1b7..a593594d08842dd8e5f1825173853fb38ad76747 100644
+--- a/dist/types/j2c.mjs
++++ b/dist/types/j2c.mjs
+@@ -1,6 +1,6 @@
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ 
+ // lib/types/j2c.ts
+diff --git a/dist/types/jp2.cjs b/dist/types/jp2.cjs
+index cdd7c884efeb940b99f69a8f1d6ed361a1979211..aa9cc470322fae8b286272ebe44542528c613565 100644
+--- a/dist/types/jp2.cjs
++++ b/dist/types/jp2.cjs
+@@ -3,12 +3,13 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+diff --git a/dist/types/jp2.mjs b/dist/types/jp2.mjs
+index 63a537635b4f91250431a53225d4521ed60cf67d..e10dae4f4957fde675fa37933e29394b30638331 100644
+--- a/dist/types/jp2.mjs
++++ b/dist/types/jp2.mjs
+@@ -1,12 +1,13 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+diff --git a/dist/types/jpg.cjs b/dist/types/jpg.cjs
+index 664da4aaed5404e3637bf39ac5a58990be473b48..05130436b7ba6c4154f656b2ea8f0da2f45a7548 100644
+--- a/dist/types/jpg.cjs
++++ b/dist/types/jpg.cjs
+@@ -3,7 +3,7 @@
+ // lib/types/utils.ts
+ new TextDecoder();
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+diff --git a/dist/types/jpg.mjs b/dist/types/jpg.mjs
+index 8fd607609035b43e7c1cc6fbe8d041f737532161..1ad392b7d31b9af99d3de1fe9924823496d9821d 100644
+--- a/dist/types/jpg.mjs
++++ b/dist/types/jpg.mjs
+@@ -1,7 +1,7 @@
+ // lib/types/utils.ts
+ new TextDecoder();
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+diff --git a/dist/types/jxl.cjs b/dist/types/jxl.cjs
+index a12095be85c7a8fd25763895a47c46b4292ebd9c..272080ad7948b8b669396630aa943052afb8f3ae 100644
+--- a/dist/types/jxl.cjs
++++ b/dist/types/jxl.cjs
+@@ -44,12 +44,13 @@ var BitReader = class {
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+diff --git a/dist/types/jxl.mjs b/dist/types/jxl.mjs
+index 49b0c4cac6abb366378e5feed745f16981b441c0..16ad0fc0104df826c1dcbd84b75d3f95a5fb4d53 100644
+--- a/dist/types/jxl.mjs
++++ b/dist/types/jxl.mjs
+@@ -42,12 +42,13 @@ var BitReader = class {
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+diff --git a/dist/types/ktx.cjs b/dist/types/ktx.cjs
+index 01ba7e465db0149e7c8adbe1d2be22863c10ce9f..7da370e22bed8bddc4a53f3dde8e9740f8bfb2ad 100644
+--- a/dist/types/ktx.cjs
++++ b/dist/types/ktx.cjs
+@@ -3,7 +3,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32LE = (input, offset = 0) => getView(input, offset).getUint32(0, true);
+ 
+ // lib/types/ktx.ts
+diff --git a/dist/types/ktx.mjs b/dist/types/ktx.mjs
+index d2c103dfd0ea97fc975e90a81a62077ec471d362..09c042cd39d0b75b33b862be9b9fef08051e88c5 100644
+--- a/dist/types/ktx.mjs
++++ b/dist/types/ktx.mjs
+@@ -1,7 +1,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32LE = (input, offset = 0) => getView(input, offset).getUint32(0, true);
+ 
+ // lib/types/ktx.ts
+diff --git a/dist/types/png.cjs b/dist/types/png.cjs
+index 5f1cbe1c74f54811502eb3f5f905e093fcd1f967..2796200704101eda888a43c9267ee5eee0f84568 100644
+--- a/dist/types/png.cjs
++++ b/dist/types/png.cjs
+@@ -3,7 +3,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ 
+ // lib/types/png.ts
+diff --git a/dist/types/png.mjs b/dist/types/png.mjs
+index d68ec182a1751a29917237e84f4725f27240d9e9..e0ae80dbf6d7b0f1c73ce715a7e4fe40cecdc8d5 100644
+--- a/dist/types/png.mjs
++++ b/dist/types/png.mjs
+@@ -1,7 +1,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ 
+ // lib/types/png.ts
+diff --git a/dist/types/psd.cjs b/dist/types/psd.cjs
+index fe979cad140c82e93da58356f4ac7411e6e0b23b..9ad259c1cfb6e2534bb4571b2abed36926c7b673 100644
+--- a/dist/types/psd.cjs
++++ b/dist/types/psd.cjs
+@@ -3,7 +3,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ 
+ // lib/types/psd.ts
+diff --git a/dist/types/psd.mjs b/dist/types/psd.mjs
+index a3639266f10cf16dff17543763d8375f43df4350..f0a956afc9165691562f5ad4258aa2511d515aa7 100644
+--- a/dist/types/psd.mjs
++++ b/dist/types/psd.mjs
+@@ -1,7 +1,7 @@
+ // lib/types/utils.ts
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+ 
+ // lib/types/psd.ts
+diff --git a/dist/types/tga.cjs b/dist/types/tga.cjs
+index f7d6f386d07e3755fe4508475d09d8893cd0aa38..9ad9a5a923d370744aed08bf49a22b3b7cfe4695 100644
+--- a/dist/types/tga.cjs
++++ b/dist/types/tga.cjs
+@@ -2,7 +2,7 @@
+ 
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ 
+ // lib/types/tga.ts
+diff --git a/dist/types/tga.mjs b/dist/types/tga.mjs
+index 1e75dd1ca22b56aa70ee6155de777c3895a4126a..5aeff42b544dda06279d0c90b00759394ace608e 100644
+--- a/dist/types/tga.mjs
++++ b/dist/types/tga.mjs
+@@ -1,6 +1,6 @@
+ // lib/types/utils.ts
+ new TextDecoder();
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ 
+ // lib/types/tga.ts
+diff --git a/dist/types/tiff.cjs b/dist/types/tiff.cjs
+index b3fe32b02d2f45503c6586854ac5c798efeaf1ab..2e302c58cdea12895e4e66d2473ea4600e6d7133 100644
+--- a/dist/types/tiff.cjs
++++ b/dist/types/tiff.cjs
+@@ -4,7 +4,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+diff --git a/dist/types/tiff.mjs b/dist/types/tiff.mjs
+index 293846ce07191fe39e76018634624ed71022e354..300e65ffa3899e46c26905944789aa5270ced4cf 100644
+--- a/dist/types/tiff.mjs
++++ b/dist/types/tiff.mjs
+@@ -2,7 +2,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+ var readUInt32BE = (input, offset = 0) => getView(input, offset).getUint32(0, false);
+diff --git a/dist/types/utils.cjs b/dist/types/utils.cjs
+index 23d52e4cbf271e667feb2d7f040c07f69678d3aa..dc818deb7ea24302c9da244fb26bfbd52b51a580 100644
+--- a/dist/types/utils.cjs
++++ b/dist/types/utils.cjs
+@@ -4,7 +4,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -28,9 +28,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+diff --git a/dist/types/utils.mjs b/dist/types/utils.mjs
+index 3f09dceb036e40be8538dbb5588d88c951339158..e74ec869a65c57b6a31727f9edc74e5da80abff3 100644
+--- a/dist/types/utils.mjs
++++ b/dist/types/utils.mjs
+@@ -2,7 +2,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt16BE = (input, offset = 0) => getView(input, offset).getUint16(0, false);
+ var readUInt16LE = (input, offset = 0) => getView(input, offset).getUint16(0, true);
+@@ -26,9 +26,10 @@ function readUInt(input, bits, offset = 0, isBigEndian = false) {
+   return methods[methodName](input, offset);
+ }
+ function readBox(input, offset) {
+-  if (input.length - offset < 4) return;
+-  const boxSize = readUInt32BE(input, offset);
+-  if (input.length - offset < boxSize) return;
++  if (input.length - offset < 8) return;
++  const declaredSize = readUInt32BE(input, offset);
++  const boxSize = declaredSize === 0 ? input.length - offset : declaredSize;
++  if (boxSize < 8 || input.length - offset < boxSize) return;
+   return {
+     name: toUTF8String(input, 4 + offset, 8 + offset),
+     offset,
+diff --git a/dist/types/webp.cjs b/dist/types/webp.cjs
+index c3c549e9a2d5d39fc7420dc4ae8e5696e46d8e95..ef202527840e5180a1ce2c51507f9dc584cd60d5 100644
+--- a/dist/types/webp.cjs
++++ b/dist/types/webp.cjs
+@@ -4,7 +4,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt24LE = (input, offset = 0) => {
+   const view = getView(input, offset);
+diff --git a/dist/types/webp.mjs b/dist/types/webp.mjs
+index b96c3756ad5401ab39073ba4789c328615134e28..d08269908bdc812ac528989fa0d6ea34011c273e 100644
+--- a/dist/types/webp.mjs
++++ b/dist/types/webp.mjs
+@@ -2,7 +2,7 @@
+ var decoder = new TextDecoder();
+ var toUTF8String = (input, start = 0, end = input.length) => decoder.decode(input.slice(start, end));
+ var toHexString = (input, start = 0, end = input.length) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), "");
+-var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset);
++var getView = (input, offset) => new DataView(input.buffer, input.byteOffset + offset, input.byteLength - offset);
+ var readInt16LE = (input, offset = 0) => getView(input, offset).getInt16(0, true);
+ var readUInt24LE = (input, offset = 0) => {
+   const view = getView(input, offset);

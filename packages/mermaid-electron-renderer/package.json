@@ -39,5 +39,8 @@
 		"@markdown-confluence/lib": "workspace:5.5.2",
 		"mermaid": "^11.16.1",
 		"uuid": "^14.0.0"
+	},
+	"devDependencies": {
+		"electron": "^42.11.2"
 	}
 }

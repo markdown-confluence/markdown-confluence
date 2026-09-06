@@ -7,13 +7,21 @@ The inventory covers 162 issues and 721 pull requests as retrieved on 7 Septembe
 - Latest main (`32306a8`) incorporated; the Rust port and its preserved local branches were discarded at the user's request.
 - Accepted feature changes integrated with shared settings, upload transport, hierarchy, overwrite protection, macro IDs and OAuth/v2 reconciled.
 - Added regression coverage for formatted/nested callouts, literal image examples, selected Markdown embeds, dates, task IDs in page chrome, renderer cleanup and large-diagram timeout configuration.
-- Node 24.15.0 / pnpm 11.1.2 / Vite+ 0.1.24: frozen installation, `vp run check`, `vp run fmt:check`, `vp test run` (166 passed, one opt-in live test skipped) and `vp run build` pass.
+- Node 24.15.0 / pnpm 11.1.2 / Vite+ 0.1.24: frozen installation, `vp run check`, `vp run fmt:check`, `vp test run` (169 passed, one opt-in live test skipped) and `vp run build` pass.
 - Five public package tarballs install in a clean project. The installed library works through ESM and CommonJS dynamic import. The installed CLI accepts stdin and writes valid ADF without credentials. PlantUML package exports load.
 - Real Puppeteer rendering passes from both the workspace and installed package. A 100-step diagram rendered at 129 × 10470 pixels using the configurable 600000 ms protocol timeout.
-- ARM64 Docker build and offline conversion pass. The rebuilt Puppeteer renderer uses the container's Debian Chromium and produces a valid 458 × 70 PNG. AMD64 is still pending.
+- ARM64 Docker build and offline conversion pass. The rebuilt Puppeteer renderer uses the container's Debian Chromium and produces a valid 458 × 70 PNG. The first draft PR also passed the Linux AMD64 build; the final multi-architecture registry manifest remains to be verified.
 - Actionlint 1.7.12 validates the workflows. Artifact preparation tests cover missing build outputs, mismatched package versions and invalid CommonJS bundles. A separate upload-script smoke test uses temporary local Git repositories and a fake GitHub release service; it verifies no publication after a build failure, eight uploaded assets on first publication, an idempotent retry and rejection of differing existing assets.
 
 Local logs and tarballs are in `.git/codex-release-20260907/` and are not committed as release artifacts. The CLI's incompatible legacy `bundleDependencies` setting was removed after a real `vp pm pack` failure; package contents are restricted to built distribution files plus package metadata, README and license.
+
+## Dependency remediation
+
+The initial audit reported 65 findings. Compatible updates and targeted overrides reduced that to three reported advisories: two for the locally patched image-size parser and one for UUID 3 through Atlaskit telemetry. The inspected Atlaskit call sites use UUID v4; the advisory concerns buffer handling in v3/v5/v6. No audit findings have been hidden or suppressed.
+
+The image-size fix has bounded-worker regression tests and is bundled into the library as well as the CLI/Obsidian builds, because workspace patches do not propagate to npm consumers. A direct test of the built library's public upload adapter confirms malformed ICNS terminates and preserves the attachment fallback. See `patches/README.md` for the fix and upstream advisory references.
+
+A real PlantUML PNG was generated successfully from synthetic test content (230 × 158 pixels). Upload and rendered-page verification remain pending.
 
 ## Dedicated live fixtures
 
