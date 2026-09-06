@@ -11,6 +11,7 @@ export type ConfluenceSettings = {
 	confluenceApiPrefix: string;
 	confluenceRequestHeaders: Record<string, string>;
 	folderToPublish: string;
+	tagsToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
 	forceOverwrite: boolean;
@@ -35,6 +36,7 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	confluenceApiPrefix: "/wiki/rest",
 	confluenceRequestHeaders: {},
 	folderToPublish: "Confluence Pages",
+	tagsToPublish: "",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,

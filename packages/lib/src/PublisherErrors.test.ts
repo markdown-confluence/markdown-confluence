@@ -34,6 +34,7 @@ const testSettings: ConfluenceSettings = {
 	atlassianUserName: "user@example.com",
 	atlassianApiToken: "token",
 	folderToPublish: ".",
+	tagsToPublish: "",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,

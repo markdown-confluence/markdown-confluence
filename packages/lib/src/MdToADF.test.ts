@@ -277,6 +277,7 @@ test("converts markdown task list items to ADF task nodes", () => {
 		atlassianUserName: "asdf@asdf.com",
 		atlassianApiToken: "asdfasdf",
 		folderToPublish: ".",
+		tagsToPublish: "",
 		contentRoot: "./",
 		firstHeadingPageTitle: false,
 		forceOverwrite: false,

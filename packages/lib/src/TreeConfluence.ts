@@ -145,7 +145,7 @@ function createFileStructureInConfluenceEffect(
 			...node.file,
 			pageId: parentPageId,
 			spaceKey,
-			pageUrl: "",
+			pageUrl: buildPageUrl(settings, spaceKey, parentPageId),
 		};
 
 		if (createPage) {
@@ -178,6 +178,7 @@ function createFileStructureInConfluenceEffect(
 				yield* updateMarkdownValuesEffect(node.file.absoluteFilePath, {
 					publish: true,
 					pageId: pageDetails.id,
+					pageUrl: buildPageUrl(settings, pageDetails.spaceKey, pageDetails.id),
 				});
 
 				file = {
@@ -220,7 +221,7 @@ function createFileStructureInConfluenceEffect(
 			{ concurrency: "unbounded" },
 		);
 
-		const pageUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${file.spaceKey}/pages/${file.pageId}/`;
+		const pageUrl = buildPageUrl(settings, file.spaceKey, file.pageId);
 		return {
 			file: { ...file, pageUrl },
 			version,
@@ -276,6 +277,10 @@ function getPageDetailsByIdEffect(
 	);
 }
 
+function buildPageUrl(settings: ConfluenceSettings, spaceKey: string, pageId: string): string {
+	return `${settings.confluenceBaseUrl}/wiki/spaces/${spaceKey}/pages/${pageId}/`;
+}
+
 function ensurePageExistsEffect(
 	confluenceClient: RequiredConfluenceClient,
 	file: LocalAdfFile,
@@ -292,6 +297,7 @@ function ensurePageExistsEffect(
 				updateMarkdownValuesEffect(file.absoluteFilePath, {
 					publish: true,
 					pageId: pageDetails.id,
+					pageUrl: buildPageUrl(settings, pageDetails.spaceKey, pageDetails.id),
 				}).pipe(
 					Effect.as({
 						id: pageDetails.id,
@@ -311,11 +317,13 @@ function ensurePageExistsEffect(
 					return updateMarkdownValuesEffect(file.absoluteFilePath, {
 						publish: false,
 						pageId: undefined,
+						pageUrl: undefined,
 					}).pipe(
 						Effect.andThen(
 							findOrCreatePageByTitleEffect(
 								confluenceClient,
 								file,
+								settings,
 								spaceKey,
 								parentPageId,
 								topPageId,
@@ -329,12 +337,20 @@ function ensurePageExistsEffect(
 		);
 	}
 
-	return findOrCreatePageByTitleEffect(confluenceClient, file, spaceKey, parentPageId, topPageId);
+	return findOrCreatePageByTitleEffect(
+		confluenceClient,
+		file,
+		settings,
+		spaceKey,
+		parentPageId,
+		topPageId,
+	);
 }
 
 function findOrCreatePageByTitleEffect(
 	confluenceClient: RequiredConfluenceClient,
 	file: LocalAdfFile,
+	settings: ConfluenceSettings,
 	spaceKey: string,
 	parentPageId: string,
 	topPageId: string,
@@ -368,6 +384,7 @@ function findOrCreatePageByTitleEffect(
 				return updateMarkdownValuesEffect(file.absoluteFilePath, {
 					publish: true,
 					pageId: currentPage.id,
+					pageUrl: buildPageUrl(settings, spaceKey, currentPage.id),
 				}).pipe(
 					Effect.as({
 						id: currentPage.id,
@@ -409,6 +426,7 @@ function findOrCreatePageByTitleEffect(
 					updateMarkdownValuesEffect(file.absoluteFilePath, {
 						publish: true,
 						pageId: pageDetails.id,
+						pageUrl: buildPageUrl(settings, spaceKey, pageDetails.id),
 					}).pipe(
 						Effect.as({
 							id: pageDetails.id,

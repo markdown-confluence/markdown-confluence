@@ -44,6 +44,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 						"X-File-Header": "file-value",
 					},
 					folderToPublish: "file-folder",
+					tagsToPublish: "file-tag",
 					contentRoot: "file-root",
 					firstHeadingPageTitle: true,
 					forceOverwrite: false,
@@ -83,6 +84,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 			CONFLUENCE_API_PREFIX: "/env/rest",
 			FOLDER_TO_PUBLISH: "env-folder",
 			CONFLUENCE_FORCE_OVERWRITE: "true",
+			CONFLUENCE_TAGS_TO_PUBLISH: "env-tag",
 		},
 	});
 
@@ -109,6 +111,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 			"X-Cli-Header": "cli-value",
 		},
 		folderToPublish: "env-folder",
+		tagsToPublish: "env-tag",
 		contentRoot: expectedCliContentRoot,
 		firstHeadingPageTitle: true,
 		forceOverwrite: true,
@@ -130,6 +133,7 @@ test("keeps explicit false values from config providers", async () => {
 					confluenceApiPrefix: "/wiki/rest",
 					confluenceRequestHeaders: {},
 					folderToPublish: "file-folder",
+					tagsToPublish: "",
 					contentRoot,
 					firstHeadingPageTitle: false,
 					forceOverwrite: false,
@@ -189,6 +193,8 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 					"cli-token",
 					"--enableFolder",
 					"docs",
+					"--tagsToPublish",
+					"public,docs",
 					"--contentRoot",
 					contentRoot,
 					"--fh",
@@ -218,6 +224,7 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 
 	expect(settings.firstHeadingPageTitle).toBe(false);
 	expect(settings.forceOverwrite).toBe(false);
+	expect(settings.tagsToPublish).toBe("public,docs");
 	expect(settings.contentRoot).toBe(expectedContentRoot);
 });
 

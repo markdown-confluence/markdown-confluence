@@ -11,6 +11,7 @@ export type ConfluencePerPageConfig = {
 	frontmatterToPublish: FrontmatterConfig<string[], "array-text">;
 	tags: FrontmatterConfig<string[], "array-text">;
 	pageId: FrontmatterConfig<string | undefined, "text">;
+	pageUrl: FrontmatterConfig<string | undefined, "text">;
 	dontChangeParentPageId: FrontmatterConfig<boolean, "boolean">;
 	blogPostDate: FrontmatterConfig<string | undefined, "text">;
 	contentType: FrontmatterConfig<PageContentType, "options">;
@@ -50,7 +51,7 @@ export type ConfluencePerPageAllValues = {
 	[K in keyof ConfluencePerPageConfig]: ConfluencePerPageConfig[K]["default"]; // TODO: Accumlate Errors
 };
 
-type excludedProperties = "frontmatterToPublish";
+type excludedProperties = "frontmatterToPublish" | "pageUrl";
 
 export type ConfluencePerPageValues = Omit<
 	{
@@ -199,6 +200,21 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 			return pageId;
 		},
 	},
+	pageUrl: {
+		key: "connie-page-url",
+		default: undefined,
+		inputType: "text",
+		inputValidator: (value) => {
+			if (typeof value === "string") {
+				return { valid: true, errors: [] };
+			}
+			return {
+				valid: false,
+				errors: [new Error("Page URL needs to be a string.")],
+			};
+		},
+		process: (yamlValue) => (typeof yamlValue === "string" ? yamlValue : undefined),
+	},
 	dontChangeParentPageId: {
 		key: "connie-dont-change-parent-page",
 		default: false,
@@ -326,7 +342,7 @@ export function processConniePerPageConfig(
 		}
 	}
 
-	return preventOverspreading(result, "frontmatterToPublish");
+	return preventOverspreading(result, "frontmatterToPublish", "pageUrl");
 }
 
 function preventOverspreading<T>(source: Partial<T>, ...keysToOmit: excludedProperties[]): T {

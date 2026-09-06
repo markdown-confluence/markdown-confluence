@@ -43,6 +43,9 @@ export const confluenceSettingsConfig = Config.all({
 		"confluenceRequestHeaders",
 	).pipe(Config.withDefault(DEFAULT_SETTINGS.confluenceRequestHeaders)),
 	folderToPublish: Config.string("folderToPublish"),
+	tagsToPublish: Config.string("tagsToPublish").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.tagsToPublish),
+	),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
 	forceOverwrite: Config.boolean("forceOverwrite").pipe(
@@ -199,6 +202,7 @@ function makeEnvironmentProvider(
 					"CONFLUENCE_REQUEST_HEADERS",
 				),
 				folderToPublish: yield* runtimeEnvironment.getEnv("FOLDER_TO_PUBLISH"),
+				tagsToPublish: yield* runtimeEnvironment.getEnv("CONFLUENCE_TAGS_TO_PUBLISH"),
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
 				firstHeadingPageTitle:
 					firstHeadingPageTitle === "true" ? firstHeadingPageTitle : undefined,
@@ -218,6 +222,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "apiPrefix", type: "string" },
 		{ name: "requestHeaders", type: "string" },
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
+		{ name: "tagsToPublish", aliases: ["t"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
 		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
@@ -233,6 +238,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			confluenceApiPrefix: options["apiPrefix"],
 			confluenceRequestHeaders: options["requestHeaders"],
 			folderToPublish: options["enableFolder"],
+			tagsToPublish: options["tagsToPublish"],
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
 			forceOverwrite: options["forceOverwrite"],

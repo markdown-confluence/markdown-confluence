@@ -160,6 +160,19 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Tags to publish")
+			.setDesc("Publish files with any matching YAML tag, separated by commas")
+			.addText((text) =>
+				text
+					.setPlaceholder("docs, public")
+					.setValue(this.plugin.settings.tagsToPublish)
+					.onChange(async (value) => {
+						this.plugin.settings.tagsToPublish = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("First Header Page Name")
 			.setDesc("First header replaces file name as page title")
 			.addToggle((toggle) =>
