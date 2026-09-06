@@ -15,9 +15,11 @@ import {
 	PlantumlRendererPlugin,
 	RuntimeEnvironmentService,
 	createAuthenticatedConfluenceClient,
+	StandardInputLive,
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
 import { getErrorMessage } from "./errorMessage";
+import { markdownToAdf } from "./toAdf";
 import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 
 const program = Effect.gen(function* () {
@@ -72,10 +74,20 @@ const program = Effect.gen(function* () {
 	}
 });
 
-NodeRuntime.runMain(
-	program.pipe(
+const command = Effect.gen(function* () {
+	const runtime = yield* RuntimeEnvironmentService;
+	const argv = yield* runtime.argv;
+	if (argv[2] === "to-adf") {
+		return yield* markdownToAdf(argv.slice(3)).pipe(Effect.provide(StandardInputLive));
+	}
+	return yield* program.pipe(
 		Effect.provide(MarkdownWorkspaceLive),
 		Effect.provide(ConfluenceSettingsLive),
+	);
+});
+
+NodeRuntime.runMain(
+	command.pipe(
 		Effect.catch((error) =>
 			Effect.gen(function* () {
 				const runtimeEnvironment = yield* RuntimeEnvironmentService as any;
