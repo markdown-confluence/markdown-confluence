@@ -24,7 +24,8 @@
 		"mutation": "stryker run",
 		"mutation:dry-run": "stryker run --dryRunOnly",
 		"test": "vp test run",
-		"release:prepare": "node scripts/prepare-release-assets.js"
+		"release:prepare": "node scripts/prepare-release-assets.js",
+		"test:confluence-e2e": "node scripts/confluence-release-e2e.js"
 	},
 	"devDependencies": {
 		"@effect-oxlint/effect-oxlint": "jsr:^0.2.0",
