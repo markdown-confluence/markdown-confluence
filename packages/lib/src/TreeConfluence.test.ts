@@ -4,7 +4,7 @@ import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { Effect } from "effect";
 import { ConfluencePerPageAllValues } from "./ConniePageConfig";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 import { ensureAllFilesExistInConfluence } from "./TreeConfluence";
 import { LocalAdfFileTreeNode } from "./Publisher";
 import { BinaryFile, FilesToUpload, MarkdownFile, MarkdownWorkspace } from "./MarkdownWorkspace";
@@ -330,6 +330,7 @@ function createContentPage({
 }
 
 const testSettings: ConfluenceSettings = {
+	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
 	confluenceParentId: "123456",
 	atlassianUserName: "user@example.com",

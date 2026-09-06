@@ -3,7 +3,7 @@ import { expect, test } from "@effect/vitest";
 import { Effect } from "effect";
 import { runEffect } from "./effects";
 import { MarkdownFile } from "./MarkdownWorkspace";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 import { createFolderStructure } from "./TreeLocal";
 
 test("uses the containing directory as the root for one markdown file", async () => {
@@ -185,6 +185,7 @@ function createMarkdownFile(
 }
 
 const testSettings: ConfluenceSettings = {
+	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
 	confluenceParentId: "123456",
 	atlassianUserName: "user@example.com",

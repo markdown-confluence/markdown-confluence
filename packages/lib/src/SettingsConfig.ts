@@ -1,6 +1,6 @@
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
-import { Config, ConfigProvider, Effect, Layer } from "effect";
+import { Config, ConfigProvider, Effect, Layer, Schema } from "effect";
 import {
 	MarkdownConfluencePlatform,
 	runEffect,
@@ -8,6 +8,7 @@ import {
 	RuntimeEnvironmentService,
 } from "./effects";
 import {
+	ConfluenceAuthType,
 	ConfluenceSettings,
 	ConfluenceSettingsService,
 	DEFAULT_SETTINGS,
@@ -15,6 +16,7 @@ import {
 } from "./Settings";
 
 const CONFLUENCE_SETTINGS_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof ConfluenceSettings)[];
+const CONFLUENCE_AUTH_TYPES: readonly ConfluenceAuthType[] = ["basic", "bearer"];
 
 type ArgumentDefinition = {
 	name: string;
@@ -29,6 +31,17 @@ export const confluenceSettingsConfig = Config.all({
 	confluenceParentId: Config.string("confluenceParentId"),
 	atlassianUserName: Config.string("atlassianUserName"),
 	atlassianApiToken: Config.string("atlassianApiToken"),
+	confluenceAuthType: Config.schema(
+		Schema.Literals(CONFLUENCE_AUTH_TYPES),
+		"confluenceAuthType",
+	).pipe(Config.withDefault(DEFAULT_SETTINGS.confluenceAuthType)),
+	confluenceApiPrefix: Config.string("confluenceApiPrefix").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.confluenceApiPrefix),
+	),
+	confluenceRequestHeaders: Config.schema(
+		Config.Record(Schema.String, Schema.String),
+		"confluenceRequestHeaders",
+	).pipe(Config.withDefault(DEFAULT_SETTINGS.confluenceRequestHeaders)),
 	folderToPublish: Config.string("folderToPublish"),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
@@ -180,6 +193,11 @@ function makeEnvironmentProvider(
 				confluenceParentId: yield* runtimeEnvironment.getEnv("CONFLUENCE_PARENT_ID"),
 				atlassianUserName: yield* runtimeEnvironment.getEnv("ATLASSIAN_USERNAME"),
 				atlassianApiToken: yield* runtimeEnvironment.getEnv("ATLASSIAN_API_TOKEN"),
+				confluenceAuthType: yield* runtimeEnvironment.getEnv("CONFLUENCE_AUTH_TYPE"),
+				confluenceApiPrefix: yield* runtimeEnvironment.getEnv("CONFLUENCE_API_PREFIX"),
+				confluenceRequestHeaders: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_REQUEST_HEADERS",
+				),
 				folderToPublish: yield* runtimeEnvironment.getEnv("FOLDER_TO_PUBLISH"),
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
 				firstHeadingPageTitle:
@@ -196,6 +214,9 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "parentId", aliases: ["p"], type: "string" },
 		{ name: "userName", aliases: ["u"], type: "string" },
 		{ name: "apiToken", type: "string" },
+		{ name: "authType", type: "string" },
+		{ name: "apiPrefix", type: "string" },
+		{ name: "requestHeaders", type: "string" },
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
@@ -208,6 +229,9 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			confluenceParentId: options["parentId"],
 			atlassianUserName: options["userName"],
 			atlassianApiToken: options["apiToken"],
+			confluenceAuthType: options["authType"],
+			confluenceApiPrefix: options["apiPrefix"],
+			confluenceRequestHeaders: options["requestHeaders"],
 			folderToPublish: options["enableFolder"],
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
@@ -290,12 +314,29 @@ function pickConfluenceSettings(config: Record<string, unknown>): Partial<Conflu
 		}
 
 		const value = config[key];
-		if (typeof value === typeof DEFAULT_SETTINGS[key]) {
+		if (isConfluenceSettingValue(key, value)) {
 			(result as Record<string, unknown>)[key] = value;
 		}
 	}
 
 	return result;
+}
+
+function isConfluenceSettingValue(key: keyof ConfluenceSettings, value: unknown): boolean {
+	if (key === "confluenceRequestHeaders") {
+		return isStringRecord(value);
+	}
+
+	return typeof value === typeof DEFAULT_SETTINGS[key];
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+	return (
+		value !== null &&
+		!Array.isArray(value) &&
+		typeof value === "object" &&
+		Object.values(value).every((entry) => typeof entry === "string")
+	);
 }
 
 function compactRecord<T extends Record<string, unknown>>(record: T): Record<string, string> {

@@ -12,6 +12,7 @@ import {
 	Publisher,
 	MermaidRendererPlugin,
 	RuntimeEnvironmentService,
+	createConfluenceClientConfig,
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
 import { ConfluenceClient } from "confluence.js";
@@ -23,25 +24,20 @@ const program = Effect.gen(function* () {
 
 	const settings = yield* ConfluenceUploadSettings.ConfluenceSettingsService as any;
 
-	const confluenceClient = new ConfluenceClient({
-		host: settings.confluenceBaseUrl,
-		authentication: {
-			basic: {
-				email: settings.atlassianUserName,
-				apiToken: settings.atlassianApiToken,
+	const confluenceClient = new ConfluenceClient(
+		createConfluenceClientConfig(settings, {
+			middlewares: {
+				onError(e) {
+					if ("response" in e && "data" in e.response) {
+						e.message =
+							typeof e.response.data === "string"
+								? e.response.data
+								: JSON.stringify(e.response.data);
+					}
+				},
 			},
-		},
-		middlewares: {
-			onError(e) {
-				if ("response" in e && "data" in e.response) {
-					e.message =
-						typeof e.response.data === "string"
-							? e.response.data
-							: JSON.stringify(e.response.data);
-				}
-			},
-		},
-	});
+		}),
+	);
 
 	const publisher = new Publisher(settings, confluenceClient, [
 		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),

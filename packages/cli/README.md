@@ -98,6 +98,11 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
   "confluenceParentId": "123456",
   "atlassianUserName": "your-email@example.com",
   "atlassianApiToken": "optional-token-from-config",
+  "confluenceAuthType": "basic",
+  "confluenceApiPrefix": "/wiki/rest",
+  "confluenceRequestHeaders": {
+    "X-Custom-Header": "optional-value"
+  },
   "folderToPublish": "docs",
   "contentRoot": ".",
   "firstHeadingPageTitle": false,
@@ -113,6 +118,9 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 | `confluenceParentId` | `CONFLUENCE_PARENT_ID` | `--parentId`, `-p` | The numeric ID of an existing Confluence parent page. The parent page determines the target space. |
 | `atlassianUserName` | `ATLASSIAN_USERNAME` | `--userName`, `-u` | The Atlassian user name or email address used for publishing. |
 | `atlassianApiToken` | `ATLASSIAN_API_TOKEN` | `--apiToken` | The Atlassian API token. Prefer an environment variable or GitHub secret instead of committing this value to JSON. |
+| `confluenceAuthType` | `CONFLUENCE_AUTH_TYPE` | `--authType` | Authentication mode. Use `basic` for Confluence Cloud API tokens or `bearer` for PAT-style bearer tokens. |
+| `confluenceApiPrefix` | `CONFLUENCE_API_PREFIX` | `--apiPrefix` | API route prefix. Defaults to `/wiki/rest`; use values like `/rest` only when your Confluence API is exposed there. |
+| `confluenceRequestHeaders` | `CONFLUENCE_REQUEST_HEADERS` | `--requestHeaders` | Extra request headers. JSON config accepts an object; env and CLI accept `Header=Value,Another=Value`. |
 | `folderToPublish` | `FOLDER_TO_PUBLISH` | `--enableFolder`, `-f` | The folder, relative to `contentRoot`, whose Markdown files default to `connie-publish: true`. Use `.` to publish all Markdown files under `contentRoot`. |
 | `contentRoot` | `CONFLUENCE_CONTENT_ROOT` | `--contentRoot`, `--cr` | The root directory to scan for Markdown files and referenced content. |
 | `firstHeadingPageTitle` | `CONFLUENCE_FIRST_HEADING_PAGE_TITLE` | `--firstHeaderPageTitle`, `--fh` | When `true`, use the first heading as the page title when `connie-title` is not set. |

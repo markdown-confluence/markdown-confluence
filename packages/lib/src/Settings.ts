@@ -1,10 +1,15 @@
 import { Context } from "effect";
 
+export type ConfluenceAuthType = "basic" | "bearer";
+
 export type ConfluenceSettings = {
 	confluenceBaseUrl: string;
 	confluenceParentId: string;
 	atlassianUserName: string;
 	atlassianApiToken: string;
+	confluenceAuthType: ConfluenceAuthType;
+	confluenceApiPrefix: string;
+	confluenceRequestHeaders: Record<string, string>;
 	folderToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
@@ -26,6 +31,9 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	confluenceParentId: "",
 	atlassianUserName: "",
 	atlassianApiToken: "",
+	confluenceAuthType: "basic",
+	confluenceApiPrefix: "/wiki/rest",
+	confluenceRequestHeaders: {},
 	folderToPublish: "Confluence Pages",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
@@ -50,9 +58,21 @@ export function validateConfluenceSettings(
 		field: "confluenceParentId",
 		message: "Confluence parent ID is required",
 	});
-	addRequiredSettingIssue(issues, settings.atlassianUserName, {
-		field: "atlassianUserName",
-		message: "Atlassian user name is required",
+	if (settings.confluenceAuthType !== "bearer") {
+		addRequiredSettingIssue(issues, settings.atlassianUserName, {
+			field: "atlassianUserName",
+			message: "Atlassian user name is required",
+		});
+	}
+	if (!["basic", "bearer"].includes(settings.confluenceAuthType)) {
+		issues.push({
+			field: "confluenceAuthType",
+			message: "Confluence auth type must be basic or bearer",
+		});
+	}
+	addRequiredSettingIssue(issues, settings.confluenceApiPrefix, {
+		field: "confluenceApiPrefix",
+		message: "Confluence API prefix is required",
 	});
 	addRequiredSettingIssue(issues, settings.atlassianApiToken, {
 		field: "atlassianApiToken",

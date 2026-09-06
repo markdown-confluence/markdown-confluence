@@ -1,7 +1,7 @@
 import { expect, test } from "@effect/vitest";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
 import { Publisher } from "./Publisher";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 
 test("explains how to resolve a missing parent page space key", async () => {
 	const publisher = new Publisher(testSettings, createConfluenceClientWithoutParentSpace(), []);
@@ -28,6 +28,7 @@ function createConfluenceClientWithoutParentSpace(): RequiredConfluenceClient {
 }
 
 const testSettings: ConfluenceSettings = {
+	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
 	confluenceParentId: "123456",
 	atlassianUserName: "user@example.com",

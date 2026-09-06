@@ -3,7 +3,7 @@ import { TextDefinition } from "@atlaskit/adf-schema";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { prepareAdfToUpload } from "./AdfProcessing";
 import { ConfluenceAdfFile, ConfluenceNode } from "./Publisher";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 
 test("resolves wikilinks that include a path under the publish root", () => {
 	const pages = [
@@ -131,6 +131,7 @@ function createNode(file: Partial<ConfluenceAdfFile>): ConfluenceNode {
 }
 
 const testSettings: ConfluenceSettings = {
+	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
 	confluenceParentId: "1",
 	atlassianUserName: "test@example.com",

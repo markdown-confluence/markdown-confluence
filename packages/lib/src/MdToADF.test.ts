@@ -2,7 +2,7 @@
 import { expect, test } from "@effect/vitest";
 import { MarkdownFile } from "./MarkdownWorkspace";
 import { convertMDtoADF } from "./MdToADF";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 
 const markdownTestCases: MarkdownFile[] = [
 	{
@@ -271,6 +271,7 @@ test("converts markdown task list items to ADF task nodes", () => {
 		frontmatter: {},
 	};
 	const settings: ConfluenceSettings = {
+		...DEFAULT_SETTINGS,
 		confluenceBaseUrl: "https://example.com",
 		confluenceParentId: "asdf",
 		atlassianUserName: "asdf@asdf.com",

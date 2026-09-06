@@ -9,6 +9,7 @@ import {
 	MarkdownConfluencePlatform,
 	MarkdownWorkspaceLive,
 	MarkdownWorkspaceService,
+	createConfluenceClientConfig,
 } from "@markdown-confluence/lib";
 import { Effect, Layer } from "effect";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
@@ -85,25 +86,20 @@ export default class ConfluencePlugin extends Plugin {
 			mermaidItems.mermaidConfig,
 			mermaidItems.bodyStyles,
 		);
-		const confluenceClient = new ObsidianConfluenceClient({
-			host: this.settings.confluenceBaseUrl,
-			authentication: {
-				basic: {
-					email: this.settings.atlassianUserName,
-					apiToken: this.settings.atlassianApiToken,
+		const confluenceClient = new ObsidianConfluenceClient(
+			createConfluenceClientConfig(this.settings, {
+				middlewares: {
+					onError(e) {
+						if ("response" in e && "data" in e.response) {
+							e.message =
+								typeof e.response.data === "string"
+									? e.response.data
+									: JSON.stringify(e.response.data);
+						}
+					},
 				},
-			},
-			middlewares: {
-				onError(e) {
-					if ("response" in e && "data" in e.response) {
-						e.message =
-							typeof e.response.data === "string"
-								? e.response.data
-								: JSON.stringify(e.response.data);
-					}
-				},
-			},
-		});
+			}),
+		);
 
 		this.publisher = new Publisher(this.settings, confluenceClient, [
 			new MermaidRendererPlugin(mermaidRenderer),
@@ -238,15 +234,9 @@ export default class ConfluencePlugin extends Plugin {
 				);
 				console.log({ json });
 
-				const confluenceClient = new ObsidianConfluenceClient({
-					host: this.settings.confluenceBaseUrl,
-					authentication: {
-						basic: {
-							email: this.settings.atlassianUserName,
-							apiToken: this.settings.atlassianApiToken,
-						},
-					},
-				});
+				const confluenceClient = new ObsidianConfluenceClient(
+					createConfluenceClientConfig(this.settings),
+				);
 				const testingPage = await confluenceClient.content.getContentById({
 					id: "9732097",
 					expand: ["body.atlas_doc_format", "space"],

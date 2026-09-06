@@ -7,16 +7,22 @@ import {
 	getAuthenticationToken,
 } from "confluence.js";
 import { requestUrl } from "obsidian";
-import { RequiredConfluenceClient } from "@markdown-confluence/lib";
 import { toRequestArrayBuffer } from "./requestBody";
+import {
+	DEFAULT_CONFLUENCE_API_PREFIX,
+	normalizeConfluenceApiPrefix,
+	RequiredConfluenceClient,
+} from "@markdown-confluence/lib";
 
 const ATLASSIAN_TOKEN_CHECK_FLAG = "X-Atlassian-Token";
 const ATLASSIAN_TOKEN_CHECK_NOCHECK_VALUE = "no-check";
 
 export class MyBaseClient implements Client {
-	protected urlSuffix = "/wiki/rest";
-
 	constructor(protected readonly config: Config) {}
+
+	protected get urlSuffix(): string {
+		return normalizeConfluenceApiPrefix(this.config.apiPrefix ?? DEFAULT_CONFLUENCE_API_PREFIX);
+	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	protected paramSerializer(parameters: Record<string, any>): string {

@@ -38,6 +38,11 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 					confluenceParentId: "file-parent",
 					atlassianUserName: "file-user@example.com",
 					atlassianApiToken: "file-token",
+					confluenceAuthType: "basic",
+					confluenceApiPrefix: "/file/rest",
+					confluenceRequestHeaders: {
+						"X-File-Header": "file-value",
+					},
 					folderToPublish: "file-folder",
 					contentRoot: "file-root",
 					firstHeadingPageTitle: true,
@@ -62,6 +67,12 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 			"cli-parent",
 			"--apiToken",
 			"cli-token",
+			"--authType",
+			"bearer",
+			"--apiPrefix",
+			"cli-rest",
+			"--requestHeaders",
+			"X-Cli-Header=cli-value",
 			"--contentRoot",
 			"cli-root",
 		],
@@ -69,6 +80,7 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 		env: {
 			CONFLUENCE_BASE_URL: "https://env.example.atlassian.net",
 			ATLASSIAN_USERNAME: "env-user@example.com",
+			CONFLUENCE_API_PREFIX: "/env/rest",
 			FOLDER_TO_PUBLISH: "env-folder",
 			CONFLUENCE_FORCE_OVERWRITE: "true",
 		},
@@ -91,6 +103,11 @@ test("loads settings from Effect ConfigProviders with CLI, env, file, default pr
 		confluenceParentId: "cli-parent",
 		atlassianUserName: "env-user@example.com",
 		atlassianApiToken: "cli-token",
+		confluenceAuthType: "bearer",
+		confluenceApiPrefix: "cli-rest",
+		confluenceRequestHeaders: {
+			"X-Cli-Header": "cli-value",
+		},
 		folderToPublish: "env-folder",
 		contentRoot: expectedCliContentRoot,
 		firstHeadingPageTitle: true,
@@ -109,6 +126,9 @@ test("keeps explicit false values from config providers", async () => {
 					confluenceParentId: "file-parent",
 					atlassianUserName: "file-user@example.com",
 					atlassianApiToken: "file-token",
+					confluenceAuthType: "basic",
+					confluenceApiPrefix: "/wiki/rest",
+					confluenceRequestHeaders: {},
 					folderToPublish: "file-folder",
 					contentRoot,
 					firstHeadingPageTitle: false,
@@ -126,6 +146,28 @@ test("keeps explicit false values from config providers", async () => {
 	expect(settings.firstHeadingPageTitle).toBe(false);
 	expect(settings.forceOverwrite).toBe(false);
 	expect(settings.contentRoot).toBe(expectedContentRoot);
+});
+
+test("allows bearer auth without an Atlassian user name", async () => {
+	const settings = await runEffect(
+		parseConfluenceSettingsEffect(
+			ConfigProvider.fromUnknown({
+				confluenceBaseUrl: "https://file.example.atlassian.net",
+				confluenceParentId: "file-parent",
+				atlassianUserName: "",
+				atlassianApiToken: "personal-access-token",
+				confluenceAuthType: "bearer",
+				confluenceApiPrefix: "/rest",
+				confluenceRequestHeaders: {},
+				folderToPublish: "file-folder",
+				contentRoot: "docs",
+				firstHeadingPageTitle: false,
+			}),
+		),
+	);
+
+	expect(settings.confluenceAuthType).toBe("bearer");
+	expect(settings.atlassianUserName).toBe("");
 });
 
 test("parses boolean CLI values passed as separate arguments", async () => {

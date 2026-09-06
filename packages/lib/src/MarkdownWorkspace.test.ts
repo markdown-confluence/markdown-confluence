@@ -2,7 +2,7 @@ import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { afterEach, expect, test } from "@effect/vitest";
 import { Effect } from "effect";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 import { RuntimeEnvironmentService, runEffect } from "./effects";
 import { loadMarkdownWorkspace } from "./MarkdownWorkspace";
 
@@ -135,6 +135,7 @@ test("updates markdown values for an absolute file path inside contentRoot", asy
 });
 
 const testSettings: ConfluenceSettings = {
+	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
 	confluenceParentId: "123456",
 	atlassianUserName: "user@example.com",
