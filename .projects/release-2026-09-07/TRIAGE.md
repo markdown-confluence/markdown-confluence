@@ -15,12 +15,12 @@ Inventory: **162 issues (67 open)** and **721 PRs (52 open)**. All 883 records a
 - Local main fast-forwarded 64 commits to `32306a8`; work branch: `andymac4182/c/release-readiness-20260907`.
 - Rust port and cache discarded at user request.
 - Selected feature PRs integrated locally: #695, #708, #752–#765, #795/#830 and #866, with regression repairs for overlapping changes.
-- Node 24.15.0 is pinned through `.node-version`; pnpm 11.1.2 and Vite+ 0.1.24 are aligned. A clean frozen install, lint/format, 169 tests and the full build pass; one opt-in live test remains skipped.
+- Node 24.15.0 is pinned through `.node-version`; pnpm 11.1.2 and Vite+ 0.1.24 are aligned. A clean frozen install, lint/format, 178 tests and the full build pass; one opt-in live test remains skipped.
 - Five public npm packages pack and install in a clean project. ESM/CJS library imports, the installed offline CLI and real Puppeteer rendering pass.
-- Native ARM64 Docker build, offline conversion and Chromium diagram rendering pass. AMD64 and remote CI remain to be verified.
+- Native ARM64 Docker build, offline conversion and Chromium diagram rendering pass. Linux AMD64 build, Windows, CodeQL and dependency review pass.
 - Release Please migrated to the maintained Node 24 action. Artifact preparation rejects missing files/version mismatches; upload smoke checks prove build failures publish nothing, retries are idempotent and differing assets are rejected.
-- Dedicated Confluence space `MCRT20260907` and the test Obsidian vault have been created. Real publishing and plugin interaction are pending credentials and the requested Restricted Mode approval.
-- Last published release remains 5.5.2 (September 2023). Release PR #703 will be regenerated after integration; source API changes require migration notes.
+- Dedicated Confluence space `MCRT20260907` and the test Obsidian vault have been created. The live eight-page Confluence create/unchanged/update test and browser inspection pass using CI secrets. Obsidian interaction still awaits its local API token and the requested Restricted Mode approval.
+- Last published release remains 5.5.2 (September 2023). Release PR #703 will be regenerated after integration; version 6 migration notes describe the changed public API. The companion Action update is prepared in markdown-confluence/publish-action#11.
 - These classifications describe the release plan. Items are not marked shipped until distribution and corresponding live behavior are verified. See `VERIFICATION.md` for evidence and remaining gates.
 
 ## Release sequence

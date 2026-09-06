@@ -481,9 +481,12 @@ export class ConfluenceV2Client {
 			const route: string | undefined = routes[current.type];
 			if (!route)
 				throw new ConfluenceV2Error("Unsupported ancestor content type", 502, undefined);
-			const batch: V2Ancestor[] = await this.collectResults<V2Ancestor>(
+			// Ancestor batches run root-to-parent; fetch the next batch above its first entry.
+			const response: V2MultiEntityResult<V2Ancestor> = await this.request(
+				"GET",
 				`/${route}/${encodeURIComponent(current.id)}/ancestors?limit=250`,
 			);
+			const batch = response.results;
 			for (const ancestor of batch) {
 				if (visited.has(ancestor.id))
 					throw new ConfluenceV2Error(
