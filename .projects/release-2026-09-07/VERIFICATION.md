@@ -1,0 +1,42 @@
+# Release verification
+
+The inventory covers 162 issues and 721 pull requests as retrieved on 7 September 2026. `TRIAGE.md` records the open-item decisions. This document records evidence, not release completion.
+
+## Completed locally
+
+- Latest main (`32306a8`) incorporated; the Rust port and its preserved local branches were discarded at the user's request.
+- Accepted feature changes integrated with shared settings, upload transport, hierarchy, overwrite protection, macro IDs and OAuth/v2 reconciled.
+- Added regression coverage for formatted/nested callouts, literal image examples, selected Markdown embeds, dates, task IDs in page chrome, renderer cleanup and large-diagram timeout configuration.
+- Node 24.15.0 / pnpm 11.1.2 / Vite+ 0.1.24: frozen installation, `vp run check`, `vp run fmt:check`, `vp test run` (166 passed, one opt-in live test skipped) and `vp run build` pass.
+- Five public package tarballs install in a clean project. The installed library works through ESM and CommonJS dynamic import. The installed CLI accepts stdin and writes valid ADF without credentials. PlantUML package exports load.
+- Real Puppeteer rendering passes from both the workspace and installed package. A 100-step diagram rendered at 129 × 10470 pixels using the configurable 600000 ms protocol timeout.
+- ARM64 Docker build and offline conversion pass. The rebuilt Puppeteer renderer uses the container's Debian Chromium and produces a valid 458 × 70 PNG. AMD64 is still pending.
+- Actionlint 1.7.12 validates the workflows. Artifact preparation tests cover missing build outputs, mismatched package versions and invalid CommonJS bundles. A separate upload-script smoke test uses temporary local Git repositories and a fake GitHub release service; it verifies no publication after a build failure, eight uploaded assets on first publication, an idempotent retry and rejection of differing existing assets.
+
+Local logs and tarballs are in `.git/codex-release-20260907/` and are not committed as release artifacts. The CLI's incompatible legacy `bundleDependencies` setting was removed after a real `vp pm pack` failure; package contents are restricted to built distribution files plus package metadata, README and license.
+
+## Dedicated live fixtures
+
+- Confluence space: [Markdown Confluence Release Tests 2026-09-07](https://markdown-confluence.atlassian.net/wiki/spaces/MCRT20260907/overview?homepageId=986448062).
+- Parent page: `986448062`.
+- Test vault: `/Users/andrewmcclenaghan/porting/markdown-confluence-release-vault`.
+- Latest rebuilt plugin and manifest are installed in the vault's `confluence-integration` directory. Settings target only the dedicated test space. No API token is committed or included in reports.
+- Fixtures cover formatting, callouts, Unicode, tables, nested lists, links, anchors, page hierarchy, PNG/SVG dimensions, non-image attachments, Mermaid, PlantUML, heading embeds, page headers/footers, TOC, ignored code blocks, folder/tag selection and explicit exclusions.
+
+The token field is still empty, and Obsidian remains in Restricted Mode pending the requested approval. No successful live publish has been claimed.
+
+## Remaining release gates
+
+1. Complete Confluence/Obsidian create → inspect → unchanged publish → update verification with the fixtures. Check remote ADF, rendered pages, attachments, labels, hierarchy and frontmatter page URLs. Verify excluded files never publish and unchanged runs do not change page versions.
+2. Exercise overwrite protection, failure recovery, duplicate titles, missing references and OAuth/v2 behavior. Keep issues with insufficient reproduction evidence open.
+3. Finish a real PlantUML render and publication test, with rendering enabled explicitly for the synthetic fixtures.
+4. Pass the branch's Linux/Windows verification, CodeQL and dependency review; verify both container architectures.
+5. Finalize migration/release notes and linked version manifests. Regenerate the stale release PR.
+6. Publish and verify npm packages, immutable container version plus moving aliases, Obsidian release assets and companion publish-action. Verify the Obsidian community listing separately.
+7. Reconcile GitHub PR/issue state against the behavior actually delivered. Do not close roadmap or partial-coverage trackers as fully fixed.
+
+## Release workflow recovery
+
+The `release-please` workflow uses the maintained `googleapis/release-please-action` v5 manifest interface. Publishing checks out the root release tag, validates its version and ancestry, then runs the repository's Vite+ checks, tests and build before packaging. Obsidian metadata is copied after Vite empties `dist`.
+
+A maintainer can dispatch the workflow from main with an existing `obsidian-confluence-root-vX.Y.Z` tag to finish publication. Published npm versions are skipped by recursive publishing. An existing container version must identify the same commit and include AMD64 and ARM64 before it can be reused. Existing GitHub release assets must match byte for byte and are never overwritten. Obsidian metadata updates are limited to the distribution files, with the versions compatibility map preserved.

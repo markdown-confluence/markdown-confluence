@@ -23,7 +23,8 @@
 		"lint:names": "node scripts/check-descriptive-names.js",
 		"mutation": "stryker run",
 		"mutation:dry-run": "stryker run --dryRunOnly",
-		"test": "vp test run"
+		"test": "vp test run",
+		"release:prepare": "node scripts/prepare-release-assets.js"
 	},
 	"devDependencies": {
 		"@effect-oxlint/effect-oxlint": "jsr:^0.2.0",
