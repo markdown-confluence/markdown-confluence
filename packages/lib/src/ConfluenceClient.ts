@@ -1,6 +1,6 @@
-import { Api } from "confluence.js";
+import { Api, Client } from "confluence.js";
 
-export interface RequiredConfluenceClient {
+export interface RequiredConfluenceClient extends Client {
 	content: Api.Content;
 	space: Api.Space;
 	contentAttachments: Api.ContentAttachments;
