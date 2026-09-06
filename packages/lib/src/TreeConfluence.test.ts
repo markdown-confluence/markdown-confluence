@@ -337,4 +337,5 @@ const testSettings: ConfluenceSettings = {
 	folderToPublish: ".",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
+	forceOverwrite: false,
 };

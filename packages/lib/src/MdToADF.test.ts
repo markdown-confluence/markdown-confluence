@@ -278,6 +278,7 @@ test("converts markdown task list items to ADF task nodes", () => {
 		folderToPublish: ".",
 		contentRoot: "./",
 		firstHeadingPageTitle: false,
+		forceOverwrite: false,
 	};
 
 	const adfFile = convertMDtoADF(markdown, settings);
