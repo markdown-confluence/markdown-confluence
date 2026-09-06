@@ -1,5 +1,5 @@
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, resolveSiteUrl } from "./Settings";
 import { MarkdownFile } from "./MarkdownWorkspace";
 import { parseMarkdownToADF } from "./MdToADF";
 
@@ -144,7 +144,7 @@ export const conniePerPageConfig: ConfluencePerPageConfig = {
 					}
 				}
 
-				const newADF = parseMarkdownToADF(frontmatterHeader, settings.confluenceBaseUrl);
+				const newADF = parseMarkdownToADF(frontmatterHeader, resolveSiteUrl(settings));
 
 				adfContent.content = [...newADF.content, ...adfContent.content];
 			}

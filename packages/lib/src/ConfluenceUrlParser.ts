@@ -1,4 +1,4 @@
-export function cleanUpUrlIfConfluence(input: string, confluenceBaseUrl: string): string {
+export function cleanUpUrlIfConfluence(input: string, siteUrl: string): string {
 	let url: URL;
 
 	// Check if the input is a valid URL
@@ -8,7 +8,7 @@ export function cleanUpUrlIfConfluence(input: string, confluenceBaseUrl: string)
 		return "#";
 	}
 
-	const confluenceUrl = new URL(confluenceBaseUrl);
+	const confluenceUrl = new URL(siteUrl);
 	if (url.hostname !== confluenceUrl.hostname) {
 		return input;
 	}

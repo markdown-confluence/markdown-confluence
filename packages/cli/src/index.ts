@@ -12,10 +12,9 @@ import {
 	Publisher,
 	MermaidRendererPlugin,
 	RuntimeEnvironmentService,
-	createConfluenceClientConfig,
+	createAuthenticatedConfluenceClient,
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
-import { ConfluenceClient } from "confluence.js";
 import { getErrorMessage } from "./errorMessage";
 
 const program = Effect.gen(function* () {
@@ -24,20 +23,7 @@ const program = Effect.gen(function* () {
 
 	const settings = yield* ConfluenceUploadSettings.ConfluenceSettingsService as any;
 
-	const confluenceClient = new ConfluenceClient(
-		createConfluenceClientConfig(settings, {
-			middlewares: {
-				onError(e) {
-					if ("response" in e && "data" in e.response) {
-						e.message =
-							typeof e.response.data === "string"
-								? e.response.data
-								: JSON.stringify(e.response.data);
-					}
-				},
-			},
-		}),
-	);
+	const confluenceClient = yield* createAuthenticatedConfluenceClient(settings);
 
 	const publisher = new Publisher(settings, confluenceClient, [
 		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),
@@ -60,6 +46,11 @@ const program = Effect.gen(function* () {
 				`FAILED:  ${file.node.file.absoluteFilePath} publish failed. Error is: ${file.reason}`,
 			),
 		) as any;
+	}
+	if (
+		results.some((file: { successfulUploadResult?: unknown }) => !file.successfulUploadResult)
+	) {
+		return yield* Effect.fail(new Error("One or more pages failed to publish"));
 	}
 });
 

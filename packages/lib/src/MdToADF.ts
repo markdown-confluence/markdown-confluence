@@ -7,7 +7,7 @@ import { processConniePerPageConfig } from "./ConniePageConfig";
 import { p } from "@atlaskit/adf-utils/builders";
 import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap";
 import { isSafeUrl } from "@atlaskit/adf-schema";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, resolveSiteUrl } from "./Settings";
 import { cleanUpUrlIfConfluence } from "./ConfluenceUrlParser";
 import SparkMD5 from "spark-md5";
 
@@ -517,7 +517,7 @@ function safeDecodeURIComponent(value: string): string {
 export function convertMDtoADF(file: MarkdownFile, settings: ConfluenceSettings): LocalAdfFile {
 	file.contents = file.contents.replace(frontmatterRegex, "");
 
-	const adfContent = parseMarkdownToADF(file.contents, settings.confluenceBaseUrl);
+	const adfContent = parseMarkdownToADF(file.contents, resolveSiteUrl(settings));
 
 	const results = processConniePerPageConfig(file, settings, adfContent);
 	stripIgnoredCodeBlocks(adfContent as ADFNode, settings.ignoredCodeBlockLanguages ?? []);
@@ -698,12 +698,12 @@ function stripIgnoredCodeBlocks(
 function addConfiguredPageChrome(adfContent: JSONDocNode, settings: ConfluenceSettings): void {
 	const headerContent = parseConfiguredPageChromeMarkdown(
 		settings.pageHeaderMarkdown,
-		settings.confluenceBaseUrl,
+		resolveSiteUrl(settings),
 		"header",
 	);
 	const footerContent = parseConfiguredPageChromeMarkdown(
 		settings.pageFooterMarkdown,
-		settings.confluenceBaseUrl,
+		resolveSiteUrl(settings),
 		"footer",
 	);
 

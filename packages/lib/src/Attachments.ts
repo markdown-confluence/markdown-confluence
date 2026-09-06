@@ -222,8 +222,44 @@ function getImageSize(buffer: Buffer): { width?: number; height?: number } {
 	try {
 		return sizeOf(buffer);
 	} catch {
-		return {};
+		return getSvgImageSize(buffer) ?? {};
 	}
+}
+
+function getSvgImageSize(buffer: Buffer): { width?: number; height?: number } | undefined {
+	const svg = buffer.toString("utf-8", 0, Math.min(buffer.length, 4096));
+	const svgTagStart = svg.indexOf("<svg");
+	if (svgTagStart === -1) {
+		return undefined;
+	}
+	const svgTag = svg.slice(svgTagStart);
+
+	const width = parseSvgLength(svgTag.match(/\swidth="([^"]+)"/)?.[1]);
+	const height = parseSvgLength(svgTag.match(/\sheight="([^"]+)"/)?.[1]);
+	if (width && height) {
+		return { width, height };
+	}
+
+	const viewBox = svgTag.match(/\sviewBox="([^"]+)"/)?.[1];
+	if (viewBox) {
+		const [, , viewBoxWidth, viewBoxHeight] = viewBox
+			.trim()
+			.split(/[\s,]+/)
+			.map((value) => Number(value));
+		if (viewBoxWidth && viewBoxHeight) {
+			return { width: viewBoxWidth, height: viewBoxHeight };
+		}
+	}
+
+	return undefined;
+}
+
+function parseSvgLength(value: string | undefined): number | undefined {
+	if (!value) {
+		return undefined;
+	}
+	const parsed = Number.parseFloat(value);
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 function resolveContentType(uploadFilename: string, contentType: string | undefined): string {

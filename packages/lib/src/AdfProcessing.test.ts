@@ -133,9 +133,13 @@ function createNode(file: Partial<ConfluenceAdfFile>): ConfluenceNode {
 const testSettings: ConfluenceSettings = {
 	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
+	confluenceSiteUrl: "",
 	confluenceParentId: "1",
+	confluenceAuthType: "basic",
 	atlassianUserName: "test@example.com",
 	atlassianApiToken: "token",
+	atlassianClientId: "",
+	atlassianClientSecret: "",
 	folderToPublish: "Confluence Pages",
 	tagsToPublish: "",
 	contentRoot: ".",

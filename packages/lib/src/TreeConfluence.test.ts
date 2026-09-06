@@ -336,9 +336,13 @@ function createContentPage({
 const testSettings: ConfluenceSettings = {
 	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
+	confluenceSiteUrl: "",
 	confluenceParentId: "123456",
+	confluenceAuthType: "basic",
 	atlassianUserName: "user@example.com",
 	atlassianApiToken: "token",
+	atlassianClientId: "",
+	atlassianClientSecret: "",
 	folderToPublish: ".",
 	tagsToPublish: "",
 	contentRoot: ".",

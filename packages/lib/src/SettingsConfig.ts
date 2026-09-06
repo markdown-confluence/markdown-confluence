@@ -16,7 +16,6 @@ import {
 } from "./Settings";
 
 const CONFLUENCE_SETTINGS_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof ConfluenceSettings)[];
-const CONFLUENCE_AUTH_TYPES: readonly ConfluenceAuthType[] = ["basic", "bearer"];
 
 type ArgumentDefinition = {
 	name: string;
@@ -28,13 +27,18 @@ type ArgumentValue = boolean | string | undefined;
 
 export const confluenceSettingsConfig = Config.all({
 	confluenceBaseUrl: Config.string("confluenceBaseUrl"),
+	confluenceSiteUrl: Config.string("confluenceSiteUrl").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.confluenceSiteUrl),
+	),
 	confluenceParentId: Config.string("confluenceParentId"),
-	atlassianUserName: Config.string("atlassianUserName"),
-	atlassianApiToken: Config.string("atlassianApiToken"),
-	confluenceAuthType: Config.schema(
-		Schema.Literals(CONFLUENCE_AUTH_TYPES),
-		"confluenceAuthType",
-	).pipe(Config.withDefault(DEFAULT_SETTINGS.confluenceAuthType)),
+	atlassianUserName: Config.string("atlassianUserName").pipe(Config.withDefault("")),
+	atlassianApiToken: Config.string("atlassianApiToken").pipe(Config.withDefault("")),
+	atlassianClientId: Config.string("atlassianClientId").pipe(Config.withDefault("")),
+	atlassianClientSecret: Config.string("atlassianClientSecret").pipe(Config.withDefault("")),
+	confluenceAuthType: Config.string("confluenceAuthType").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.confluenceAuthType),
+		Config.map((value) => value as ConfluenceAuthType),
+	),
 	confluenceApiPrefix: Config.string("confluenceApiPrefix").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.confluenceApiPrefix),
 	),
@@ -199,6 +203,7 @@ function makeEnvironmentProvider(
 		return ConfigProvider.fromEnv({
 			env: compactRecord({
 				confluenceBaseUrl: yield* runtimeEnvironment.getEnv("CONFLUENCE_BASE_URL"),
+				confluenceSiteUrl: yield* runtimeEnvironment.getEnv("CONFLUENCE_SITE_URL"),
 				confluenceParentId: yield* runtimeEnvironment.getEnv("CONFLUENCE_PARENT_ID"),
 				atlassianUserName: yield* runtimeEnvironment.getEnv("ATLASSIAN_USERNAME"),
 				atlassianApiToken: yield* runtimeEnvironment.getEnv("ATLASSIAN_API_TOKEN"),
@@ -207,6 +212,8 @@ function makeEnvironmentProvider(
 				confluenceRequestHeaders: yield* runtimeEnvironment.getEnv(
 					"CONFLUENCE_REQUEST_HEADERS",
 				),
+				atlassianClientId: yield* runtimeEnvironment.getEnv("ATLASSIAN_CLIENT_ID"),
+				atlassianClientSecret: yield* runtimeEnvironment.getEnv("ATLASSIAN_CLIENT_SECRET"),
 				folderToPublish: yield* runtimeEnvironment.getEnv("FOLDER_TO_PUBLISH"),
 				tagsToPublish: yield* runtimeEnvironment.getEnv("CONFLUENCE_TAGS_TO_PUBLISH"),
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
@@ -226,12 +233,15 @@ function makeEnvironmentProvider(
 function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.ConfigProvider {
 	const options = parseArgumentValues(argv, [
 		{ name: "baseUrl", aliases: ["b"], type: "string" },
+		{ name: "siteUrl", type: "string" },
 		{ name: "parentId", aliases: ["p"], type: "string" },
 		{ name: "userName", aliases: ["u"], type: "string" },
 		{ name: "apiToken", type: "string" },
 		{ name: "authType", type: "string" },
 		{ name: "apiPrefix", type: "string" },
 		{ name: "requestHeaders", type: "string" },
+		{ name: "clientId", type: "string" },
+		{ name: "clientSecret", type: "string" },
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
 		{ name: "tagsToPublish", aliases: ["t"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
@@ -244,12 +254,15 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 	return ConfigProvider.fromUnknown(
 		compactRecord({
 			confluenceBaseUrl: options["baseUrl"],
+			confluenceSiteUrl: options["siteUrl"],
 			confluenceParentId: options["parentId"],
 			atlassianUserName: options["userName"],
 			atlassianApiToken: options["apiToken"],
 			confluenceAuthType: options["authType"],
 			confluenceApiPrefix: options["apiPrefix"],
 			confluenceRequestHeaders: options["requestHeaders"],
+			atlassianClientId: options["clientId"],
+			atlassianClientSecret: options["clientSecret"],
 			folderToPublish: options["enableFolder"],
 			tagsToPublish: options["tagsToPublish"],
 			contentRoot: options["contentRoot"],

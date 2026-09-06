@@ -1,7 +1,7 @@
 import { traverse } from "@atlaskit/adf-utils/traverse";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { ConfluenceAdfFile, ConfluenceNode } from "./Publisher";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, resolveSiteUrl } from "./Settings";
 import { adfEqual, marksEqual } from "./AdfEqual";
 import { ADFEntity } from "@atlaskit/adf-utils/types";
 import { heading, li, ol, p, text } from "@atlaskit/adf-utils/builders";
@@ -584,7 +584,7 @@ function processWikilinkToActualLink(
 							: currentFile;
 
 					if (linkPage) {
-						const confluenceUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
+						const confluenceUrl = `${resolveSiteUrl(settings)}/wiki/spaces/${linkPage.spaceKey}/pages/${linkPage.pageId}${wikilinkUrl.hash}`;
 						node.marks[0].attrs["href"] = confluenceUrl;
 						if (
 							node.text === `${pathName}${wikilinkUrl.hash}` ||

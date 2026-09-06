@@ -1,15 +1,18 @@
 import { Context } from "effect";
 
-export type ConfluenceAuthType = "basic" | "bearer";
+export type ConfluenceAuthType = "basic" | "bearer" | "oauth2";
 
 export type ConfluenceSettings = {
 	confluenceBaseUrl: string;
+	confluenceSiteUrl: string;
 	confluenceParentId: string;
 	atlassianUserName: string;
 	atlassianApiToken: string;
 	confluenceAuthType: ConfluenceAuthType;
 	confluenceApiPrefix: string;
 	confluenceRequestHeaders: Record<string, string>;
+	atlassianClientId: string;
+	atlassianClientSecret: string;
 	folderToPublish: string;
 	tagsToPublish: string;
 	contentRoot: string;
@@ -32,12 +35,15 @@ export type ConfluenceSettingsValidationResult = {
 
 export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	confluenceBaseUrl: "",
+	confluenceSiteUrl: "",
 	confluenceParentId: "",
 	atlassianUserName: "",
 	atlassianApiToken: "",
 	confluenceAuthType: "basic",
 	confluenceApiPrefix: "/wiki/rest",
 	confluenceRequestHeaders: {},
+	atlassianClientId: "",
+	atlassianClientSecret: "",
 	folderToPublish: "Confluence Pages",
 	tagsToPublish: "",
 	contentRoot: ".",
@@ -47,6 +53,17 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	pageFooterMarkdown: "",
 	ignoredCodeBlockLanguages: [],
 };
+
+/**
+ * The human-facing Atlassian site URL used to build and match browser-facing
+ * links (e.g. https://your-site.atlassian.net). Falls back to
+ * `confluenceBaseUrl` when `confluenceSiteUrl` is unset, preserving existing
+ * behaviour for deployments that talk directly to the site rather than the
+ * API gateway (https://api.atlassian.com/ex/confluence/{cloudId}).
+ */
+export function resolveSiteUrl(settings: ConfluenceSettings): string {
+	return settings.confluenceSiteUrl || settings.confluenceBaseUrl;
+}
 
 export class ConfluenceSettingsService extends Context.Service<
 	ConfluenceSettingsService,
@@ -66,26 +83,37 @@ export function validateConfluenceSettings(
 		field: "confluenceParentId",
 		message: "Confluence parent ID is required",
 	});
-	if (settings.confluenceAuthType !== "bearer") {
+	if (settings.confluenceAuthType === "basic") {
 		addRequiredSettingIssue(issues, settings.atlassianUserName, {
 			field: "atlassianUserName",
 			message: "Atlassian user name is required",
 		});
 	}
-	if (!["basic", "bearer"].includes(settings.confluenceAuthType)) {
+	if (!["basic", "bearer", "oauth2"].includes(settings.confluenceAuthType)) {
 		issues.push({
 			field: "confluenceAuthType",
-			message: "Confluence auth type must be basic or bearer",
+			message: `Unsupported Confluence auth type "${settings.confluenceAuthType}". Expected basic, bearer, or oauth2`,
 		});
 	}
 	addRequiredSettingIssue(issues, settings.confluenceApiPrefix, {
 		field: "confluenceApiPrefix",
 		message: "Confluence API prefix is required",
 	});
-	addRequiredSettingIssue(issues, settings.atlassianApiToken, {
-		field: "atlassianApiToken",
-		message: "Atlassian API token is required",
-	});
+	if (settings.confluenceAuthType === "oauth2") {
+		addRequiredSettingIssue(issues, settings.atlassianClientId, {
+			field: "atlassianClientId",
+			message: "Atlassian client ID is required when confluenceAuthType is oauth2",
+		});
+		addRequiredSettingIssue(issues, settings.atlassianClientSecret, {
+			field: "atlassianClientSecret",
+			message: "Atlassian client secret is required when confluenceAuthType is oauth2",
+		});
+	} else {
+		addRequiredSettingIssue(issues, settings.atlassianApiToken, {
+			field: "atlassianApiToken",
+			message: "Atlassian API token is required",
+		});
+	}
 	addRequiredSettingIssue(issues, settings.folderToPublish, {
 		field: "folderToPublish",
 		message: "Folder to publish is required",
@@ -99,6 +127,13 @@ export function validateConfluenceSettings(
 		typeof settings.confluenceBaseUrl === "string" ? settings.confluenceBaseUrl.trim() : "";
 	if (confluenceBaseUrl) {
 		const parsedUrl = parseUrl(confluenceBaseUrl);
+		if (parsedUrl?.hostname === "api.atlassian.com" && !settings.confluenceSiteUrl?.trim()) {
+			issues.push({
+				field: "confluenceSiteUrl",
+				message:
+					"Confluence site URL is required when confluenceBaseUrl points at the Atlassian API gateway",
+			});
+		}
 		if (!parsedUrl) {
 			issues.push({
 				field: "confluenceBaseUrl",
@@ -115,6 +150,20 @@ export function validateConfluenceSettings(
 			issues.push({
 				field: "confluenceBaseUrl",
 				message: "Confluence base URL must not end with a slash",
+			});
+		}
+	}
+	if (settings.confluenceSiteUrl) {
+		const siteUrl = parseUrl(settings.confluenceSiteUrl);
+		if (
+			!siteUrl ||
+			!["http:", "https:"].includes(siteUrl.protocol) ||
+			settings.confluenceSiteUrl.endsWith("/")
+		) {
+			issues.push({
+				field: "confluenceSiteUrl",
+				message:
+					"Confluence site URL must be an http:// or https:// URL without a trailing slash",
 			});
 		}
 	}

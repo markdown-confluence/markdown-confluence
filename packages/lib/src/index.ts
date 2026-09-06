@@ -1,4 +1,5 @@
 import * as ConfluencePageConfig from "./ConniePageConfig";
+import { createAuthenticatedConfluenceClient } from "./AuthenticatedConfluenceClient";
 import * as ConfluenceUploadSettings from "./Settings";
 import {
 	AlwaysADFProcessingPlugins,
@@ -40,6 +41,12 @@ import {
 	type MarkdownWorkspace,
 } from "./MarkdownWorkspace";
 import { convertMDtoADF, parseMarkdownToADF, stripMarkdownHtmlComments } from "./MdToADF";
+import { ConfluenceV2Client, ConfluenceV2Error } from "./ConfluenceV2Client";
+import {
+	ATLASSIAN_OAUTH_AUDIENCE,
+	ATLASSIAN_OAUTH_TOKEN_URL,
+	fetchOAuthAccessToken,
+} from "./OAuthToken";
 import {
 	Publisher,
 	type ConfluenceAdfFile,
@@ -65,10 +72,14 @@ import {
 
 export {
 	AlwaysADFProcessingPlugins,
+	ATLASSIAN_OAUTH_AUDIENCE,
+	ATLASSIAN_OAUTH_TOKEN_URL,
 	ConfluencePageConfig,
 	ConfluenceSettingsLive,
 	ConfluenceUploadSettings,
 	DEFAULT_CONFLUENCE_API_PREFIX,
+	ConfluenceV2Client,
+	ConfluenceV2Error,
 	MarkdownConfluencePlatformLive,
 	MarkdownConfluenceRuntime,
 	MarkdownWorkspaceLive,
@@ -80,9 +91,11 @@ export {
 	confluenceSettingsConfig,
 	convertMDtoADF,
 	createConfluenceClientConfig,
+	createAuthenticatedConfluenceClient,
 	createPublisherFunctions,
 	executeADFProcessingPipeline,
 	executeADFProcessingPipelineEffect,
+	fetchOAuthAccessToken,
 	getMermaidFileName,
 	loadConfluenceSettings,
 	loadConfluenceSettingsEffect,

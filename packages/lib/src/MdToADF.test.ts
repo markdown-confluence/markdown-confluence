@@ -638,3 +638,69 @@ function createTestSettings(overrides: Partial<ConfluenceSettings> = {}): Conflu
 		...overrides,
 	};
 }
+
+test("matches bare Confluence links against confluenceSiteUrl, not the API gateway base", () => {
+	const pageLink =
+		"https://site.example.atlassian.net/wiki/spaces/TEAM/pages/12345/Some+Page+Title";
+	const markdown: MarkdownFile = {
+		folderName: "links",
+		absoluteFilePath: "/path/to/links.md",
+		fileName: "links.md",
+		contents: pageLink,
+		pageTitle: "Links",
+		frontmatter: {},
+	};
+	const settings: ConfluenceSettings = {
+		confluenceBaseUrl: "https://api.atlassian.com/ex/confluence/cloud-id",
+		confluenceSiteUrl: "https://site.example.atlassian.net",
+		confluenceParentId: "asdf",
+		confluenceAuthType: "oauth2",
+		atlassianUserName: "",
+		atlassianApiToken: "",
+		atlassianClientId: "client-id",
+		atlassianClientSecret: "client-secret",
+		folderToPublish: ".",
+		contentRoot: "./",
+		firstHeadingPageTitle: false,
+	};
+
+	const adfFile = convertMDtoADF(markdown, settings);
+	const serialized = JSON.stringify(adfFile.contents);
+
+	expect(serialized).toContain('"type":"inlineCard"');
+	// The trailing slug is stripped because the host matches confluenceSiteUrl.
+	expect(serialized).toContain("https://site.example.atlassian.net/wiki/spaces/TEAM/pages/12345");
+	expect(serialized).not.toContain("Some+Page+Title");
+});
+
+test("falls back to confluenceBaseUrl for link matching when confluenceSiteUrl is empty", () => {
+	const pageLink =
+		"https://site.example.atlassian.net/wiki/spaces/TEAM/pages/12345/Some+Page+Title";
+	const markdown: MarkdownFile = {
+		folderName: "links",
+		absoluteFilePath: "/path/to/links-fallback.md",
+		fileName: "links-fallback.md",
+		contents: pageLink,
+		pageTitle: "Links Fallback",
+		frontmatter: {},
+	};
+	const settings: ConfluenceSettings = {
+		confluenceBaseUrl: "https://site.example.atlassian.net",
+		confluenceSiteUrl: "",
+		confluenceParentId: "asdf",
+		confluenceAuthType: "basic",
+		atlassianUserName: "user@example.com",
+		atlassianApiToken: "token",
+		atlassianClientId: "",
+		atlassianClientSecret: "",
+		folderToPublish: ".",
+		contentRoot: "./",
+		firstHeadingPageTitle: false,
+	};
+
+	const adfFile = convertMDtoADF(markdown, settings);
+	const serialized = JSON.stringify(adfFile.contents);
+
+	expect(serialized).toContain('"type":"inlineCard"');
+	expect(serialized).not.toContain("Some+Page+Title");
+});

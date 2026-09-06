@@ -14,7 +14,7 @@ import {
 	LocalAdfFile,
 	LocalAdfFileTreeNode,
 } from "./Publisher";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, resolveSiteUrl } from "./Settings";
 
 const blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
 
@@ -278,7 +278,7 @@ function getPageDetailsByIdEffect(
 }
 
 function buildPageUrl(settings: ConfluenceSettings, spaceKey: string, pageId: string): string {
-	return `${settings.confluenceBaseUrl}/wiki/spaces/${spaceKey}/pages/${pageId}/`;
+	return `${resolveSiteUrl(settings)}/wiki/spaces/${spaceKey}/pages/${pageId}/`;
 }
 
 function ensurePageExistsEffect(

@@ -117,7 +117,8 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 
 | JSON key | Environment variable | CLI option | Description |
 | --- | --- | --- | --- |
-| `confluenceBaseUrl` | `CONFLUENCE_BASE_URL` | `--baseUrl`, `-b` | Your Confluence site URL. For Confluence Cloud, use the Atlassian site URL without `/wiki`, for example `https://your-domain.atlassian.net`. |
+| `confluenceBaseUrl` | `CONFLUENCE_BASE_URL` | `--baseUrl`, `-b` | Your Confluence site URL. For Confluence Cloud, use the Atlassian site URL without `/wiki`, for example `https://your-domain.atlassian.net`. When authenticating with OAuth 2.0, set this to the API gateway URL `https://api.atlassian.com/ex/confluence/{cloudId}`. |
+| `confluenceSiteUrl` | `CONFLUENCE_SITE_URL` | `--siteUrl` | The browsable Confluence site URL used to build and match display links (for example `https://your-domain.atlassian.net`). Falls back to `confluenceBaseUrl` when unset. Required when `confluenceBaseUrl` points at the API gateway, otherwise published links would be unresolvable. |
 | `confluenceParentId` | `CONFLUENCE_PARENT_ID` | `--parentId`, `-p` | The numeric ID of an existing Confluence parent page. The parent page determines the target space. |
 | `atlassianUserName` | `ATLASSIAN_USERNAME` | `--userName`, `-u` | The Atlassian user name or email address used for publishing. |
 | `atlassianApiToken` | `ATLASSIAN_API_TOKEN` | `--apiToken` | The Atlassian API token. Prefer an environment variable or GitHub secret instead of committing this value to JSON. |
@@ -131,6 +132,39 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 | `pageHeaderMarkdown` | `CONFLUENCE_PAGE_HEADER_MARKDOWN` | `--pageHeaderMarkdown` | Markdown inserted at the top of every generated Confluence page. |
 | `pageFooterMarkdown` | `CONFLUENCE_PAGE_FOOTER_MARKDOWN` | `--pageFooterMarkdown` | Markdown inserted at the bottom of every generated Confluence page. |
 | `ignoredCodeBlockLanguages` | n/a | n/a | Fenced code block languages to remove from generated pages, configured as a JSON array in `.markdown-confluence.json`. |
+
+### OAuth 2.0 Service Account Authentication
+
+By default the CLI authenticates with Basic Auth using `atlassianUserName` and `atlassianApiToken`. You can instead authenticate as a service account using the OAuth 2.0 client-credentials grant. The CLI exchanges the credentials for a short-lived bearer token itself, so this works for the CLI, the Docker image, and the GitHub Action without any pre-steps.
+
+To use OAuth 2.0:
+
+1. Set `confluenceAuthType` to `oauth2`.
+2. Supply `atlassianClientId` and `atlassianClientSecret` (prefer environment variables or secrets).
+3. Set `confluenceBaseUrl` to the API gateway URL `https://api.atlassian.com/ex/confluence/{cloudId}`.
+4. Set `confluenceSiteUrl` to your browsable site URL `https://your-domain.atlassian.net` so published links resolve correctly.
+
+`.markdown-confluence.json`:
+
+```json
+{
+  "confluenceAuthType": "oauth2",
+  "confluenceBaseUrl": "https://api.atlassian.com/ex/confluence/your-cloud-id",
+  "confluenceSiteUrl": "https://your-domain.atlassian.net",
+  "confluenceParentId": "123456",
+  "folderToPublish": "docs",
+  "contentRoot": "."
+}
+```
+
+```bash
+export ATLASSIAN_CLIENT_ID="YOUR CLIENT ID"
+export ATLASSIAN_CLIENT_SECRET="YOUR CLIENT SECRET"
+```
+
+The CLI exchanges these credentials for a bearer token against the Atlassian token endpoint (`https://auth.atlassian.com/oauth/token`) and uses it for all Confluence API requests.
+
+> **Note:** The bearer token is fetched once at startup and is short-lived. This is sufficient for normal publishes, but a very large publish run could exceed the token lifetime and begin failing partway through. If you hit this, split the publish into smaller runs.
 
 ### `folderToPublish` vs `contentRoot`
 
