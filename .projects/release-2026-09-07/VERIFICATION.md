@@ -62,3 +62,9 @@ The companion Action update is prepared in [publish-action PR #11](https://githu
 The `release-please` workflow uses the maintained `googleapis/release-please-action` v5 manifest interface. Publishing checks out the root release tag, validates its version and ancestry, then runs the repository's Vite+ checks, tests and build before packaging. Obsidian metadata is copied after Vite empties `dist`.
 
 A maintainer can dispatch the workflow from main with an existing `obsidian-confluence-root-vX.Y.Z` tag to finish publication. Published npm versions are skipped by recursive publishing. An existing container version must identify the same commit and include AMD64 and ARM64 before it can be reused. Existing GitHub release assets must match byte for byte and are never overwritten. Obsidian metadata updates are limited to the distribution files, with the versions compatibility map preserved.
+
+## Handoff state
+
+The final code revision `12ea6c6` passes [live Confluence and built CLI verification](https://github.com/markdown-confluence/markdown-confluence/actions/runs/34067152046), Linux/Windows build checks, CodeQL and dependency review. Snyk container and mutation checks were still running at handoff. The working tree is committed; no release version/tag, npm publication, container publication or integration release has been created.
+
+The latest plugin bundle is copied to the dedicated test vault. The Mac is locked, its API token field remains empty, and approval to exit Restricted Mode is still pending. These prevent the desktop end-to-end test. The computer-use tool requires the user to unlock the Mac manually and requires action-time confirmation before weakening the vault's Restricted Mode protection.

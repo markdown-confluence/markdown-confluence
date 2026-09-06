@@ -9,9 +9,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/876",
 			"updatedAt": "2026-08-13T10:05:08Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Add validated Puppeteer protocol timeout configuration and exercise a real diagram."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 797,
@@ -22,7 +23,8 @@
 			"kind": "issue",
 			"decision": "fix",
 			"priority": "P1",
-			"rationale": "Repair release artifacts and verify Obsidian distribution and Community Plugin listing separately."
+			"rationale": "Repair release artifacts and verify Obsidian distribution and Community Plugin listing separately.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 796,
@@ -33,7 +35,8 @@
 			"kind": "issue",
 			"decision": "fix",
 			"priority": "P1",
-			"rationale": "Review OAuth and v2 content together (#795, #830), preserving Basic authentication."
+			"rationale": "Review OAuth and v2 content together (#795, #830), preserving Basic authentication.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 786,
@@ -44,7 +47,8 @@
 			"kind": "issue",
 			"decision": "fix",
 			"priority": "P1",
-			"rationale": "Update and verify the companion publish-action workflows and released action."
+			"rationale": "Update and verify the companion publish-action workflows and released action.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 680,
@@ -83,9 +87,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/675",
 			"updatedAt": "2025-06-17T08:15:04Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #765 and validate actual amd64/arm64 images."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 674,
@@ -125,9 +130,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/671",
 			"updatedAt": "2025-04-25T07:17:32Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #761 with attachment/version handling; test unchanged publishes and explicit overwrite."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 670,
@@ -138,7 +144,8 @@
 			"kind": "issue",
 			"decision": "fix",
 			"priority": "P1",
-			"rationale": "Review OAuth and v2 content together (#795, #830), preserving Basic authentication."
+			"rationale": "Review OAuth and v2 content together (#795, #830), preserving Basic authentication.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 667,
@@ -198,9 +205,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/660",
 			"updatedAt": "2024-12-31T18:24:40Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Repair #763: ESM createRequire banner must not enter the CommonJS Obsidian bundle; test useful errors."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 659,
@@ -221,7 +229,8 @@
 			"kind": "issue",
 			"decision": "ship",
 			"priority": "P2",
-			"rationale": "main already contains Mermaid 11.15.0; verify packaged renderer and release the change."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 657,
@@ -230,9 +239,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/657",
 			"updatedAt": "2024-11-26T14:21:03Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #759/#753; test dimensions, non-image files, multipart transport and content preservation."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 656,
@@ -262,9 +272,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/654",
 			"updatedAt": "2024-10-25T04:11:32Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P2",
-			"rationale": "Integrate #764 and #866 for TOC, headers/footers, ignored blocks; document raw ADF for other macros."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 653,
@@ -357,9 +368,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/641",
 			"updatedAt": "2024-05-09T10:05:01Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #760; verify root note, duplicate-title scope and inherited space; document hierarchy."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 639,
@@ -420,9 +432,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/634",
 			"updatedAt": "2024-04-10T14:07:12Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #762 and verify Mermaid theme colors."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 633,
@@ -433,7 +446,8 @@
 			"kind": "issue",
 			"decision": "fix",
 			"priority": "P2",
-			"rationale": "Integrate #755 locking, page URLs and tag selection."
+			"rationale": "Integrate #755 locking, page URLs and tag selection.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 632,
@@ -463,9 +477,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/630",
 			"updatedAt": "2024-03-14T12:55:36Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #759/#753; test dimensions, non-image files, multipart transport and content preservation."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 629,
@@ -536,9 +551,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/622",
 			"updatedAt": "2025-02-19T16:51:25Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #760; verify root note, duplicate-title scope and inherited space; document hierarchy."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 621,
@@ -580,9 +596,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/577",
 			"updatedAt": "2023-11-06T16:35:18Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P2",
-			"rationale": "Integrate #764 and #866 for TOC, headers/footers, ignored blocks; document raw ADF for other macros."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 576,
@@ -601,9 +618,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/567",
 			"updatedAt": "2023-10-28T16:00:12Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P2",
-			"rationale": "Integrate #764 and #866 for TOC, headers/footers, ignored blocks; document raw ADF for other macros."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 558,
@@ -623,9 +641,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/557",
 			"updatedAt": "2023-10-20T16:12:10Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Repair #754 examples to use the actual API; verify packed ESM and CommonJS dynamic imports."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 553,
@@ -645,9 +664,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/539",
 			"updatedAt": "2024-09-06T14:17:55Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #759/#753; test dimensions, non-image files, multipart transport and content preservation."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 538,
@@ -878,9 +898,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/400",
 			"updatedAt": "2023-09-24T11:36:04Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P2",
-			"rationale": "Reproduce formatted callout titles; add regression and patch if needed."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 399,
@@ -919,9 +940,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/387",
 			"updatedAt": "2026-02-20T16:59:48Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #756 and resolve media/link interactions; test content, relative paths and anchors."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 364,
@@ -930,9 +952,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/364",
 			"updatedAt": "2023-06-19T07:05:09Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #759/#753; test dimensions, non-image files, multipart transport and content preservation."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 363,
@@ -951,9 +974,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/353",
 			"updatedAt": "2023-12-01T01:31:18Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Repair #754 examples to use the actual API; verify packed ESM and CommonJS dynamic imports."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 351,
@@ -984,9 +1008,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/338",
 			"updatedAt": "2023-06-02T17:36:12Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #756 and resolve media/link interactions; test content, relative paths and anchors."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 337,
@@ -995,9 +1020,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/337",
 			"updatedAt": "2023-07-09T16:38:32Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P1",
-			"rationale": "Integrate #761 with attachment/version handling; test unchanged publishes and explicit overwrite."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 336,
@@ -1026,9 +1052,10 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/issues/334",
 			"updatedAt": "2023-07-18T12:00:08Z",
 			"kind": "issue",
-			"decision": "fix",
+			"decision": "ship",
 			"priority": "P2",
-			"rationale": "Review #708 against current Effect pipeline; require configured rendering and verify attachments."
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 333,
@@ -1224,7 +1251,8 @@
 			"kind": "issue",
 			"decision": "fix",
 			"priority": "P1",
-			"rationale": "Integrate #757 with new auth validation and Obsidian feedback."
+			"rationale": "Integrate #757 with new auth validation and Obsidian feedback.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 230,
@@ -1926,8 +1954,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/868",
 			"updatedAt": "2026-08-08T07:13:37Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Consolidate compatible dependency changes and lockfile; verify combined graph and packed runtime."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 867,
@@ -1946,8 +1975,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/866",
 			"updatedAt": "2026-08-03T21:51:41Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Targets #764 branch; incorporate macro-ID uniqueness and test header/body/footer IDs."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 865,
@@ -2006,8 +2036,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/860",
 			"updatedAt": "2026-07-27T21:34:19Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Consolidate compatible dependency changes and lockfile; verify combined graph and packed runtime."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 859,
@@ -2066,8 +2097,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/854",
 			"updatedAt": "2026-07-26T23:31:46Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Consolidate compatible dependency changes and lockfile; verify combined graph and packed runtime."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 853,
@@ -2307,7 +2339,8 @@
 			"updatedAt": "2026-07-02T17:04:43Z",
 			"kind": "pr",
 			"decision": "fix",
-			"rationale": "Stacked OAuth/v2 work must ship together after auth, errors, pagination, attachment and compatibility review."
+			"rationale": "Stacked OAuth/v2 work must ship together after auth, errors, pagination, attachment and compatibility review.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 829,
@@ -2637,7 +2670,8 @@
 			"updatedAt": "2026-07-02T16:45:36Z",
 			"kind": "pr",
 			"decision": "fix",
-			"rationale": "Stacked OAuth/v2 work must ship together after auth, errors, pagination, attachment and compatibility review."
+			"rationale": "Stacked OAuth/v2 work must ship together after auth, errors, pagination, attachment and compatibility review.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 794,
@@ -2726,8 +2760,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/785",
 			"updatedAt": "2026-06-03T10:01:22Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Consolidate compatible dependency changes and lockfile; verify combined graph and packed runtime."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 784,
@@ -2736,8 +2771,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/784",
 			"updatedAt": "2026-06-03T10:01:11Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Consolidate compatible dependency changes and lockfile; verify combined graph and packed runtime."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 783,
@@ -2746,8 +2782,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/783",
 			"updatedAt": "2026-06-03T10:00:01Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Vite+ update fails checks; align core/test/runner overrides and validate before adopting, otherwise retain working tooling."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 782,
@@ -2756,8 +2793,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/782",
 			"updatedAt": "2026-06-03T09:56:49Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Consolidate compatible dependency changes and lockfile; verify combined graph and packed runtime."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 781,
@@ -2836,8 +2874,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/774",
 			"updatedAt": "2026-06-03T09:55:52Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Review action inputs/runtime and pinned commit, integrate compatible updates and verify CI."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 773,
@@ -2876,8 +2915,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/770",
 			"updatedAt": "2026-06-03T09:56:31Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Review action inputs/runtime and pinned commit, integrate compatible updates and verify CI."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 769,
@@ -2886,8 +2926,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/769",
 			"updatedAt": "2026-06-03T09:56:19Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Review action inputs/runtime and pinned commit, integrate compatible updates and verify CI."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 768,
@@ -2906,8 +2947,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/767",
 			"updatedAt": "2026-06-03T09:54:48Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Review action inputs/runtime and pinned commit, integrate compatible updates and verify CI."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 766,
@@ -2926,8 +2968,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/765",
 			"updatedAt": "2026-05-31T07:25:49Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 764,
@@ -2936,8 +2979,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/764",
 			"updatedAt": "2026-05-31T07:22:51Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 763,
@@ -2946,8 +2990,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/763",
 			"updatedAt": "2026-05-31T07:25:45Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 762,
@@ -2956,8 +3001,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/762",
 			"updatedAt": "2026-05-31T07:22:32Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 761,
@@ -2966,8 +3012,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/761",
 			"updatedAt": "2026-05-31T07:26:40Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 760,
@@ -2976,8 +3023,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/760",
 			"updatedAt": "2026-05-31T07:21:17Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 759,
@@ -2986,8 +3034,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/759",
 			"updatedAt": "2026-05-31T07:23:24Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 758,
@@ -2996,8 +3045,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/758",
 			"updatedAt": "2026-05-31T07:25:23Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 757,
@@ -3007,7 +3057,8 @@
 			"updatedAt": "2026-05-31T07:21:06Z",
 			"kind": "pr",
 			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 756,
@@ -3016,8 +3067,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/756",
 			"updatedAt": "2026-05-31T07:21:29Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 755,
@@ -3027,7 +3079,8 @@
 			"updatedAt": "2026-05-31T07:20:02Z",
 			"kind": "pr",
 			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 754,
@@ -3036,8 +3089,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/754",
 			"updatedAt": "2026-05-31T07:19:28Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 753,
@@ -3047,7 +3101,8 @@
 			"updatedAt": "2026-05-31T07:18:59Z",
 			"kind": "pr",
 			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping.",
+			"implementationStatus": "integrated-pending-final-verification"
 		},
 		{
 			"number": 752,
@@ -3056,8 +3111,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/752",
 			"updatedAt": "2026-05-31T07:20:33Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Release candidate: integrate overlaps, address review findings and validate combined artifacts before shipping."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 751,
@@ -3496,8 +3552,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/708",
 			"updatedAt": "2026-06-04T01:58:21Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Review/adapt PlantUML to current plugin/Effect APIs; validate before enabling."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 707,
@@ -3626,8 +3683,9 @@
 			"url": "https://github.com/markdown-confluence/markdown-confluence/pull/695",
 			"updatedAt": "2026-05-15T06:31:08Z",
 			"kind": "pr",
-			"decision": "fix",
-			"rationale": "Rebase offline to-adf onto Effect CLI; test file/stdin/output without credentials or network."
+			"decision": "ship",
+			"rationale": "Integrated and verified by the regression suite and applicable live publishing, package or renderer checks. Awaiting the final Obsidian test and verified release distribution; not yet released.",
+			"implementationStatus": "verified-awaiting-release"
 		},
 		{
 			"number": 694,
@@ -8899,5 +8957,6 @@
 			"decision": "historical",
 			"rationale": "Already closed; retain as context without automatic reopening."
 		}
-	]
+	],
+	"verificationRevision": "12ea6c6c601a72968a20d6a6ccdbccfed5c310cb"
 }
