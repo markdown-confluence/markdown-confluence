@@ -9,6 +9,7 @@ import {
 } from "./ConniePageConfig";
 import { runEffect } from "./effects";
 import { parseMarkdownFrontmatter, stringifyMarkdownFrontmatter } from "./MarkdownFrontmatter";
+import { findMarkdownEmbeds, rebaseEmbeddedLinks, selectEmbeddedMarkdown } from "./MarkdownEmbeds";
 import { ConfluenceSettings, ConfluenceSettingsService } from "./Settings";
 
 interface MarkdownContent {
@@ -287,14 +288,12 @@ export function makeMarkdownWorkspaceEffect(
 			seenFiles: Set<string>,
 		): Effect.Effect<string, Error> {
 			return Effect.gen(function* () {
-				const embedPattern = /!\[\[([^\]\n]+)]]/g;
 				let expandedContents = "";
 				let currentIndex = 0;
-				let match: RegExpExecArray | null;
 
-				while ((match = embedPattern.exec(contents)) !== null) {
+				for (const match of findMarkdownEmbeds(contents)) {
 					const embedTarget = match[1];
-					const embedStart = match.index;
+					const embedStart = match.index!;
 					const embedEnd = embedStart + match[0].length;
 
 					expandedContents += contents.slice(currentIndex, embedStart);
@@ -326,7 +325,8 @@ export function makeMarkdownWorkspaceEffect(
 			seenFiles: Set<string>,
 		): Effect.Effect<string, Error> {
 			return Effect.gen(function* () {
-				const target = rawTarget.split("|")[0]?.split("#")[0]?.trim();
+				const [targetValue, fragment] = (rawTarget.split("|")[0] ?? "").split("#");
+				const target = targetValue?.trim();
 				if (!target) {
 					return originalEmbed;
 				}
@@ -342,18 +342,50 @@ export function makeMarkdownWorkspaceEffect(
 					path.dirname(referencedFromFilePath),
 				);
 
-				if (!embeddedFilePath || seenFiles.has(embeddedFilePath)) {
+				if (!embeddedFilePath) {
 					return originalEmbed;
+				}
+				if (seenFiles.has(embeddedFilePath) || seenFiles.size >= 50) {
+					return yield* Effect.fail(
+						new Error(`Circular or excessively nested Markdown embed: ${rawTarget}`),
+					);
 				}
 
 				const embeddedContent = yield* getFileContent(embeddedFilePath);
+				const selectedContent = yield* Effect.try({
+					try: () => selectEmbeddedMarkdown(embeddedContent.content, fragment),
+					catch: toError,
+				});
 				const expandedEmbeddedContent = yield* expandMarkdownEmbeds(
-					embeddedContent.content,
+					selectedContent,
 					embeddedFilePath,
 					new Set([...seenFiles, embeddedFilePath]),
 				);
 
-				return `\n\n${expandedEmbeddedContent.trim()}\n\n`;
+				const targets = new Set<string>();
+				rebaseEmbeddedLinks(expandedEmbeddedContent, (link) => {
+					targets.add(link);
+					return link;
+				});
+				const resolvedLinks = new Map<string, string>();
+				for (const link of targets) {
+					const sourcePath = yield* findClosestFile(
+						path.extname(link) ? link : `${link}.md`,
+						path.dirname(embeddedFilePath),
+					);
+					if (sourcePath)
+						resolvedLinks.set(
+							link,
+							path
+								.relative(path.dirname(referencedFromFilePath), sourcePath)
+								.replaceAll("\\", "/"),
+						);
+				}
+				const rebased = rebaseEmbeddedLinks(
+					expandedEmbeddedContent,
+					(link) => resolvedLinks.get(link) ?? link,
+				);
+				return `\n\n${rebased.trim()}\n\n`;
 			}).pipe(Effect.mapError(toError));
 		}
 

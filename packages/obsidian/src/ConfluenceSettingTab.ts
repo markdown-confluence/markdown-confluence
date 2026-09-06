@@ -247,7 +247,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("PlantUML server URL")
 			.setDesc(
-				"Default sends diagram source to plantuml.com. For private content, run plantuml/plantuml-server in Docker and point this here (e.g. http://localhost:8080).",
+				"Rendering sends diagram source to this server. Use a server you trust, such as a local plantuml/plantuml-server container at http://localhost:8080.",
 			)
 			.addText((text) =>
 				text

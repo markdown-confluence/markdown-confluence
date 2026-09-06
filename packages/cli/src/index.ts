@@ -31,7 +31,9 @@ const program = Effect.gen(function* () {
 	const confluenceClient = yield* createAuthenticatedConfluenceClient(settings);
 
 	const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
-		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),
+		new MermaidRendererPlugin(
+			new PuppeteerMermaidRenderer({ protocolTimeout: settings.mermaidProtocolTimeout }),
+		),
 	];
 
 	if (settings.plantuml.enabled) {

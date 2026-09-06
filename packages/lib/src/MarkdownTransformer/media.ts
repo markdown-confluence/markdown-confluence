@@ -1,3 +1,5 @@
+import { findMarkdownMatches } from "../MarkdownEmbeds";
+
 export type Token = {
 	new (type: string, tag: string, level: number): Token;
 	type: string;
@@ -22,7 +24,6 @@ export interface MdState {
 
 function createRule() {
 	const imagePattern = String.raw`!\[[^\]]*\]\([^)]+\)|!\[[^\]]*\]\[[^\]]*]|!\[\[[^\]\n]*\.[^\]\n]*\]\]`;
-	const imageRegex = new RegExp(imagePattern);
 	const imageMatchRegex = new RegExp(imagePattern, "g");
 	const referenceImageRegex = /^!\[(?<alt>[^\]]*)]\[(?<label>[^\]]*)]$/;
 	const validParentTokens = [
@@ -169,7 +170,9 @@ function createRule() {
 
 		let processedTokens: string[] = [];
 		const newTokens = State.tokens.reduce((tokens: Token[], token: Token) => {
-			if (token.type === "inline" && imageRegex.test(token.content)) {
+			const matches =
+				token.type === "inline" ? findMarkdownMatches(token.content, imageMatchRegex) : [];
+			if (matches.length > 0) {
 				const openingTokens: Token[] = [];
 				const precedingTokens = [...tokens];
 				let previousToken = precedingTokens.at(-1);
@@ -192,21 +195,20 @@ function createRule() {
 					)
 					.reverse();
 
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				const matches = token.content.match(imageMatchRegex)!;
-				let inlineContentStack = token.content;
+				let cursor = 0;
 				matches.forEach((match) => {
-					const start = inlineContentStack.indexOf(match);
-					const contentBefore = inlineContentStack.substr(0, start);
-					inlineContentStack = inlineContentStack.substr(start + match.length);
+					const start = match.index!;
+					const contentBefore = token.content.slice(cursor, start);
+					cursor = start + match[0].length;
 
 					subTree = [
 						...subTree,
 						...createInlineTokens(contentBefore, openingTokens, closingTokens),
-						...createMediaTokens(match),
+						...createMediaTokens(match[0]),
 					];
 				});
 
+				const inlineContentStack = token.content.slice(cursor);
 				if (inlineContentStack.length) {
 					subTree = [
 						...subTree,

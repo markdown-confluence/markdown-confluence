@@ -141,6 +141,7 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 | `forceOverwrite` | `CONFLUENCE_FORCE_OVERWRITE` | `--forceOverwrite`, `--fo` | When `true`, publish over pages last updated by another user. Leave this `false` to preserve Confluence-side edits. |
 | `pageHeaderMarkdown` | `CONFLUENCE_PAGE_HEADER_MARKDOWN` | `--pageHeaderMarkdown` | Markdown inserted at the top of every generated Confluence page. |
 | `pageFooterMarkdown` | `CONFLUENCE_PAGE_FOOTER_MARKDOWN` | `--pageFooterMarkdown` | Markdown inserted at the bottom of every generated Confluence page. |
+| `mermaidProtocolTimeout` | `CONFLUENCE_MERMAID_PROTOCOL_TIMEOUT` | `--mermaidProtocolTimeout` | Puppeteer protocol timeout in milliseconds. Defaults to `180000`; increase it (for example `600000`) for large Mermaid diagrams. Must be a positive integer. |
 | `ignoredCodeBlockLanguages` | n/a | n/a | Fenced code block languages to remove from generated pages, configured as a JSON array in `.markdown-confluence.json`. |
 | `plantuml.enabled` | `CONFLUENCE_PLANTUML_ENABLED` | `--plantumlEnabled` | When `true` (default: `false`), code blocks tagged `plantuml`, `puml`, or `uml` are rendered to images via the configured PlantUML server. |
 | `plantuml.serverUrl` | `CONFLUENCE_PLANTUML_SERVER_URL` | `--plantumlServerUrl` | PlantUML server base URL. Required when enabled. Diagram source is sent to this server; use a self-hosted server for private content (see [PlantUML support](#plantuml-support)). |

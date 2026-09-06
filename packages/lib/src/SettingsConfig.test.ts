@@ -307,6 +307,17 @@ const validSettings: ConfluenceSettings = {
 	firstHeadingPageTitle: false,
 };
 
+test("accepts a large Mermaid timeout and rejects a nonpositive timeout", async () => {
+	const parse = (mermaidProtocolTimeout: number) =>
+		runEffect(
+			parseConfluenceSettingsEffect(
+				ConfigProvider.fromUnknown({ ...validSettings, mermaidProtocolTimeout }),
+			),
+		);
+	expect((await parse(600_000)).mermaidProtocolTimeout).toBe(600_000);
+	await expect(parse(0)).rejects.toThrow("Mermaid protocol timeout");
+});
+
 test("loads OAuth client-credentials settings and leaves basic credentials optional", async () => {
 	const settings = await runEffect(
 		parseConfluenceSettingsEffect(

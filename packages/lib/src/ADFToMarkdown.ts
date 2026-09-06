@@ -245,6 +245,7 @@ function renderCodeBlock(language: string, code: string) {
 }
 
 function renderDate(timestamp: unknown) {
+	if (typeof timestamp === "string" && timestamp.trim() === "") return "";
 	const timestampNumber =
 		typeof timestamp === "string" || typeof timestamp === "number" ? Number(timestamp) : NaN;
 	if (!Number.isFinite(timestampNumber)) {

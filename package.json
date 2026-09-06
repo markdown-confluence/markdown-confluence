@@ -6,6 +6,7 @@
 		"packages/lib",
 		"packages/mermaid-electron-renderer",
 		"packages/mermaid-puppeteer-renderer",
+		"packages/plantuml-renderer",
 		"packages/cli",
 		"packages/obsidian"
 	],

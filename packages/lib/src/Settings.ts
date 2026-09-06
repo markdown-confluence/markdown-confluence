@@ -26,6 +26,7 @@ export type ConfluenceSettings = {
 	ignoredCodeBlockLanguages?: readonly string[];
 	forceOverwrite: boolean;
 	plantuml: PlantumlSettings;
+	mermaidProtocolTimeout: number;
 };
 
 export type ConfluenceSettingsValidationIssue = {
@@ -61,6 +62,7 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 		enabled: false,
 		serverUrl: "",
 	},
+	mermaidProtocolTimeout: 180_000,
 };
 
 /**
@@ -83,6 +85,17 @@ export function validateConfluenceSettings(
 	settings: ConfluenceSettings,
 ): ConfluenceSettingsValidationResult {
 	const issues: ConfluenceSettingsValidationIssue[] = [];
+	if (
+		!Number.isSafeInteger(settings.mermaidProtocolTimeout) ||
+		settings.mermaidProtocolTimeout <= 0 ||
+		settings.mermaidProtocolTimeout > 2_147_483_647
+	) {
+		issues.push({
+			field: "mermaidProtocolTimeout",
+			message:
+				"Mermaid protocol timeout must be an integer between 1 and 2147483647 milliseconds",
+		});
+	}
 
 	addRequiredSettingIssue(issues, settings.confluenceBaseUrl, {
 		field: "confluenceBaseUrl",

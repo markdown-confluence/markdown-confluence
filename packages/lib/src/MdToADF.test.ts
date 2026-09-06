@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { expect, test } from "@effect/vitest";
 import { MarkdownFile } from "./MarkdownWorkspace";
-import { convertMDtoADF } from "./MdToADF";
+import { convertMDtoADF, parseMarkdownToADF } from "./MdToADF";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 
 const markdownTestCases: MarkdownFile[] = [
@@ -437,6 +437,45 @@ function createMarkdownFile(contents: string): MarkdownFile {
 	};
 }
 
+test("preserves formatted callout titles and subsequent ordinary quotes", () => {
+	const adf = parseMarkdownToADF(
+		"> [!info] **Formatted** callout title\n> Body\n\nPlain separator\n\n> Ordinary quote",
+		"https://example.com",
+	);
+	expect(adf.content?.[0]?.type).toBe("panel");
+	expect(JSON.stringify(adf.content?.[0])).toContain(
+		'"text":"Formatted","marks":[{"type":"strong"}]',
+	);
+	expect(JSON.stringify(adf)).not.toContain("[!info]");
+	expect(adf.content?.at(-1)?.type).toBe("blockquote");
+});
+
+test("preserves nested callout content within the supported Confluence panel schema", () => {
+	const adf = parseMarkdownToADF(
+		"> [!info] Outer\n>\n> > [!warning] Inner\n> > Nested text\n>\n> Outer text",
+		"https://example.com",
+	);
+	expect(adf.content?.[0]?.attrs?.["panelType"]).toBe("info");
+	expect(JSON.stringify(adf)).toContain("Warning: Inner");
+	expect(JSON.stringify(adf)).toContain("Nested text");
+	expect(JSON.stringify(adf)).toContain("Outer text");
+});
+
+test("uses distinct task identifiers in page headers, body, and footers", () => {
+	const adf = convertMDtoADF(createMarkdownFile("- [ ] Body"), {
+		...DEFAULT_SETTINGS,
+		...testSettings,
+		pageHeaderMarkdown: "- [ ] Header",
+		pageFooterMarkdown: "- [ ] Footer",
+	});
+	const ids = (adf.contents.content ?? []).flatMap((list) => [
+		list.attrs?.["localId"],
+		list.content?.[0]?.attrs?.["localId"],
+	]);
+	expect(ids).toHaveLength(6);
+	expect(new Set(ids).size).toBe(6);
+});
+
 test("parses wikilink images inside nested lists without dropping later images", () => {
 	const markdown: MarkdownFile = {
 		folderName: "lists",
@@ -703,4 +742,17 @@ test("falls back to confluenceBaseUrl for link matching when confluenceSiteUrl i
 
 	expect(serialized).toContain('"type":"inlineCard"');
 	expect(serialized).not.toContain("Some+Page+Title");
+});
+
+test("leaves literal images intact when an identical real image follows", () => {
+	const adf = parseMarkdownToADF(
+		"`![[image.png]]` then ![[image.png]] and `![alt](image.png)`\n\n\\![[escaped.png]]\n\n```md\n![[fenced.png]]\n```",
+		"https://example.com",
+	);
+	const serialized = JSON.stringify(adf);
+	expect(serialized.match(/"type":"media"/g)).toHaveLength(1);
+	expect(serialized).toContain('"text":"![[image.png]]","marks":[{"type":"code"}]');
+	expect(serialized).toContain("escaped.png");
+	expect(serialized).toContain("![[fenced.png]]");
+	expect(serialized).toContain("![alt](image.png)");
 });

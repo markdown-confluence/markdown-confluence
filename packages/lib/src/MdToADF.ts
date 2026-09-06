@@ -127,7 +127,19 @@ function parsePageFragmentToADF(
 ) {
 	const prosenodes = transformer.parse(stripMarkdownHtmlComments(markdown));
 	const adfNodes = serializer.encode(prosenodes);
-	const nodes = processADF(adfNodes, confluenceBaseUrl);
+	let nodes = processADF(adfNodes, confluenceBaseUrl);
+	if (pageFragment !== "body") {
+		nodes = traverse(nodes, {
+			taskItem: (node) => ({
+				...node,
+				attrs: { ...node.attrs, localId: `${pageFragment}-${node.attrs?.["localId"]}` },
+			}),
+			taskList: (node) => ({
+				...node,
+				attrs: { ...node.attrs, localId: `${pageFragment}-${node.attrs?.["localId"]}` },
+			}),
+		}) as JSONDocNode;
+	}
 	return replaceSupportedMacroPlaceholders(nodes, pageFragment);
 }
 

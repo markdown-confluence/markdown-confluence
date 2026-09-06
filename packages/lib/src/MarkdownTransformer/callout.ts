@@ -1,6 +1,5 @@
 import type MarkdownIt from "markdown-it";
 import type StateCore from "markdown-it/lib/rules_core/state_core.mjs";
-import type Token from "markdown-it/lib/token.mjs";
 
 const panelRegex = /\[!(?<calloutType>.*?)\](?<collapseType>[+-])?[ \t]*(?<title>.*)/;
 
@@ -90,88 +89,57 @@ function capitalizeFirstLetter(string: string) {
 }
 
 export function panel(state: StateCore): boolean {
-	let isInCallout = false;
-	let adfType = "panel";
-	let calloutStartIndex = 0;
-	let blockTitle = "";
-	const newTokens = state.tokens.reduce(
-		(previousTokens, token, currentIndex: number, allTokens) => {
-			let tokenToReturn = token;
-			if (token.type === "blockquote_open") {
-				let currentCheck = currentIndex + 1; // Start after this token
-				// eslint-disable-next-line no-constant-condition
-				while (true) {
-					const tokenToCheck = allTokens[currentCheck];
-					currentCheck = currentCheck + 1;
-					if (!tokenToCheck) {
-						continue;
-					}
-					if (tokenToCheck.type === "blockquote_close") {
-						break;
-					}
-					if (tokenToCheck.content === "") {
-						continue;
-					}
-
-					const check = tokenToCheck.content.match(panelRegex);
-
-					if (check === null || check === undefined || check.groups === undefined) {
-						continue;
-					}
-
-					const calloutType = check.groups["calloutType"] ?? "info";
-					const collapseType = check.groups["collapseType"];
-					const title = check.groups["title"];
-					calloutStartIndex = currentCheck - 1;
-					isInCallout = true;
-					blockTitle = title ? title : calloutType;
-
-					if (collapseType === "+" || collapseType === "-") {
-						adfType = "expand";
-						tokenToReturn = new state.Token("expand_open", "", 0);
-						tokenToReturn.markup = ">";
-						tokenToReturn.block = true;
-						tokenToReturn.nesting = 1;
-
-						tokenToReturn.attrs = [["title", blockTitle]];
-					} else {
-						adfType = "panel";
-						tokenToReturn = new state.Token("panel_open", "", 0);
-						tokenToReturn.markup = ">";
-						tokenToReturn.block = true;
-						tokenToReturn.nesting = 1;
-						tokenToReturn.attrs = getPanelAttributes(calloutType);
-					}
-
-					break;
-				}
+	const stack: string[] = [];
+	const flattened = new Set<StateCore["tokens"][number]>();
+	for (let index = 0; index < state.tokens.length; index++) {
+		const token = state.tokens[index]!;
+		if (token.type === "blockquote_open") {
+			const paragraph = state.tokens[index + 1];
+			const inline = state.tokens[index + 2];
+			const match =
+				paragraph?.type === "paragraph_open" && inline?.type === "inline"
+					? inline.content.match(panelRegex)
+					: null;
+			if (!match?.groups || match.index !== 0 || !inline) {
+				const type = stack.some((parent) => parent !== "blockquote")
+					? "flattened"
+					: "blockquote";
+				stack.push(type);
+				if (type === "flattened") flattened.add(token);
+				continue;
 			}
-			if (token.type === "blockquote_close" && isInCallout) {
-				token.type = `${adfType}_close`;
+			const calloutType = match.groups["calloutType"] ?? "info";
+			const collapseType = match.groups["collapseType"];
+			const title = match.groups["title"] || capitalizeFirstLetter(calloutType);
+			// Confluence panels cannot contain panels or blockquotes. Keep nested
+			// callout content as paragraphs instead of letting the schema drop it.
+			const nested = stack.some((parent) => parent !== "blockquote");
+			const type = nested
+				? "flattened"
+				: collapseType === "+" || collapseType === "-"
+					? "expand"
+					: "panel";
+			stack.push(type);
+			if (nested) flattened.add(token);
+			token.type = `${type}_open`;
+			token.tag = "";
+			token.attrs = type === "expand" ? [["title", title]] : getPanelAttributes(calloutType);
+			inline.content = inline.content.replace(
+				match[0],
+				nested ? `${capitalizeFirstLetter(calloutType)}: ${title}` : title,
+			);
+			inline.children = [];
+			state.md.inline.parse(inline.content, state.md, state.env, inline.children);
+		} else if (token.type === "blockquote_close") {
+			const type = stack.pop();
+			if (type === "flattened") {
+				flattened.add(token);
+			} else if (type && type !== "blockquote") {
+				token.type = `${type}_close`;
 				token.tag = "";
 			}
-			if (currentIndex === calloutStartIndex && isInCallout) {
-				const check = token.content.match(panelRegex);
-				const calloutTitle = capitalizeFirstLetter(blockTitle);
-				if (check && check.length > 1) {
-					token.content = token.content.replace(check[0], calloutTitle);
-					if (token.children) {
-						for (let i = 0; i < token.children.length; i++) {
-							const child = token.children[i];
-							if (child && child.content.includes(check[0])) {
-								child.content = child.content.replace(check[0], calloutTitle);
-								break;
-							}
-						}
-					}
-				}
-			}
-
-			return [...previousTokens, tokenToReturn];
-		},
-		[] as Token[],
-	);
-
-	state.tokens = newTokens;
+		}
+	}
+	state.tokens = state.tokens.filter((token) => !flattened.has(token));
 	return true;
 }

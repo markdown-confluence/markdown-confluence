@@ -5,13 +5,16 @@ import { Path } from "effect/Path";
 
 export function markdownToAdf(args: string[]) {
 	return Effect.gen(function* () {
-		const options = yield* Effect.try(() => parseToAdfOptions(args));
+		const options = yield* Effect.try({ try: () => parseToAdfOptions(args), catch: toError });
 		const fs = yield* FileSystem;
 		const path = yield* Path;
 		const markdown = options.input
 			? yield* fs.readFileString(path.resolve(options.input), "utf-8")
 			: yield* (yield* StandardInputService).readAll;
-		const adf = yield* Effect.try(() => parseMarkdownToADF(markdown, options.baseUrl));
+		const adf = yield* Effect.try({
+			try: () => parseMarkdownToADF(markdown, options.baseUrl),
+			catch: toError,
+		});
 		const output = JSON.stringify(adf, null, 2);
 		if (options.output) {
 			yield* fs.writeFileString(path.resolve(options.output), `${output}\n`);
@@ -19,6 +22,10 @@ export function markdownToAdf(args: string[]) {
 			yield* Console.log(output);
 		}
 	});
+}
+
+function toError(error: unknown): Error {
+	return error instanceof Error ? error : new Error(String(error));
 }
 
 type ToAdfOptions = {
