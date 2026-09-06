@@ -44,7 +44,7 @@ async function runWithConcurrency<T, R>(
 
 export class HttpPlantumlRenderer implements PlantumlRenderer {
 	private readonly serverUrl: string;
-	private readonly format: PlantumlOutputFormat;
+	readonly format: PlantumlOutputFormat;
 	private readonly timeoutMs: number;
 	private readonly concurrency: number;
 	private readonly fetchImpl: typeof fetch;
@@ -67,6 +67,30 @@ export class HttpPlantumlRenderer implements PlantumlRenderer {
 		this.format = options.format ?? "png";
 		this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 		this.concurrency = options.concurrency ?? DEFAULT_CONCURRENCY;
+		const server = new URL(this.serverUrl);
+		if (
+			!["http:", "https:"].includes(server.protocol) ||
+			server.username ||
+			server.password ||
+			server.search ||
+			server.hash
+		) {
+			throw new Error(
+				"HttpPlantumlRenderer: serverUrl must be an HTTP(S) URL without credentials, query or fragment",
+			);
+		}
+		if (!["png", "svg"].includes(this.format))
+			throw new Error("HttpPlantumlRenderer: format must be png or svg");
+		if (!Number.isSafeInteger(this.concurrency) || this.concurrency < 1)
+			throw new Error("HttpPlantumlRenderer: concurrency must be a positive integer");
+		if (
+			!Number.isSafeInteger(this.timeoutMs) ||
+			this.timeoutMs < 1 ||
+			this.timeoutMs > 2147483647
+		)
+			throw new Error(
+				"HttpPlantumlRenderer: timeoutMs must be a positive integer no greater than 2147483647",
+			);
 		// Bind to globalThis so the browser/Electron `fetch` keeps its `this`
 		// when called as a method on the class (otherwise it throws
 		// "Failed to execute 'fetch' on 'Window': Illegal invocation").

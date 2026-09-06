@@ -31,14 +31,18 @@ function normalizePlantumlSource(source: string): string {
 	return `@startuml\n${source}\n@enduml`;
 }
 
-export function getPlantumlFileName(plantumlContent: string | undefined) {
+export function getPlantumlFileName(
+	plantumlContent: string | undefined,
+	format: "png" | "svg" = "png",
+) {
 	const plantumlText = normalizePlantumlSource(plantumlContent ?? "");
 	const pathMd5 = SparkMD5.hash(plantumlText);
-	const uploadFilename = `RenderedPlantumlChart-${pathMd5}.png`;
+	const uploadFilename = `RenderedPlantumlChart-${pathMd5}.${format}`;
 	return { uploadFilename, plantumlText };
 }
 
 export interface PlantumlRenderer {
+	readonly format?: "png" | "svg";
 	capturePlantumlCharts(charts: ChartData[]): Promise<Map<string, Buffer>>;
 }
 
@@ -65,7 +69,7 @@ export class PlantumlRendererPlugin implements ADFProcessingPlugin<
 			if (typeof source !== "string" || source.trim().length === 0) {
 				continue;
 			}
-			const plantumlDetails = getPlantumlFileName(source);
+			const plantumlDetails = getPlantumlFileName(source, this.plantumlRenderer.format);
 			plantumlNodesToUpload.set(plantumlDetails.uploadFilename, {
 				name: plantumlDetails.uploadFilename,
 				data: plantumlDetails.plantumlText,
@@ -107,7 +111,7 @@ export class PlantumlRendererPlugin implements ADFProcessingPlugin<
 				const uploadedContent = yield* supportFunctions.uploadBufferEffect(
 					plantumlImage[0],
 					plantumlImage[1],
-					"image/png",
+					plantumlRenderer.format === "svg" ? "image/svg+xml" : "image/png",
 				);
 
 				imageMap = {
@@ -121,7 +125,11 @@ export class PlantumlRendererPlugin implements ADFProcessingPlugin<
 	}
 
 	load(adf: JSONDocNode, imageMap: Record<string, UploadedImageData | null>): JSONDocNode {
-		return walkContent(adf as ADFEntity, imageMap) as JSONDocNode;
+		return walkContent(
+			adf as ADFEntity,
+			imageMap,
+			this.plantumlRenderer.format ?? "png",
+		) as JSONDocNode;
 	}
 }
 
@@ -163,6 +171,7 @@ function makeSourceExpand(plantumlText: string): ADFEntity {
 function tryRewritePlantumlCodeBlock(
 	node: ADFEntity,
 	imageMap: Record<string, UploadedImageData | null>,
+	format: "png" | "svg",
 ): [ADFEntity, ADFEntity] | null {
 	if (node.type !== "codeBlock") {
 		return null;
@@ -174,7 +183,7 @@ function tryRewritePlantumlCodeBlock(
 	if (typeof plantumlContent !== "string" || plantumlContent.trim().length === 0) {
 		return null;
 	}
-	const { uploadFilename, plantumlText } = getPlantumlFileName(plantumlContent);
+	const { uploadFilename, plantumlText } = getPlantumlFileName(plantumlContent, format);
 	const mappedImage = imageMap[uploadFilename];
 	if (!mappedImage) {
 		return null;
@@ -189,6 +198,7 @@ function tryRewritePlantumlCodeBlock(
 function walkContent(
 	node: ADFEntity,
 	imageMap: Record<string, UploadedImageData | null>,
+	format: "png" | "svg",
 ): ADFEntity {
 	if (!Array.isArray(node.content)) {
 		return node;
@@ -202,13 +212,13 @@ function walkContent(
 			newContent.push(child);
 			continue;
 		}
-		const replacementPair = tryRewritePlantumlCodeBlock(child, imageMap);
+		const replacementPair = tryRewritePlantumlCodeBlock(child, imageMap, format);
 		if (replacementPair) {
 			newContent.push(...replacementPair);
 			mutated = true;
 			continue;
 		}
-		const recursed = walkContent(child, imageMap);
+		const recursed = walkContent(child, imageMap, format);
 		if (recursed !== child) {
 			mutated = true;
 		}

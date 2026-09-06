@@ -249,3 +249,27 @@ test("load does not mutate the input ADF", async () => {
 
 	expect(JSON.stringify(doc)).toBe(before);
 });
+
+test("SVG renderers preserve the file extension and upload MIME type throughout publishing", async () => {
+	const plugin = new PlantumlRendererPlugin({
+		format: "svg",
+		async capturePlantumlCharts(charts) {
+			return new Map(
+				charts.map((chart) => [chart.name, Buffer.from('<svg width="20" height="10"/>')]),
+			);
+		},
+	});
+	const doc = makeDoc([{ language: "plantuml", text: "Alice -> Bob" }]);
+	const charts = plugin.extract(doc);
+	expect(charts[0]?.name).toMatch(/\.svg$/);
+	const imageMap = await plugin.transform(charts, {
+		...noopSupportFunctions,
+		uploadBufferEffect(filename, buffer, mimeType) {
+			expect(filename).toMatch(/\.svg$/);
+			expect(mimeType).toBe("image/svg+xml");
+			expect(buffer.toString()).toContain("<svg");
+			return noopSupportFunctions.uploadBufferEffect(filename, buffer, mimeType);
+		},
+	});
+	expect(plugin.load(doc, imageMap).content[0]?.type).toBe("mediaSingle");
+});

@@ -78,6 +78,12 @@ const program = Effect.scoped(
 			expectedSpace,
 			"Refusing to publish outside the dedicated test space",
 		);
+		const requestedBodies = new Map();
+		const updateContent = client.content.updateContent.bind(client.content);
+		client.content.updateContent = async (parameters) => {
+			requestedBodies.set(parameters.id, parameters.body?.atlas_doc_format?.value);
+			return updateContent(parameters);
+		};
 		const publisher = new Publisher(settings, client, [
 			new MermaidRendererPlugin(
 				new PuppeteerMermaidRenderer({ protocolTimeout: settings.mermaidProtocolTimeout }),
@@ -125,11 +131,13 @@ const program = Effect.scoped(
 			"Excluded notes must not publish",
 		);
 		const versions = new Map();
+		const storedBodies = new Map();
 		for (const result of first) {
 			const file = result.node.file;
 			const page = yield* fetchPage(file.pageId);
 			assert.equal(page.space?.key, expectedSpace);
 			versions.set(file.pageId, page.version.number);
+			storedBodies.set(file.pageId, page.body.atlas_doc_format.value);
 			// Synthetic folder containers use the standard child-page listing, not source Markdown.
 			if (!file.pageTitle.startsWith(prefix)) continue;
 			const body = page.body.atlas_doc_format.value;
@@ -210,8 +218,19 @@ const program = Effect.scoped(
 		);
 		assert.ok(localFormatting.includes(formatting.pageId));
 
+		requestedBodies.clear();
 		const second = yield* publish();
 		for (const result of second) {
+			if (result.successfulUploadResult.contentResult !== "same") {
+				yield* Console.log(
+					JSON.stringify({
+						title: result.node.file.pageTitle,
+						storedBody: JSON.parse(storedBodies.get(result.node.file.pageId)),
+						requestedBody: JSON.parse(requestedBodies.get(result.node.file.pageId)),
+					}),
+				);
+			}
+
 			assert.equal(
 				result.successfulUploadResult.contentResult,
 				"same",

@@ -133,3 +133,16 @@ test("supports svg output format", async () => {
 		{ name: "diagram.svg", data: "@startuml\nA->B\n@enduml" },
 	]);
 });
+
+test("rejects invalid concurrency and timeout values before rendering", () => {
+	for (const concurrency of [0, -1, 1.5, NaN, Infinity]) {
+		expect(
+			() => new HttpPlantumlRenderer({ serverUrl: "https://example.test", concurrency }),
+		).toThrow(/concurrency/);
+	}
+	for (const timeoutMs of [0, -1, NaN, Infinity, 2147483648]) {
+		expect(
+			() => new HttpPlantumlRenderer({ serverUrl: "https://example.test", timeoutMs }),
+		).toThrow(/timeoutMs/);
+	}
+});
