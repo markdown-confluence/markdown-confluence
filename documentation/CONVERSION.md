@@ -39,6 +39,7 @@ The existing configuration and environment variables provide authentication:
 bearer/OAuth settings. `CONFLUENCE_CONFIG_FILE` also selects the configuration file.
 A publishing parent ID is **not required** for these reads. An OAuth gateway
 configuration still needs `confluenceSiteUrl` for the human-facing page URL.
+Authenticated page reads require an HTTPS `confluenceBaseUrl`.
 
 Supported page references are numeric IDs with `--page`, full `/pages/ID/Title`
 URLs, legacy `viewpage.action?pageId=ID` URLs, and space overview URLs containing

@@ -35,6 +35,12 @@ export function fetchConfluencePageAdf(settings: ConfluenceSettings, reference: 
 		);
 		if (issues.length)
 			return yield* Effect.fail(new Error(issues.map((issue) => issue.message).join("\n")));
+		if (new URL(settings.confluenceBaseUrl).protocol !== "https:")
+			return yield* Effect.fail(
+				new Error(
+					"Confluence page reads require an HTTPS base URL to protect credentials.",
+				),
+			);
 		const id = yield* Effect.try({
 			try: () => resolveConfluencePageId(reference, resolveSiteUrl(settings)),
 			catch: toError,

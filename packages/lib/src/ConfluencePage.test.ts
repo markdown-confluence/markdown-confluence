@@ -75,10 +75,38 @@ test("reports failed reads without exposing transport headers or credentials", a
 			},
 		} as unknown as RequiredConfluenceClient),
 	);
-	await expect(Effect.runPromise(fetchConfluencePageAdf(readSettings, "123"))).rejects.toThrow(
-		"Unable to read Confluence page 123 (HTTP 403)",
-	);
+	await expect(
+		Effect.runPromise(fetchConfluencePageAdf(readSettings, "123")),
+	).rejects.toMatchObject({
+		message:
+			"Unable to read Confluence page 123 (HTTP 403). Check the configured site, authentication and page permissions.",
+	});
 });
+
+for (const confluenceAuthType of ["basic", "bearer", "oauth2"] as const) {
+	test(`rejects HTTP before creating a ${confluenceAuthType} client or requesting tokens`, async () => {
+		const createClient = vi
+			.spyOn(authentication, "createAuthenticatedConfluenceClient")
+			.mockReturnValue(Effect.die("Client must not be created"));
+		await expect(
+			Effect.runPromise(
+				fetchConfluencePageAdf(
+					{
+						...readSettings,
+						confluenceBaseUrl: "http://example.atlassian.net",
+						confluenceAuthType,
+						atlassianClientId: "test-client",
+						atlassianClientSecret: "test-secret",
+					},
+					"123",
+				),
+			),
+		).rejects.toMatchObject({
+			message: "Confluence page reads require an HTTPS base URL to protect credentials.",
+		});
+		expect(createClient).not.toHaveBeenCalled();
+	});
+}
 
 test("rejects invalid connection settings before creating an authenticated client", async () => {
 	const createClient = vi
