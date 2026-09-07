@@ -33,13 +33,18 @@ jobs:
           run-install: false
       - name: Install dependencies
         run: vp install --frozen-lockfile
-      - name: Build the release artifacts
-        run: vp run build
       - name: Publish synthetic fixtures and verify create, unchanged and update behavior
-        run: vp run test:confluence-e2e
+        run: vp run test:integration live
         env:
           ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
           ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
           CONFLUENCE_E2E_BASE_URL: https://markdown-confluence.atlassian.net
           CONFLUENCE_E2E_PARENT_ID: "986448062"
           CONFLUENCE_E2E_SPACE_KEY: MCRT20260907
+      - name: Upload integration reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-confluence
+          path: reports/integration/
+          if-no-files-found: ignore

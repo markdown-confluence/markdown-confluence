@@ -23,3 +23,5 @@ data.json
 .DS_Store
 
 dist/
+.env.integration
+.release-repo/

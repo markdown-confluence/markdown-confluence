@@ -42,6 +42,8 @@ For detailed installation and usage instructions, please visit our [documentatio
 ## Contributing
 Contributions are welcome! If you have a feature request, bug report, or want to improve the plugin, please open an issue or submit a pull request on the GitHub repository.
 
+Run `vp run test:integration` for a build and integration smoke test. The [testing guide](documentation/TESTING.md) covers isolated npm consumers, live Confluence, Docker, and the dedicated Obsidian test vault.
+
 ## License
 This project is licensed under the [Apache 2.0](https://github.com/markdown-confluence/markdown-confluence/blob/main/LICENSE) License.
 

@@ -20,6 +20,7 @@ jobs:
       tests_status: ${{ steps.tests.outcome }}
       build_status: ${{ steps.build.outcome }}
       builddocker_status: ${{ steps.builddocker.outcome }}
+      integration_status: ${{ steps.integration.outcome }}
 
     steps:
     - name: Harden Runner
@@ -70,6 +71,20 @@ jobs:
       continue-on-error: true
       run: vp run -r build:docker
 
+    - name: Verify isolated npm packages and real diagram rendering
+      id: integration
+      if: steps.build.outcome == 'success'
+      continue-on-error: true
+      run: vp run test:integration packages --skip-build
+
+    - name: Upload integration reports
+      if: always()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: integration-linux
+        path: reports/integration/
+        if-no-files-found: ignore
+
     - name: Report Errors
       if: ${{ always() }}
       run: |
@@ -78,11 +93,13 @@ jobs:
         echo "Tests status: ${{ steps.tests.outcome }}"
         echo "Build status: ${{ steps.build.outcome }}"
         echo "Build Docker status: ${{ steps.builddocker.outcome }}"
+        echo "Integration status: ${{ steps.integration.outcome }}"
         if [[ ${{ steps.eslint.outcome }} == 'failure' ]] \
         || [[ ${{ steps.prettier.outcome }} == 'failure' ]] \
         || [[ ${{ steps.tests.outcome }} == 'failure' ]] \
         || [[ ${{ steps.build.outcome }} == 'failure' ]] \
         || [[ ${{ steps.builddocker.outcome }} == 'failure' ]] \
+        || [[ ${{ steps.integration.outcome }} == 'failure' ]] \
         ; then
           exit 1
         fi
@@ -111,3 +128,14 @@ jobs:
         ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
         ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
         CONFLUENCE_PARENT_ID: "IGNORE ME"
+
+    - name: Verify built CLI and real Chromium rendering on Windows
+      run: vp run test:integration
+
+    - name: Upload integration reports
+      if: always()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: integration-windows
+        path: reports/integration/
+        if-no-files-found: ignore

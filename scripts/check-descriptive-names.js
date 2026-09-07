@@ -8,11 +8,13 @@ import { fileURLToPath } from "node:url";
 
 const skippedDirectoryNames = new Set([
 	".git",
+	".release-repo",
 	".husky",
 	"coverage",
 	"dev-vault",
 	"dist",
 	"node_modules",
+	"reports",
 ]);
 const blockedTerms = new Set([
 	"util",

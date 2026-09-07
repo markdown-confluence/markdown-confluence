@@ -98,6 +98,15 @@ jobs:
           vp test run
           vp run build
           vp run release:prepare
+      - name: Verify the npm tarballs before publication
+        run: vp run test:integration packages --skip-build
+      - name: Upload package verification report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-release-packages
+          path: reports/integration/
+          if-no-files-found: ignore
       - name: Publish npm packages
         run: vp pm publish -r --filter '@markdown-confluence/*' --access public --no-git-checks
       - name: Log in to the container registry
