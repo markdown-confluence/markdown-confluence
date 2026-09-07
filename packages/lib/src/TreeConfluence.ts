@@ -218,7 +218,9 @@ function createFileStructureInConfluenceEffect(
 					true,
 				),
 			),
-			{ concurrency: "unbounded" },
+			// Serial traversal bounds requests across every tree depth. Per-parent
+			// parallelism multiplies for nested folders and can overwhelm Confluence.
+			{ concurrency: 1 },
 		);
 
 		const pageUrl = buildPageUrl(settings, file.spaceKey, file.pageId);

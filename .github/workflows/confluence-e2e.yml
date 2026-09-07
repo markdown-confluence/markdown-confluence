@@ -5,6 +5,17 @@ on:
     branches: [main]
     types: [opened, reopened, synchronize, labeled]
   workflow_dispatch:
+    inputs:
+      auth:
+        description: Authentication to verify
+        type: choice
+        options: [basic, oauth2]
+        default: basic
+      profile:
+        description: Live fixtures or the 166-note container regression
+        type: choice
+        options: [live, regressions]
+        default: live
 
 permissions:
   contents: read
@@ -20,7 +31,7 @@ jobs:
       (github.event.pull_request.head.repo.full_name == github.repository &&
       contains(github.event.pull_request.labels.*.name, 'run-confluence-e2e'))
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -33,9 +44,26 @@ jobs:
           run-install: false
       - name: Install dependencies
         run: vp install --frozen-lockfile
+      - name: Build candidate container for regression testing
+        if: inputs.profile == 'regressions'
+        run: |
+          vp run build
+          vp run -r build:docker
       - name: Publish synthetic fixtures and verify create, unchanged and update behavior
-        run: vp run test:integration live
+        run: |
+          if [ "$TEST_PROFILE" = "regressions" ]; then
+            CONFLUENCE_E2E_REGRESSION_SIZE=small vp run test:integration regressions --skip-build
+            vp run test:integration regressions --skip-build
+          else
+            vp run test:integration live
+          fi
         env:
+          TEST_PROFILE: ${{ inputs.profile || 'live' }}
+          CONFLUENCE_E2E_IMAGE: markdown-confluence/markdown-confluence
+          CONFLUENCE_E2E_AUTH_TYPE: ${{ inputs.auth || 'basic' }}
+          ATLASSIAN_CLIENT_ID: ${{ secrets.ATLASSIAN_CLIENT_ID }}
+          ATLASSIAN_CLIENT_SECRET: ${{ secrets.ATLASSIAN_CLIENT_SECRET }}
+          CONFLUENCE_E2E_API_URL: https://api.atlassian.com/ex/confluence/c3c16874-09be-4bda-9016-2fbd2e925d90
           ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
           ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
           CONFLUENCE_E2E_BASE_URL: https://markdown-confluence.atlassian.net

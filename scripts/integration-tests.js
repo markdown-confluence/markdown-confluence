@@ -18,6 +18,7 @@ const help = `Integration profiles (vp run test:integration [profile] [options])
   quick      Build, check all fixture conversions and render real Mermaid PNGs (default).
   packages   Pack all five npm packages, install into a fresh consumer and verify them.
   live       Publish synthetic fixtures to Confluence; verify unchanged/update/recovery.
+  regressions Publish 166 notes with Mermaid/images using the released action container.
   docker     Build the local image and exercise its CLI without Confluence credentials.
   vault      Create a dedicated Obsidian fixture vault, or refresh only its plugin build.
   obsidian   Run the desktop plugin test in the prepared, open vault via Obsidian CLI.
@@ -31,7 +32,7 @@ const help = `Integration profiles (vp run test:integration [profile] [options])
 Configuration: .env.integration (see .env.integration.example).
 Reports: reports/integration/. See documentation/TESTING.md for coverage and setup.`;
 
-function command(executable, args, options = {}) {
+function command(executable, args, options = {}, timeout = "15 minutes") {
 	return Effect.scoped(
 		Effect.gen(function* () {
 			const child = yield* ChildProcess.make(executable, args, {
@@ -63,7 +64,7 @@ function command(executable, args, options = {}) {
 				);
 			return output;
 		}),
-	).pipe(Effect.timeout("15 minutes"));
+	).pipe(Effect.timeout(timeout));
 }
 
 function readTestEnvironment(options) {
@@ -79,6 +80,10 @@ function readTestEnvironment(options) {
 		const mapping = {
 			ATLASSIAN_USERNAME: "atlassianUserName",
 			ATLASSIAN_API_TOKEN: "atlassianApiToken",
+			ATLASSIAN_CLIENT_ID: "atlassianClientId",
+			ATLASSIAN_CLIENT_SECRET: "atlassianClientSecret",
+			CONFLUENCE_E2E_AUTH_TYPE: undefined,
+			CONFLUENCE_E2E_API_URL: undefined,
 			CONFLUENCE_E2E_BASE_URL: "confluenceBaseUrl",
 			CONFLUENCE_E2E_PARENT_ID: "confluenceParentId",
 			CONFLUENCE_E2E_SPACE_KEY: undefined,
@@ -265,11 +270,20 @@ function runIntegration() {
 					);
 				});
 			const work = Effect.gen(function* () {
-				const live = ["live", "obsidian"].includes(options.profile);
-				const environment = ["live", "obsidian", "vault"].includes(options.profile)
+				const live = ["live", "regressions", "obsidian"].includes(options.profile);
+				const environment = ["live", "regressions", "obsidian", "vault"].includes(
+					options.profile,
+				)
 					? yield* readTestEnvironment(options)
 					: {};
 				if (live) validateLiveEnvironment(environment);
+				if (
+					["obsidian", "vault"].includes(options.profile) &&
+					environment.CONFLUENCE_E2E_AUTH_TYPE === "oauth2"
+				)
+					throw new Error(
+						"Desktop profiles currently support Basic authentication; use live for OAuth verification",
+					);
 				if (!options.skipBuild)
 					yield* step("Build workspace", command("vp", ["run", "build"]));
 				yield* step("Validate release artifacts", prepareReleaseAssets(repositoryRoot));
@@ -312,6 +326,23 @@ function runIntegration() {
 							environment,
 							reportDirectory,
 						}),
+					);
+					return;
+				}
+				if (options.profile === "regressions") {
+					yield* step(
+						"Container: Mermaid failure/recovery, image cases and publishing scale",
+						command(
+							node,
+							["scripts/integration-regressions.js"],
+							{
+								env: {
+									...environment,
+									CONFLUENCE_E2E_REPORT_DIRECTORY: reportDirectory,
+								},
+							},
+							"25 minutes",
+						),
 					);
 					return;
 				}

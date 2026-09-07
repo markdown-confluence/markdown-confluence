@@ -166,6 +166,11 @@ export function validateConfluenceSettings(
 				field: "confluenceBaseUrl",
 				message: "Confluence base URL must start with http:// or https://",
 			});
+		} else if (settings.confluenceAuthType === "oauth2" && parsedUrl.protocol !== "https:") {
+			issues.push({
+				field: "confluenceBaseUrl",
+				message: "OAuth requires an HTTPS Confluence API base URL",
+			});
 		}
 
 		if (confluenceBaseUrl.endsWith("/")) {

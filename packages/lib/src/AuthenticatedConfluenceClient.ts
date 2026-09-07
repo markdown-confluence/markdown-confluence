@@ -12,6 +12,13 @@ export function createAuthenticatedConfluenceClient(
 ): Effect.Effect<RequiredConfluenceClient, Error> {
 	return Effect.gen(function* () {
 		const oauth = settings.confluenceAuthType === "oauth2";
+		if (
+			oauth &&
+			(!URL.canParse(settings.confluenceBaseUrl) ||
+				new URL(settings.confluenceBaseUrl).protocol !== "https:")
+		) {
+			return yield* Effect.fail(new Error("OAuth requires an HTTPS Confluence API base URL"));
+		}
 		const accessToken = oauth
 			? yield* fetchOAuthAccessToken(
 					settings.atlassianClientId,

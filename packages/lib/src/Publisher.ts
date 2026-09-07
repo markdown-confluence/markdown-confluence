@@ -114,6 +114,7 @@ export class Publisher {
 		settings: ConfluenceSettings,
 		confluenceClient: RequiredConfluenceClient,
 		adfProcessingPlugins: ADFProcessingPlugin<unknown, unknown>[],
+		private readonly onProgress: (message: string) => void = () => undefined,
 	) {
 		this.settings = settings;
 
@@ -144,8 +145,10 @@ export class Publisher {
 			this.myAccountId = accountId;
 		};
 		const publishFileEffect = this.publishFileEffect.bind(this);
+		const progress = (message: string) => Effect.sync(() => this.onProgress(message));
 
 		return Effect.gen(function* () {
+			yield* progress("Connecting to Confluence");
 			if (!getMyAccountId()) {
 				const currentUser = yield* Effect.tryPromise({
 					try: () => confluenceClient.users.getCurrentUser(),
@@ -174,10 +177,14 @@ export class Publisher {
 			const spaceToPublishTo = parentPage.space;
 
 			const workspace = yield* MarkdownWorkspaceService;
+			yield* progress("Loading Markdown files");
 			const files = yield* workspace.getMarkdownFilesToUpload.pipe(
 				Effect.provideService(MarkdownPublishFilter, publishFilter),
 			);
 			const folderTree = yield* createLocalAdfTreeEffect(files, settings);
+			yield* progress(
+				`Resolving the Confluence hierarchy for ${files.length} Markdown files`,
+			);
 			let confluencePagesToPublish = yield* ensureAllFilesExistInConfluenceEffect(
 				confluenceClient,
 				folderTree,
@@ -194,8 +201,13 @@ export class Publisher {
 			}
 
 			return yield* Effect.all(
-				confluencePagesToPublish.map((file) => publishFileEffect(file)),
-				{ concurrency: "unbounded" },
+				confluencePagesToPublish.map((file, index) =>
+					progress(
+						`Publishing ${index + 1}/${confluencePagesToPublish.length}: ${file.file.pageTitle}`,
+					).pipe(Effect.andThen(publishFileEffect(file))),
+				),
+				// Each page may launch Chromium and upload several attachments.
+				{ concurrency: 2 },
 			);
 		});
 	}
@@ -324,7 +336,9 @@ export class Publisher {
 				title: existingPageData.pageTitle,
 				type: existingPageData.contentType,
 				...currentSpaceDetails,
-				...(shouldPreserveParent ? {} : { ancestors: existingPageData.ancestors }),
+				...(shouldPreserveParent
+					? {}
+					: { ancestors: existingPageData.ancestors.slice(-1) }),
 			};
 
 			const newPageDetails = {
@@ -334,7 +348,7 @@ export class Publisher {
 				...(shouldPreserveParent
 					? {}
 					: {
-							ancestors: ancestors.map((ancestor) => ({
+							ancestors: ancestors.slice(-1).map((ancestor) => ({
 								id: ancestor,
 							})),
 						}),

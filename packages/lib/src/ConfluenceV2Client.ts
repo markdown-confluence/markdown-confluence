@@ -386,6 +386,15 @@ export class ConfluenceV2Client {
 
 		const collectionName = `contentId-${pageId}`;
 		const results = attachments.map((attachment) => ({
+			id: attachment.id,
+			version: attachment.version
+				? {
+						number: attachment.version.number,
+						by: { accountId: attachment.version.authorId },
+						when: attachment.version.createdAt,
+						message: attachment.version.message,
+					}
+				: undefined,
 			title: attachment.title,
 			metadata: { comment: attachment.comment ?? "" },
 			extensions: { fileId: attachment.fileId ?? "", collectionName },

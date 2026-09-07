@@ -3,6 +3,7 @@
 import { expect, test } from "@effect/vitest";
 import { ConfluenceClient } from "confluence.js";
 import { Effect } from "effect";
+import { Path } from "effect/Path";
 import SparkMD5 from "spark-md5";
 import { orderMarks } from "./AdfEqual";
 import { ADFProcessingPlugin, PublisherFunctions } from "./ADFProcessingPlugins";
@@ -606,6 +607,7 @@ async function publishSinglePage({
 	lastUpdatedBy = "current-user",
 	initialVersion = 1,
 	pageSpaceKey = "SPACE",
+	existingAncestors = [{ id: "parent-id" }],
 	dontChangeParentPageId = false,
 	plugins = [],
 	attachments = [],
@@ -619,6 +621,7 @@ async function publishSinglePage({
 	lastUpdatedBy?: string;
 	initialVersion?: number;
 	pageSpaceKey?: string;
+	existingAncestors?: { id: string }[];
 	dontChangeParentPageId?: boolean;
 	plugins?: ADFProcessingPlugin<unknown, unknown>[];
 	attachments?: AttachmentFixture[];
@@ -632,6 +635,7 @@ async function publishSinglePage({
 		lastUpdatedBy,
 		initialVersion,
 		pageSpaceKey,
+		existingAncestors,
 		attachments,
 		uploadRequests,
 		getLatestVersion,
@@ -670,6 +674,7 @@ function makePublisherTestConfluenceClient({
 	lastUpdatedBy,
 	initialVersion,
 	pageSpaceKey,
+	existingAncestors = [{ id: "parent-id" }],
 	attachments,
 	uploadRequests,
 	getLatestVersion,
@@ -679,6 +684,7 @@ function makePublisherTestConfluenceClient({
 	lastUpdatedBy: string;
 	initialVersion: number;
 	pageSpaceKey: string;
+	existingAncestors?: { id: string }[];
 	attachments: AttachmentFixture[];
 	uploadRequests: unknown[];
 	getLatestVersion: () => number;
@@ -716,7 +722,7 @@ function makePublisherTestConfluenceClient({
 							value: JSON.stringify(existingAdf),
 						},
 					},
-					ancestors: [{ id: "parent-id" }],
+					ancestors: existingAncestors,
 					space: { key: pageSpaceKey },
 				};
 			},
@@ -762,6 +768,67 @@ function md5(contents: Buffer): string {
 	return spark.append(Uint8Array.from(contents).buffer).end();
 }
 
+test("publishes a large collection without exceeding two concurrent page updates", async () => {
+	const filesystemPath = await runEffect(
+		Effect.gen(function* () {
+			return yield* Path;
+		}),
+	);
+	const contentRoot = filesystemPath.join(filesystemPath.sep, "docs");
+	let active = 0;
+	let peak = 0;
+	const count = 32;
+	const client = makePublisherTestConfluenceClient({
+		existingAdf: parseMarkdownToADF("Before", testPublishSettings.confluenceBaseUrl),
+		lastUpdatedBy: "current-user",
+		initialVersion: 1,
+		pageSpaceKey: "SPACE",
+		attachments: [],
+		uploadRequests: [],
+		getLatestVersion: () => 1,
+		updateContent: async (request) => {
+			active++;
+			peak = Math.max(peak, active);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			active--;
+			return request;
+		},
+	});
+	const getContentById = client.content.getContentById.bind(client.content);
+	client.content.getContentById = (async (request: { id: string; expand?: string[] }) => {
+		const page = await getContentById(request);
+		return request.id === "parent-id" ? page : { ...page, id: request.id, title: request.id };
+	}) as typeof client.content.getContentById;
+	const workspace = new InMemoryMarkdownWorkspace(
+		Array.from({ length: count }, (_, index) => ({
+			folderName: "docs",
+			absoluteFilePath: filesystemPath.join(contentRoot, `page-${index}.md`),
+			fileName: `page-${index}.md`,
+			pageTitle: `page-${index}`,
+			contents: "After",
+			frontmatter: { "connie-page-id": `page-${index}` },
+		})),
+	);
+	const progress: string[] = [];
+	const publisher = new Publisher(
+		{ ...testPublishSettings, contentRoot },
+		client,
+		[],
+		(message) => progress.push(message),
+	);
+	const results = await runEffect(
+		publisher.publishEffect().pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
+	);
+	expect(results).toHaveLength(count);
+	expect(
+		results.every((result) => result.successfulUploadResult?.contentResult === "updated"),
+	).toBe(true);
+	expect(peak).toBe(2);
+	expect(active).toBe(0);
+	expect(progress[0]).toBe("Connecting to Confluence");
+	expect(progress.filter((message) => message.startsWith("Publishing "))).toHaveLength(count);
+});
+
 const testPublishSettings: ConfluenceSettings = {
 	confluenceBaseUrl: "https://example.atlassian.net",
 	confluenceParentId: "parent-id",
@@ -772,3 +839,19 @@ const testPublishSettings: ConfluenceSettings = {
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,
 };
+
+test("preserves unchanged pages when the publishing parent has higher ancestors", async () => {
+	const { result, updateContentRequests } = await publishSinglePage({
+		existingAncestors: [{ id: "space-home" }, { id: "parent-id" }],
+	});
+	expect(result[0]?.successfulUploadResult?.contentResult).toBe("same");
+	expect(updateContentRequests).toEqual([]);
+});
+
+test("moves a page when its immediate parent differs", async () => {
+	const { result, updateContentRequests } = await publishSinglePage({
+		existingAncestors: [{ id: "parent-id" }, { id: "old-folder" }],
+	});
+	expect(result[0]?.successfulUploadResult?.contentResult).toBe("updated");
+	expect(updateContentRequests[0]?.ancestors).toEqual([{ id: "parent-id" }]);
+});
