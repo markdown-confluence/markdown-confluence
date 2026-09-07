@@ -1,5 +1,25 @@
 # Changelog
 
+## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v5.5.2...@markdown-confluence/mermaid-puppeteer-renderer-v6.0.0) (2026-09-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* the public library is ESM and replaces LoaderAdaptor/SettingsLoader constructor arguments with settings and the MarkdownWorkspace service. The CLI requires Node 24.15.0 or newer.
+
+### Features
+
+* release verified publishing fixes and features ([#893](https://github.com/markdown-confluence/markdown-confluence/issues/893)) ([0144b73](https://github.com/markdown-confluence/markdown-confluence/commit/0144b733afad912eb57b5034db046892235678fd))
+
+
+### Dependencies
+
+* **deps:** bump mermaid from 10.4.0 to 10.9.6 ([#690](https://github.com/markdown-confluence/markdown-confluence/issues/690)) ([fdb50a7](https://github.com/markdown-confluence/markdown-confluence/commit/fdb50a7c6531ac4cfa37c788bfb45a6bbd0f454f))
+* **deps:** bump puppeteer from 25.0.2 to 25.0.4 ([#730](https://github.com/markdown-confluence/markdown-confluence/issues/730)) ([67edc0a](https://github.com/markdown-confluence/markdown-confluence/commit/67edc0a0322b8f543d44a8cc1c011dab580a133b))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped to 6.0.0
+
 ## [5.5.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v5.5.1...@markdown-confluence/mermaid-puppeteer-renderer-v5.5.2) (2023-09-24)
 
 

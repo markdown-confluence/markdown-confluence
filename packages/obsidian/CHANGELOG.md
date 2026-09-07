@@ -7,6 +7,35 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.5.2...obsidian-confluence-v6.0.0) (2026-09-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* the public library is ESM and replaces LoaderAdaptor/SettingsLoader constructor arguments with settings and the MarkdownWorkspace service. The CLI requires Node 24.15.0 or newer.
+
+### Features
+
+* allow publish result notices in obsidian ([82333d5](https://github.com/markdown-confluence/markdown-confluence/commit/82333d507a930d32e6d95743cc7c070521be0e92))
+* allow publish result notices in Obsidian ([c58bb83](https://github.com/markdown-confluence/markdown-confluence/commit/c58bb834258aaff07335a53cc8dea2cfc4c5bbb4))
+* release verified publishing fixes and features ([#893](https://github.com/markdown-confluence/markdown-confluence/issues/893)) ([0144b73](https://github.com/markdown-confluence/markdown-confluence/commit/0144b733afad912eb57b5034db046892235678fd))
+
+
+### Bug Fixes
+
+* refresh lockfile for effect bump ([a7d1974](https://github.com/markdown-confluence/markdown-confluence/commit/a7d1974ef2ca911692941c2d2cca94546daace38))
+* update Obsidian SDK compatibility ([#699](https://github.com/markdown-confluence/markdown-confluence/issues/699)) ([2ef4241](https://github.com/markdown-confluence/markdown-confluence/commit/2ef4241ba043247461e53938f53a69337e6a18ef))
+
+
+### Dependencies
+
+* **deps:** bump axios and confluence.js ([#697](https://github.com/markdown-confluence/markdown-confluence/issues/697)) ([9045c41](https://github.com/markdown-confluence/markdown-confluence/commit/9045c41b69b3467e405a8916c76c2c84c423290a))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped to 6.0.0
+    * @markdown-confluence/mermaid-electron-renderer bumped to 6.0.0
+    * @markdown-confluence/plantuml-renderer bumped to 6.0.0
+
 ## [5.5.2](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.5.1...obsidian-confluence-v5.5.2) (2023-09-24)
 
 

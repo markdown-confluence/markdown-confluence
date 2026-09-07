@@ -1,5 +1,33 @@
 # Changelog
 
+## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.5.2...@markdown-confluence/cli-v6.0.0) (2026-09-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* the public library is ESM and replaces LoaderAdaptor/SettingsLoader constructor arguments with settings and the MarkdownWorkspace service. The CLI requires Node 24.15.0 or newer.
+
+### Features
+
+* release verified publishing fixes and features ([#893](https://github.com/markdown-confluence/markdown-confluence/issues/893)) ([0144b73](https://github.com/markdown-confluence/markdown-confluence/commit/0144b733afad912eb57b5034db046892235678fd))
+
+
+### Bug Fixes
+
+* normalize content root and document config ([#684](https://github.com/markdown-confluence/markdown-confluence/issues/684)) ([5ca8cbf](https://github.com/markdown-confluence/markdown-confluence/commit/5ca8cbf3203fbdb10ce80432f3343b86f0f81cfa))
+
+
+### Dependencies
+
+* **deps:** bump axios and confluence.js ([#697](https://github.com/markdown-confluence/markdown-confluence/issues/697)) ([9045c41](https://github.com/markdown-confluence/markdown-confluence/commit/9045c41b69b3467e405a8916c76c2c84c423290a))
+* **deps:** bump puppeteer/puppeteer from 24.43.1 to 25.0.4 in /packages/cli ([#713](https://github.com/markdown-confluence/markdown-confluence/issues/713)) ([5324d2a](https://github.com/markdown-confluence/markdown-confluence/commit/5324d2a478691ae8072c2a6d8b54d1e64df32a29))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([fdf3cbf](https://github.com/markdown-confluence/markdown-confluence/commit/fdf3cbf31fc59592a06420ed7ff1484f8719def2))
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped to 6.0.0
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped to 6.0.0
+    * @markdown-confluence/plantuml-renderer bumped to 6.0.0
+
 ## [5.5.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.5.1...@markdown-confluence/cli-v5.5.2) (2023-09-24)
 
 

@@ -1,6 +1,6 @@
 {
 	"name": "@markdown-confluence/cli",
-	"version": "5.5.2",
+	"version": "6.0.0",
 	"description": "This CLI allows you to publish your notes to Confluence",
 	"keywords": [],
 	"homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/cli",
