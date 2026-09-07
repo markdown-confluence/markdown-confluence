@@ -61,7 +61,7 @@ export function prepareIntegrationVault(repositoryRoot, vaultPath, settings = {}
 				JSON.stringify(
 					{
 						...settings,
-						contentRoot: vaultPath,
+						contentRoot: ".",
 						folderToPublish: "Release Tests",
 						tagsToPublish: "release-test",
 						ignoredCodeBlockLanguages: ["dataview", "button"],

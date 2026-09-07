@@ -20,6 +20,7 @@ export default defineConfig({
 			"packages/mermaid-puppeteer-renderer/src/**/*.test.ts",
 			"packages/plantuml-renderer/src/**/*.test.ts",
 			"scripts/**/*.test.js",
+			"services/**/*.test.js",
 		],
 		testTimeout: 300000,
 	},

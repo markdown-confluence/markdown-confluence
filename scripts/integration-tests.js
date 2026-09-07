@@ -10,7 +10,11 @@ import {
 	RuntimeEnvironmentService,
 } from "../packages/lib/src/effects/index.ts";
 import { prepareReleaseAssets, releasePackages } from "./prepare-release-assets.js";
-import { parseIntegrationOptions, validateLiveEnvironment } from "./integration-options.js";
+import {
+	parseIntegrationOptions,
+	validateLiveEnvironment,
+	liveConnectionSettings,
+} from "./integration-options.js";
 import { prepareIntegrationVault } from "./integration-vault.js";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
@@ -277,13 +281,6 @@ function runIntegration() {
 					? yield* readTestEnvironment(options)
 					: {};
 				if (live) validateLiveEnvironment(environment);
-				if (
-					["obsidian", "vault"].includes(options.profile) &&
-					environment.CONFLUENCE_E2E_AUTH_TYPE === "oauth2"
-				)
-					throw new Error(
-						"Desktop profiles currently support Basic authentication; use live for OAuth verification",
-					);
 				if (!options.skipBuild)
 					yield* step("Build workspace", command("vp", ["run", "build"]));
 				yield* step("Validate release artifacts", prepareReleaseAssets(repositoryRoot));
@@ -296,13 +293,19 @@ function runIntegration() {
 				if (options.profile === "vault") {
 					const result = yield* step(
 						"Prepare dedicated Obsidian vault",
-						prepareIntegrationVault(repositoryRoot, vaultPath, {
-							confluenceBaseUrl: environment.CONFLUENCE_E2E_BASE_URL,
-							confluenceSiteUrl: environment.CONFLUENCE_E2E_BASE_URL,
-							confluenceParentId: environment.CONFLUENCE_E2E_PARENT_ID,
-							atlassianUserName: environment.ATLASSIAN_USERNAME,
-							atlassianApiToken: environment.ATLASSIAN_API_TOKEN,
-						}),
+						prepareIntegrationVault(
+							repositoryRoot,
+							vaultPath,
+							environment.CONFLUENCE_E2E_AUTH_TYPE === "oauth2"
+								? liveConnectionSettings(environment)
+								: {
+										confluenceBaseUrl: environment.CONFLUENCE_E2E_BASE_URL,
+										confluenceSiteUrl: environment.CONFLUENCE_E2E_BASE_URL,
+										confluenceParentId: environment.CONFLUENCE_E2E_PARENT_ID,
+										atlassianUserName: environment.ATLASSIAN_USERNAME,
+										atlassianApiToken: environment.ATLASSIAN_API_TOKEN,
+									},
+						),
 					);
 					report.vault = result;
 					yield* Console.log(

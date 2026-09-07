@@ -10,7 +10,7 @@ vp run test:integration
 ```
 
 This builds all packages, validates the Obsidian release artifacts, imports the
-built packages, renders a real Mermaid PNG in Chromium, and converts all ten
+built packages, renders a real Mermaid PNG in Chromium, and converts all
 Markdown fixtures through the CLI. CLI output must match the library's ADF,
 including Unicode and TOC macros. It also checks CommonJS dynamic import and a
 nonzero CLI error exit. It does not publish anything or require Confluence credentials.
@@ -75,7 +75,8 @@ CONFLUENCE_E2E_AUTH_TYPE=oauth2 vp run test:integration live
 
 `CONFLUENCE_E2E_BASE_URL` remains the browsable site origin. No Basic credential
 is needed in OAuth mode. See [CLOUD_OAUTH.md](CLOUD_OAUTH.md) for account permissions
-and scopes. The desktop/vault profiles do not support client-credentials OAuth.
+and scopes. The desktop/vault profiles also support service-account OAuth.
+For interactive browser login and token storage, see [OBSIDIAN_OAUTH.md](OBSIDIAN_OAUTH.md).
 
 The live harness copies synthetic fixtures into a temporary directory and prefixes
 page titles per run. It verifies formatting, heading embeds, exclusions, folder

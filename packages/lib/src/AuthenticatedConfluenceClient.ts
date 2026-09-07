@@ -1,5 +1,6 @@
 import { Effect } from "effect";
-import { Api, ConfluenceClient } from "confluence.js";
+import { Api, ConfluenceClient, type Config } from "confluence.js";
+import type { ConfluenceFetch } from "./ConfluenceFetch";
 import { ConfluenceSettings } from "./Settings";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
 import { createConfluenceClientConfig } from "./ConfluenceClientConfig";
@@ -9,6 +10,12 @@ import { fetchOAuthAccessToken } from "./OAuthToken";
 /** Builds a publisher client while preserving the transport used for multipart uploads. */
 export function createAuthenticatedConfluenceClient(
 	settings: ConfluenceSettings,
+	options: {
+		createClient?: (config: Config) => RequiredConfluenceClient;
+		fetch?: ConfluenceFetch;
+		/** Access token obtained by an external OAuth authorization flow. */
+		oauthAccessToken?: string;
+	} = {},
 ): Effect.Effect<RequiredConfluenceClient, Error> {
 	return Effect.gen(function* () {
 		const oauth = settings.confluenceAuthType === "oauth2";
@@ -20,12 +27,14 @@ export function createAuthenticatedConfluenceClient(
 			return yield* Effect.fail(new Error("OAuth requires an HTTPS Confluence API base URL"));
 		}
 		const accessToken = oauth
-			? yield* fetchOAuthAccessToken(
+			? (options.oauthAccessToken ??
+				(yield* fetchOAuthAccessToken(
 					settings.atlassianClientId,
 					settings.atlassianClientSecret,
-				)
+					options.fetch,
+				)))
 			: settings.atlassianApiToken;
-		const client = new ConfluenceClient(
+		const client = (options.createClient ?? ((config) => new ConfluenceClient(config)))(
 			createConfluenceClientConfig({
 				...settings,
 				confluenceAuthType: oauth ? "bearer" : settings.confluenceAuthType,
@@ -37,6 +46,7 @@ export function createAuthenticatedConfluenceClient(
 				settings.confluenceBaseUrl,
 				accessToken,
 				settings.confluenceRequestHeaders,
+				options.fetch,
 			);
 			client.content = content as unknown as Api.Content;
 			client.contentAttachments.getAttachments = content.getAttachments.bind(

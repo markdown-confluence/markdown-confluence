@@ -80,3 +80,8 @@ Use the [live integration harness](TESTING.md#configure-live-testing-once) with
 `CONFLUENCE_E2E_AUTH_TYPE=oauth2`. A successful exchange alone is insufficient:
 the live test checks page creation, uploads, labels, unchanged publishing and
 updates with the service account.
+
+## Obsidian
+
+The desktop plugin supports service-account OAuth and interactive browser login.
+See [Obsidian OAuth](OBSIDIAN_OAUTH.md) for setup, token storage and integration testing.

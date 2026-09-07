@@ -1,6 +1,6 @@
-import { App, Setting, PluginSettingTab } from "obsidian";
+import { App, Setting, PluginSettingTab, Notice } from "obsidian";
 import { validateConfluenceSettings } from "@markdown-confluence/lib";
-import ConfluencePlugin from "./main";
+import type ConfluencePlugin from "./main";
 
 export class ConfluenceSettingTab extends PluginSettingTab {
 	plugin: ConfluencePlugin;
@@ -8,6 +8,96 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 	constructor(app: App, plugin: ConfluencePlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+	}
+
+	private renderBrowserLogin(containerEl: HTMLElement) {
+		const auth = this.plugin.browserOAuth;
+		new Setting(containerEl)
+			.setName("Login service")
+			.setDesc(
+				"The HTTPS service operated for this integration. For local testing, use http://127.0.0.1:8766.",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("https://login.example.com")
+					.setValue(this.plugin.settings.oauthServiceUrl)
+					.setDisabled(auth.pending || auth.connected)
+					.onChange(async (value) => {
+						this.plugin.settings.oauthServiceUrl = value.trim();
+						await this.plugin.saveSettings();
+					}),
+			);
+		const status = new Setting(containerEl)
+			.setName("Atlassian connection")
+			.setDesc(
+				auth.status ||
+					(auth.connected
+						? "Connected"
+						: "Sign in to choose the Confluence site this vault can publish to."),
+			);
+		if (auth.pending)
+			status.addButton((button) =>
+				button.setButtonText("Cancel login").onClick(() => auth.cancel()),
+			);
+		else
+			status.addButton((button) =>
+				button
+					.setButtonText(auth.connected ? "Reconnect" : "Connect to Atlassian")
+					.setCta()
+					.onClick(async () => {
+						try {
+							await auth.connect(() => this.display());
+							await this.plugin.selectOAuthSite(this.plugin.settings.oauthSiteId);
+							new Notice("Connected to Atlassian");
+						} catch (error) {
+							new Notice(error instanceof Error ? error.message : "Login failed");
+						}
+						this.display();
+					}),
+			);
+		if (auth.connected && !auth.pending) {
+			status.addButton((button) =>
+				button.setButtonText("Disconnect").onClick(async () => {
+					await auth.disconnect();
+					this.display();
+				}),
+			);
+			new Setting(containerEl)
+				.setName("Confluence site")
+				.setDesc("Only sites approved during login are available.")
+				.addDropdown((dropdown) => {
+					for (const site of this.plugin.settings.oauthSites)
+						dropdown.addOption(site.id, new URL(site.url).hostname);
+					dropdown.setValue(this.plugin.settings.oauthSiteId).onChange(async (value) => {
+						await this.plugin.selectOAuthSite(value);
+						this.display();
+					});
+				});
+			new Setting(containerEl)
+				.setName("Test connection")
+				.setDesc("Check access to the configured parent page without publishing.")
+				.addButton((button) =>
+					button.setButtonText("Test connection").onClick(async () => {
+						button.setDisabled(true);
+						try {
+							const client = await this.plugin.authenticationClient();
+							const page = await client.content.getContentById({
+								id: this.plugin.settings.confluenceParentId,
+							});
+							auth.status = `Connected · Parent page: ${page.title}`;
+							new Notice(auth.status);
+						} catch {
+							auth.status =
+								"Could not access the parent page. Check its ID, site and permissions.";
+							new Notice(auth.status);
+						}
+						this.display();
+					}),
+				);
+			containerEl.createEl("p", {
+				text: "Tokens are kept in Obsidian secret storage. Disconnect removes this vault's saved login. You can revoke the app in your Atlassian account's connected apps.",
+			});
+		}
 	}
 
 	display(): void {
@@ -24,7 +114,22 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 		});
 		const renderValidationResult = () => {
 			validationContainer.empty();
-			const validationResult = validateConfluenceSettings(this.plugin.settings);
+			const browser =
+				this.plugin.settings.confluenceAuthType === "oauth2" &&
+				this.plugin.settings.oauthMode === "browser";
+			const validationResult = validateConfluenceSettings(
+				browser
+					? {
+							...this.plugin.settings,
+							confluenceAuthType: "bearer",
+							atlassianApiToken: "browser-session",
+						}
+					: this.plugin.settings,
+			);
+			if (browser && !this.plugin.browserOAuth.connected)
+				validationContainer.createEl("p", {
+					text: "Connect to Atlassian before publishing.",
+				});
 			if (validationResult.valid) {
 				return;
 			}
@@ -43,64 +148,90 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 		};
 		renderValidationResult();
 
-		new Setting(containerEl)
-			.setName("Confluence Domain")
-			.setDesc('Confluence Domain eg "https://mysite.atlassian.net"')
-			.addText((text) =>
-				text
-					.setPlaceholder("https://mysite.atlassian.net")
-					.setValue(this.plugin.settings.confluenceBaseUrl)
-					.onChange(async (value) => {
-						this.plugin.settings.confluenceBaseUrl = value;
-						await saveSettingsAndRenderValidation();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Atlassian Username")
-			.setDesc('eg "username@domain.com"')
-			.addText((text) =>
-				text
-					.setPlaceholder("username@domain.com")
-					.setValue(this.plugin.settings.atlassianUserName)
-					.onChange(async (value) => {
-						this.plugin.settings.atlassianUserName = value;
-						await saveSettingsAndRenderValidation();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Atlassian API Token")
-			.setDesc("")
-			.addText((text) => {
-				text.inputEl.type = "password";
-				text.setPlaceholder("")
-					.setValue(this.plugin.settings.atlassianApiToken)
-					.onChange(async (value) => {
-						this.plugin.settings.atlassianApiToken = value;
-						await saveSettingsAndRenderValidation();
-					});
-			});
-
+		const oauth = this.plugin.settings.confluenceAuthType === "oauth2";
 		new Setting(containerEl)
 			.setName("Authentication Type")
-			.setDesc("Use basic for Confluence Cloud API tokens or bearer for PAT-style tokens")
+			.setDesc("Sign in through your browser, or use an API token, PAT or service account.")
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOptions({
 						basic: "Basic",
 						bearer: "Bearer / PAT",
+						oauth2: "OAuth / Service account",
+						browser: "OAuth / Browser login",
 					})
-					.setValue(this.plugin.settings.confluenceAuthType)
+					.setValue(
+						oauth && this.plugin.settings.oauthMode === "browser"
+							? "browser"
+							: this.plugin.settings.confluenceAuthType,
+					)
 					.onChange(async (value) => {
-						if (!isConfluenceAuthType(value)) {
-							return;
-						}
-
-						this.plugin.settings.confluenceAuthType = value;
-						await saveSettingsAndRenderValidation();
+						if (value !== "browser" && !isConfluenceAuthType(value)) return;
+						this.plugin.browserOAuth.cancel();
+						this.plugin.settings.oauthMode =
+							value === "browser" ? "browser" : "service-account";
+						this.plugin.settings.confluenceAuthType =
+							value === "browser" ? "oauth2" : value;
+						await this.plugin.saveSettings();
+						this.display();
 					}),
 			);
+
+		const addText = (
+			name: string,
+			field:
+				| "confluenceBaseUrl"
+				| "confluenceSiteUrl"
+				| "atlassianUserName"
+				| "atlassianApiToken"
+				| "atlassianClientId"
+				| "atlassianClientSecret",
+			description: string,
+			secret = false,
+		) => {
+			new Setting(containerEl)
+				.setName(name)
+				.setDesc(description)
+				.addText((text) => {
+					if (secret) text.inputEl.type = "password";
+					text.setValue(this.plugin.settings[field] ?? "").onChange(async (value) => {
+						this.plugin.settings[field] = value.trim();
+						await saveSettingsAndRenderValidation();
+					});
+				});
+		};
+		const browser = oauth && this.plugin.settings.oauthMode === "browser";
+		if (browser) this.renderBrowserLogin(containerEl);
+		if (!browser)
+			addText(
+				oauth ? "Confluence API URL" : "Confluence Domain",
+				"confluenceBaseUrl",
+				oauth
+					? "https://api.atlassian.com/ex/confluence/{cloudId}"
+					: "Your Confluence site, for example https://mysite.atlassian.net",
+			);
+		if (oauth && !browser) {
+			addText(
+				"Confluence Site URL",
+				"confluenceSiteUrl",
+				"The browser address, for example https://mysite.atlassian.net",
+			);
+			addText(
+				"OAuth Client ID",
+				"atlassianClientId",
+				"From the service account in Atlassian Administration.",
+			);
+			addText(
+				"OAuth Client Secret",
+				"atlassianClientSecret",
+				"Stored in this vault's plugin settings. A fresh access token is requested for each publish.",
+				true,
+			);
+		} else if (!browser) {
+			if (this.plugin.settings.confluenceAuthType === "basic")
+				addText("Atlassian Username", "atlassianUserName", "Your Atlassian email address.");
+			addText("Atlassian API Token", "atlassianApiToken", "", true);
+		}
 
 		new Setting(containerEl)
 			.setName("Confluence API Prefix")
@@ -273,8 +404,8 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 	}
 }
 
-function isConfluenceAuthType(value: string): value is "basic" | "bearer" {
-	return value === "basic" || value === "bearer";
+function isConfluenceAuthType(value: string): value is "basic" | "bearer" | "oauth2" {
+	return value === "basic" || value === "bearer" || value === "oauth2";
 }
 
 function formatRequestHeaders(headers: Record<string, string>): string {

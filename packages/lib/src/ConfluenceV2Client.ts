@@ -1,4 +1,5 @@
 import type { Models, Parameters } from "confluence.js";
+import type { ConfluenceFetch } from "./ConfluenceFetch";
 import type {
 	V2Ancestor,
 	V2Attachment,
@@ -98,12 +99,13 @@ async function requestV2<T>(
 	path: string,
 	body?: unknown,
 	requestHeaders: Record<string, string> = {},
+	fetchRequest: ConfluenceFetch = (url, init) => fetch(url, init),
 ): Promise<T> {
 	const url = `${baseUrl.replace(/\/$/, "")}/wiki/api/v2${path}`;
 
-	let response: Response;
+	let response: Awaited<ReturnType<ConfluenceFetch>>;
 	try {
-		response = await fetch(url, {
+		response = await fetchRequest(url, {
 			method,
 			redirect: "error",
 			headers: buildRequestHeaders(accessToken, requestHeaders, body),
@@ -146,7 +148,7 @@ function buildRequestHeaders(
 	return headers;
 }
 
-async function readJsonSafe(response: Response): Promise<unknown> {
+async function readJsonSafe(response: Pick<Response, "json">): Promise<unknown> {
 	try {
 		return await response.json();
 	} catch {
@@ -188,10 +190,15 @@ export class ConfluenceV2Client {
 	private readonly request: V2Request;
 	private readonly apiRoot: URL;
 
-	constructor(baseUrl: string, accessToken: string, requestHeaders: Record<string, string> = {}) {
+	constructor(
+		baseUrl: string,
+		accessToken: string,
+		requestHeaders: Record<string, string> = {},
+		fetchRequest?: ConfluenceFetch,
+	) {
 		this.apiRoot = new URL(`${baseUrl.replace(/\/$/, "")}/wiki/api/v2/`);
 		this.request = (method, path, body) =>
-			requestV2(baseUrl, accessToken, method, path, body, requestHeaders);
+			requestV2(baseUrl, accessToken, method, path, body, requestHeaders, fetchRequest);
 		this.spaces = new SpaceKeyCache(this.request);
 	}
 
