@@ -112,6 +112,19 @@ permission boundary still need separate checks. The Docker profile is a local
 container smoke test; it does not verify published multi-architecture images or
 the companion GitHub Action release.
 
+### Dataview desktop acceptance
+
+Install and enable Dataview in the dedicated test vault, then add `--dataview`:
+
+```sh
+vp run test:integration obsidian --dataview
+```
+
+This also verifies native tables/lists/tasks, outgoing paper links, embedded note
+context, preserved queries, unchanged versions, dependency-only updates and query
+errors before remote updates. It restores modified source and plugin settings.
+See [DATAVIEW.md](DATAVIEW.md) for setup, supported query forms and hook details.
+
 ## GitHub Actions
 
 Pull requests run package integration on Linux and the built CLI/Chromium check

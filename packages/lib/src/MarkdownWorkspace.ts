@@ -11,6 +11,10 @@ import { runEffect } from "./effects";
 import { parseMarkdownFrontmatter, stringifyMarkdownFrontmatter } from "./MarkdownFrontmatter";
 import { findMarkdownEmbeds, rebaseEmbeddedLinks, selectEmbeddedMarkdown } from "./MarkdownEmbeds";
 import { ConfluenceSettings, ConfluenceSettingsService } from "./Settings";
+import {
+	MarkdownSourceTransformerService,
+	MarkdownPublishFilter,
+} from "./MarkdownSourceTransformer";
 
 interface MarkdownContent {
 	data: Record<string, unknown>;
@@ -80,6 +84,7 @@ export function makeMarkdownWorkspaceEffect(
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem;
 		const path = yield* Path;
+		const sourceTransformer = yield* MarkdownSourceTransformerService;
 		const contentRoot = normalizeContentRoot(settings.contentRoot, path);
 		yield* validateContentRoot(fs, contentRoot);
 		const workspaceSettings = {
@@ -150,30 +155,55 @@ export function makeMarkdownWorkspaceEffect(
 				yield* fs.writeFileString(actualAbsoluteFilePath, updatedData);
 			}).pipe(Effect.mapError(toError));
 
-		const loadMarkdownFile = (absoluteFilePath: string): Effect.Effect<MarkdownFile, Error> =>
+		const transformSource = (
+			content: string,
+			absoluteFilePath: string,
+			frontmatter: Record<string, unknown>,
+		) =>
+			sourceTransformer.transform(content, {
+				absoluteFilePath,
+				sourcePath: path
+					.relative(workspaceSettings.contentRoot, absoluteFilePath)
+					.replaceAll("\\", "/"),
+				frontmatter,
+			});
+
+		const readMarkdownFile = (absoluteFilePath: string): Effect.Effect<MarkdownFile, Error> =>
 			Effect.gen(function* () {
 				const { data, content } = yield* getFileContent(absoluteFilePath);
-				const contents = yield* expandMarkdownEmbeds(
-					content,
-					absoluteFilePath,
-					new Set([absoluteFilePath]),
-				);
-
-				const folderName = path.basename(path.parse(absoluteFilePath).dir);
 				const fileName = path.basename(absoluteFilePath);
-
-				const extension = path.extname(fileName);
-				const pageTitle = path.basename(fileName, extension);
-
 				return {
-					folderName,
+					folderName: path.basename(path.parse(absoluteFilePath).dir),
 					absoluteFilePath: absoluteFilePath.replace(workspaceSettings.contentRoot, ""),
 					fileName,
-					pageTitle,
-					contents,
+					pageTitle: path.basename(fileName, path.extname(fileName)),
+					contents: content,
 					frontmatter: data,
 				};
 			}).pipe(Effect.mapError(toError));
+
+		const prepareMarkdownFile = (
+			file: MarkdownFile,
+			absoluteFilePath: string,
+			applySourceTransforms = true,
+		): Effect.Effect<MarkdownFile, Error> =>
+			Effect.gen(function* () {
+				const transformed = applySourceTransforms
+					? yield* transformSource(file.contents, absoluteFilePath, file.frontmatter)
+					: file.contents;
+				const contents = yield* expandMarkdownEmbeds(
+					transformed,
+					absoluteFilePath,
+					new Set([absoluteFilePath]),
+					applySourceTransforms,
+				);
+				return { ...file, contents };
+			});
+
+		const loadMarkdownFile = (absoluteFilePath: string): Effect.Effect<MarkdownFile, Error> =>
+			Effect.flatMap(readMarkdownFile(absoluteFilePath), (file) =>
+				prepareMarkdownFile(file, absoluteFilePath),
+			);
 
 		const loadMarkdownFiles = (folderPath: string): Effect.Effect<MarkdownFile[], Error> =>
 			Effect.gen(function* () {
@@ -186,7 +216,7 @@ export function makeMarkdownWorkspaceEffect(
 					const stats = yield* fs.stat(absoluteFilePath);
 
 					if (stats.type === "File" && path.extname(entry) === ".md") {
-						const file = yield* loadMarkdownFile(absoluteFilePath);
+						const file = yield* readMarkdownFile(absoluteFilePath);
 						files.push(file);
 					} else if (stats.type === "Directory") {
 						const subFiles = yield* loadMarkdownFiles(absoluteFilePath);
@@ -200,7 +230,7 @@ export function makeMarkdownWorkspaceEffect(
 		const getMarkdownFilesToUpload: Effect.Effect<FilesToUpload, Error> = Effect.gen(
 			function* () {
 				const files = yield* loadMarkdownFiles(workspaceSettings.contentRoot);
-				const filesToPublish = [];
+				const filesToPublish: MarkdownFile[] = [];
 				for (const file of files) {
 					try {
 						if (
@@ -224,7 +254,19 @@ export function makeMarkdownWorkspaceEffect(
 						);
 					}
 				}
-				return filesToPublish;
+				const publishFilter = yield* MarkdownPublishFilter;
+				const normalize = (value: string) =>
+					value.replaceAll("\\", "/").replace(/^\/+/, "");
+				// Keep ordinary embed expansion for page titles/hierarchy in the link mapping,
+				// but execute source hooks only for the requested page and its own embeds.
+				return yield* Effect.forEach(filesToPublish, (file) =>
+					prepareMarkdownFile(
+						file,
+						path.join(workspaceSettings.contentRoot, file.absoluteFilePath),
+						!publishFilter ||
+							normalize(file.absoluteFilePath) === normalize(publishFilter),
+					),
+				);
 			},
 		).pipe(Effect.mapError(toError));
 
@@ -286,6 +328,7 @@ export function makeMarkdownWorkspaceEffect(
 			contents: string,
 			referencedFromFilePath: string,
 			seenFiles: Set<string>,
+			applySourceTransforms: boolean,
 		): Effect.Effect<string, Error> {
 			return Effect.gen(function* () {
 				let expandedContents = "";
@@ -309,6 +352,7 @@ export function makeMarkdownWorkspaceEffect(
 						embedTarget,
 						referencedFromFilePath,
 						seenFiles,
+						applySourceTransforms,
 					);
 					expandedContents += replacement;
 				}
@@ -323,6 +367,7 @@ export function makeMarkdownWorkspaceEffect(
 			rawTarget: string,
 			referencedFromFilePath: string,
 			seenFiles: Set<string>,
+			applySourceTransforms: boolean,
 		): Effect.Effect<string, Error> {
 			return Effect.gen(function* () {
 				const [targetValue, fragment] = (rawTarget.split("|")[0] ?? "").split("#");
@@ -356,10 +401,18 @@ export function makeMarkdownWorkspaceEffect(
 					try: () => selectEmbeddedMarkdown(embeddedContent.content, fragment),
 					catch: toError,
 				});
+				const transformedContent = applySourceTransforms
+					? yield* transformSource(
+							selectedContent,
+							embeddedFilePath,
+							embeddedContent.data,
+						)
+					: selectedContent;
 				const expandedEmbeddedContent = yield* expandMarkdownEmbeds(
-					selectedContent,
+					transformedContent,
 					embeddedFilePath,
 					new Set([...seenFiles, embeddedFilePath]),
+					applySourceTransforms,
 				);
 
 				const targets = new Set<string>();

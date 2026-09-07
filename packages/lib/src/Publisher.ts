@@ -1,3 +1,4 @@
+import { MarkdownPublishFilter } from "./MarkdownSourceTransformer";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { Effect, Layer } from "effect";
 import { AlwaysADFPreprocessors, AlwaysADFProcessingPlugins } from "./ADFProcessingPlugins";
@@ -173,7 +174,9 @@ export class Publisher {
 			const spaceToPublishTo = parentPage.space;
 
 			const workspace = yield* MarkdownWorkspaceService;
-			const files = yield* workspace.getMarkdownFilesToUpload;
+			const files = yield* workspace.getMarkdownFilesToUpload.pipe(
+				Effect.provideService(MarkdownPublishFilter, publishFilter),
+			);
 			const folderTree = yield* createLocalAdfTreeEffect(files, settings);
 			let confluencePagesToPublish = yield* ensureAllFilesExistInConfluenceEffect(
 				confluenceClient,

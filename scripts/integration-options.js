@@ -11,6 +11,7 @@ export function parseIntegrationOptions(argv) {
 		const argument = args.shift();
 		if (argument === "--") continue;
 		if (argument === "--skip-build") options.skipBuild = true;
+		else if (argument === "--dataview") options.dataview = true;
 		else if (argument === "--help") options.help = true;
 		else if (valueOptions[argument]) {
 			const value = args.shift();
@@ -18,6 +19,8 @@ export function parseIntegrationOptions(argv) {
 			options[valueOptions[argument]] = value;
 		} else throw new Error(`Unknown integration option: ${argument}`);
 	}
+	if (options.dataview && options.profile !== "obsidian")
+		throw new Error("--dataview requires the obsidian profile");
 	return options;
 }
 

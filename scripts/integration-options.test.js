@@ -56,3 +56,10 @@ test("rejects ambiguous or credential-bearing test destinations", () => {
 		validateLiveEnvironment({ ...configured, CONFLUENCE_E2E_PARENT_ID: "not-a-page" }),
 	).toThrow("numeric page ID");
 });
+
+test("Dataview integration is explicitly limited to the desktop profile", () => {
+	expect(parseIntegrationOptions(["obsidian", "--dataview"]).dataview).toBe(true);
+	expect(() => parseIntegrationOptions(["live", "--dataview"])).toThrow(
+		"requires the obsidian profile",
+	);
+});

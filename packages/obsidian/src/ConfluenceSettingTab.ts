@@ -207,6 +207,18 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Publish Dataview results")
+			.setDesc(
+				"Publish Dataview TABLE, LIST and TASK queries as content. Requires Dataview enabled in this vault. Ignored code block languages remain omitted; DataviewJS and inline queries are not supported.",
+			)
+			.addToggle((toggle) =>
+				toggle.setValue(this.plugin.settings.renderDataview).onChange(async (value) => {
+					this.plugin.settings.renderDataview = value;
+					await this.plugin.saveSettings();
+				}),
+			);
+
+		new Setting(containerEl)
 			.setName("Mermaid Diagram Theme")
 			.setDesc("Pick the theme to apply to mermaid diagrams")
 			.addDropdown((dropdown) => {
