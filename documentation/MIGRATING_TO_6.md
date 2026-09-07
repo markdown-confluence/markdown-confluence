@@ -46,17 +46,9 @@ The npm CLI executable remains `cli`; `npx @markdown-confluence/cli` also runs i
 
 The CLI requires Node 24.15.0 or newer. The container uses Node 24.15.0 and Debian Chromium and supports AMD64 and ARM64. Its entry point is the CLI: pass `to-adf` directly after the image name for offline conversion. Mount the source directory writable when publishing because frontmatter is updated. The standalone image runs as an unprivileged user; ensure that user can write the mounted notes.
 
-Confluence Cloud is the supported target; Server and Data Center are unsupported. Basic API-token authentication remains the default. Scoped tokens use the Atlassian gateway with the account email; unscoped tokens also work against the site origin. Bearer tokens and extra request headers remain available. The obsolete REST-prefix setting is ignored and has been removed from the Obsidian UI.
+Basic API-token authentication remains the default. Bearer tokens, extra request headers and a configurable REST prefix are available. Those settings do not imply full Confluence Data Center compatibility.
 
-OAuth client credentials are available through the CLI/library and publishing Action. See the [Cloud OAuth setup guide](CLOUD_OAUTH.md) for service accounts, scopes and examples. Configure both the Atlassian API gateway URL and the browsable Confluence site URL. The account needs the relevant page, attachment, label and space permissions, including `read:content.metadata:confluence` for ancestor checks. Tokens are obtained once per invocation; split runs that exceed the token lifetime. Obsidian also supports service accounts and native browser login with rotating tokens in SecretStorage. Device-code support requires Atlassian to enable the grant for the app; see [Obsidian OAuth](OBSIDIAN_OAUTH.md).
-
-## Confluence SDK and REST endpoints
-
-The library now uses `confluence.js` 3.2.0. All authentication modes use REST v2 for pages, blog posts, spaces, ancestors, attachment reads and label reads. Current-user lookup, multipart attachment uploads and label writes retain supported v1 endpoints. See the [Cloud API migration](CLOUD_API_MIGRATION.md) for the route and authentication matrix.
-
-Custom client integrations must migrate to the v3 SDK contract. `createConfluenceClientConfig` returns `ClientConfig` with `host`, `auth` and `headers`; the old `authentication`, `apiPrefix`, Axios configuration and middleware fields are no longer supported. Prefer `createAuthenticatedConfluenceClient(settings, { fetch })` for an injected transport; the old `createClient` override is removed. Direct `sendRequest` calls use SDK v3 `body` and `searchParams`, rather than Axios `data` and `params`. Multipart uploads use native `FormData` and `Blob`. `RequiredConfluenceClient` exposes publisher models instead of the removed SDK v2 `Api`, `Models` and `Parameters` namespaces.
-
-`confluenceApiPrefix`, `DEFAULT_CONFLUENCE_API_PREFIX` and `normalizeConfluenceApiPrefix` remain as deprecated compatibility fields/exports. Endpoint paths are supplied by the SDK; these values no longer change routing.
+OAuth client credentials are available through the CLI/library and publishing Action. See the [Cloud OAuth setup guide](CLOUD_OAUTH.md) for service accounts, scopes and examples. Configure both the Atlassian API gateway URL and the browsable Confluence site URL. The account needs the relevant page, attachment, label and space permissions, including `read:content.metadata:confluence` for ancestor checks. Tokens are obtained once per invocation; split runs that exceed the token lifetime. Obsidian currently exposes Basic and Bearer authentication.
 
 ## Diagrams
 
@@ -69,3 +61,5 @@ PlantUML is disabled by default. Enabling it sends diagram source to the configu
 Install `main.js` and `manifest.json` from the [integration releases](https://github.com/markdown-confluence/obsidian-integration/releases) into `.obsidian/plugins/confluence-integration` in the vault. Enable the plugin in Obsidian's community-plugin settings. The plugin is currently absent from the community catalog; catalog reinstatement remains separate from releasing downloadable artifacts.
 
 Back up the vault before upgrading. Test the new version in a separate vault and Confluence space before using it with an existing publishing tree.
+
+For the next major release after 6, see the [Cloud SDK migration](CLOUD_API_MIGRATION.md#library-migration-from-6). It changes the public client contract and adds native Obsidian OAuth.

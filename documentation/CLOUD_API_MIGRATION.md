@@ -7,6 +7,17 @@ replace operations for which v2 has no equivalent. See the
 [maintainer's update](https://github.com/MrRefactoring/confluence.js/issues/38#issuecomment-5023677731)
 and [SDK migration guide](https://github.com/MrRefactoring/confluence.js/blob/master/MIGRATION.md).
 
+## Library migration from 6
+
+This is a **major release** because the public client contract changes. Existing
+Markdown, page IDs and standard publishing settings continue to work.
+
+The library now uses `confluence.js` 3.2.0. All authentication modes use REST v2 for pages, blog posts, spaces, ancestors, attachment reads and label reads. Current-user lookup, multipart attachment uploads and label writes retain supported v1 endpoints. The route and authentication matrix follows below.
+
+Custom client integrations must migrate to the v3 SDK contract. `createConfluenceClientConfig` returns `ClientConfig` with `host`, `auth` and `headers`; the old `authentication`, `apiPrefix`, Axios configuration and middleware fields are no longer supported. Prefer `createAuthenticatedConfluenceClient(settings, { fetch })` for an injected transport; the old `createClient` override is removed. Direct `sendRequest` calls use SDK v3 `body` and `searchParams`, rather than Axios `data` and `params`. Multipart uploads use native `FormData` and `Blob`. `RequiredConfluenceClient` exposes publisher models instead of the removed SDK v2 `Api`, `Models` and `Parameters` namespaces.
+
+`confluenceApiPrefix`, `DEFAULT_CONFLUENCE_API_PREFIX` and `normalizeConfluenceApiPrefix` remain as deprecated compatibility fields/exports. Endpoint paths are supplied by the SDK; these values no longer change routing.
+
 ## Endpoint coverage
 
 | Operation | REST version | Reason |
@@ -34,7 +45,7 @@ real Confluence operations, including a changed publish and an unchanged republi
 | --- | --- | --- | --- | --- | --- |
 | Scoped API token + email | Atlassian gateway | Passed | Passed | Passed | Passed: 166 notes, 17 Mermaid diagrams |
 | Unscoped API token + email | Site origin and gateway | Passed on both | Passed on site origin | Passed on gateway | Passed: two-note fixture |
-| Service-account OAuth | Atlassian gateway | Passed | Passed | Uses the same client as native OAuth; previous service-account setup retained | Passed: two-note fixture |
+| Service-account OAuth | Atlassian gateway | Passed | Passed | Token exchange, parent/blog access and attachment/label reads passed in the real plugin | Passed: two-note fixture |
 | Native browser OAuth | Atlassian gateway | Shared transport covered by service-account suite | Shared publishing path | Passed, including real rotating refresh tokens | Not a container login method |
 
 The small container fixture retains all image variants, inline-comment checks and
