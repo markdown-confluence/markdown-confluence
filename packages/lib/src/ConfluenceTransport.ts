@@ -1,4 +1,4 @@
-import axios, { AxiosAdapter, AxiosError } from "axios";
+import axios, { AxiosAdapter, AxiosError, type AxiosRequestConfig } from "axios";
 
 /** Preserve useful errors across confluence.js's Axios error handler. */
 export function createConfluenceTransport(
@@ -6,13 +6,15 @@ export function createConfluenceTransport(
 ): AxiosAdapter {
 	return async (config) => {
 		for (let attempt = 0; ; attempt++) {
+			if (config.signal?.aborted) throw new Error("Confluence request aborted");
 			try {
 				return await adapter(config);
 			} catch (error) {
+				if (config.signal?.aborted) throw new Error("Confluence request aborted");
 				if (!axios.isAxiosError(error)) throw error;
 				const delay = retryDelay(error, attempt);
-				if (delay !== undefined && !config.signal?.aborted) {
-					await new Promise((resolve) => setTimeout(resolve, delay));
+				if (delay !== undefined) {
+					await waitForRetry(delay, config.signal);
 					continue;
 				}
 				const status = error.response?.status;
@@ -31,6 +33,22 @@ export function createConfluenceTransport(
 			}
 		}
 	};
+}
+
+function waitForRetry(delay: number, signal: AxiosRequestConfig["signal"]): Promise<void> {
+	return new Promise((resolve, reject) => {
+		const abort = () => {
+			clearTimeout(timer);
+			signal?.removeEventListener?.("abort", abort);
+			reject(new Error("Confluence request aborted"));
+		};
+		const timer = setTimeout(() => {
+			signal?.removeEventListener?.("abort", abort);
+			resolve();
+		}, delay);
+		signal?.addEventListener?.("abort", abort, { once: true });
+		if (signal?.aborted) abort();
+	});
 }
 
 function retryDelay(error: AxiosError, attempt: number): number | undefined {

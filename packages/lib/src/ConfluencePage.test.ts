@@ -101,9 +101,7 @@ for (const confluenceAuthType of ["basic", "bearer", "oauth2"] as const) {
 					"123",
 				),
 			),
-		).rejects.toMatchObject({
-			message: "Confluence page reads require an HTTPS base URL to protect credentials.",
-		});
+		).rejects.toThrow(/HTTPS.*base URL/);
 		expect(createClient).not.toHaveBeenCalled();
 	});
 }

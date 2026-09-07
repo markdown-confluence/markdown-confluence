@@ -65,6 +65,39 @@ test("honors Retry-After for a rejected JSON write", async () => {
 	expect(adapter).toHaveBeenCalledTimes(2);
 });
 
+test("aborts a Retry-After wait immediately without sending another request", async () => {
+	vi.useFakeTimers();
+	const controller = new AbortController();
+	const request = { ...config(), signal: controller.signal };
+	const response = {
+		status: 429,
+		statusText: "Too Many Requests",
+		headers: new AxiosHeaders({ "retry-after": "30" }),
+		config: request,
+		data: {},
+	};
+	const adapter = vi
+		.fn<AxiosAdapter>()
+		.mockRejectedValue(
+			new AxiosError("rate limited", "ERR_BAD_REQUEST", request, undefined, response),
+		);
+	const result = createConfluenceTransport(adapter)(request).catch((error) => error);
+	await vi.advanceTimersByTimeAsync(0);
+	expect(vi.getTimerCount()).toBe(1);
+	controller.abort();
+	expect((await result).message).toBe("Confluence request aborted");
+	expect(adapter).toHaveBeenCalledOnce();
+	expect(vi.getTimerCount()).toBe(0);
+});
+
+test("does not send an already aborted request", async () => {
+	const adapter = vi.fn<AxiosAdapter>();
+	await expect(
+		createConfluenceTransport(adapter)({ ...config(), signal: AbortSignal.abort() }),
+	).rejects.toThrow("Confluence request aborted");
+	expect(adapter).not.toHaveBeenCalled();
+});
+
 test.each(["stream", "long-delay", "forbidden"])(
 	"does not retry %s responses unsafely",
 	async (scenario) => {

@@ -1,12 +1,36 @@
 import { afterEach, expect, test, vi } from "@effect/vitest";
 import { createServer } from "node:http";
+import axios from "axios";
 import { Effect } from "effect";
 import { createAuthenticatedConfluenceClient } from "./AuthenticatedConfluenceClient";
-import { DEFAULT_SETTINGS } from "./Settings";
+import { DEFAULT_SETTINGS, validateConfluenceSettings } from "./Settings";
 import { ATLASSIAN_OAUTH_TOKEN_URL } from "./OAuthToken";
 import { uploadBuffer } from "./Attachments";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+	vi.unstubAllGlobals();
+	vi.restoreAllMocks();
+});
+
+test("rejects an insecure OAuth destination before exchanging credentials", async () => {
+	const fetch = vi.fn();
+	vi.stubGlobal("fetch", fetch);
+	const settings = {
+		...DEFAULT_SETTINGS,
+		confluenceAuthType: "oauth2" as const,
+		confluenceBaseUrl: "http://example.atlassian.net",
+		atlassianClientId: "client-id",
+		atlassianClientSecret: "client-secret",
+	};
+	expect(validateConfluenceSettings(settings).issues).toContainEqual({
+		field: "confluenceBaseUrl",
+		message: "OAuth requires an HTTPS Confluence API base URL",
+	});
+	await expect(Effect.runPromise(createAuthenticatedConfluenceClient(settings))).rejects.toThrow(
+		"OAuth requires an HTTPS Confluence API base URL",
+	);
+	expect(fetch).not.toHaveBeenCalled();
+});
 
 test("exchanges client credentials and uses OAuth for v2 pages and multipart uploads without Basic auth", async () => {
 	const requests: {
@@ -60,6 +84,13 @@ test("exchanges client credentials and uses OAuth for v2 pages and multipart upl
 	const address = server.address();
 	if (!address || typeof address === "string") throw new Error("Missing test server port");
 	const realFetch = globalThis.fetch;
+	const apiOrigin = "https://confluence.test";
+	const localOrigin = `http://127.0.0.1:${address.port}`;
+	// Route the configured HTTPS endpoint to the test server inside the test transports only.
+	const httpAdapter = axios.getAdapter("http");
+	vi.spyOn(axios, "getAdapter").mockReturnValue((config) =>
+		httpAdapter({ ...config, baseURL: config.baseURL?.replace(apiOrigin, localOrigin) }),
+	);
 	let exchanges = 0;
 	vi.stubGlobal("fetch", async (input: string | URL | Request, init?: RequestInit) => {
 		if (input === ATLASSIAN_OAUTH_TOKEN_URL) {
@@ -77,7 +108,7 @@ test("exchanges client credentials and uses OAuth for v2 pages and multipart upl
 				}),
 			);
 		}
-		return realFetch(input, init);
+		return realFetch(String(input).replace(apiOrigin, localOrigin), init);
 	});
 	try {
 		const client = await Effect.runPromise(
@@ -86,7 +117,7 @@ test("exchanges client credentials and uses OAuth for v2 pages and multipart upl
 				confluenceAuthType: "oauth2",
 				atlassianClientId: "client-id",
 				atlassianClientSecret: "client-secret",
-				confluenceBaseUrl: `http://127.0.0.1:${address.port}/ex/confluence/cloud-id`,
+				confluenceBaseUrl: `${apiOrigin}/ex/confluence/cloud-id`,
 			}),
 		);
 		expect((await client.users.getCurrentUser()).accountId).toBe("service-account");

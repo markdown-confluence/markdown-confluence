@@ -3,10 +3,10 @@ import { spawn } from "node:child_process";
 import { Effect } from "effect";
 import { FileSystem } from "effect/FileSystem";
 import { Path as EffectPath } from "effect/Path";
-import { RuntimeEnvironmentService } from "../packages/lib/src/effects/index.ts";
 import { fileURLToPath } from "node:url";
 import {
 	ConfluenceUploadSettings,
+	RuntimeEnvironmentService,
 	createAuthenticatedConfluenceClient,
 	runEffect,
 } from "../packages/lib/dist/index.js";
