@@ -60,7 +60,7 @@
 		"@atlaskit/editor-prosemirror": "^8.0.3",
 		"@effect/platform-node": "4.0.0-rc.112",
 		"axios": "^1.20.0",
-		"confluence.js": "^2.1.0",
+		"confluence.js": "^3.2.0",
 		"effect": "4.0.0-rc.112",
 		"form-data": "^4.0.4",
 		"formdata-node": "^6.0.3",
