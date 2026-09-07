@@ -4,7 +4,16 @@ import { afterEach, expect, test } from "@effect/vitest";
 import { Effect } from "effect";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 import { RuntimeEnvironmentService, runEffect } from "./effects";
-import { loadMarkdownWorkspace, shouldPublishMarkdownFile } from "./MarkdownWorkspace";
+import {
+	loadMarkdownWorkspace,
+	shouldPublishMarkdownFile,
+	makeMarkdownWorkspaceEffect,
+} from "./MarkdownWorkspace";
+import {
+	MarkdownSourceTransformerService,
+	MarkdownPublishFilter,
+	type MarkdownSourceTransformer,
+} from "./MarkdownSourceTransformer";
 
 test("folder selection respects directory boundaries on all platforms", () => {
 	const settings = { ...DEFAULT_SETTINGS, folderToPublish: "docs" };
@@ -240,3 +249,109 @@ const testSettings: ConfluenceSettings = {
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,
 };
+
+async function transformedWorkspace(
+	files: Record<string, string>,
+	transformer: MarkdownSourceTransformer,
+) {
+	return runEffect(
+		Effect.gen(function* () {
+			const fs = yield* FileSystem;
+			const path = yield* Path;
+			tmpRoot = yield* fs.makeTempDirectory({ prefix: "markdown-confluence-source-hook-" });
+			for (const [name, content] of Object.entries(files)) {
+				const target = path.join(tmpRoot, name);
+				yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+				yield* fs.writeFileString(target, content);
+			}
+			return yield* makeMarkdownWorkspaceEffect({
+				...testSettings,
+				contentRoot: tmpRoot,
+				folderToPublish: "Publish",
+			});
+		}).pipe(Effect.provideService(MarkdownSourceTransformerService, transformer)),
+	);
+}
+
+test("source transforms preserve original queries through frontmatter write-back and raw reads", async () => {
+	const source = "```dataview\nTABLE authors\n```";
+	const workspace = await transformedWorkspace(
+		{ "Publish/Note.md": source },
+		{
+			transform: () => Effect.succeed("| Authors |\n| --- |\n| Ada |"),
+		},
+	);
+	const files = await Effect.runPromise(workspace.getMarkdownFilesToUpload);
+	expect(files[0]?.contents).toContain("| Ada |");
+	await Effect.runPromise(workspace.updateMarkdownValues("Publish/Note.md", { pageId: "123" }));
+	const saved = await runEffect(
+		Effect.gen(function* () {
+			return yield* (yield* FileSystem).readFileString(`${tmpRoot}/Publish/Note.md`);
+		}),
+	);
+	expect(saved).toContain(source);
+	expect(saved).toContain("connie-page-id:");
+	expect(saved).not.toContain("| Ada |");
+	expect(await Effect.runPromise(workspace.readText("Note.md", "Publish/Note.md"))).toContain(
+		source,
+	);
+});
+
+test("selected notes and included sections are transformed with their original context before embed expansion", async () => {
+	const visited: string[] = [];
+	const workspace = await transformedWorkspace(
+		{
+			"Publish/Note.md": "SOURCE",
+			"Notes/Included.md": "# Keep\nEMBED QUERY\n# Skip\nBAD QUERY",
+			"Notes/Other.md": "BAD QUERY",
+		},
+		{
+			transform: (markdown, context) => {
+				visited.push(context.sourcePath);
+				if (markdown.includes("BAD QUERY"))
+					return Effect.fail(new Error("Must not evaluate unrelated content"));
+				return Effect.succeed(
+					markdown
+						.replace("SOURCE", "![[Notes/Included#Keep]]")
+						.replace("EMBED QUERY", `From ${context.sourcePath}`),
+				);
+			},
+		},
+	);
+	const files = await Effect.runPromise(workspace.getMarkdownFilesToUpload);
+	expect(visited).toEqual(["Publish/Note.md", "Notes/Included.md"]);
+	expect(files[0]?.contents).toContain("From Notes/Included.md");
+	expect(files[0]?.contents).not.toContain("EMBED QUERY");
+});
+
+test("single-note publication avoids other queries while retaining their page mapping", async () => {
+	const visited: string[] = [];
+	const workspace = await transformedWorkspace(
+		{
+			"Publish/One.md": "One",
+			"Publish/Two.md": "![[Notes/Title]]",
+			"Notes/Title.md": "# Embedded title",
+		},
+		{
+			transform: (markdown, context) => {
+				visited.push(context.sourcePath);
+				return context.sourcePath.endsWith("Two.md")
+					? Effect.fail(new Error("Invalid query"))
+					: Effect.succeed(markdown);
+			},
+		},
+	);
+	const files = await Effect.runPromise(
+		workspace.getMarkdownFilesToUpload.pipe(
+			Effect.provideService(MarkdownPublishFilter, "Publish/One.md"),
+		),
+	);
+	expect(files).toHaveLength(2);
+	expect(files.find((file) => file.fileName === "Two.md")?.contents).toContain(
+		"# Embedded title",
+	);
+	expect(visited).toEqual(["Publish/One.md"]);
+	await expect(Effect.runPromise(workspace.getMarkdownFilesToUpload)).rejects.toThrow(
+		"Invalid query",
+	);
+});

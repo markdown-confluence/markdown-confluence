@@ -22,6 +22,7 @@ const help = `Integration profiles (vp run test:integration [profile] [options])
   vault      Create a dedicated Obsidian fixture vault, or refresh only its plugin build.
   obsidian   Run the desktop plugin test in the prepared, open vault via Obsidian CLI.
 
+  --dataview            Also test Dataview in the obsidian profile (requires Dataview installed).
   --skip-build          Reuse the current build (CI/watch mode; does not check freshness).
   --vault PATH          Dedicated vault path; defaults to ../markdown-confluence-integration-vault.
   --settings-from PATH  Read test credentials from an existing plugin data.json.
@@ -306,6 +307,7 @@ function runIntegration() {
 					yield* step(
 						"Desktop plugin create/unchanged/update verification",
 						runObsidianIntegration({
+							dataview: options.dataview,
 							vaultPath,
 							environment,
 							reportDirectory,

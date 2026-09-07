@@ -13,6 +13,7 @@ Copyright (c) 2022 Atlassian US, Inc.
 - Publish Obsidian notes to Atlassian Confluence
 - Support for Obsidian markdown extensions
 - Mermaid and PlantUML diagram rendering
+- Optional [Dataview TABLE, LIST and TASK publication](../../documentation/DATAVIEW.md)
 - CLI for pushing markdown files from disk
 - Commands and ribbon icon for easy access
 

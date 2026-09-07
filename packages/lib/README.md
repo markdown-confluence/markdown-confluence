@@ -38,6 +38,7 @@ main().catch((error) => {
 
 - Markdown to ADF conversion
 - Wikilink handling
+- Optional asynchronous [source transformation before conversion](../../documentation/DATAVIEW.md#source-transform-hook)
 - Image uploading support
 - Mermaid diagram upload pipeline integration
 - Comment preservation

@@ -1,3 +1,9 @@
+import {
+	MarkdownSourceTransformerService,
+	type MarkdownSourceTransformer,
+	type MarkdownSourceContext,
+} from "./MarkdownSourceTransformer";
+import { transformMarkdownCodeBlocks, type MarkdownCodeBlock } from "./MarkdownCodeBlocks";
 import { fetchConfluencePageAdf, resolveConfluencePageId } from "./ConfluencePage";
 import { convertADFToMarkdown, type AdfToMarkdownOptions } from "./AdfConversion";
 import { readAdfDocument } from "./AdfDocument";
@@ -85,6 +91,11 @@ import {
 } from "./SettingsConfig";
 
 export {
+	MarkdownSourceTransformerService,
+	type MarkdownSourceTransformer,
+	type MarkdownSourceContext,
+	transformMarkdownCodeBlocks,
+	type MarkdownCodeBlock,
 	fetchConfluencePageAdf,
 	resolveConfluencePageId,
 	convertADFToMarkdown,

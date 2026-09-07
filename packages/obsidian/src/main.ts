@@ -10,6 +10,7 @@ import {
 	MarkdownConfluencePlatform,
 	MarkdownWorkspaceLive,
 	MarkdownWorkspaceService,
+	MarkdownSourceTransformerService,
 	createConfluenceClientConfig,
 	shouldPublishMarkdownFile,
 } from "@markdown-confluence/lib";
@@ -26,9 +27,11 @@ import {
 } from "./ConfluencePerPageForm";
 import { ObsidianPlatformLive } from "./effects/ObsidianPlatform";
 import type { Mermaid, MermaidConfig } from "mermaid";
+import { createDataviewTransformer } from "./DataviewTransformer";
 
 export interface ObsidianPluginSettings extends ConfluenceUploadSettings.ConfluenceSettings {
 	showPublishResultsModal: boolean;
+	renderDataview: boolean;
 	mermaidTheme:
 		| "match-obsidian"
 		| "light-obsidian"
@@ -381,7 +384,11 @@ export default class ConfluencePlugin extends Plugin {
 		this.settings = Object.assign(
 			{},
 			ConfluenceUploadSettings.DEFAULT_SETTINGS,
-			{ mermaidTheme: "match-obsidian", showPublishResultsModal: true },
+			{
+				mermaidTheme: "match-obsidian",
+				showPublishResultsModal: true,
+				renderDataview: false,
+			},
 			loaded,
 			{
 				// Deep-merge the nested plantuml object so a persisted partial (or
@@ -405,6 +412,10 @@ export default class ConfluencePlugin extends Plugin {
 		return Effect.runPromise(
 			effect.pipe(
 				Effect.provide(MarkdownWorkspaceLive),
+				Effect.provideService(
+					MarkdownSourceTransformerService,
+					createDataviewTransformer(this.app, this.settings),
+				),
 				Effect.provide(this.settingsLayer),
 				Effect.provide(this.platform),
 				Effect.mapError(toError),

@@ -5,6 +5,7 @@ import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { RuntimeEnvironmentService } from "../packages/lib/src/effects/index.ts";
 import { vaultMarker } from "./integration-vault.js";
+import { runDataviewIntegration } from "./integration-dataview.js";
 
 const publishedNotes = [
 	"Release Tests/Release Tests.md",
@@ -26,7 +27,12 @@ export function parseObsidianOutput(output) {
 }
 
 /** Test the installed plugin in the real Electron/Obsidian runtime, without a UI mock. */
-export function runObsidianIntegration({ vaultPath, environment, reportDirectory }) {
+export function runObsidianIntegration({
+	vaultPath,
+	environment,
+	reportDirectory,
+	dataview = false,
+}) {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem;
 		const path = yield* Path;
@@ -197,6 +203,14 @@ export function runObsidianIntegration({ vaultPath, environment, reportDirectory
 		);
 		// Restore the remote fixture too, so the next run starts from the same note.
 		yield* publish();
+		if (dataview) {
+			const result = yield* runDataviewIntegration({ evaluate, get, prefix: marker.prefix });
+			yield* fs.writeFileString(
+				path.join(reportDirectory, "dataview.json"),
+				JSON.stringify(result, null, 2),
+			);
+		}
+
 		yield* fs.writeFileString(
 			path.join(reportDirectory, "obsidian.json"),
 			JSON.stringify(
