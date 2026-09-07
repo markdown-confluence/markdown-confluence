@@ -72,15 +72,15 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Atlassian API Token")
 			.setDesc("")
-			.addText((text) =>
-				text
-					.setPlaceholder("")
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setPlaceholder("")
 					.setValue(this.plugin.settings.atlassianApiToken)
 					.onChange(async (value) => {
 						this.plugin.settings.atlassianApiToken = value;
 						await saveSettingsAndRenderValidation();
-					}),
-			);
+					});
+			});
 
 		new Setting(containerEl)
 			.setName("Authentication Type")

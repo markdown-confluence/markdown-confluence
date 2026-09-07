@@ -4,7 +4,6 @@ import {
 	ConfluenceUploadSettings,
 	Publisher,
 	ConfluencePageConfig,
-	renderADFDoc,
 	MermaidRendererPlugin,
 	PlantumlRendererPlugin,
 	UploadAdfFileResult,
@@ -26,7 +25,7 @@ import {
 	mapFrontmatterToConfluencePerPageUIValues,
 } from "./ConfluencePerPageForm";
 import { ObsidianPlatformLive } from "./effects/ObsidianPlatform";
-import type { Mermaid } from "mermaid";
+import type { Mermaid, MermaidConfig } from "mermaid";
 
 export interface ObsidianPluginSettings extends ConfluenceUploadSettings.ConfluenceSettings {
 	showPublishResultsModal: boolean;
@@ -152,7 +151,7 @@ export default class ConfluencePlugin extends Plugin {
 				bodyStyles = "theme-dark";
 				break;
 			case "light-obsidian":
-				bodyStyles = "theme-dark";
+				bodyStyles = "theme-light";
 				break;
 			default:
 				throw new Error("Missing theme");
@@ -189,10 +188,17 @@ export default class ConfluencePlugin extends Plugin {
 			}
 		}
 
+		const mermaidConfig: MermaidConfig = {
+			...((await loadMermaid()) as Mermaid).mermaidAPI.getConfig(),
+			theme: bodyStyles.split(/\s+/).includes("theme-dark") ? "dark" : "default",
+		};
+		// Recompute colors for the selected theme instead of reusing Obsidian's
+		// previously derived colors, which can leave dark arrows on a dark image.
+		delete mermaidConfig.themeVariables;
 		return {
 			extraStyleSheets,
 			extraStyles,
-			mermaidConfig: ((await loadMermaid()) as Mermaid).mermaidAPI.getConfig(),
+			mermaidConfig,
 			bodyStyles,
 		};
 	}
@@ -235,35 +241,13 @@ export default class ConfluencePlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "adf-to-markdown",
-			name: "ADF To Markdown",
-			callback: async () => {
-				console.log("HMMMM");
-				const json = JSON.parse(
-					'{"type":"doc","content":[{"type":"paragraph","content":[{"text":"Testing","type":"text"}]}],"version":1}',
-				);
-				console.log({ json });
-
-				const confluenceClient = new ObsidianConfluenceClient(
-					createConfluenceClientConfig(this.settings),
-				);
-				const testingPage = await confluenceClient.content.getContentById({
-					id: "9732097",
-					expand: ["body.atlas_doc_format", "space"],
-				});
-				const adf = JSON.parse(
-					testingPage.body?.atlas_doc_format?.value || '{type: "doc", content:[]}',
-				);
-				renderADFDoc(adf);
-			},
-		});
-
-		this.addCommand({
 			id: "publish-current",
 			name: "Publish Current File to Confluence",
 			checkCallback: (checking: boolean) => {
+				const activePath = this.activeLeafPath(this.workspace);
+				if (!activePath) return false;
 				if (!checking) {
-					void this.runPublish(this.activeLeafPath(this.workspace));
+					void this.runPublish(activePath);
 				}
 				return true;
 			},
