@@ -1,6 +1,6 @@
 {
 	"name": "@markdown-confluence/plantuml-renderer",
-	"version": "5.5.2",
+	"version": "6.0.0",
 	"description": "HTTP-based PlantUML renderer for the markdown-confluence publish pipeline",
 	"keywords": [],
 	"homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/plantuml-renderer",
@@ -35,7 +35,7 @@
 		"lint": "vp lint src"
 	},
 	"dependencies": {
-		"@markdown-confluence/lib": "workspace:5.5.2",
+		"@markdown-confluence/lib": "workspace:*",
 		"plantuml-encoder": "1.4.0"
 	},
 	"devDependencies": {

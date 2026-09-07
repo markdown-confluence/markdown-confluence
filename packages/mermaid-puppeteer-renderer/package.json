@@ -1,6 +1,6 @@
 {
 	"name": "@markdown-confluence/mermaid-puppeteer-renderer",
-	"version": "5.5.2",
+	"version": "6.0.0",
 	"description": "This library allows you to publish your notes to Confluence",
 	"keywords": [],
 	"homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/mermaid-puppeteer-renderer",
@@ -36,7 +36,7 @@
 	},
 	"dependencies": {
 		"@effect/platform-node": "4.0.0-beta.70",
-		"@markdown-confluence/lib": "workspace:5.5.2",
+		"@markdown-confluence/lib": "workspace:*",
 		"effect": "4.0.0-beta.70",
 		"mermaid": "^11.16.1",
 		"puppeteer": "^25.4.0"

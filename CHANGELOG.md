@@ -1,5 +1,65 @@
 # Changelog
 
+## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.5.2...obsidian-confluence-root-v6.0.0) (2026-09-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* the public library is ESM and replaces LoaderAdaptor/SettingsLoader constructor arguments with settings and the MarkdownWorkspace service. The CLI requires Node 24.15.0 or newer.
+
+### Features
+
+* allow publish result notices in obsidian ([82333d5](https://github.com/markdown-confluence/markdown-confluence/commit/82333d507a930d32e6d95743cc7c070521be0e92))
+* allow publish result notices in Obsidian ([c58bb83](https://github.com/markdown-confluence/markdown-confluence/commit/c58bb834258aaff07335a53cc8dea2cfc4c5bbb4))
+* release verified publishing fixes and features ([#893](https://github.com/markdown-confluence/markdown-confluence/issues/893)) ([0144b73](https://github.com/markdown-confluence/markdown-confluence/commit/0144b733afad912eb57b5034db046892235678fd))
+
+
+### Bug Fixes
+
+* add vitest runner dependency ([#734](https://github.com/markdown-confluence/markdown-confluence/issues/734)) ([ce39ae4](https://github.com/markdown-confluence/markdown-confluence/commit/ce39ae4d112b2f7d583d9452803ea1c9b65d16f1))
+* bump root effect runtime ([d27a15d](https://github.com/markdown-confluence/markdown-confluence/commit/d27a15daaf78d0d9b432e3b4b3af98274fcb37a7))
+* bump root effect runtime to 4.0.0-beta.70 ([5200fd7](https://github.com/markdown-confluence/markdown-confluence/commit/5200fd7cbe7e73e0955688934dd857ba86938df2))
+* explain missing space key errors ([#686](https://github.com/markdown-confluence/markdown-confluence/issues/686)) ([6b913ac](https://github.com/markdown-confluence/markdown-confluence/commit/6b913ac7d009515eeceb1b1b2db2929f4145b6b4))
+* handle callout wikilink images ([32306a8](https://github.com/markdown-confluence/markdown-confluence/commit/32306a83cb7ca0f2fedd369c865354d9b42c966e))
+* handle callout wikilink images ([c4c5848](https://github.com/markdown-confluence/markdown-confluence/commit/c4c5848f6c2fd2961f6ed9a36d911793e282c783))
+* ignore markdown HTML comments ([#682](https://github.com/markdown-confluence/markdown-confluence/issues/682)) ([59d7141](https://github.com/markdown-confluence/markdown-confluence/commit/59d7141f53d5dda301dd8adc6ea2c6a29be528b9))
+* normalize content root and document config ([#684](https://github.com/markdown-confluence/markdown-confluence/issues/684)) ([5ca8cbf](https://github.com/markdown-confluence/markdown-confluence/commit/5ca8cbf3203fbdb10ce80432f3343b86f0f81cfa))
+* persist root page id frontmatter ([#685](https://github.com/markdown-confluence/markdown-confluence/issues/685)) ([5e07a36](https://github.com/markdown-confluence/markdown-confluence/commit/5e07a36357a76b5726c69f39db907c1a29ee384e))
+* refresh lockfile for effect bump ([2b33420](https://github.com/markdown-confluence/markdown-confluence/commit/2b3342093e99622edfb92599c6e1bc61c4d59513))
+* refresh lockfile for effect bump ([a7d1974](https://github.com/markdown-confluence/markdown-confluence/commit/a7d1974ef2ca911692941c2d2cca94546daace38))
+* resolve wikilinks with paths ([#692](https://github.com/markdown-confluence/markdown-confluence/issues/692)) ([9ede0aa](https://github.com/markdown-confluence/markdown-confluence/commit/9ede0aa696f1fb8ab379fcd17558632b5525df03))
+* support reference-style images ([#683](https://github.com/markdown-confluence/markdown-confluence/issues/683)) ([249f972](https://github.com/markdown-confluence/markdown-confluence/commit/249f972f3dd06189c63c708c4bc0af9db0c5bc28))
+* update Obsidian SDK compatibility ([#699](https://github.com/markdown-confluence/markdown-confluence/issues/699)) ([2ef4241](https://github.com/markdown-confluence/markdown-confluence/commit/2ef4241ba043247461e53938f53a69337e6a18ef))
+
+
+### Dependencies
+
+* **deps:** bump @atlaskit/adf-schema from 52.11.3 to 52.11.4 ([#721](https://github.com/markdown-confluence/markdown-confluence/issues/721)) ([bf0ec4a](https://github.com/markdown-confluence/markdown-confluence/commit/bf0ec4afa9e581823f52371c29797bd675d4cb60))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.31.8 to 8.32.0 ([#731](https://github.com/markdown-confluence/markdown-confluence/issues/731)) ([0f41ffe](https://github.com/markdown-confluence/markdown-confluence/commit/0f41ffe252af93c871b16ed7b37d963831df3c9f))
+* **deps:** bump @babel/traverse from 7.20.5 to 7.23.2 ([8b604f1](https://github.com/markdown-confluence/markdown-confluence/commit/8b604f14ae984c1b0c2a962251ca127aeba1ef1e))
+* **deps:** bump actions/dependency-review-action from 3.1.0 to 5.0.0 ([#717](https://github.com/markdown-confluence/markdown-confluence/issues/717)) ([5f297c3](https://github.com/markdown-confluence/markdown-confluence/commit/5f297c3dded26ccde161a0b07de1e56c696ab2dc))
+* **deps:** bump actions/upload-artifact from 3.1.2 to 4.0.0 ([221f04e](https://github.com/markdown-confluence/markdown-confluence/commit/221f04ec53c79ae3a131478b9f5a61e642f83b99))
+* **deps:** bump axios and confluence.js ([#697](https://github.com/markdown-confluence/markdown-confluence/issues/697)) ([9045c41](https://github.com/markdown-confluence/markdown-confluence/commit/9045c41b69b3467e405a8916c76c2c84c423290a))
+* **deps:** bump basic-ftp from 5.0.3 to 5.3.1 ([#691](https://github.com/markdown-confluence/markdown-confluence/issues/691)) ([0dbaebc](https://github.com/markdown-confluence/markdown-confluence/commit/0dbaebc8cfb2003df69d3967255aeead87b73ae5))
+* **deps:** bump bn.js from 4.12.0 to 5.2.3 ([#700](https://github.com/markdown-confluence/markdown-confluence/issues/700)) ([c425711](https://github.com/markdown-confluence/markdown-confluence/commit/c425711e074d03ddce9ab802915d5dc0c223e4dd))
+* **deps:** bump brace-expansion from 1.1.11 to 2.1.0 ([#694](https://github.com/markdown-confluence/markdown-confluence/issues/694)) ([d3c1bab](https://github.com/markdown-confluence/markdown-confluence/commit/d3c1baba20f2b5d74a133306a23c2e350cc7cb26))
+* **deps:** bump browserify-sign from 4.2.1 to 4.2.2 ([cf591c8](https://github.com/markdown-confluence/markdown-confluence/commit/cf591c8700a088afe1aeab40af8a4c4151867cbd))
+* **deps:** bump docker/build-push-action from 5.0.0 to 7.1.0 ([#718](https://github.com/markdown-confluence/markdown-confluence/issues/718)) ([fd019b4](https://github.com/markdown-confluence/markdown-confluence/commit/fd019b40d26c584a022d1dd5275a8ae278035567))
+* **deps:** bump docker/login-action from 2.2.0 to 3.0.0 ([755f447](https://github.com/markdown-confluence/markdown-confluence/commit/755f447e18783f82c0454880aaf215c323d021ab))
+* **deps:** bump docker/metadata-action from 4.6.0 to 5.4.0 ([06d39cc](https://github.com/markdown-confluence/markdown-confluence/commit/06d39cc170c99f443e5ec957530172ddbcf4aa16))
+* **deps:** bump docker/metadata-action from 5.4.0 to 6.0.0 ([#714](https://github.com/markdown-confluence/markdown-confluence/issues/714)) ([7c528b5](https://github.com/markdown-confluence/markdown-confluence/commit/7c528b5e396720e53a3e8955245eb957fe3bdb41))
+* **deps:** bump github/codeql-action from 2.13.4 to 4.35.5 ([#716](https://github.com/markdown-confluence/markdown-confluence/issues/716)) ([18ad5e1](https://github.com/markdown-confluence/markdown-confluence/commit/18ad5e1641aea42834a678389ceea15b58b53abb))
+* **deps:** bump lodash from 4.17.21 to 4.18.1 ([#705](https://github.com/markdown-confluence/markdown-confluence/issues/705)) ([47dc808](https://github.com/markdown-confluence/markdown-confluence/commit/47dc808256c4f23c7a9fcac4abe0f2ed5c8a067b))
+* **deps:** bump mermaid from 10.4.0 to 10.9.6 ([#690](https://github.com/markdown-confluence/markdown-confluence/issues/690)) ([fdb50a7](https://github.com/markdown-confluence/markdown-confluence/commit/fdb50a7c6531ac4cfa37c788bfb45a6bbd0f454f))
+* **deps:** bump ossf/scorecard-action from 2.2.0 to 2.3.1 ([b73ae83](https://github.com/markdown-confluence/markdown-confluence/commit/b73ae8360ea5bfa62441592b00db2fe084a7f39d))
+* **deps:** bump prosemirror-markdown from 1.11.1 to 1.12.0 ([445e002](https://github.com/markdown-confluence/markdown-confluence/commit/445e002505f45d8020b9288fbfac57ae8610589b))
+* **deps:** bump puppeteer from 25.0.2 to 25.0.4 ([#730](https://github.com/markdown-confluence/markdown-confluence/issues/730)) ([67edc0a](https://github.com/markdown-confluence/markdown-confluence/commit/67edc0a0322b8f543d44a8cc1c011dab580a133b))
+* **deps:** bump puppeteer/puppeteer from 24.43.1 to 25.0.4 in /packages/cli ([#713](https://github.com/markdown-confluence/markdown-confluence/issues/713)) ([5324d2a](https://github.com/markdown-confluence/markdown-confluence/commit/5324d2a478691ae8072c2a6d8b54d1e64df32a29))
+* **deps:** bump puppeteer/puppeteer in /packages/cli ([fdf3cbf](https://github.com/markdown-confluence/markdown-confluence/commit/fdf3cbf31fc59592a06420ed7ff1484f8719def2))
+* **deps:** bump step-security/harden-runner from 2.5.1 to 2.19.3 ([#723](https://github.com/markdown-confluence/markdown-confluence/issues/723)) ([6a5eb46](https://github.com/markdown-confluence/markdown-confluence/commit/6a5eb46b7fa126d1287ea2fbeb209d15bebf249c))
+* **deps:** bump uuid and @types/uuid ([5d40d19](https://github.com/markdown-confluence/markdown-confluence/commit/5d40d1950669baf883fb6d2473577afdfb8d5565))
+* **deps:** bump uuid from 13.0.2 to 14.0.0 ([#733](https://github.com/markdown-confluence/markdown-confluence/issues/733)) ([972147f](https://github.com/markdown-confluence/markdown-confluence/commit/972147ff62b127917a5233a8d0c47cf6b9914f30))
+
 ## [5.5.2](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.5.1...obsidian-confluence-root-v5.5.2) (2023-09-24)
 
 

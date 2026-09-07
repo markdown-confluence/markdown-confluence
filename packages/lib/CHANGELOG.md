@@ -1,5 +1,37 @@
 # Changelog
 
+## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.5.2...@markdown-confluence/lib-v6.0.0) (2026-09-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* the public library is ESM and replaces LoaderAdaptor/SettingsLoader constructor arguments with settings and the MarkdownWorkspace service. The CLI requires Node 24.15.0 or newer.
+
+### Features
+
+* release verified publishing fixes and features ([#893](https://github.com/markdown-confluence/markdown-confluence/issues/893)) ([0144b73](https://github.com/markdown-confluence/markdown-confluence/commit/0144b733afad912eb57b5034db046892235678fd))
+
+
+### Bug Fixes
+
+* explain missing space key errors ([#686](https://github.com/markdown-confluence/markdown-confluence/issues/686)) ([6b913ac](https://github.com/markdown-confluence/markdown-confluence/commit/6b913ac7d009515eeceb1b1b2db2929f4145b6b4))
+* handle callout wikilink images ([32306a8](https://github.com/markdown-confluence/markdown-confluence/commit/32306a83cb7ca0f2fedd369c865354d9b42c966e))
+* handle callout wikilink images ([c4c5848](https://github.com/markdown-confluence/markdown-confluence/commit/c4c5848f6c2fd2961f6ed9a36d911793e282c783))
+* ignore markdown HTML comments ([#682](https://github.com/markdown-confluence/markdown-confluence/issues/682)) ([59d7141](https://github.com/markdown-confluence/markdown-confluence/commit/59d7141f53d5dda301dd8adc6ea2c6a29be528b9))
+* normalize content root and document config ([#684](https://github.com/markdown-confluence/markdown-confluence/issues/684)) ([5ca8cbf](https://github.com/markdown-confluence/markdown-confluence/commit/5ca8cbf3203fbdb10ce80432f3343b86f0f81cfa))
+* persist root page id frontmatter ([#685](https://github.com/markdown-confluence/markdown-confluence/issues/685)) ([5e07a36](https://github.com/markdown-confluence/markdown-confluence/commit/5e07a36357a76b5726c69f39db907c1a29ee384e))
+* resolve wikilinks with paths ([#692](https://github.com/markdown-confluence/markdown-confluence/issues/692)) ([9ede0aa](https://github.com/markdown-confluence/markdown-confluence/commit/9ede0aa696f1fb8ab379fcd17558632b5525df03))
+* support reference-style images ([#683](https://github.com/markdown-confluence/markdown-confluence/issues/683)) ([249f972](https://github.com/markdown-confluence/markdown-confluence/commit/249f972f3dd06189c63c708c4bc0af9db0c5bc28))
+
+
+### Dependencies
+
+* **deps:** bump @atlaskit/adf-schema from 52.11.3 to 52.11.4 ([#721](https://github.com/markdown-confluence/markdown-confluence/issues/721)) ([bf0ec4a](https://github.com/markdown-confluence/markdown-confluence/commit/bf0ec4afa9e581823f52371c29797bd675d4cb60))
+* **deps:** bump @atlaskit/editor-json-transformer from 8.31.8 to 8.32.0 ([#731](https://github.com/markdown-confluence/markdown-confluence/issues/731)) ([0f41ffe](https://github.com/markdown-confluence/markdown-confluence/commit/0f41ffe252af93c871b16ed7b37d963831df3c9f))
+* **deps:** bump axios and confluence.js ([#697](https://github.com/markdown-confluence/markdown-confluence/issues/697)) ([9045c41](https://github.com/markdown-confluence/markdown-confluence/commit/9045c41b69b3467e405a8916c76c2c84c423290a))
+* **deps:** bump prosemirror-markdown from 1.11.1 to 1.12.0 ([445e002](https://github.com/markdown-confluence/markdown-confluence/commit/445e002505f45d8020b9288fbfac57ae8610589b))
+* **deps:** bump uuid and @types/uuid ([5d40d19](https://github.com/markdown-confluence/markdown-confluence/commit/5d40d1950669baf883fb6d2473577afdfb8d5565))
+
 ## [5.5.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/lib-v5.5.1...@markdown-confluence/lib-v5.5.2) (2023-09-24)
 
 

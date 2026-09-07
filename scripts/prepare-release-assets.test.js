@@ -86,3 +86,35 @@ test("rejects mismatched package versions and invalid Obsidian bundles", async (
 		}),
 	);
 });
+
+test("rejects stale workspace dependencies before preparing release assets", async () => {
+	await withReleaseFixture((root, fs, path, write) =>
+		Effect.gen(function* () {
+			for (const dependencyType of ["dependencies", "devDependencies"]) {
+				for (const version of ["workspace:5.5.2", "5.5.2"]) {
+					yield* write(
+						"packages/plantuml-renderer/package.json",
+						JSON.stringify({
+							version: "6.0.0",
+							[dependencyType]: { "@markdown-confluence/lib": version },
+						}),
+					);
+					expect((yield* Effect.result(prepareReleaseAssets(root)))._tag).toBe("Failure");
+					expect(
+						yield* fs.exists(path.join(root, "packages/obsidian/dist/manifest.json")),
+					).toBe(false);
+				}
+			}
+			for (const version of ["workspace:*", "workspace:6.0.0"]) {
+				yield* write(
+					"packages/plantuml-renderer/package.json",
+					JSON.stringify({
+						version: "6.0.0",
+						dependencies: { "@markdown-confluence/lib": version },
+					}),
+				);
+				expect((yield* prepareReleaseAssets(root)).version).toBe("6.0.0");
+			}
+		}),
+	);
+});

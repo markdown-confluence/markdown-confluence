@@ -6,6 +6,30 @@
   * dependencies
     * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
 
+## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v5.5.2...@markdown-confluence/mermaid-electron-renderer-v6.0.0) (2026-09-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* the public library is ESM and replaces LoaderAdaptor/SettingsLoader constructor arguments with settings and the MarkdownWorkspace service. The CLI requires Node 24.15.0 or newer.
+
+### Features
+
+* release verified publishing fixes and features ([#893](https://github.com/markdown-confluence/markdown-confluence/issues/893)) ([0144b73](https://github.com/markdown-confluence/markdown-confluence/commit/0144b733afad912eb57b5034db046892235678fd))
+
+
+### Bug Fixes
+
+* update Obsidian SDK compatibility ([#699](https://github.com/markdown-confluence/markdown-confluence/issues/699)) ([2ef4241](https://github.com/markdown-confluence/markdown-confluence/commit/2ef4241ba043247461e53938f53a69337e6a18ef))
+
+
+### Dependencies
+
+* **deps:** bump mermaid from 10.4.0 to 10.9.6 ([#690](https://github.com/markdown-confluence/markdown-confluence/issues/690)) ([fdb50a7](https://github.com/markdown-confluence/markdown-confluence/commit/fdb50a7c6531ac4cfa37c788bfb45a6bbd0f454f))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped to 6.0.0
+
 ## [5.5.2](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v5.5.1...@markdown-confluence/mermaid-electron-renderer-v5.5.2) (2023-09-24)
 
 
