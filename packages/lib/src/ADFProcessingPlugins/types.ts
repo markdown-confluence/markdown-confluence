@@ -39,6 +39,35 @@ export interface ADFProcessingPlugin<E, T> {
 	load(adf: JSONDocNode, transformedItems: T, supportFunctions: PublisherFunctions): JSONDocNode;
 }
 
+export interface ADFPreprocessorContext {
+	workspace: MarkdownWorkspace;
+	pageFilePath: string;
+}
+
+// Runs before the main ADF processing pipeline. Use this for transforms that
+// need async I/O (e.g. reading referenced files) before extraction starts —
+// the ADFProcessingPlugin contract has a sync extract() that can't do I/O.
+export interface ADFPreprocessor {
+	preprocess(
+		adf: JSONDocNode,
+		ctx: ADFPreprocessorContext,
+	): Effect.Effect<JSONDocNode, unknown, MarkdownConfluencePlatform>;
+}
+
+export function executeADFPreprocessorsEffect(
+	preprocessors: ADFPreprocessor[],
+	adf: JSONDocNode,
+	ctx: ADFPreprocessorContext,
+): Effect.Effect<JSONDocNode, unknown, MarkdownConfluencePlatform> {
+	return Effect.gen(function* () {
+		let current = adf;
+		for (const preprocessor of preprocessors) {
+			current = yield* preprocessor.preprocess(current, ctx);
+		}
+		return current;
+	});
+}
+
 export function createPublisherFunctions(
 	confluenceClient: RequiredConfluenceClient,
 	workspace: MarkdownWorkspace,

@@ -1,17 +1,21 @@
 import { Plugin, Notice, MarkdownView, Workspace, loadMermaid } from "obsidian";
 import {
+	ADFProcessingPlugin,
 	ConfluenceUploadSettings,
 	Publisher,
 	ConfluencePageConfig,
-	renderADFDoc,
 	MermaidRendererPlugin,
+	PlantumlRendererPlugin,
 	UploadAdfFileResult,
 	MarkdownConfluencePlatform,
 	MarkdownWorkspaceLive,
 	MarkdownWorkspaceService,
+	createConfluenceClientConfig,
+	shouldPublishMarkdownFile,
 } from "@markdown-confluence/lib";
 import { Effect, Layer } from "effect";
 import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
+import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
 import { CompletedModal } from "./CompletedModal";
 import { ObsidianConfluenceClient } from "./MyBaseClient";
@@ -21,7 +25,7 @@ import {
 	mapFrontmatterToConfluencePerPageUIValues,
 } from "./ConfluencePerPageForm";
 import { ObsidianPlatformLive } from "./effects/ObsidianPlatform";
-import type { Mermaid } from "mermaid";
+import type { Mermaid, MermaidConfig } from "mermaid";
 
 export interface ObsidianPluginSettings extends ConfluenceUploadSettings.ConfluenceSettings {
 	showPublishResultsModal: boolean;
@@ -85,29 +89,42 @@ export default class ConfluencePlugin extends Plugin {
 			mermaidItems.mermaidConfig,
 			mermaidItems.bodyStyles,
 		);
-		const confluenceClient = new ObsidianConfluenceClient({
-			host: this.settings.confluenceBaseUrl,
-			authentication: {
-				basic: {
-					email: this.settings.atlassianUserName,
-					apiToken: this.settings.atlassianApiToken,
+		const confluenceClient = new ObsidianConfluenceClient(
+			createConfluenceClientConfig(this.settings, {
+				middlewares: {
+					onError(e) {
+						if ("response" in e && "data" in e.response) {
+							e.message =
+								typeof e.response.data === "string"
+									? e.response.data
+									: JSON.stringify(e.response.data);
+						}
+					},
 				},
-			},
-			middlewares: {
-				onError(e) {
-					if ("response" in e && "data" in e.response) {
-						e.message =
-							typeof e.response.data === "string"
-								? e.response.data
-								: JSON.stringify(e.response.data);
-					}
-				},
-			},
-		});
+			}),
+		);
 
-		this.publisher = new Publisher(this.settings, confluenceClient, [
+		const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
 			new MermaidRendererPlugin(mermaidRenderer),
-		]);
+		];
+
+		if (this.settings.plantuml.enabled) {
+			if (this.settings.plantuml.serverUrl) {
+				plugins.push(
+					new PlantumlRendererPlugin(
+						new HttpPlantumlRenderer({
+							serverUrl: this.settings.plantuml.serverUrl,
+						}),
+					),
+				);
+			} else {
+				new Notice(
+					"PlantUML rendering is enabled but the PlantUML server URL is empty. Configure it in the plugin settings.",
+				);
+			}
+		}
+
+		this.publisher = new Publisher(this.settings, confluenceClient, plugins);
 	}
 
 	async getMermaidItems() {
@@ -134,7 +151,7 @@ export default class ConfluencePlugin extends Plugin {
 				bodyStyles = "theme-dark";
 				break;
 			case "light-obsidian":
-				bodyStyles = "theme-dark";
+				bodyStyles = "theme-light";
 				break;
 			default:
 				throw new Error("Missing theme");
@@ -171,10 +188,17 @@ export default class ConfluencePlugin extends Plugin {
 			}
 		}
 
+		const mermaidConfig: MermaidConfig = {
+			...((await loadMermaid()) as Mermaid).mermaidAPI.getConfig(),
+			theme: bodyStyles.split(/\s+/).includes("theme-dark") ? "dark" : "default",
+		};
+		// Recompute colors for the selected theme instead of reusing Obsidian's
+		// previously derived colors, which can leave dark arrows on a dark image.
+		delete mermaidConfig.themeVariables;
 		return {
 			extraStyleSheets,
 			extraStyles,
-			mermaidConfig: ((await loadMermaid()) as Mermaid).mermaidAPI.getConfig(),
+			mermaidConfig,
 			bodyStyles,
 		};
 	}
@@ -213,70 +237,17 @@ export default class ConfluencePlugin extends Plugin {
 		await this.init();
 
 		this.addRibbonIcon("cloud", "Publish to Confluence", async () => {
-			if (this.isSyncing) {
-				new Notice("Syncing already on going");
-				return;
-			}
-			this.isSyncing = true;
-			try {
-				const stats = await this.doPublish();
-				this.showPublishResults(stats);
-			} catch (error) {
-				this.showPublishError(error);
-			} finally {
-				this.isSyncing = false;
-			}
-		});
-
-		this.addCommand({
-			id: "adf-to-markdown",
-			name: "ADF To Markdown",
-			callback: async () => {
-				console.log("HMMMM");
-				const json = JSON.parse(
-					'{"type":"doc","content":[{"type":"paragraph","content":[{"text":"Testing","type":"text"}]}],"version":1}',
-				);
-				console.log({ json });
-
-				const confluenceClient = new ObsidianConfluenceClient({
-					host: this.settings.confluenceBaseUrl,
-					authentication: {
-						basic: {
-							email: this.settings.atlassianUserName,
-							apiToken: this.settings.atlassianApiToken,
-						},
-					},
-				});
-				const testingPage = await confluenceClient.content.getContentById({
-					id: "9732097",
-					expand: ["body.atlas_doc_format", "space"],
-				});
-				const adf = JSON.parse(
-					testingPage.body?.atlas_doc_format?.value || '{type: "doc", content:[]}',
-				);
-				renderADFDoc(adf);
-			},
+			await this.runPublish();
 		});
 
 		this.addCommand({
 			id: "publish-current",
 			name: "Publish Current File to Confluence",
 			checkCallback: (checking: boolean) => {
-				if (!this.isSyncing) {
-					if (!checking) {
-						this.isSyncing = true;
-						this.doPublish(this.activeLeafPath(this.workspace))
-							.then((stats) => {
-								this.showPublishResults(stats);
-							})
-							.catch((error) => {
-								this.showPublishError(error);
-							})
-							.finally(() => {
-								this.isSyncing = false;
-							});
-					}
-					return true;
+				const activePath = this.activeLeafPath(this.workspace);
+				if (!activePath) return false;
+				if (!checking) {
+					void this.runPublish(activePath);
 				}
 				return true;
 			},
@@ -286,20 +257,8 @@ export default class ConfluencePlugin extends Plugin {
 			id: "publish-all",
 			name: "Publish All to Confluence",
 			checkCallback: (checking: boolean) => {
-				if (!this.isSyncing) {
-					if (!checking) {
-						this.isSyncing = true;
-						this.doPublish()
-							.then((stats) => {
-								this.showPublishResults(stats);
-							})
-							.catch((error) => {
-								this.showPublishError(error);
-							})
-							.finally(() => {
-								this.isSyncing = false;
-							});
-					}
+				if (!checking) {
+					void this.runPublish();
 				}
 				return true;
 			},
@@ -318,10 +277,11 @@ export default class ConfluencePlugin extends Plugin {
 						view.file.path,
 					)?.frontmatter;
 					const file = view.file;
-					const enabledForPublishing =
-						(file.path.startsWith(this.settings.folderToPublish) &&
-							(!frontMatter || frontMatter["connie-publish"] !== false)) ||
-						(frontMatter && frontMatter["connie-publish"] === true);
+					const enabledForPublishing = shouldPublishMarkdownFile(
+						file.path,
+						frontMatter,
+						this.settings,
+					);
 					return !enabledForPublishing;
 				}
 
@@ -349,10 +309,11 @@ export default class ConfluencePlugin extends Plugin {
 						view.file.path,
 					)?.frontmatter;
 					const file = view.file;
-					const enabledForPublishing =
-						(file.path.startsWith(this.settings.folderToPublish) &&
-							(!frontMatter || frontMatter["connie-publish"] !== false)) ||
-						(frontMatter && frontMatter["connie-publish"] === true);
+					const enabledForPublishing = shouldPublishMarkdownFile(
+						file.path,
+						frontMatter,
+						this.settings,
+					);
 					return enabledForPublishing;
 				}
 
@@ -416,11 +377,20 @@ export default class ConfluencePlugin extends Plugin {
 	override async onunload() {}
 
 	async loadSettings() {
+		const loaded = ((await this.loadData()) ?? {}) as Partial<ObsidianPluginSettings>;
 		this.settings = Object.assign(
 			{},
 			ConfluenceUploadSettings.DEFAULT_SETTINGS,
 			{ mermaidTheme: "match-obsidian", showPublishResultsModal: true },
-			await this.loadData(),
+			loaded,
+			{
+				// Deep-merge the nested plantuml object so a persisted partial (or
+				// an older settings file missing it) keeps the defaults.
+				plantuml: {
+					...ConfluenceUploadSettings.DEFAULT_SETTINGS.plantuml,
+					...loaded.plantuml,
+				},
+			},
 		);
 	}
 
@@ -440,6 +410,23 @@ export default class ConfluencePlugin extends Plugin {
 				Effect.mapError(toError),
 			),
 		);
+	}
+
+	private async runPublish(publishFilter?: string): Promise<void> {
+		if (this.isSyncing) {
+			new Notice("A Confluence publish is already in progress.");
+			return;
+		}
+
+		this.isSyncing = true;
+		try {
+			const stats = await this.doPublish(publishFilter);
+			this.showPublishResults(stats);
+		} catch (error) {
+			this.showPublishError(error);
+		} finally {
+			this.isSyncing = false;
+		}
 	}
 
 	private showPublishError(error: unknown) {

@@ -13,6 +13,11 @@ if you want to view the source, please visit the github repository of this plugi
 */
 `;
 
+export const generatedNodeBanner = `${generatedBanner}
+import { createRequire as __createRequire } from "node:module";
+const require = __createRequire(import.meta.url);
+`;
+
 export function isNodeBuiltin(id: string): boolean {
 	return builtins.has(id);
 }

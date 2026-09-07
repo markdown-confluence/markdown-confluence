@@ -2,8 +2,7 @@ import { BrowserWindow } from "@electron/remote";
 import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
 import mermaid, { MermaidConfig } from "mermaid";
 import { v4 as uuidv4 } from "uuid";
-
-let mermaidRenderHtml: string;
+import { sanitizeMermaidConfig } from "./mermaidConfig";
 
 const pluginMermaidConfig: MermaidConfig = {
 	theme: "base",
@@ -35,70 +34,49 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 	) {}
 
 	async captureMermaidCharts(charts: ChartData[]): Promise<Map<string, Buffer>> {
-		if (!mermaidRenderHtml) {
-			mermaidRenderHtml = URL.createObjectURL(
-				this.getFileContentBlob(this.extraStyleSheets, this.extraStyles, this.bodyClasses),
-			);
-		}
-
+		const mermaidRenderHtml = URL.createObjectURL(
+			this.getFileContentBlob(this.extraStyleSheets, this.extraStyles, this.bodyClasses),
+		);
 		const capturedCharts = new Map<string, Buffer>();
-
-		const promises = charts.map(async (chart) => {
-			const debug = false;
-
-			const chartWindow = new BrowserWindow({
-				width: 800,
-				height: 600,
-				show: debug,
-				frame: debug,
-			});
-
-			if (debug) {
-				chartWindow.webContents.openDevTools();
-			}
-
-			await chartWindow.loadURL(mermaidRenderHtml);
-
-			const { themeVariables, ...mermaidInitConfig } = this.mermaidConfig;
-
-			mermaid.initialize({ ...mermaidInitConfig, startOnLoad: false });
-
-			if (themeVariables) {
-				mermaid.mermaidAPI.updateSiteConfig({ themeVariables });
-			}
-
-			const id = "mm" + uuidv4().replace(/-/g, "");
-			const { svg } = await mermaid.render(id, chart.data);
-
-			// Render the chart and get the dimensions
-			const dimensions = await chartWindow.webContents.executeJavaScript(
-				`renderSvg(${JSON.stringify(svg)});`,
+		try {
+			const { themeVariables, ...mermaidInitConfig } = sanitizeMermaidConfig(
+				this.mermaidConfig,
 			);
+			mermaid.initialize({
+				...mermaidInitConfig,
+				startOnLoad: false,
+				suppressErrorRendering: true,
+			});
+			if (themeVariables) mermaid.mermaidAPI.updateSiteConfig({ themeVariables });
 
-			// Resize the window to fit the chart dimensions
-			const { width, height } = dimensions;
-			chartWindow.setSize(width, height);
-
-			try {
-				// Capture the chart as a NativeImage
-				const image = await chartWindow.webContents.capturePage(dimensions, {
-					stayHidden: true,
-					stayAwake: true,
+			for (const chart of charts) {
+				const chartWindow = new BrowserWindow({
+					width: 800,
+					height: 600,
+					show: false,
+					frame: false,
 				});
-				// Convert the NativeImage to a PNG buffer
-				const imageBuffer = image.toPNG();
-				// Add the buffer to the capturedCharts map
-				capturedCharts.set(chart.name, imageBuffer);
-				// Resolve the promise
-			} finally {
-				if (!debug) {
+				try {
+					await chartWindow.loadURL(mermaidRenderHtml);
+					const id = "mm" + uuidv4().replace(/-/g, "");
+					const { svg } = await mermaid.render(id, chart.data);
+					const dimensions = await chartWindow.webContents.executeJavaScript(
+						`renderSvg(${JSON.stringify(svg)});`,
+					);
+					chartWindow.setSize(dimensions.width, dimensions.height);
+					const capturedImage = await chartWindow.webContents.capturePage(dimensions, {
+						stayHidden: true,
+						stayAwake: true,
+					});
+					capturedCharts.set(chart.name, capturedImage.toPNG());
+				} finally {
 					chartWindow.close();
 				}
 			}
-		});
-
-		await Promise.all(promises);
-		return capturedCharts;
+			return capturedCharts;
+		} finally {
+			URL.revokeObjectURL(mermaidRenderHtml);
+		}
 	}
 
 	getFileContentBlob(
@@ -141,10 +119,6 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 </html>
 `;
 
-		const bytes = new Uint8Array(fileContents.length);
-		for (let i = 0; i < fileContents.length; i++) {
-			bytes[i] = fileContents.charCodeAt(i);
-		}
-		return new Blob([bytes], { type: "text/html" });
+		return new Blob([fileContents], { type: "text/html" });
 	}
 }

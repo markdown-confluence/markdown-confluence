@@ -37,6 +37,8 @@ const createTreeNode = (name: string): LocalAdfFileTreeNode => ({
 	children: [],
 });
 
+const folderNoteFileNames = ["index", "README", "readme"];
+
 const resolveTreeNodePath = (contentRootPath: string, nodeName: string, path: Path): string => {
 	if (nodeName === contentRootPath) {
 		return nodeName;
@@ -76,16 +78,21 @@ const addFileToTree = (
 
 const processNode = (treeRootPath: string, node: LocalAdfFileTreeNode, path: Path) => {
 	if (!node.file) {
-		let indexFile = node.children.find((child) => path.parse(child.name).name === node.name);
+		const nodePageTitle = path.basename(node.name);
+		let indexFile = node.children.find(
+			(child) => path.parse(child.name).name === nodePageTitle,
+		);
 		if (!indexFile) {
-			// Support FolderFile with a file name of "index.md"
-			indexFile = node.children.find((child) =>
-				["index", "README", "readme"].includes(path.parse(child.name).name),
-			);
+			// Support FolderFile with file names such as "index.md" and "README.md".
+			indexFile = folderNoteFileNames
+				.map((fileName) =>
+					node.children.find((child) => path.parse(child.name).name === fileName),
+				)
+				.find((child) => child !== undefined);
 		}
 
 		if (indexFile && indexFile.file) {
-			node.file = indexFile.file;
+			node.file = withFolderNotePageTitle(indexFile.file, nodePageTitle, path);
 			node.children = node.children.filter((child) => child !== indexFile);
 		} else {
 			node.file = {
@@ -105,6 +112,9 @@ const processNode = (treeRootPath: string, node: LocalAdfFileTreeNode, path: Pat
 	}
 
 	const nodeFile = node.file;
+	if (!nodeFile) {
+		throw new Error("Missing file on node");
+	}
 	const childTreeRootPath =
 		nodeFile.contents === (folderFile as JSONDocNode)
 			? nodeFile.absoluteFilePath
@@ -112,6 +122,24 @@ const processNode = (treeRootPath: string, node: LocalAdfFileTreeNode, path: Pat
 
 	node.children.forEach((childNode) => processNode(childTreeRootPath, childNode, path));
 };
+
+function withFolderNotePageTitle(
+	file: NonNullable<LocalAdfFileTreeNode["file"]>,
+	nodePageTitle: string,
+	path: Path,
+): NonNullable<LocalAdfFileTreeNode["file"]> {
+	if (!nodePageTitle) {
+		return file;
+	}
+
+	const fileTitle = path.parse(file.fileName).name;
+	const shouldUseFolderTitle =
+		folderNoteFileNames.includes(fileTitle) &&
+		file.pageTitle === fileTitle &&
+		typeof file.frontmatter["connie-title"] !== "string";
+
+	return shouldUseFolderTitle ? { ...file, pageTitle: nodePageTitle } : file;
+}
 
 export const createFolderStructure = (
 	markdownFiles: MarkdownFile[],
@@ -148,14 +176,26 @@ export const createFolderStructureEffect = (
 
 function checkUniquePageTitle(
 	rootNode: LocalAdfFileTreeNode,
-	pageTitles: Set<string> = new Set<string>(),
+	pageTitles: Map<string, NonNullable<LocalAdfFileTreeNode["file"]>[]> = new Map(),
 ) {
-	const currentPageTitle = rootNode.file?.pageTitle ?? "";
+	const currentFile = rootNode.file;
 
-	if (pageTitles.has(currentPageTitle)) {
+	if (!currentFile) {
+		rootNode.children.forEach((child) => checkUniquePageTitle(child, pageTitles));
+		return;
+	}
+
+	const currentPageTitle = currentFile.pageTitle;
+	const existingFiles = pageTitles.get(currentPageTitle) ?? [];
+
+	if (
+		existingFiles.length > 0 &&
+		!existingFiles.concat(currentFile).every((file) => file.pageId)
+	) {
 		throw new Error(`Page title "${currentPageTitle}" is not unique across all files.`);
 	}
-	pageTitles.add(currentPageTitle);
+
+	pageTitles.set(currentPageTitle, existingFiles.concat(currentFile));
 	rootNode.children.forEach((child) => checkUniquePageTitle(child, pageTitles));
 }
 

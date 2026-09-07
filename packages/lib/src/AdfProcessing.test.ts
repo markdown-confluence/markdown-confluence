@@ -3,7 +3,7 @@ import { TextDefinition } from "@atlaskit/adf-schema";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { prepareAdfToUpload } from "./AdfProcessing";
 import { ConfluenceAdfFile, ConfluenceNode } from "./Publisher";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 
 test("resolves wikilinks that include a path under the publish root", () => {
 	const pages = [
@@ -25,6 +25,48 @@ test("resolves wikilinks that include a path under the publish root", () => {
 	const link = pages[0]!.file.contents.content[0]!.content![0] as TextDefinition;
 	expect(link.marks?.[0]?.attrs?.href).toBe(
 		"https://example.atlassian.net/wiki/spaces/SPACE/pages/123456",
+	);
+});
+
+test("resolves relative markdown links from the current file directory", () => {
+	const pages = [
+		createNode({
+			fileName: "README.md",
+			absoluteFilePath: "Confluence Pages/docs/guidebook/README.md",
+			contents: docWithLink("Context", "wikilinks:context/README"),
+		}),
+		createNode({
+			fileName: "README.md",
+			absoluteFilePath: "Confluence Pages/docs/guidebook/context/README.md",
+			pageId: "222222",
+			spaceKey: "SPACE",
+		}),
+	];
+
+	prepareAdfToUpload(pages, testSettings);
+
+	const link = pages[0]!.file.contents.content[0]!.content![0] as TextDefinition;
+	expect(link.marks?.[0]?.attrs?.href).toBe(
+		"https://example.atlassian.net/wiki/spaces/SPACE/pages/222222",
+	);
+});
+
+test("resolves same-page heading wikilinks to the current page", () => {
+	const pages = [
+		createNode({
+			fileName: "source.md",
+			absoluteFilePath: "Confluence Pages/source.md",
+			pageId: "111111",
+			spaceKey: "SPACE",
+			contents: docWithLink("Overview", "wikilinks:#Overview"),
+		}),
+	];
+
+	prepareAdfToUpload(pages, testSettings);
+
+	const link = pages[0]!.file.contents.content[0]!.content![0] as TextDefinition;
+	expect(link.marks?.[0]?.attrs?.href).toBe(
+		"https://example.atlassian.net/wiki/spaces/SPACE/pages/111111#Overview",
 	);
 });
 
@@ -89,11 +131,18 @@ function createNode(file: Partial<ConfluenceAdfFile>): ConfluenceNode {
 }
 
 const testSettings: ConfluenceSettings = {
+	...DEFAULT_SETTINGS,
 	confluenceBaseUrl: "https://example.atlassian.net",
+	confluenceSiteUrl: "",
 	confluenceParentId: "1",
+	confluenceAuthType: "basic",
 	atlassianUserName: "test@example.com",
 	atlassianApiToken: "token",
+	atlassianClientId: "",
+	atlassianClientSecret: "",
 	folderToPublish: "Confluence Pages",
+	tagsToPublish: "",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
+	forceOverwrite: false,
 };

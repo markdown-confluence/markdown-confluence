@@ -1,0 +1,4 @@
+@startuml
+CLI -> Confluence: Publish
+Confluence --> CLI: Success
+@enduml

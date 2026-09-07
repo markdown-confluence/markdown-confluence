@@ -14,7 +14,7 @@ import {
 	LocalAdfFile,
 	LocalAdfFileTreeNode,
 } from "./Publisher";
-import { ConfluenceSettings } from "./Settings";
+import { ConfluenceSettings, resolveSiteUrl } from "./Settings";
 
 const blankPageAdf: string = JSON.stringify(doc(p("Page not published yet")));
 
@@ -30,23 +30,39 @@ interface PageDetails {
 	contentType: string;
 }
 
-function flattenTree(node: ConfluenceTreeNode, ancestors: string[] = []): ConfluenceNode[] {
+function flattenTree(
+	node: ConfluenceTreeNode,
+	ancestors: string[] = [],
+	includeCurrent = ancestors.length > 0,
+	parentSpaceKey?: string,
+): ConfluenceNode[] {
 	const nodes: ConfluenceNode[] = [];
 	const { file, version, lastUpdatedBy, existingPageData, children } = node;
+	const crossesSpace = parentSpaceKey !== undefined && parentSpaceKey !== file.spaceKey;
 
-	if (ancestors.length > 0) {
+	if (includeCurrent) {
 		nodes.push({
 			file,
 			version,
 			lastUpdatedBy,
 			existingPageData,
-			ancestors,
+			ancestors:
+				ancestors.length > 0 && !crossesSpace
+					? ancestors
+					: existingPageData.ancestors.map((ancestor) => ancestor.id),
 		});
 	}
 
 	if (children) {
 		children.forEach((child) => {
-			nodes.push(...flattenTree(child, [...ancestors, file.pageId]));
+			nodes.push(
+				...flattenTree(
+					child,
+					crossesSpace ? [file.pageId] : [...ancestors, file.pageId],
+					true,
+					file.spaceKey,
+				),
+			);
 		});
 	}
 
@@ -72,7 +88,7 @@ export function ensureAllFilesExistInConfluenceEffect(
 			false,
 		);
 
-		const pages = flattenTree(confluenceNode);
+		const pages = flattenTree(confluenceNode, [], confluenceNode.version > 0);
 
 		yield* Effect.sync(() => prepareAdfToUpload(pages, settings));
 
@@ -125,11 +141,11 @@ function createFileStructureInConfluenceEffect(
 		let contentType = "page";
 		let ancestors: { id: string }[] = [];
 		let lastUpdatedBy: string | undefined;
-		const file: ConfluenceAdfFile = {
+		let file: ConfluenceAdfFile = {
 			...node.file,
 			pageId: parentPageId,
 			spaceKey,
-			pageUrl: "",
+			pageUrl: buildPageUrl(settings, spaceKey, parentPageId),
 		};
 
 		if (createPage) {
@@ -154,35 +170,58 @@ function createFileStructureInConfluenceEffect(
 			contentType = pageDetails.contentType;
 		} else {
 			if (isMarkdownBackedFile(node.file)) {
+				const pageDetails = yield* getPageDetailsByIdEffect(
+					confluenceClient,
+					parentPageId,
+					settings,
+				);
 				yield* updateMarkdownValuesEffect(node.file.absoluteFilePath, {
 					publish: true,
-					pageId: parentPageId,
+					pageId: pageDetails.id,
+					pageUrl: buildPageUrl(settings, pageDetails.spaceKey, pageDetails.id),
 				});
-			}
 
-			version = 0;
-			adfContent = doc(p());
-			pageTitle = "";
-			ancestors = [];
-			contentType = "page";
+				file = {
+					...file,
+					pageId: pageDetails.id,
+					spaceKey: pageDetails.spaceKey,
+					pageTitle: pageDetails.pageTitle,
+				};
+				version = pageDetails.version;
+				adfContent = yield* Effect.try({
+					try: () => JSON.parse(pageDetails.existingAdf ?? "{}") as JSONDocNode,
+					catch: toError,
+				});
+				pageTitle = pageDetails.pageTitle;
+				ancestors = pageDetails.ancestors;
+				lastUpdatedBy = pageDetails.lastUpdatedBy;
+				contentType = pageDetails.contentType;
+			} else {
+				version = 0;
+				adfContent = doc(p());
+				pageTitle = "";
+				ancestors = [];
+				contentType = "page";
+			}
 		}
 
+		const childTopPageId = file.spaceKey === spaceKey ? topPageId : file.pageId;
 		const childDetails: ConfluenceTreeNode[] = yield* Effect.all(
 			node.children.map((childNode) =>
 				createFileStructureInConfluenceEffect(
 					settings,
 					confluenceClient,
 					childNode,
-					spaceKey,
+					file.spaceKey,
 					file.pageId,
-					topPageId,
+					childTopPageId,
 					true,
 				),
 			),
 			{ concurrency: "unbounded" },
 		);
 
-		const pageUrl = `${settings.confluenceBaseUrl}/wiki/spaces/${spaceKey}/pages/${file.pageId}/`;
+		const pageUrl = buildPageUrl(settings, file.spaceKey, file.pageId);
 		return {
 			file: { ...file, pageUrl },
 			version,
@@ -202,6 +241,46 @@ function isMarkdownBackedFile(file: LocalAdfFile): boolean {
 	return file.absoluteFilePath.toLowerCase().endsWith(".md");
 }
 
+function getPageDetailsByIdEffect(
+	confluenceClient: RequiredConfluenceClient,
+	pageId: string,
+	settings: ConfluenceSettings,
+): Effect.Effect<PageDetails, unknown> {
+	return Effect.tryPromise({
+		try: () =>
+			confluenceClient.content.getContentById({
+				id: pageId,
+				expand: ["version", "body.atlas_doc_format", "ancestors", "space"],
+			}),
+		catch: identity,
+	}).pipe(
+		Effect.flatMap((contentById) => {
+			if (!contentById.space?.key) {
+				return Effect.fail(createMissingSpaceKeyError(pageId, settings.confluenceBaseUrl));
+			}
+
+			return Effect.succeed({
+				id: contentById.id,
+				title: contentById.title,
+				version: contentById?.version?.number ?? 1,
+				lastUpdatedBy: contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
+				existingAdf: contentById?.body?.atlas_doc_format?.value,
+				spaceKey: contentById.space.key,
+				pageTitle: contentById.title,
+				ancestors:
+					contentById.ancestors?.map((ancestor) => ({
+						id: ancestor.id,
+					})) ?? [],
+				contentType: contentById.type,
+			});
+		}),
+	);
+}
+
+function buildPageUrl(settings: ConfluenceSettings, spaceKey: string, pageId: string): string {
+	return `${resolveSiteUrl(settings)}/wiki/spaces/${spaceKey}/pages/${pageId}/`;
+}
+
 function ensurePageExistsEffect(
 	confluenceClient: RequiredConfluenceClient,
 	file: LocalAdfFile,
@@ -213,51 +292,38 @@ function ensurePageExistsEffect(
 	if (file.pageId) {
 		const pageId = file.pageId;
 
-		return Effect.tryPromise({
-			try: () =>
-				confluenceClient.content.getContentById({
-					id: pageId,
-					expand: ["version", "body.atlas_doc_format", "ancestors", "space"],
-				}),
-			catch: identity,
-		}).pipe(
-			Effect.flatMap((contentById) => {
-				if (!contentById.space?.key) {
-					return Effect.fail(
-						createMissingSpaceKeyError(pageId, settings.confluenceBaseUrl),
-					);
-				}
-
-				return updateMarkdownValuesEffect(file.absoluteFilePath, {
+		return getPageDetailsByIdEffect(confluenceClient, pageId, settings).pipe(
+			Effect.flatMap((pageDetails) =>
+				updateMarkdownValuesEffect(file.absoluteFilePath, {
 					publish: true,
-					pageId: contentById.id,
+					pageId: pageDetails.id,
+					pageUrl: buildPageUrl(settings, pageDetails.spaceKey, pageDetails.id),
 				}).pipe(
 					Effect.as({
-						id: contentById.id,
+						id: pageDetails.id,
 						title: file.pageTitle,
-						version: contentById?.version?.number ?? 1,
-						lastUpdatedBy: contentById?.version?.by?.accountId ?? "NO ACCOUNT ID",
-						existingAdf: contentById?.body?.atlas_doc_format?.value,
-						spaceKey: contentById.space.key,
-						pageTitle: contentById.title,
-						ancestors:
-							contentById.ancestors?.map((ancestor) => ({
-								id: ancestor.id,
-							})) ?? [],
-						contentType: contentById.type,
+						version: pageDetails.version,
+						lastUpdatedBy: pageDetails.lastUpdatedBy,
+						existingAdf: pageDetails.existingAdf,
+						spaceKey: pageDetails.spaceKey,
+						pageTitle: pageDetails.pageTitle,
+						ancestors: pageDetails.ancestors,
+						contentType: pageDetails.contentType,
 					}),
-				);
-			}),
+				),
+			),
 			Effect.catch((error) => {
 				if (isNotFoundError(error)) {
 					return updateMarkdownValuesEffect(file.absoluteFilePath, {
 						publish: false,
 						pageId: undefined,
+						pageUrl: undefined,
 					}).pipe(
 						Effect.andThen(
 							findOrCreatePageByTitleEffect(
 								confluenceClient,
 								file,
+								settings,
 								spaceKey,
 								parentPageId,
 								topPageId,
@@ -271,12 +337,20 @@ function ensurePageExistsEffect(
 		);
 	}
 
-	return findOrCreatePageByTitleEffect(confluenceClient, file, spaceKey, parentPageId, topPageId);
+	return findOrCreatePageByTitleEffect(
+		confluenceClient,
+		file,
+		settings,
+		spaceKey,
+		parentPageId,
+		topPageId,
+	);
 }
 
 function findOrCreatePageByTitleEffect(
 	confluenceClient: RequiredConfluenceClient,
 	file: LocalAdfFile,
+	settings: ConfluenceSettings,
 	spaceKey: string,
 	parentPageId: string,
 	topPageId: string,
@@ -310,6 +384,7 @@ function findOrCreatePageByTitleEffect(
 				return updateMarkdownValuesEffect(file.absoluteFilePath, {
 					publish: true,
 					pageId: currentPage.id,
+					pageUrl: buildPageUrl(settings, spaceKey, currentPage.id),
 				}).pipe(
 					Effect.as({
 						id: currentPage.id,
@@ -351,6 +426,7 @@ function findOrCreatePageByTitleEffect(
 					updateMarkdownValuesEffect(file.absoluteFilePath, {
 						publish: true,
 						pageId: pageDetails.id,
+						pageUrl: buildPageUrl(settings, spaceKey, pageDetails.id),
 					}).pipe(
 						Effect.as({
 							id: pageDetails.id,

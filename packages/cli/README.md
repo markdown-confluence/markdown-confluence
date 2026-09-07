@@ -42,6 +42,14 @@ set ATLASSIAN_API_TOKEN="YOUR API TOKEN"
 vp dlx @markdown-confluence/cli
 ```
 
+**Convert Markdown to ADF**
+
+```bash
+npx @markdown-confluence/cli to-adf ./docs/page.md
+npx @markdown-confluence/cli to-adf ./docs/page.md --output page.adf.json
+cat ./docs/page.md | npx @markdown-confluence/cli to-adf
+```
+
 ### Docker Container
 
 **Example setup**
@@ -49,6 +57,8 @@ vp dlx @markdown-confluence/cli
 ```bash
 docker run -it --rm -v "$(pwd):/content" -e ATLASSIAN_API_TOKEN ghcr.io/markdown-confluence/publish:latest
 ```
+
+The published image includes `linux/amd64` and `linux/arm64` variants. Docker Desktop on Apple Silicon should select the `linux/arm64` image automatically.
 
 ### GitHub Actions
 
@@ -98,9 +108,18 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
   "confluenceParentId": "123456",
   "atlassianUserName": "your-email@example.com",
   "atlassianApiToken": "optional-token-from-config",
+  "confluenceAuthType": "basic",
+  "confluenceApiPrefix": "/wiki/rest",
+  "confluenceRequestHeaders": {
+    "X-Custom-Header": "optional-value"
+  },
   "folderToPublish": "docs",
   "contentRoot": ".",
-  "firstHeadingPageTitle": false
+  "firstHeadingPageTitle": false,
+  "forceOverwrite": false,
+  "pageHeaderMarkdown": "",
+  "pageFooterMarkdown": "",
+  "ignoredCodeBlockLanguages": ["dataview", "button"]
 }
 ```
 
@@ -108,13 +127,59 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 
 | JSON key | Environment variable | CLI option | Description |
 | --- | --- | --- | --- |
-| `confluenceBaseUrl` | `CONFLUENCE_BASE_URL` | `--baseUrl`, `-b` | Your Confluence site URL. For Confluence Cloud, use the Atlassian site URL without `/wiki`, for example `https://your-domain.atlassian.net`. |
+| `confluenceBaseUrl` | `CONFLUENCE_BASE_URL` | `--baseUrl`, `-b` | Your Confluence site URL. For Confluence Cloud, use the Atlassian site URL without `/wiki`, for example `https://your-domain.atlassian.net`. When authenticating with OAuth 2.0, set this to the API gateway URL `https://api.atlassian.com/ex/confluence/{cloudId}`. |
+| `confluenceSiteUrl` | `CONFLUENCE_SITE_URL` | `--siteUrl` | The browsable Confluence site URL used to build and match display links (for example `https://your-domain.atlassian.net`). Falls back to `confluenceBaseUrl` when unset. Required when `confluenceBaseUrl` points at the API gateway, otherwise published links would be unresolvable. |
 | `confluenceParentId` | `CONFLUENCE_PARENT_ID` | `--parentId`, `-p` | The numeric ID of an existing Confluence parent page. The parent page determines the target space. |
 | `atlassianUserName` | `ATLASSIAN_USERNAME` | `--userName`, `-u` | The Atlassian user name or email address used for publishing. |
 | `atlassianApiToken` | `ATLASSIAN_API_TOKEN` | `--apiToken` | The Atlassian API token. Prefer an environment variable or GitHub secret instead of committing this value to JSON. |
+| `confluenceAuthType` | `CONFLUENCE_AUTH_TYPE` | `--authType` | Authentication mode. Use `basic` for Confluence Cloud API tokens or `bearer` for PAT-style bearer tokens. |
+| `confluenceApiPrefix` | `CONFLUENCE_API_PREFIX` | `--apiPrefix` | API route prefix. Defaults to `/wiki/rest`; use values like `/rest` only when your Confluence API is exposed there. |
+| `confluenceRequestHeaders` | `CONFLUENCE_REQUEST_HEADERS` | `--requestHeaders` | Extra request headers. JSON config accepts an object; env and CLI accept `Header=Value,Another=Value`. |
 | `folderToPublish` | `FOLDER_TO_PUBLISH` | `--enableFolder`, `-f` | The folder, relative to `contentRoot`, whose Markdown files default to `connie-publish: true`. Use `.` to publish all Markdown files under `contentRoot`. |
 | `contentRoot` | `CONFLUENCE_CONTENT_ROOT` | `--contentRoot`, `--cr` | The root directory to scan for Markdown files and referenced content. |
 | `firstHeadingPageTitle` | `CONFLUENCE_FIRST_HEADING_PAGE_TITLE` | `--firstHeaderPageTitle`, `--fh` | When `true`, use the first heading as the page title when `connie-title` is not set. |
+| `forceOverwrite` | `CONFLUENCE_FORCE_OVERWRITE` | `--forceOverwrite`, `--fo` | When `true`, publish over pages last updated by another user. Leave this `false` to preserve Confluence-side edits. |
+| `pageHeaderMarkdown` | `CONFLUENCE_PAGE_HEADER_MARKDOWN` | `--pageHeaderMarkdown` | Markdown inserted at the top of every generated Confluence page. |
+| `pageFooterMarkdown` | `CONFLUENCE_PAGE_FOOTER_MARKDOWN` | `--pageFooterMarkdown` | Markdown inserted at the bottom of every generated Confluence page. |
+| `mermaidProtocolTimeout` | `CONFLUENCE_MERMAID_PROTOCOL_TIMEOUT` | `--mermaidProtocolTimeout` | Puppeteer protocol timeout in milliseconds. Defaults to `180000`; increase it (for example `600000`) for large Mermaid diagrams. Must be a positive integer. |
+| `ignoredCodeBlockLanguages` | n/a | n/a | Fenced code block languages to remove from generated pages, configured as a JSON array in `.markdown-confluence.json`. |
+| `plantuml.enabled` | `CONFLUENCE_PLANTUML_ENABLED` | `--plantumlEnabled` | When `true` (default: `false`), code blocks tagged `plantuml`, `puml`, or `uml` are rendered to images via the configured PlantUML server. |
+| `plantuml.serverUrl` | `CONFLUENCE_PLANTUML_SERVER_URL` | `--plantumlServerUrl` | PlantUML server base URL. Required when enabled. Diagram source is sent to this server; use a self-hosted server for private content (see [PlantUML support](#plantuml-support)). |
+
+### OAuth 2.0 Service Account Authentication
+
+By default the CLI authenticates with Basic Auth using `atlassianUserName` and `atlassianApiToken`. You can instead authenticate as a service account using the OAuth 2.0 client-credentials grant. The CLI exchanges the credentials for a short-lived bearer token itself, so this works for the CLI, the Docker image, and the GitHub Action without any pre-steps.
+
+To use OAuth 2.0:
+
+1. Set `confluenceAuthType` to `oauth2`.
+2. Supply `atlassianClientId` and `atlassianClientSecret` (prefer environment variables or secrets).
+3. Set `confluenceBaseUrl` to the API gateway URL `https://api.atlassian.com/ex/confluence/{cloudId}`.
+4. Set `confluenceSiteUrl` to your browsable site URL `https://your-domain.atlassian.net` so published links resolve correctly.
+
+`.markdown-confluence.json`:
+
+```json
+{
+  "confluenceAuthType": "oauth2",
+  "confluenceBaseUrl": "https://api.atlassian.com/ex/confluence/your-cloud-id",
+  "confluenceSiteUrl": "https://your-domain.atlassian.net",
+  "confluenceParentId": "123456",
+  "folderToPublish": "docs",
+  "contentRoot": "."
+}
+```
+
+```bash
+export ATLASSIAN_CLIENT_ID="YOUR CLIENT ID"
+export ATLASSIAN_CLIENT_SECRET="YOUR CLIENT SECRET"
+```
+
+Grant the service account the page, attachment, label and space permissions required by its publishing scope, including `read:content.metadata:confluence` for the full ancestor chain. Publishing stops if that chain cannot be read, so a missing permission cannot bypass the parent-page boundary. See the [Confluence ancestors API](https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-ancestors/).
+
+The CLI exchanges these credentials for a bearer token against the Atlassian token endpoint (`https://auth.atlassian.com/oauth/token`) and uses it for all Confluence API requests.
+
+> **Note:** The bearer token is fetched once at startup and is short-lived. This is sufficient for normal publishes, but a very large publish run could exceed the token lifetime and begin failing partway through. If you hit this, split the publish into smaller runs.
 
 ### `folderToPublish` vs `contentRoot`
 
@@ -147,6 +212,40 @@ This scans `phil` and publishes only files under `phil/thingy`:
 }
 ```
 
+### Publishing Hierarchy and Folder Notes
+
+Markdown Confluence builds the Confluence page tree from the relative paths of the Markdown files it publishes. The common local root maps to `confluenceParentId`; it is not created as an extra child page.
+
+To publish each repository under a repo-named sub-page such as `parent-page/hello-world`, either set `confluenceParentId` to the existing `hello-world` page ID for that repository run, or keep a `hello-world` folder in the scanned Markdown tree so the folder becomes the sub-page under `confluenceParentId`. There is no separate global "sub-parent page name" setting.
+
+A folder can provide its own page content with a folder note. The folder note can be named the same as the folder, `index.md`, `README.md`, or `readme.md`. When an `index.md` or `README.md` folder note has no explicit `connie-title` and no first-heading title, the folder name is used as the Confluence page title. At the publishing root, an `index.md` or `README.md` folder note updates the configured parent page's content instead of creating a child page named `index` or `README`.
+
+Only local Markdown files are published. Pages created directly in Confluence are not pulled into the local tree or published automatically. To manage an existing Confluence page from Markdown, create a local Markdown file and set `connie-page-id` to that page ID.
+### PlantUML support
+
+Fenced code blocks tagged `plantuml`, `puml`, or `uml` are rendered to PNG via a PlantUML server and uploaded as page attachments. Each rendered diagram is followed by a collapsible "source" section containing the raw `@startuml…@enduml`. Obsidian-style `![[diagram.puml]]` wikilink embeds are also resolved and rendered.
+
+PlantUML rendering is disabled by default. Enable it and configure a server you trust to receive diagram source. For example, run a local server:
+
+```bash
+docker run -d --name plantuml -p 8080:8080 plantuml/plantuml-server:jetty
+export CONFLUENCE_PLANTUML_ENABLED=true
+export CONFLUENCE_PLANTUML_SERVER_URL=http://localhost:8080
+```
+
+In `.markdown-confluence.json` the PlantUML options are nested:
+
+```json
+{
+  "plantuml": {
+    "enabled": true,
+    "serverUrl": "http://localhost:8080"
+  }
+}
+```
+
+To disable PlantUML rendering entirely (leaving the source as a code block on the page), set `plantuml.enabled: false` or `CONFLUENCE_PLANTUML_ENABLED=false`.
+
 ### Per-page Frontmatter
 
 Individual Markdown files can override publishing behavior with frontmatter:
@@ -167,3 +266,50 @@ tags:
 ```
 
 These keys apply to one Markdown file at a time and are not global `.markdown-confluence.json` settings.
+
+### Markdown Extensions And Macros
+
+To publish a Confluence table of contents, put an empty `toc` fence where the macro should appear:
+
+````markdown
+```toc
+```
+````
+
+The converter also accepts standalone Confluence wiki-style TOC macro markup:
+
+```markdown
+{toc:printable=true|maxLevel=3}
+```
+
+For advanced macro or ADF templates, use an `adf` fenced code block containing the ADF JSON that should be inserted into the page:
+
+````markdown
+```adf
+{
+  "type": "paragraph",
+  "content": [
+    {
+      "type": "inlineExtension",
+      "attrs": {
+        "extensionType": "com.atlassian.confluence.macro.core",
+        "extensionKey": "status",
+        "parameters": {
+          "macroParams": {
+            "title": { "value": "Draft" }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+````
+
+Use `ignoredCodeBlockLanguages` to drop source-only Obsidian plugin blocks from published pages:
+
+```json
+{
+  "ignoredCodeBlockLanguages": ["dataview", "button"]
+}
+```

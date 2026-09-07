@@ -44,3 +44,25 @@ export function runEffect<A, E>(
 ): Promise<A> {
 	return MarkdownConfluenceRuntime.runPromise(effect);
 }
+
+/** Piped input is separate from interactive terminal input. */
+export class StandardInputService extends Context.Service<
+	StandardInputService,
+	{
+		readAll: Effect.Effect<string, Error>;
+	}
+>()("@markdown-confluence/StandardInput") {}
+
+export const StandardInputLive = Layer.succeed(StandardInputService, {
+	readAll: Effect.tryPromise({
+		try: async () => {
+			if (process.stdin.isTTY)
+				throw new Error("Input file is required when stdin is not piped.");
+			process.stdin.setEncoding("utf-8");
+			let input = "";
+			for await (const chunk of process.stdin) input += chunk;
+			return input;
+		},
+		catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+	}),
+});

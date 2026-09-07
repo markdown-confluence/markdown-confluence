@@ -107,6 +107,9 @@ function renderADFContent(
 		case "orderedList": {
 			return renderChildrenResult;
 		}
+		case "decisionList": {
+			return renderChildrenResult;
+		}
 		case "listItem": {
 			let prefix = "- ";
 			switch (parent.type) {
@@ -165,6 +168,13 @@ function renderADFContent(
 				element.attrs && element.attrs["state"] ? element.attrs["state"] : "TODO";
 			const taskStateMarkdown = taskState === "TODO" ? " " : "x";
 			return `- [${taskStateMarkdown}] ${renderChildrenResult}\n`;
+		}
+		case "decisionItem": {
+			return `- ${renderChildrenResult.trimEnd()}\n`;
+		}
+		case "date": {
+			const timestamp = element.attrs && element.attrs["timestamp"];
+			return renderDate(timestamp);
 		}
 		case "emoji": {
 			const emojiId = element.attrs && element.attrs["id"] ? element.attrs["id"] : undefined;
@@ -232,6 +242,18 @@ function renderTable(element: ADFEntity) {
 
 function renderCodeBlock(language: string, code: string) {
 	return `\`\`\`${language} \n${code}\n\`\`\``;
+}
+
+function renderDate(timestamp: unknown) {
+	if (typeof timestamp === "string" && timestamp.trim() === "") return "";
+	const timestampNumber =
+		typeof timestamp === "string" || typeof timestamp === "number" ? Number(timestamp) : NaN;
+	if (!Number.isFinite(timestampNumber)) {
+		return "";
+	}
+
+	const date = new Date(timestampNumber);
+	return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : "";
 }
 
 function renderChildren(element: ADFEntity) {

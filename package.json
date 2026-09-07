@@ -6,6 +6,7 @@
 		"packages/lib",
 		"packages/mermaid-electron-renderer",
 		"packages/mermaid-puppeteer-renderer",
+		"packages/plantuml-renderer",
 		"packages/cli",
 		"packages/obsidian"
 	],
@@ -22,7 +23,9 @@
 		"lint:names": "node scripts/check-descriptive-names.js",
 		"mutation": "stryker run",
 		"mutation:dry-run": "stryker run --dryRunOnly",
-		"test": "vp test run"
+		"test": "vp test run",
+		"release:prepare": "node scripts/prepare-release-assets.js",
+		"test:confluence-e2e": "node scripts/confluence-release-e2e.js"
 	},
 	"devDependencies": {
 		"@effect-oxlint/effect-oxlint": "jsr:^0.2.0",
@@ -37,8 +40,9 @@
 		"oxlint": "1.66.0",
 		"tslib": "2.8.1",
 		"typescript": "^6.0.3",
-		"vite-plus": "^0.1.21",
-		"vitest": "npm:@voidzero-dev/vite-plus-test@0.1.21"
+		"vite": "npm:@voidzero-dev/vite-plus-core@0.1.24",
+		"vite-plus": "0.1.24",
+		"vitest": "npm:@voidzero-dev/vite-plus-test@0.1.24"
 	},
 	"packageManager": "pnpm@11.1.2"
 }

@@ -1,0 +1,44 @@
+{
+	"name": "@markdown-confluence/plantuml-renderer",
+	"version": "5.5.2",
+	"description": "HTTP-based PlantUML renderer for the markdown-confluence publish pipeline",
+	"keywords": [],
+	"homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/plantuml-renderer",
+	"bugs": {
+		"url": "https://github.com/markdown-confluence/markdown-confluence/issues"
+	},
+	"license": "Apache-2.0",
+	"author": "andymac4182",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/markdown-confluence/markdown-confluence",
+		"directory": "packages/plantuml-renderer"
+	},
+	"files": [
+		"dist"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"publishConfig": {
+		"access": "public",
+		"provenance": true,
+		"registry": "https://registry.npmjs.org/"
+	},
+	"scripts": {
+		"dev": "vp build --watch",
+		"build": "vp exec tsc --noEmit && vp build && vp exec tsc --emitDeclarationOnly",
+		"fmt": "vp fmt --write \"src/**/*.{ts,tsx,js}\"",
+		"fmt:check": "vp fmt --check \"src/**/*.{ts,tsx,js}\"",
+		"lint": "vp lint src"
+	},
+	"dependencies": {
+		"@markdown-confluence/lib": "workspace:5.5.2",
+		"plantuml-encoder": "1.4.0"
+	},
+	"devDependencies": {
+		"@types/plantuml-encoder": "1.4.2"
+	}
+}

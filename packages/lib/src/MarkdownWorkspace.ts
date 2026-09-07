@@ -9,6 +9,7 @@ import {
 } from "./ConniePageConfig";
 import { runEffect } from "./effects";
 import { parseMarkdownFrontmatter, stringifyMarkdownFrontmatter } from "./MarkdownFrontmatter";
+import { findMarkdownEmbeds, rebaseEmbeddedLinks, selectEmbeddedMarkdown } from "./MarkdownEmbeds";
 import { ConfluenceSettings, ConfluenceSettingsService } from "./Settings";
 
 interface MarkdownContent {
@@ -47,6 +48,10 @@ export interface MarkdownWorkspace {
 		searchPath: string,
 		referencedFromFilePath: string,
 	): Effect.Effect<BinaryFile | false, Error>;
+	readText(
+		searchPath: string,
+		referencedFromFilePath: string,
+	): Effect.Effect<string | false, Error>;
 }
 
 export class MarkdownWorkspaceService extends Context.Service<
@@ -147,7 +152,12 @@ export function makeMarkdownWorkspaceEffect(
 
 		const loadMarkdownFile = (absoluteFilePath: string): Effect.Effect<MarkdownFile, Error> =>
 			Effect.gen(function* () {
-				const { data, content: contents } = yield* getFileContent(absoluteFilePath);
+				const { data, content } = yield* getFileContent(absoluteFilePath);
+				const contents = yield* expandMarkdownEmbeds(
+					content,
+					absoluteFilePath,
+					new Set([absoluteFilePath]),
+				);
 
 				const folderName = path.basename(path.parse(absoluteFilePath).dir);
 				const fileName = path.basename(absoluteFilePath);
@@ -193,13 +203,12 @@ export function makeMarkdownWorkspaceEffect(
 				const filesToPublish = [];
 				for (const file of files) {
 					try {
-						const frontMatter = file.frontmatter;
-
 						if (
-							((file.absoluteFilePath.startsWith(workspaceSettings.folderToPublish) ||
-								workspaceSettings.folderToPublish === ".") &&
-								(!frontMatter || frontMatter["connie-publish"] !== false)) ||
-							(frontMatter && frontMatter["connie-publish"] === true)
+							shouldPublishMarkdownFile(
+								file.absoluteFilePath,
+								file.frontmatter,
+								workspaceSettings,
+							)
 						) {
 							filesToPublish.push(file);
 						}
@@ -219,11 +228,11 @@ export function makeMarkdownWorkspaceEffect(
 			},
 		).pipe(Effect.mapError(toError));
 
-		const findClosestFile = (
+		function findClosestFile(
 			fileName: string,
 			startingDirectory: string,
-		): Effect.Effect<string | null, Error> =>
-			Effect.gen(function* () {
+		): Effect.Effect<string | null, Error> {
+			return Effect.gen(function* () {
 				const potentialAbsolutePathForFileName = path.join(startingDirectory, fileName);
 				if (yield* isFile(fs, potentialAbsolutePathForFileName)) {
 					return potentialAbsolutePathForFileName;
@@ -271,6 +280,114 @@ export function makeMarkdownWorkspaceEffect(
 
 				return yield* findClosestFile(fileName, parentDirectory);
 			}).pipe(Effect.mapError(toError));
+		}
+
+		function expandMarkdownEmbeds(
+			contents: string,
+			referencedFromFilePath: string,
+			seenFiles: Set<string>,
+		): Effect.Effect<string, Error> {
+			return Effect.gen(function* () {
+				let expandedContents = "";
+				let currentIndex = 0;
+
+				for (const match of findMarkdownEmbeds(contents)) {
+					const embedTarget = match[1];
+					const embedStart = match.index!;
+					const embedEnd = embedStart + match[0].length;
+
+					expandedContents += contents.slice(currentIndex, embedStart);
+					currentIndex = embedEnd;
+
+					if (!embedTarget) {
+						expandedContents += match[0];
+						continue;
+					}
+
+					const replacement = yield* resolveMarkdownEmbed(
+						match[0],
+						embedTarget,
+						referencedFromFilePath,
+						seenFiles,
+					);
+					expandedContents += replacement;
+				}
+
+				expandedContents += contents.slice(currentIndex);
+				return expandedContents;
+			}).pipe(Effect.mapError(toError));
+		}
+
+		function resolveMarkdownEmbed(
+			originalEmbed: string,
+			rawTarget: string,
+			referencedFromFilePath: string,
+			seenFiles: Set<string>,
+		): Effect.Effect<string, Error> {
+			return Effect.gen(function* () {
+				const [targetValue, fragment] = (rawTarget.split("|")[0] ?? "").split("#");
+				const target = targetValue?.trim();
+				if (!target) {
+					return originalEmbed;
+				}
+
+				const targetExtension = path.extname(target).toLowerCase();
+				if (targetExtension && targetExtension !== ".md") {
+					return originalEmbed;
+				}
+
+				const markdownTarget = targetExtension ? target : `${target}.md`;
+				const embeddedFilePath = yield* findClosestFile(
+					markdownTarget,
+					path.dirname(referencedFromFilePath),
+				);
+
+				if (!embeddedFilePath) {
+					return originalEmbed;
+				}
+				if (seenFiles.has(embeddedFilePath) || seenFiles.size >= 50) {
+					return yield* Effect.fail(
+						new Error(`Circular or excessively nested Markdown embed: ${rawTarget}`),
+					);
+				}
+
+				const embeddedContent = yield* getFileContent(embeddedFilePath);
+				const selectedContent = yield* Effect.try({
+					try: () => selectEmbeddedMarkdown(embeddedContent.content, fragment),
+					catch: toError,
+				});
+				const expandedEmbeddedContent = yield* expandMarkdownEmbeds(
+					selectedContent,
+					embeddedFilePath,
+					new Set([...seenFiles, embeddedFilePath]),
+				);
+
+				const targets = new Set<string>();
+				rebaseEmbeddedLinks(expandedEmbeddedContent, (link) => {
+					targets.add(link);
+					return link;
+				});
+				const resolvedLinks = new Map<string, string>();
+				for (const link of targets) {
+					const sourcePath = yield* findClosestFile(
+						path.extname(link) ? link : `${link}.md`,
+						path.dirname(embeddedFilePath),
+					);
+					if (sourcePath)
+						resolvedLinks.set(
+							link,
+							path
+								.relative(path.dirname(referencedFromFilePath), sourcePath)
+								.replaceAll("\\", "/"),
+						);
+				}
+				const rebased = rebaseEmbeddedLinks(
+					expandedEmbeddedContent,
+					(link) => resolvedLinks.get(link) ?? link,
+				);
+				return `\n\n${rebased.trim()}\n\n`;
+			}).pipe(Effect.mapError(toError));
+		}
 
 		const readBinary = (
 			searchPath: string,
@@ -298,11 +415,29 @@ export function makeMarkdownWorkspaceEffect(
 				return false;
 			}).pipe(Effect.mapError(toError));
 
+		const readText = (
+			searchPath: string,
+			referencedFromFilePath: string,
+		): Effect.Effect<string | false, Error> =>
+			Effect.gen(function* () {
+				const absoluteFilePath = yield* findClosestFile(
+					searchPath,
+					path.dirname(path.join(workspaceSettings.contentRoot, referencedFromFilePath)),
+				);
+
+				if (absoluteFilePath) {
+					return yield* fs.readFileString(absoluteFilePath, "utf-8");
+				}
+
+				return false;
+			}).pipe(Effect.mapError(toError));
+
 		return {
 			updateMarkdownValues,
 			loadMarkdownFile,
 			getMarkdownFilesToUpload,
 			readBinary,
+			readText,
 		};
 	});
 }
@@ -366,6 +501,76 @@ function isFile(fs: FileSystem, filePath: string): Effect.Effect<boolean, never>
 		Effect.map((stats) => stats.type === "File"),
 		Effect.catch(() => Effect.succeed(false)),
 	);
+}
+
+export function shouldPublishMarkdownFile(
+	absoluteFilePath: string,
+	frontmatter: Record<string, unknown> | undefined,
+	settings: ConfluenceSettings,
+): boolean {
+	if (frontmatter?.["connie-publish"] === false) {
+		return false;
+	}
+
+	if (frontmatter?.["connie-publish"] === true) {
+		return true;
+	}
+
+	const filePath = absoluteFilePath.replaceAll("\\", "/");
+	const folder = settings.folderToPublish.replaceAll("\\", "/").replace(/\/$/, "");
+	if (folder === "." || filePath.startsWith(`${folder}/`)) {
+		return true;
+	}
+
+	return hasMatchingPublishTag(frontmatter, settings.tagsToPublish);
+}
+
+function hasMatchingPublishTag(
+	frontmatter: Record<string, unknown> | undefined,
+	tagsToPublish: string,
+): boolean {
+	const publishTags = parseTags(tagsToPublish);
+	if (publishTags.size === 0) {
+		return false;
+	}
+
+	for (const tag of parseFrontmatterTags(frontmatter?.["tags"])) {
+		if (publishTags.has(tag)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function parseFrontmatterTags(tags: unknown): Set<string> {
+	if (Array.isArray(tags)) {
+		return new Set(
+			tags
+				.filter((tag): tag is string => typeof tag === "string")
+				.map(normalizeTag)
+				.filter((tag) => tag.length > 0),
+		);
+	}
+
+	if (typeof tags === "string") {
+		return parseTags(tags);
+	}
+
+	return new Set();
+}
+
+function parseTags(value: string): Set<string> {
+	return new Set(
+		value
+			.split(/[\s,]+/)
+			.map(normalizeTag)
+			.filter((tag) => tag.length > 0),
+	);
+}
+
+function normalizeTag(tag: string): string {
+	return tag.trim().replace(/^#/, "").toLowerCase();
 }
 
 function logUpdateMarkdownValuesError(input: {

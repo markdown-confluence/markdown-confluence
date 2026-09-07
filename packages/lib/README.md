@@ -1,26 +1,44 @@
-# 🌙 @markdown-confluence/lib - The Sleep-Deprived Engineer's Dream
+# @markdown-confluence/lib
 
-Hey fellow engineers, I know we've all been there - burning the midnight oil, trying to balance work and family, and somehow still managing to get things done. With a newborn at home, I'm no stranger to the art of staying up all night. That's why I've put together this fantastic library to make your lives a little easier. Say hello to `@markdown-confluence/lib`, the core library for publishing Markdown files to Confluence with some extra goodies to make your life better. Seriously, this thing is like a double shot of espresso for your markdown-to-Confluence pipeline.
+Core library for converting Markdown to Atlassian Document Format (ADF) and publishing Markdown workspaces to Confluence.
 
-## 🚀 Features
+## Requirements
 
-* Wikilinks: Need to connect pages or sections? Piece of cake.
-* Image uploading: Wave goodbye to manual image management.
-* Mermaid diagram uploading: Beautiful diagrams with zero hassle.
-* Comment preserving: Because we all need to remember why we did *that*.
-* Diffing: No unnecessary uploads, saving you time and bandwidth.
-* Integration tests: Ensuring the Atlassian Document Format (ADF) round trips like a champ.
+- Node.js 24.15.0 is used by this repository's CI.
+- The package is published as ESM. Use `import` in ESM projects or dynamic `import()` from CommonJS.
+- TypeScript projects should use a modern module resolution mode such as `Bundler`, `Node16`, or `NodeNext`.
 
-## 🧪 Built With
+## ESM Usage
 
-* TypeScript: Robust, scalable, and oh-so-readable.
+```ts
+import { parseMarkdownToADF } from "@markdown-confluence/lib";
 
-## 🎁 Batteries Included
+const adf = parseMarkdownToADF("# Release notes", "https://example.atlassian.net");
+console.log(adf);
+```
 
-This library is designed to be opinionated and feature-rich. Think of it as a Swiss Army knife for your markdown-to-Confluence needs. It's not just about getting the job done; it's about getting it done *right*, with a set of tools that make your life easier.
+## CommonJS Usage
 
-## 😴 Sleep Tight
+CommonJS `require("@markdown-confluence/lib")` is not supported because the package is ESM-only. Use dynamic `import()` instead:
 
-So, to all my fellow sleep-deprived engineers, I hope `@markdown-confluence/lib` makes your nights a little less restless. Go on, give it a try, and let it work its magic on your markdown files. And remember, you're doing great - we're all in this together.
+```js
+async function main() {
+	const { parseMarkdownToADF } = await import("@markdown-confluence/lib");
+	const adf = parseMarkdownToADF("# Release notes", "https://example.atlassian.net");
+	console.log(adf);
+}
 
-Happy coding! 🛠️
+main().catch((error) => {
+	console.error(error);
+	process.exitCode = 1;
+});
+```
+
+## Features
+
+- Markdown to ADF conversion
+- Wikilink handling
+- Image uploading support
+- Mermaid diagram upload pipeline integration
+- Comment preservation
+- Diffing to avoid unnecessary uploads

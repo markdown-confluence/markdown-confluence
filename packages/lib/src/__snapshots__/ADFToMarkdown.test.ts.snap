@@ -5,12 +5,11 @@ exports[`ADF To Markdown Test 1`] = `
 
 [https://andymac4182.atlassian.net/wiki/spaces/T2/pages/8290305](https://andymac4182.atlassian.net/wiki/spaces/T2/pages/8290305) 
 
-\`\`\`adf 
-{"type":"decisionList","attrs":{"localId":"39becc7a-48c3-4e2d-a6bc-35648d6689a2"},"content":[{"type":"decisionItem","attrs":{"state":"DECIDED","localId":"95268b83-2fc0-4801-9b4f-e5c42cc530e6"},"content":[{"text":"Decision to track","type":"text"}]},{"type":"decisionItem","attrs":{"state":"DECIDED","localId":"564ab974-e6fe-48d2-a144-507f5ec30906"},"content":[{"text":"Testing Decision 2","type":"text"}]}]}
-\`\`\`
-\`\`\`adf 
-{"type":"paragraph","content":[{"type":"date","attrs":{"timestamp":"1683244800000"}},{"text":" ","type":"text"}]}
-\`\`\`
+- Decision to track
+- Testing Decision 2
+
+2023-05-05
+
 | **Testing** | **Testing 2** | **Testing 3** |
 | ----------- | ------------- | ------------- |
 | Row 1       | Row 1.2       | Row 1.3       |

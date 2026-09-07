@@ -80,10 +80,6 @@ const ADFToMDTest = {
 						timestamp: "1683244800000",
 					},
 				},
-				{
-					text: " ",
-					type: "text",
-				},
 			],
 		},
 		{
@@ -918,3 +914,15 @@ test("ADF To Markdown Test", async () => {
 	const result = renderADFDoc(ADFToMDTest);
 	expect(result).toMatchSnapshot();
 });
+
+test.each(["", " ", "invalid", "1e100", Infinity])(
+	"does not invent or throw for an invalid ADF date %s",
+	(timestamp) => {
+		const result = renderADFDoc({
+			type: "doc",
+			version: 1,
+			content: [{ type: "paragraph", content: [{ type: "date", attrs: { timestamp } }] }],
+		} as JSONDocNode);
+		expect(result.trim()).toBe("");
+	},
+);

@@ -3,7 +3,7 @@ import { Path } from "effect/Path";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { defineConfig, type Plugin } from "vite-plus";
-import { generatedBanner, isNodeBuiltin } from "../../vite.package-build.ts";
+import { generatedNodeBanner, isNodeBuiltin } from "../../vite.package-build.ts";
 
 const NodePlatformLive = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
@@ -45,15 +45,16 @@ export default defineConfig({
 		rollupOptions: {
 			external: isNodeBuiltin,
 			output: {
-				banner: generatedBanner,
+				banner: generatedNodeBanner,
 				codeSplitting: false,
 			},
 		},
 		sourcemap: true,
-		target: "node16",
+		target: "node24",
 	},
 	plugins: [copyRendererHtmlPlugin()],
 	resolve: {
+		conditions: ["node", "module"],
 		mainFields: ["module", "main"],
 	},
 });

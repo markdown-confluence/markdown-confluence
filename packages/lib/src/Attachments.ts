@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import FormData from "form-data";
 import SparkMD5 from "spark-md5";
 import { lookup } from "mime-types";
 import { runEffect } from "./effects";
@@ -25,6 +26,17 @@ export type CurrentAttachments = Record<
 		collectionName: string;
 	}
 >;
+
+interface AttachmentUploadResponse {
+	results: {
+		extensions: {
+			fileId: string;
+		};
+		container: {
+			id: string;
+		};
+	}[];
+}
 
 function toArrayBuffer(contents: Uint8Array): ArrayBuffer {
 	return Uint8Array.from(contents).buffer;
@@ -81,22 +93,15 @@ export function uploadBufferEffect(
 			};
 		}
 
-		const attachmentDetails = {
-			id: pageId,
-			attachments: [
-				{
-					file: fileBuffer,
-					filename: uploadFilename,
-					minorEdit: false,
-					comment: currentFileMd5,
-					contentType: resolveContentType(uploadFilename, contentType),
-				},
-			],
-		};
-
 		const attachmentResponse = yield* Effect.tryPromise({
 			try: () =>
-				confluenceClient.contentAttachments.createOrUpdateAttachments(attachmentDetails),
+				uploadAttachment(confluenceClient, {
+					pageId,
+					fileBuffer,
+					uploadFilename,
+					contentType: resolveContentType(uploadFilename, contentType),
+					comment: currentFileMd5,
+				}),
 			catch: identity,
 		});
 
@@ -174,24 +179,15 @@ export function uploadFileEffect(
 				};
 			}
 
-			const attachmentDetails = {
-				id: pageId,
-				attachments: [
-					{
-						file: imageBuffer,
-						filename: uploadFilename,
-						minorEdit: false,
-						comment: currentFileMd5,
-						contentType: testing.mimeType,
-					},
-				],
-			};
-
 			const attachmentResponse = yield* Effect.tryPromise({
 				try: () =>
-					confluenceClient.contentAttachments.createOrUpdateAttachments(
-						attachmentDetails,
-					),
+					uploadAttachment(confluenceClient, {
+						pageId,
+						fileBuffer: imageBuffer,
+						uploadFilename,
+						contentType: testing.mimeType,
+						comment: currentFileMd5,
+					}),
 				catch: identity,
 			});
 
@@ -226,12 +222,78 @@ function getImageSize(buffer: Buffer): { width?: number; height?: number } {
 	try {
 		return sizeOf(buffer);
 	} catch {
-		return {};
+		return getSvgImageSize(buffer) ?? {};
 	}
+}
+
+function getSvgImageSize(buffer: Buffer): { width?: number; height?: number } | undefined {
+	const svg = buffer.toString("utf-8", 0, Math.min(buffer.length, 4096));
+	const svgTagStart = svg.indexOf("<svg");
+	if (svgTagStart === -1) {
+		return undefined;
+	}
+	const svgTag = svg.slice(svgTagStart);
+
+	const width = parseSvgLength(svgTag.match(/\swidth="([^"]+)"/)?.[1]);
+	const height = parseSvgLength(svgTag.match(/\sheight="([^"]+)"/)?.[1]);
+	if (width && height) {
+		return { width, height };
+	}
+
+	const viewBox = svgTag.match(/\sviewBox="([^"]+)"/)?.[1];
+	if (viewBox) {
+		const [, , viewBoxWidth, viewBoxHeight] = viewBox
+			.trim()
+			.split(/[\s,]+/)
+			.map((value) => Number(value));
+		if (viewBoxWidth && viewBoxHeight) {
+			return { width: viewBoxWidth, height: viewBoxHeight };
+		}
+	}
+
+	return undefined;
+}
+
+function parseSvgLength(value: string | undefined): number | undefined {
+	if (!value) {
+		return undefined;
+	}
+	const parsed = Number.parseFloat(value);
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 function resolveContentType(uploadFilename: string, contentType: string | undefined): string {
 	return contentType ?? (lookup(uploadFilename) || "application/octet-stream");
+}
+
+function uploadAttachment(
+	confluenceClient: RequiredConfluenceClient,
+	attachment: {
+		pageId: string;
+		fileBuffer: Buffer;
+		uploadFilename: string;
+		contentType: string;
+		comment: string;
+	},
+): Promise<AttachmentUploadResponse> {
+	const formData = new FormData();
+	formData.append("file", attachment.fileBuffer, {
+		filename: attachment.uploadFilename,
+		contentType: attachment.contentType,
+	});
+	formData.append("minorEdit", "false");
+	formData.append("comment", attachment.comment);
+
+	return confluenceClient.sendRequest<AttachmentUploadResponse>({
+		url: `/api/content/${attachment.pageId}/child/attachment`,
+		method: "PUT",
+		headers: {
+			"X-Atlassian-Token": "no-check",
+			...formData.getHeaders(),
+		},
+		params: {},
+		data: formData,
+	});
 }
 
 function identity(error: unknown): unknown {

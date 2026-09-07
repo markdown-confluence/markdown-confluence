@@ -5,16 +5,25 @@ allowBuilds:
     puppeteer: true
 
 overrides:
-    vite: npm:@voidzero-dev/vite-plus-core@0.1.21
-    vitest: npm:@voidzero-dev/vite-plus-test@0.1.21
+    vite: npm:@voidzero-dev/vite-plus-core@0.1.24
+    vitest: npm:@voidzero-dev/vite-plus-test@0.1.24
+    # Security fixes for versions pinned by upstream dependencies.
+    "qs@<6.16.0": 6.16.0
+    "linkify-it@<5.0.2": 5.0.2
+    "extract-zip@<2.0.2": 2.0.2
 
 peerDependencyRules:
     allowedVersions:
-        vitest: 0.1.21
+        vitest: 0.1.24
+        vite: 0.1.24
 
 packages:
     - packages/lib
     - packages/mermaid-electron-renderer
     - packages/mermaid-puppeteer-renderer
+    - packages/plantuml-renderer
     - packages/cli
     - packages/obsidian
+
+patchedDependencies:
+    image-size@2.0.2: patches/image-size@2.0.2.patch

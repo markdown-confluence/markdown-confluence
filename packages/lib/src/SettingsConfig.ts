@@ -1,13 +1,19 @@
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
-import { Config, ConfigProvider, Effect, Layer } from "effect";
+import { Config, ConfigProvider, Effect, Layer, Schema } from "effect";
 import {
 	MarkdownConfluencePlatform,
 	runEffect,
 	RuntimeEnvironment,
 	RuntimeEnvironmentService,
 } from "./effects";
-import { ConfluenceSettings, ConfluenceSettingsService, DEFAULT_SETTINGS } from "./Settings";
+import {
+	ConfluenceAuthType,
+	ConfluenceSettings,
+	ConfluenceSettingsService,
+	DEFAULT_SETTINGS,
+	validateConfluenceSettings,
+} from "./Settings";
 
 const CONFLUENCE_SETTINGS_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof ConfluenceSettings)[];
 
@@ -21,12 +27,51 @@ type ArgumentValue = boolean | string | undefined;
 
 export const confluenceSettingsConfig = Config.all({
 	confluenceBaseUrl: Config.string("confluenceBaseUrl"),
+	confluenceSiteUrl: Config.string("confluenceSiteUrl").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.confluenceSiteUrl),
+	),
 	confluenceParentId: Config.string("confluenceParentId"),
-	atlassianUserName: Config.string("atlassianUserName"),
-	atlassianApiToken: Config.string("atlassianApiToken"),
+	mermaidProtocolTimeout: Config.number("mermaidProtocolTimeout").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.mermaidProtocolTimeout),
+	),
+	atlassianUserName: Config.string("atlassianUserName").pipe(Config.withDefault("")),
+	atlassianApiToken: Config.string("atlassianApiToken").pipe(Config.withDefault("")),
+	atlassianClientId: Config.string("atlassianClientId").pipe(Config.withDefault("")),
+	atlassianClientSecret: Config.string("atlassianClientSecret").pipe(Config.withDefault("")),
+	confluenceAuthType: Config.string("confluenceAuthType").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.confluenceAuthType),
+		Config.map((value) => value as ConfluenceAuthType),
+	),
+	confluenceApiPrefix: Config.string("confluenceApiPrefix").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.confluenceApiPrefix),
+	),
+	confluenceRequestHeaders: Config.schema(
+		Config.Record(Schema.String, Schema.String),
+		"confluenceRequestHeaders",
+	).pipe(Config.withDefault(DEFAULT_SETTINGS.confluenceRequestHeaders)),
 	folderToPublish: Config.string("folderToPublish"),
+	tagsToPublish: Config.string("tagsToPublish").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.tagsToPublish),
+	),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
+	forceOverwrite: Config.boolean("forceOverwrite").pipe(
+		Config.withDefault(DEFAULT_SETTINGS.forceOverwrite),
+	),
+	pageHeaderMarkdown: Config.string("pageHeaderMarkdown").pipe(Config.withDefault("")),
+	pageFooterMarkdown: Config.string("pageFooterMarkdown").pipe(Config.withDefault("")),
+	ignoredCodeBlockLanguages: Config.schema(
+		Schema.Array(Schema.String),
+		"ignoredCodeBlockLanguages",
+	).pipe(Config.withDefault([])),
+	plantuml: Config.all({
+		enabled: Config.boolean("enabled").pipe(
+			Config.withDefault(DEFAULT_SETTINGS.plantuml.enabled),
+		),
+		serverUrl: Config.string("serverUrl").pipe(
+			Config.withDefault(DEFAULT_SETTINGS.plantuml.serverUrl),
+		),
+	}).pipe(Config.nested("plantuml")),
 });
 
 export const ConfluenceSettingsLive: Layer.Layer<
@@ -100,29 +145,12 @@ function validateConfluenceSettingsEffect(
 ): Effect.Effect<ConfluenceSettings, Error, Path> {
 	return Effect.gen(function* () {
 		const path = yield* Path;
+		const validationResult = validateConfluenceSettings(settings);
 
-		if (!settings.confluenceBaseUrl) {
-			return yield* Effect.fail(new Error("Confluence base URL is required"));
-		}
-
-		if (!settings.confluenceParentId) {
-			return yield* Effect.fail(new Error("Confluence parent ID is required"));
-		}
-
-		if (!settings.atlassianUserName) {
-			return yield* Effect.fail(new Error("Atlassian user name is required"));
-		}
-
-		if (!settings.atlassianApiToken) {
-			return yield* Effect.fail(new Error("Atlassian API token is required"));
-		}
-
-		if (!settings.folderToPublish) {
-			return yield* Effect.fail(new Error("Folder to publish is required"));
-		}
-
-		if (!settings.contentRoot) {
-			return yield* Effect.fail(new Error("Content root is required"));
+		if (!validationResult.valid) {
+			return yield* Effect.fail(
+				new Error(validationResult.issues.map((issue) => issue.message).join("\n")),
+			);
 		}
 
 		return {
@@ -181,17 +209,45 @@ function makeEnvironmentProvider(
 		const firstHeadingPageTitle = yield* runtimeEnvironment.getEnv(
 			"CONFLUENCE_FIRST_HEADING_PAGE_TITLE",
 		);
+		const forceOverwrite = yield* runtimeEnvironment.getEnv("CONFLUENCE_FORCE_OVERWRITE");
+		const plantumlEnabled = yield* runtimeEnvironment.getEnv("CONFLUENCE_PLANTUML_ENABLED");
+		const plantumlServerUrl = yield* runtimeEnvironment.getEnv(
+			"CONFLUENCE_PLANTUML_SERVER_URL",
+		);
 
 		return ConfigProvider.fromEnv({
 			env: compactRecord({
 				confluenceBaseUrl: yield* runtimeEnvironment.getEnv("CONFLUENCE_BASE_URL"),
+				confluenceSiteUrl: yield* runtimeEnvironment.getEnv("CONFLUENCE_SITE_URL"),
 				confluenceParentId: yield* runtimeEnvironment.getEnv("CONFLUENCE_PARENT_ID"),
+				mermaidProtocolTimeout: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_MERMAID_PROTOCOL_TIMEOUT",
+				),
 				atlassianUserName: yield* runtimeEnvironment.getEnv("ATLASSIAN_USERNAME"),
 				atlassianApiToken: yield* runtimeEnvironment.getEnv("ATLASSIAN_API_TOKEN"),
+				confluenceAuthType: yield* runtimeEnvironment.getEnv("CONFLUENCE_AUTH_TYPE"),
+				confluenceApiPrefix: yield* runtimeEnvironment.getEnv("CONFLUENCE_API_PREFIX"),
+				confluenceRequestHeaders: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_REQUEST_HEADERS",
+				),
+				atlassianClientId: yield* runtimeEnvironment.getEnv("ATLASSIAN_CLIENT_ID"),
+				atlassianClientSecret: yield* runtimeEnvironment.getEnv("ATLASSIAN_CLIENT_SECRET"),
 				folderToPublish: yield* runtimeEnvironment.getEnv("FOLDER_TO_PUBLISH"),
+				tagsToPublish: yield* runtimeEnvironment.getEnv("CONFLUENCE_TAGS_TO_PUBLISH"),
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
-				firstHeadingPageTitle:
-					firstHeadingPageTitle === "true" ? firstHeadingPageTitle : undefined,
+				firstHeadingPageTitle: firstHeadingPageTitle,
+				forceOverwrite,
+				pageHeaderMarkdown: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_PAGE_HEADER_MARKDOWN",
+				),
+				pageFooterMarkdown: yield* runtimeEnvironment.getEnv(
+					"CONFLUENCE_PAGE_FOOTER_MARKDOWN",
+				),
+				// fromEnv splits nested config paths on "_", so plantuml.enabled
+				// and plantuml.serverUrl are supplied as plantuml_enabled /
+				// plantuml_serverUrl here.
+				plantuml_enabled: plantumlEnabled,
+				plantuml_serverUrl: plantumlServerUrl,
 			}),
 		});
 	});
@@ -200,25 +256,55 @@ function makeEnvironmentProvider(
 function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.ConfigProvider {
 	const options = parseArgumentValues(argv, [
 		{ name: "baseUrl", aliases: ["b"], type: "string" },
+		{ name: "siteUrl", type: "string" },
 		{ name: "parentId", aliases: ["p"], type: "string" },
+		{ name: "mermaidProtocolTimeout", type: "string" },
 		{ name: "userName", aliases: ["u"], type: "string" },
 		{ name: "apiToken", type: "string" },
+		{ name: "authType", type: "string" },
+		{ name: "apiPrefix", type: "string" },
+		{ name: "requestHeaders", type: "string" },
+		{ name: "clientId", type: "string" },
+		{ name: "clientSecret", type: "string" },
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
+		{ name: "tagsToPublish", aliases: ["t"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
+		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
+		{ name: "pageHeaderMarkdown", type: "string" },
+		{ name: "pageFooterMarkdown", type: "string" },
+		{ name: "plantumlEnabled", type: "boolean" },
+		{ name: "plantumlServerUrl", type: "string" },
 	]);
 
-	return ConfigProvider.fromUnknown(
-		compactRecord({
+	const plantuml = compactRecord({
+		enabled: options["plantumlEnabled"],
+		serverUrl: options["plantumlServerUrl"],
+	});
+
+	return ConfigProvider.fromUnknown({
+		...compactRecord({
 			confluenceBaseUrl: options["baseUrl"],
+			confluenceSiteUrl: options["siteUrl"],
 			confluenceParentId: options["parentId"],
+			mermaidProtocolTimeout: options["mermaidProtocolTimeout"],
 			atlassianUserName: options["userName"],
 			atlassianApiToken: options["apiToken"],
+			confluenceAuthType: options["authType"],
+			confluenceApiPrefix: options["apiPrefix"],
+			confluenceRequestHeaders: options["requestHeaders"],
+			atlassianClientId: options["clientId"],
+			atlassianClientSecret: options["clientSecret"],
 			folderToPublish: options["enableFolder"],
+			tagsToPublish: options["tagsToPublish"],
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
+			forceOverwrite: options["forceOverwrite"],
+			pageHeaderMarkdown: options["pageHeaderMarkdown"],
+			pageFooterMarkdown: options["pageFooterMarkdown"],
 		}),
-	);
+		...(Object.keys(plantuml).length > 0 ? { plantuml } : {}),
+	});
 }
 
 function parseArgumentValues(
@@ -294,13 +380,53 @@ function pickConfluenceSettings(config: Record<string, unknown>): Partial<Conflu
 			continue;
 		}
 
+		// `plantuml` is a nested object; copy its known sub-keys through with
+		// the right types so a partial config file still merges cleanly.
+		if (key === "plantuml") {
+			const value = config[key];
+			if (value && typeof value === "object" && !Array.isArray(value)) {
+				const plantuml = value as Record<string, unknown>;
+				const picked: Partial<ConfluenceSettings["plantuml"]> = {};
+				if (typeof plantuml["enabled"] === "boolean") {
+					picked.enabled = plantuml["enabled"];
+				}
+				if (typeof plantuml["serverUrl"] === "string") {
+					picked.serverUrl = plantuml["serverUrl"];
+				}
+				if (Object.keys(picked).length > 0) {
+					result.plantuml = picked as ConfluenceSettings["plantuml"];
+				}
+			}
+			continue;
+		}
+
 		const value = config[key];
-		if (typeof value === typeof DEFAULT_SETTINGS[key]) {
+		if (isConfluenceSettingValue(key, value)) {
 			(result as Record<string, unknown>)[key] = value;
 		}
 	}
 
 	return result;
+}
+
+function isConfluenceSettingValue(key: keyof ConfluenceSettings, value: unknown): boolean {
+	if (key === "confluenceRequestHeaders") {
+		return isStringRecord(value);
+	}
+
+	if (Array.isArray(DEFAULT_SETTINGS[key])) {
+		return Array.isArray(value) && value.every((item) => typeof item === "string");
+	}
+	return typeof value === typeof DEFAULT_SETTINGS[key];
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+	return (
+		value !== null &&
+		!Array.isArray(value) &&
+		typeof value === "object" &&
+		Object.values(value).every((entry) => typeof entry === "string")
+	);
 }
 
 function compactRecord<T extends Record<string, unknown>>(record: T): Record<string, string> {

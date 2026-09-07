@@ -5,16 +5,22 @@ import chalk from "chalk";
 import boxen from "boxen";
 import { Console, Effect } from "effect";
 import {
+	ADFProcessingPlugin,
 	ConfluenceSettingsLive,
 	ConfluenceUploadSettings,
 	MarkdownWorkspaceLive,
 	MarkdownConfluencePlatformLive,
 	Publisher,
 	MermaidRendererPlugin,
+	PlantumlRendererPlugin,
 	RuntimeEnvironmentService,
+	createAuthenticatedConfluenceClient,
+	StandardInputLive,
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
-import { ConfluenceClient } from "confluence.js";
+import { getErrorMessage } from "./errorMessage";
+import { markdownToAdf } from "./toAdf";
+import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 
 const program = Effect.gen(function* () {
 	const runtimeEnvironment = yield* RuntimeEnvironmentService as any;
@@ -22,29 +28,28 @@ const program = Effect.gen(function* () {
 
 	const settings = yield* ConfluenceUploadSettings.ConfluenceSettingsService as any;
 
-	const confluenceClient = new ConfluenceClient({
-		host: settings.confluenceBaseUrl,
-		authentication: {
-			basic: {
-				email: settings.atlassianUserName,
-				apiToken: settings.atlassianApiToken,
-			},
-		},
-		middlewares: {
-			onError(e) {
-				if ("response" in e && "data" in e.response) {
-					e.message =
-						typeof e.response.data === "string"
-							? e.response.data
-							: JSON.stringify(e.response.data);
-				}
-			},
-		},
-	});
+	const confluenceClient = yield* createAuthenticatedConfluenceClient(settings);
 
-	const publisher = new Publisher(settings, confluenceClient, [
-		new MermaidRendererPlugin(new PuppeteerMermaidRenderer()),
-	]);
+	const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
+		new MermaidRendererPlugin(
+			new PuppeteerMermaidRenderer({ protocolTimeout: settings.mermaidProtocolTimeout }),
+		),
+	];
+
+	if (settings.plantuml.enabled) {
+		if (!settings.plantuml.serverUrl) {
+			throw new Error(
+				"PlantUML rendering is enabled but plantuml.serverUrl is empty. Set CONFLUENCE_PLANTUML_SERVER_URL, --plantumlServerUrl, or plantuml.serverUrl in .markdown-confluence.json — or set plantuml.enabled to false.",
+			);
+		}
+		plugins.push(
+			new PlantumlRendererPlugin(
+				new HttpPlantumlRenderer({ serverUrl: settings.plantuml.serverUrl }),
+			),
+		);
+	}
+
+	const publisher = new Publisher(settings, confluenceClient, plugins);
 
 	const publishFilter = "";
 	const results = yield* publisher.publishEffect(publishFilter) as any;
@@ -64,12 +69,27 @@ const program = Effect.gen(function* () {
 			),
 		) as any;
 	}
+	if (
+		results.some((file: { successfulUploadResult?: unknown }) => !file.successfulUploadResult)
+	) {
+		return yield* Effect.fail(new Error("One or more pages failed to publish"));
+	}
+});
+
+const command = Effect.gen(function* () {
+	const runtime = yield* RuntimeEnvironmentService;
+	const argv = yield* runtime.argv;
+	if (argv[2] === "to-adf") {
+		return yield* markdownToAdf(argv.slice(3)).pipe(Effect.provide(StandardInputLive));
+	}
+	return yield* program.pipe(
+		Effect.provide(MarkdownWorkspaceLive),
+		Effect.provide(ConfluenceSettingsLive),
+	);
 });
 
 NodeRuntime.runMain(
-	program.pipe(
-		Effect.provide(MarkdownWorkspaceLive),
-		Effect.provide(ConfluenceSettingsLive),
+	command.pipe(
 		Effect.catch((error) =>
 			Effect.gen(function* () {
 				const runtimeEnvironment = yield* RuntimeEnvironmentService as any;
@@ -82,7 +102,3 @@ NodeRuntime.runMain(
 		Effect.provide(MarkdownConfluencePlatformLive),
 	) as Effect.Effect<void, never>,
 );
-
-function getErrorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : JSON.stringify(error);
-}

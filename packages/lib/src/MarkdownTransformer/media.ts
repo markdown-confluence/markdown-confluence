@@ -1,3 +1,5 @@
+import { findMarkdownMatches } from "../MarkdownEmbeds";
+
 export type Token = {
 	new (type: string, tag: string, level: number): Token;
 	type: string;
@@ -21,7 +23,8 @@ export interface MdState {
 }
 
 function createRule() {
-	const regx = /!\[[^\]]*\]\([^)]+\)|!\[[^\]]*\]\[[^\]]*]|!\[\[.*\..*]]/g;
+	const imagePattern = String.raw`!\[[^\]]*\]\([^)]+\)|!\[[^\]]*\]\[[^\]]*]|!\[\[[^\]\n]*\.[^\]\n]*\]\]`;
+	const imageMatchRegex = new RegExp(imagePattern, "g");
 	const referenceImageRegex = /^!\[(?<alt>[^\]]*)]\[(?<label>[^\]]*)]$/;
 	const validParentTokens = [
 		"blockquote_open",
@@ -55,6 +58,22 @@ function createRule() {
 	 * remaining inline content (bold, links, etc.) is kept intact!
 	 */
 	return function media(State: MdState) {
+		const createSizeAttrs = (sizeText: string | undefined): string[][] => {
+			const match = sizeText?.trim().match(/^(?<width>\d+)(?:x(?<height>\d+))?$/);
+			if (!match?.groups) {
+				return [];
+			}
+
+			const { width, height } = match.groups;
+			return [...(width ? [["width", width]] : []), ...(height ? [["height", height]] : [])];
+		};
+
+		const getAltSize = (str: string): string | undefined => {
+			const altEnd = str.indexOf("]");
+			const alt = altEnd > 2 ? str.slice(2, altEnd) : "";
+			return alt.includes("|") ? alt.split("|").at(-1) : undefined;
+		};
+
 		const createUrlAttrs = (href: string) => {
 			if (href.startsWith("http")) {
 				return [
@@ -77,7 +96,7 @@ function createRule() {
 			if (res.ok) {
 				const href = State.md.normalizeLink(res.str);
 				if (State.md.validateLink(href)) {
-					return createUrlAttrs(href);
+					return [...createUrlAttrs(href), ...createSizeAttrs(getAltSize(str))];
 				}
 			}
 
@@ -95,7 +114,10 @@ function createRule() {
 			const href = State.env?.references?.[normalizedReference]?.href;
 
 			if (href && State.md.validateLink(href)) {
-				return createUrlAttrs(State.md.normalizeLink(href));
+				return [
+					...createUrlAttrs(State.md.normalizeLink(href)),
+					...createSizeAttrs(getAltSize(str)),
+				];
 			}
 
 			return [
@@ -109,15 +131,11 @@ function createRule() {
 			const contentSplit = content.split("|");
 
 			const filename = contentSplit[0];
-			const widthHeight = contentSplit[1]?.split("x");
-			const width = widthHeight ? widthHeight[0] : undefined;
-			const height = !!widthHeight && widthHeight.length > 1 ? widthHeight[1] : undefined;
 
 			return [
 				["url", `file://${filename}`],
 				["type", "file"],
-				...(width ? [["width", `${width}`]] : []),
-				...(height ? [["height", `${height}`]] : []),
+				...createSizeAttrs(contentSplit[1]),
 			];
 		};
 
@@ -151,72 +169,65 @@ function createRule() {
 		};
 
 		let processedTokens: string[] = [];
-		const newTokens = State.tokens.reduce(
-			(tokens: Token[], token: Token, i: number, arr: Token[]) => {
-				if (token.type === "inline" && regx.test(token.content)) {
-					const openingTokens: Token[] = [];
-					let cursor = i - 1;
-					let previousToken = arr[cursor];
-					let subTree: Token[] = [];
+		const newTokens = State.tokens.reduce((tokens: Token[], token: Token) => {
+			const matches =
+				token.type === "inline" ? findMarkdownMatches(token.content, imageMatchRegex) : [];
+			if (matches.length > 0) {
+				const openingTokens: Token[] = [];
+				const precedingTokens = [...tokens];
+				let previousToken = precedingTokens.at(-1);
+				let subTree: Token[] = [];
 
-					while (previousToken && previousToken.nesting === 1) {
-						if (validParentTokens.indexOf(previousToken.type) !== -1) {
-							break;
-						}
-
-						openingTokens.unshift(previousToken);
-						cursor--;
-						previousToken = arr[cursor];
-					}
-					cursor++;
-
-					const closingTokens = openingTokens
-						.map(
-							(token) =>
-								new State.Token(
-									token.type.replace("_open", "_close"),
-									token.tag,
-									-1,
-								),
-						)
-						.reverse();
-
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					const matches = token.content.match(regx)!;
-					let inlineContentStack = token.content;
-					matches.forEach((match) => {
-						const start = inlineContentStack.indexOf(match);
-						const contentBefore = inlineContentStack.substr(0, start);
-						inlineContentStack = inlineContentStack.substr(start + match.length);
-
-						subTree = [
-							...subTree,
-							...createInlineTokens(contentBefore, openingTokens, closingTokens),
-							...createMediaTokens(match),
-						];
-					});
-
-					if (inlineContentStack.length) {
-						subTree = [
-							...subTree,
-							...createInlineTokens(inlineContentStack, openingTokens, closingTokens),
-						];
+				while (previousToken && previousToken.nesting === 1) {
+					if (validParentTokens.indexOf(previousToken.type) !== -1) {
+						break;
 					}
 
-					processedTokens = [...processedTokens, ...closingTokens.map((c) => c.type)];
-
-					tokens = [...tokens.slice(0, cursor), ...subTree];
-				} else if (processedTokens.indexOf(token.type) !== -1) {
-					// Ignore token if it's already processed
-					processedTokens.splice(processedTokens.indexOf(token.type), 1);
-				} else {
-					tokens.push(token);
+					openingTokens.unshift(previousToken);
+					precedingTokens.pop();
+					previousToken = precedingTokens.at(-1);
 				}
 
-				return tokens;
-			},
-			[],
-		);
+				const closingTokens = openingTokens
+					.map(
+						(token) =>
+							new State.Token(token.type.replace("_open", "_close"), token.tag, -1),
+					)
+					.reverse();
+
+				let cursor = 0;
+				matches.forEach((match) => {
+					const start = match.index!;
+					const contentBefore = token.content.slice(cursor, start);
+					cursor = start + match[0].length;
+
+					subTree = [
+						...subTree,
+						...createInlineTokens(contentBefore, openingTokens, closingTokens),
+						...createMediaTokens(match[0]),
+					];
+				});
+
+				const inlineContentStack = token.content.slice(cursor);
+				if (inlineContentStack.length) {
+					subTree = [
+						...subTree,
+						...createInlineTokens(inlineContentStack, openingTokens, closingTokens),
+					];
+				}
+
+				processedTokens = [...processedTokens, ...closingTokens.map((c) => c.type)];
+
+				tokens = [...precedingTokens, ...subTree];
+			} else if (processedTokens.indexOf(token.type) !== -1) {
+				// Ignore token if it's already processed
+				processedTokens.splice(processedTokens.indexOf(token.type), 1);
+			} else {
+				tokens.push(token);
+			}
+
+			return tokens;
+		}, []);
 
 		State.tokens = newTokens;
 		return true;
