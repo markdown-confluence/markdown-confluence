@@ -785,3 +785,37 @@ test("does not interpret image syntax inside another image title", () => {
 	);
 	expect(collectMediaAttrs(adf)).toEqual([expect.objectContaining({ url: "file://image.png" })]);
 });
+
+// Issue #647: later images must not discard text emitted after earlier images.
+for (const image of ["![](image.png)", "![[image.png]]"]) {
+	for (const newline of ["\n", "\r\n"]) {
+		for (const blankBeforeImage of [false, true]) {
+			test(`preserves text around repeated ${image} with ${JSON.stringify(newline)} and blank=${blankBeforeImage}`, () => {
+				const markers = [
+					"BEFORE",
+					"AFTER_FIRST_IMAGE",
+					"MIDDLE",
+					"AFTER_SECOND_IMAGE",
+					"END",
+				];
+				const markdown = [
+					markers[0],
+					...(blankBeforeImage ? [""] : []),
+					image,
+					markers[1],
+					"",
+					markers[2],
+					...(blankBeforeImage ? [""] : []),
+					image,
+					markers[3],
+					"",
+					markers[4],
+				].join(newline);
+				const document = parseMarkdownToADF(markdown, testSettings.confluenceBaseUrl);
+				const serialized = JSON.stringify(document);
+				for (const marker of markers) expect(serialized).toContain(marker);
+				expect(collectMediaAttrs(document)).toHaveLength(2);
+			});
+		}
+	}
+}

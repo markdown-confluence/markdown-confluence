@@ -34,3 +34,15 @@ Bob --> Alice: Ready
 ```
 
 ![[assets/sequence.puml]]
+
+## Adjacent images regression (#647)
+
+Before adjacent image one.
+![[assets/blue.png|80]]
+After adjacent image one.
+
+Before adjacent image two.
+![Green rectangle](../assets/green.svg)
+After adjacent image two.
+
+End of adjacent image regression.

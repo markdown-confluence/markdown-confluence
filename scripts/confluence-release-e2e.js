@@ -231,6 +231,11 @@ const program = Effect.scoped(
 			"Before the first image.",
 			"Between images.",
 			"After the images.",
+			"Before adjacent image one.",
+			"After adjacent image one.",
+			"Before adjacent image two.",
+			"After adjacent image two.",
+			"End of adjacent image regression.",
 			"Final list item",
 		]) {
 			assert.ok(
