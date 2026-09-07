@@ -351,7 +351,7 @@ await runEffect(
 
 					const failureParent = await client.content.createContent({
 						type: "page",
-						title: `${prefix} Diagram recovery`,
+						title: `${prefix} Failure tests`,
 						space: { key: environment.CONFLUENCE_E2E_SPACE_KEY },
 						ancestors: [{ id: testParent.id }],
 						body: {
@@ -371,7 +371,10 @@ await runEffect(
 						`${frontmatter}\n\`\`\`mermaid\nnot a valid diagram syntax\n\`\`\`\n`,
 					);
 					const failed = await publish("invalid-diagram", "failure", "180000", 1);
-					assert.match(failed, /mermaid|diagram|syntax|parse/i);
+					assert.match(
+						failed,
+						/No diagram type detected|Parse error|Syntax error|UnknownDiagramError/i,
+					);
 					const invalidSource = await readFile(failureFile, "utf8");
 					await writeFile(
 						failureFile,
@@ -382,7 +385,8 @@ await runEffect(
 					);
 					await publish("diagram-recovery", "failure");
 					const recovered = await pageFor("failure/failure.md");
-					await publish("protocol-timeout", "failure", "1", 1);
+					const timeoutOutput = await publish("protocol-timeout", "failure", "1", 1);
+					assert.match(timeoutOutput, /timed out|timeout/i);
 					assert.equal(
 						(await pageFor("failure/failure.md")).version.number,
 						recovered.version.number,
