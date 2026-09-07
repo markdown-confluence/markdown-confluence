@@ -59,6 +59,8 @@
 		"@atlaskit/editor-json-transformer": "^9.8.0",
 		"@atlaskit/editor-prosemirror": "^8.0.3",
 		"@effect/platform-node": "4.0.0-rc.112",
+		"@mathjax/mathjax-tex-font": "^4.1.3",
+		"@mathjax/src": "^4.1.3",
 		"confluence.js": "^3.2.0",
 		"effect": "4.0.0-rc.112",
 		"glob": "^13.0.6",

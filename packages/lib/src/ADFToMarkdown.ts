@@ -1,3 +1,4 @@
+import { readMathExpression } from "./ADFProcessingPlugins/MathRendererPlugin";
 import { ADFEntity } from "@atlaskit/adf-utils/dist/types/types";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { fencedCode } from "./AdfDocument";
@@ -98,6 +99,8 @@ function renderADFContent(
 		return renderChildrenResult;
 	}
 
+	const math = readMathExpression(element);
+	if (math) return math.display ? `$$\n${math.source}\n$$` : `$${math.source}$`;
 	switch (element.type) {
 		case "doc": {
 			return new Error("Call renderADFDoc");

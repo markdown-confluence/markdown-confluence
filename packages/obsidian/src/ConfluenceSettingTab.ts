@@ -414,6 +414,12 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("LaTeX equations")
+			.setDesc(
+				"Inline $...$ and display $$...$$ equations are rendered locally as images when publishing. Your Markdown source stays unchanged. No additional server or setup is required.",
+			);
+
+		new Setting(containerEl)
 			.setName("Mermaid Diagram Theme")
 			.setDesc("Pick the theme to apply to mermaid diagrams")
 			.addDropdown((dropdown) => {

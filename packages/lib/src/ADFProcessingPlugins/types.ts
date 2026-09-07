@@ -1,4 +1,6 @@
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
+import { filter } from "@atlaskit/adf-utils/traverse";
+import { readMathExpression } from "./MathRendererPlugin";
 import { Effect } from "effect";
 import {
 	CurrentAttachments,
@@ -160,6 +162,11 @@ export function executeADFProcessingPipelineEffect(
 		const finalADF = plugins.reduce((accADF, plugin, index) => {
 			return plugin.load(accADF, transformedData[index], supportFunctions);
 		}, adf);
+		if (filter(finalADF, (node) => !!readMathExpression(node)).length) {
+			return yield* Effect.fail(
+				new Error("LaTeX equations require MathRendererPlugin with a math renderer"),
+			);
+		}
 
 		return finalADF;
 	});

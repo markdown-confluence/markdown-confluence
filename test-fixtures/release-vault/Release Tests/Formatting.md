@@ -29,3 +29,18 @@ THIS BLOCK MUST NOT BE PUBLISHED
 [[#Local heading|Jump within this page]]
 
 Inline comment anchor stays here.
+
+## Equations
+
+Inline energy $E=mc^2$ stays in this sentence.
+
+$$
+\begin{aligned}
+a &= \frac{1}{2} \\
+b &= \sqrt{x^2+y^2}
+\end{aligned}
+$$
+
+| Equation | Meaning |
+| --- | --- |
+| $x_i^2$ | A squared component |

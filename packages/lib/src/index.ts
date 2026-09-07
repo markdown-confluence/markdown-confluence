@@ -1,3 +1,4 @@
+import { normalizeAdfForComparison } from "./AdfEqual";
 import {
 	MarkdownSourceTransformerService,
 	type MarkdownSourceTransformer,
@@ -92,6 +93,7 @@ import {
 } from "./SettingsConfig";
 
 export {
+	normalizeAdfForComparison,
 	type ConfluenceFetch,
 	MarkdownSourceTransformerService,
 	type MarkdownSourceTransformer,
@@ -172,4 +174,23 @@ export {
 	type RequiredConfluenceClient,
 	type RuntimeEnvironment,
 	type UploadAdfFileResult,
+};
+
+import { MathRendererPlugin, readMathExpression } from "./ADFProcessingPlugins/MathRendererPlugin";
+import {
+	renderMathSvg,
+	mathImageHtml,
+	rasterizeMathImage,
+	type MathExpression,
+	type MathRenderer,
+} from "./MathRenderer";
+
+export {
+	MathRendererPlugin,
+	readMathExpression,
+	renderMathSvg,
+	mathImageHtml,
+	rasterizeMathImage,
+	type MathExpression,
+	type MathRenderer,
 };

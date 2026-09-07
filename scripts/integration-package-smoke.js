@@ -5,7 +5,9 @@ export async function verifyPackageImports(resolvePackage) {
 	const libraryUrl = resolvePackage("lib");
 	const library = await import(libraryUrl);
 	const { HttpPlantumlRenderer } = await import(resolvePackage("plantuml-renderer"));
-	const { PuppeteerMermaidRenderer } = await import(resolvePackage("mermaid-puppeteer-renderer"));
+	const { PuppeteerMermaidRenderer, PuppeteerMathRenderer } = await import(
+		resolvePackage("mermaid-puppeteer-renderer")
+	);
 	const adf = library.parseMarkdownToADF(
 		"# Integration check\n\n中文 café ✓\n\n```toc\n```\n\n**Bold** and [link](https://example.com).",
 		"https://example.atlassian.net",
@@ -37,7 +39,16 @@ export async function verifyPackageImports(resolvePackage) {
 		[137, 80, 78, 71, 13, 10, 26, 10],
 	);
 	assert.ok(images.get("integration.png").length > 100);
+	const math = new PuppeteerMathRenderer();
+	const equation = [{ name: "equation.png", source: String.raw`\frac{1}{2}`, display: true }];
+	const firstMath = (await math.captureMath(equation)).get("equation.png");
+	assert.deepEqual([...firstMath.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+	assert.deepEqual(
+		(await math.captureMath(equation)).get("equation.png"),
+		firstMath,
+		"Math PNGs must be deterministic across render sessions",
+	);
 	console.log(
-		"Package imports, Markdown/TOC, PlantUML contract and real Chromium rendering passed.",
+		"Package imports, Markdown/TOC, PlantUML contract and real Chromium Mermaid/LaTeX rendering passed.",
 	);
 }

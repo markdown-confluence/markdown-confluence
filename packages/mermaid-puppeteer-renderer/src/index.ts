@@ -108,3 +108,7 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 		return capturedCharts;
 	}
 }
+
+import { PuppeteerMathRenderer } from "./PuppeteerMathRenderer";
+
+export { PuppeteerMathRenderer };

@@ -301,6 +301,8 @@ await runEffect(
 								: `docs/Note ${String(index).padStart(3, "0")}.md`;
 						files.push(filename);
 						let body = `---\nconnie-title: ${prefix} ${index === 0 ? "Root" : `Note ${index}`}\n---\n# Synthetic note ${index}\n\nVerification for publish-action #4 and #3.\n`;
+						if (index === 0)
+							body += "\nInline $E=mc^2$ remains inline.\n\n$$\\frac{1}{2}$$\n";
 						if (index % 10 === 0)
 							body += `\n\`\`\`mermaid\nflowchart LR\n  A[Note ${index}] --> B[Rendered] --> C[Published]\n\`\`\`\n`;
 						if (index === 1)
@@ -332,6 +334,19 @@ await runEffect(
 					);
 					const before = await snapshot(files);
 					assert.equal(Object.keys(before).length, noteCount);
+					const rootMath = before["docs/docs.md"];
+					assert.equal(
+						nodes(rootMath.adf, "mediaInline").length,
+						1,
+						"Container math must stay inline",
+					);
+					assert.equal(
+						rootMath.attachments.filter((item) =>
+							item.title.startsWith("RenderedMath-"),
+						).length,
+						2,
+						"Container must upload inline and display equation PNGs",
+					);
 					const media = before["docs/Note 001.md"];
 					assert.equal(
 						nodes(media.adf, "media").filter((node) => node.attrs.type === "file")
@@ -444,6 +459,21 @@ await runEffect(
 						recovered.version.number,
 					);
 					await publish("timeout-recovery", "failure");
+					assert.equal(
+						(await pageFor("failure/failure.md")).version.number,
+						recovered.version.number,
+					);
+					const validSource = await readFile(failureFile);
+					await writeFile(failureFile, validSource + "\n\n$\\frac{$\n");
+					const invalidMath = await publish("invalid-math", "failure", "180000", 1);
+					assert.match(invalidMath, /Invalid LaTeX/);
+					assert.equal(
+						(await pageFor("failure/failure.md")).version.number,
+						recovered.version.number,
+						"Invalid math must leave the remote page unchanged",
+					);
+					await writeFile(failureFile, validSource);
+					await publish("math-recovery", "failure");
 					assert.equal(
 						(await pageFor("failure/failure.md")).version.number,
 						recovered.version.number,

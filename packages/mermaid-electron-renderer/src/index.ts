@@ -122,3 +122,7 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 		return new Blob([fileContents], { type: "text/html" });
 	}
 }
+
+import { ElectronMathRenderer } from "./ElectronMathRenderer";
+
+export { ElectronMathRenderer };
