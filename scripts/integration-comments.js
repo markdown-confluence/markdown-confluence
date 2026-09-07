@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import { Effect } from "effect";
 import { FileSystem } from "effect/FileSystem";
-import {
-	ConfluenceUploadSettings,
-	RuntimeEnvironmentService,
-	createAuthenticatedConfluenceClient,
-} from "../packages/lib/dist/index.js";
 
 /** Seed comments as a collaborator without expanding the publisher's permissions. */
 export function createInlineCommentClient(publisher, connection) {
 	return Effect.gen(function* () {
+		const {
+			ConfluenceUploadSettings,
+			RuntimeEnvironmentService,
+			createAuthenticatedConfluenceClient,
+		} = yield* Effect.promise(() => import("../packages/lib/dist/index.js"));
 		const fs = yield* FileSystem;
 		const runtime = yield* RuntimeEnvironmentService;
 		const settingsFile = yield* runtime.getEnv("CONFLUENCE_E2E_COMMENTS_SETTINGS_FILE");
