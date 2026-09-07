@@ -29,7 +29,7 @@
 		"@types/react": "^19.2.15",
 		"@types/react-dom": "^19.2.3",
 		"csstype": "^3.2.3",
-		"effect": "4.0.0-beta.70",
+		"effect": "4.0.0-rc.112",
 		"mermaid": "^11.16.1",
 		"obsidian": "1.12.3"
 	}
