@@ -9,6 +9,7 @@ function serverResponse(status = 200) {
 	const incoming = Object.assign(new EventEmitter(), {
 		statusCode: status,
 		statusMessage: "Test",
+		headers: {},
 		destroy: vi.fn(),
 	});
 	const outgoing = Object.assign(new EventEmitter(), {
@@ -36,7 +37,7 @@ test("uses HTTPS with the abort signal and preserves token bodies and response s
 		redirect: "error",
 	});
 	expect(vi.mocked(request).mock.calls[0][1]).toMatchObject({ signal, method: "POST" });
-	expect(fixture.outgoing.end).toHaveBeenCalledWith("client_secret=a%2Bb");
+	expect(fixture.outgoing.end).toHaveBeenCalledWith(Buffer.from("client_secret=a%2Bb"));
 	expect(response.ok).toBe(true);
 	expect(await response.json()).toEqual({ id: "page" });
 });
@@ -48,6 +49,28 @@ test("rejects redirects without sending credentials to another destination", asy
 	);
 	expect(request).toHaveBeenCalledOnce();
 	expect(fixture.incoming.destroy).toHaveBeenCalledOnce();
+});
+
+test("preserves binary attachment bytes and the matching multipart boundary", async () => {
+	const fixture = serverResponse();
+	const bytes = new Uint8Array([0, 255, 128, 13, 10, 42]);
+	const form = new FormData();
+	form.set("file", new Blob([bytes], { type: "application/octet-stream" }), "binary.bin");
+	form.set("comment", "file checksum");
+	await desktopFetch("https://example.atlassian.net/wiki/rest/api/content/123/child/attachment", {
+		method: "PUT",
+		headers: { Authorization: "Bearer test-token" },
+		body: form,
+	});
+	const sent = fixture.outgoing.end.mock.calls[0][0] as Buffer;
+	const options = vi.mocked(request).mock.calls[0][1] as { headers: Record<string, string> };
+	const boundary = options.headers["content-type"].split("boundary=")[1];
+	expect(boundary).toBeTruthy();
+	expect(sent.includes(Buffer.from(bytes))).toBe(true);
+	expect(sent.toString("latin1")).toContain(`--${boundary}`);
+	expect(sent.toString("latin1")).toContain('filename="binary.bin"');
+	expect(sent.toString("latin1")).toContain("file checksum");
+	expect(options.headers.authorization).toBe("Bearer test-token");
 });
 
 test("rejects insecure transport before making a request", async () => {

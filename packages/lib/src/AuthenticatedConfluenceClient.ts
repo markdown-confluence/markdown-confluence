@@ -1,30 +1,31 @@
 import { Effect } from "effect";
-import { Api, ConfluenceClient, type Config } from "confluence.js";
+import { createV1Client } from "confluence.js";
 import type { ConfluenceFetch } from "./ConfluenceFetch";
 import { ConfluenceSettings } from "./Settings";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
 import { createConfluenceClientConfig } from "./ConfluenceClientConfig";
+import { createConfluenceTransport } from "./ConfluenceTransport";
 import { ConfluenceV2Client } from "./ConfluenceV2Client";
 import { fetchOAuthAccessToken } from "./OAuthToken";
 
-/** Builds a publisher client while preserving the transport used for multipart uploads. */
+/** All Cloud authentication modes use the same v2 publishing operations and transport. */
 export function createAuthenticatedConfluenceClient(
 	settings: ConfluenceSettings,
-	options: {
-		createClient?: (config: Config) => RequiredConfluenceClient;
-		fetch?: ConfluenceFetch;
-		/** Access token obtained by an external OAuth authorization flow. */
-		oauthAccessToken?: string;
-	} = {},
+	options: { fetch?: ConfluenceFetch; oauthAccessToken?: string } = {},
 ): Effect.Effect<RequiredConfluenceClient, Error> {
 	return Effect.gen(function* () {
 		const oauth = settings.confluenceAuthType === "oauth2";
 		if (
-			oauth &&
-			(!URL.canParse(settings.confluenceBaseUrl) ||
-				new URL(settings.confluenceBaseUrl).protocol !== "https:")
+			!URL.canParse(settings.confluenceBaseUrl) ||
+			new URL(settings.confluenceBaseUrl).protocol !== "https:"
 		) {
-			return yield* Effect.fail(new Error("OAuth requires an HTTPS Confluence API base URL"));
+			return yield* Effect.fail(
+				new Error(
+					oauth
+						? "OAuth requires an HTTPS Confluence API base URL"
+						: "Confluence Cloud requires an HTTPS API base URL",
+				),
+			);
 		}
 		const accessToken = oauth
 			? (options.oauthAccessToken ??
@@ -34,28 +35,30 @@ export function createAuthenticatedConfluenceClient(
 					options.fetch,
 				)))
 			: settings.atlassianApiToken;
-		const client = (options.createClient ?? ((config) => new ConfluenceClient(config)))(
-			createConfluenceClientConfig({
-				...settings,
-				confluenceAuthType: oauth ? "bearer" : settings.confluenceAuthType,
-				atlassianApiToken: accessToken,
-			}),
-		);
-		if (oauth) {
-			const content = new ConfluenceV2Client(
-				settings.confluenceBaseUrl,
-				accessToken,
-				settings.confluenceRequestHeaders,
-				options.fetch,
-			);
-			client.content = content as unknown as Api.Content;
-			client.contentAttachments.getAttachments = content.getAttachments.bind(
-				content,
-			) as Api.ContentAttachments["getAttachments"];
-			client.contentLabels.getLabelsForContent = content.getLabelsForContent.bind(
-				content,
-			) as Api.ContentLabels["getLabelsForContent"];
-		}
-		return client;
+		const config = createConfluenceClientConfig({
+			...settings,
+			confluenceAuthType: oauth ? "bearer" : settings.confluenceAuthType,
+			atlassianApiToken: accessToken,
+		});
+		const transport = createConfluenceTransport(config, options.fetch);
+		const v1 = createV1Client(transport);
+		const content = new ConfluenceV2Client(settings.confluenceBaseUrl, transport);
+		return {
+			...transport,
+			content,
+			contentAttachments: { getAttachments: content.getAttachments.bind(content) },
+			contentLabels: {
+				...v1.contentLabels,
+				getLabelsForContent: content.getLabelsForContent.bind(content),
+			},
+			users: {
+				getCurrentUser: async () => {
+					const user = await v1.users.getCurrentUser();
+					if (!user.accountId)
+						throw new Error("Confluence did not return the current account ID");
+					return { ...user, accountId: user.accountId };
+				},
+			},
+		};
 	});
 }

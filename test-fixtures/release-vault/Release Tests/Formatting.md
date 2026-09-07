@@ -27,3 +27,5 @@ THIS BLOCK MUST NOT BE PUBLISHED
 ## Local heading
 
 [[#Local heading|Jump within this page]]
+
+Inline comment anchor stays here.

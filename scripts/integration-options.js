@@ -2,6 +2,7 @@ export const integrationProfiles = [
 	"quick",
 	"packages",
 	"live",
+	"blogs",
 	"regressions",
 	"docker",
 	"vault",

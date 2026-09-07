@@ -1,123 +1,132 @@
 import { afterEach, expect, test, vi } from "@effect/vitest";
-import {
-	AxiosError,
-	AxiosHeaders,
-	type AxiosAdapter,
-	type InternalAxiosRequestConfig,
-} from "axios";
+import type { SendRequestOptions } from "confluence.js/core";
 import { createConfluenceTransport } from "./ConfluenceTransport";
 
-afterEach(() => vi.useRealTimers());
-
-const config = (method = "get"): InternalAxiosRequestConfig => ({
-	method,
-	baseURL: "https://example.atlassian.net/wiki/rest",
-	url: "/api/content?token=do-not-log",
-	headers: new AxiosHeaders({ Authorization: "Bearer secret" }),
+const config = {
+	host: "https://example.atlassian.net",
+	auth: { type: "bearer" as const, token: "secret" },
+};
+const options: SendRequestOptions = { url: "/wiki/api/v2/pages?token=do-not-log" };
+const json = (body: unknown, status = 200, retryAfter?: string) =>
+	new Response(JSON.stringify(body), {
+		status,
+		...(retryAfter ? { headers: { "retry-after": retryAfter } } : {}),
+	});
+afterEach(() => {
+	vi.useRealTimers();
+	vi.restoreAllMocks();
 });
 
-test("retries transient reads and preserves a useful error when retries are exhausted", async () => {
+test("retries transient reads and keeps errors free of credentials and query parameters", async () => {
 	vi.useFakeTimers();
-	const request = config();
-	const adapter = vi.fn(async () => {
-		throw new AxiosError("socket disconnected", "ECONNRESET", request);
+	const fetch = vi.fn(async () => {
+		throw Object.assign(new Error("secret connection detail"), {
+			cause: { code: "ECONNRESET" },
+		});
 	});
-	const result = createConfluenceTransport(adapter)(request).catch((error) => error);
+	const result = createConfluenceTransport(config, fetch)
+		.sendRequest(options)
+		.catch((error) => error);
 	await vi.runAllTimersAsync();
 	const error = await result;
-	expect(adapter).toHaveBeenCalledTimes(3);
-	expect(error.message).toBe("Confluence GET /api/content failed: ECONNRESET");
-	expect(error.isAxiosError).toBeUndefined();
+	expect(fetch).toHaveBeenCalledTimes(3);
+	expect(error.message).toBe("Confluence GET /wiki/api/v2/pages failed: ECONNRESET");
 	expect(JSON.stringify(error)).not.toContain("secret");
 	expect(error.message).not.toContain("do-not-log");
 });
-
 test("does not replay a write after an ambiguous connection failure", async () => {
-	const request = { ...config("post"), data: '{"title":"Page"}' };
-	const adapter = vi.fn(async () => {
-		throw new AxiosError("socket disconnected", "ECONNRESET", request);
+	const fetch = vi.fn(async () => {
+		throw Object.assign(new Error("socket disconnected"), { code: "ECONNRESET" });
 	});
-	await expect(createConfluenceTransport(adapter)(request)).rejects.toThrow("ECONNRESET");
-	expect(adapter).toHaveBeenCalledOnce();
+	await expect(
+		createConfluenceTransport(config, fetch).sendRequest({
+			...options,
+			method: "POST",
+			body: { title: "Page" },
+		}),
+	).rejects.toThrow("ECONNRESET");
+	expect(fetch).toHaveBeenCalledOnce();
 });
-
 test("honors Retry-After for a rejected JSON write", async () => {
 	vi.useFakeTimers();
-	const request = { ...config("post"), data: '{"title":"Page"}' };
-	const response = {
-		status: 429,
-		statusText: "Too Many Requests",
-		headers: new AxiosHeaders({ "retry-after": "2" }),
-		config: request,
-		data: {},
-	};
-	const adapter = vi
-		.fn<AxiosAdapter>()
-		.mockRejectedValueOnce(
-			new AxiosError("rate limited", "ERR_BAD_REQUEST", request, undefined, response),
-		)
-		.mockResolvedValue({ ...response, status: 200, data: { id: "created-once" } });
-	const result = createConfluenceTransport(adapter)(request);
+	const fetch = vi
+		.fn()
+		.mockResolvedValueOnce(json({}, 429, "2"))
+		.mockResolvedValue(json({ id: "created-once" }));
+	const result = createConfluenceTransport(config, fetch).sendRequest({
+		...options,
+		method: "POST",
+		body: { title: "Page" },
+	});
 	await vi.advanceTimersByTimeAsync(1999);
-	expect(adapter).toHaveBeenCalledOnce();
+	expect(fetch).toHaveBeenCalledOnce();
 	await vi.advanceTimersByTimeAsync(1);
-	expect((await result).data).toEqual({ id: "created-once" });
-	expect(adapter).toHaveBeenCalledTimes(2);
+	expect(await result).toEqual({ id: "created-once" });
+	expect(fetch).toHaveBeenCalledTimes(2);
 });
-
-test("aborts a Retry-After wait immediately without sending another request", async () => {
+test("aborts a Retry-After wait without sending another request", async () => {
 	vi.useFakeTimers();
 	const controller = new AbortController();
-	const request = { ...config(), signal: controller.signal };
-	const response = {
-		status: 429,
-		statusText: "Too Many Requests",
-		headers: new AxiosHeaders({ "retry-after": "30" }),
-		config: request,
-		data: {},
-	};
-	const adapter = vi
-		.fn<AxiosAdapter>()
-		.mockRejectedValue(
-			new AxiosError("rate limited", "ERR_BAD_REQUEST", request, undefined, response),
-		);
-	const result = createConfluenceTransport(adapter)(request).catch((error) => error);
+	vi.spyOn(AbortSignal, "timeout").mockReturnValue(controller.signal);
+	const fetch = vi.fn().mockResolvedValue(json({}, 429, "30"));
+	const result = createConfluenceTransport(config, fetch)
+		.sendRequest(options)
+		.catch((error) => error);
 	await vi.advanceTimersByTimeAsync(0);
-	expect(vi.getTimerCount()).toBe(1);
 	controller.abort();
 	expect((await result).message).toBe("Confluence request aborted");
-	expect(adapter).toHaveBeenCalledOnce();
+	expect(fetch).toHaveBeenCalledOnce();
 	expect(vi.getTimerCount()).toBe(0);
 });
-
 test("does not send an already aborted request", async () => {
-	const adapter = vi.fn<AxiosAdapter>();
-	await expect(
-		createConfluenceTransport(adapter)({ ...config(), signal: AbortSignal.abort() }),
-	).rejects.toThrow("Confluence request aborted");
-	expect(adapter).not.toHaveBeenCalled();
+	vi.spyOn(AbortSignal, "timeout").mockReturnValue(AbortSignal.abort());
+	const fetch = vi.fn();
+	await expect(createConfluenceTransport(config, fetch).sendRequest(options)).rejects.toThrow(
+		"Confluence request aborted",
+	);
+	expect(fetch).not.toHaveBeenCalled();
 });
-
-test.each(["stream", "long-delay", "forbidden"])(
+test.each(["multipart", "long-delay", "forbidden"])(
 	"does not retry %s responses unsafely",
 	async (scenario) => {
-		const request = {
-			...config("put"),
-			data: scenario === "stream" ? { pipe: () => undefined } : "body",
-		};
-		const response = {
-			status: scenario === "forbidden" ? 403 : 429,
-			statusText: "Rejected",
-			headers: new AxiosHeaders({ "retry-after": scenario === "long-delay" ? "60" : "0" }),
-			config: request,
-			data: { message: "Rejected" },
-		};
-		const adapter = vi.fn(async () => {
-			throw new AxiosError("rejected", "ERR_BAD_REQUEST", request, undefined, response);
-		});
-		await expect(createConfluenceTransport(adapter)(request)).rejects.toMatchObject({
-			response: { status: response.status },
-		});
-		expect(adapter).toHaveBeenCalledOnce();
+		const status = scenario === "forbidden" ? 403 : 429;
+		const fetch = vi.fn(async () =>
+			json({ message: "Rejected" }, status, scenario === "long-delay" ? "60" : "0"),
+		);
+		await expect(
+			createConfluenceTransport(config, fetch).sendRequest({
+				...options,
+				method: "PUT",
+				body: scenario === "multipart" ? new FormData() : { title: "Page" },
+			}),
+		).rejects.toMatchObject({ response: { status } });
+		expect(fetch).toHaveBeenCalledOnce();
 	},
 );
+test("never sends credentials outside the configured Cloud API", async () => {
+	const fetch = vi.fn();
+	const client = createConfluenceTransport(config, fetch);
+	for (const url of [
+		"https://other.test/wiki/api/v2/pages",
+		"//other.test/wiki/api/v2/pages",
+		"/wiki/../../other",
+		"/wiki/\\other",
+	]) {
+		await expect(client.sendRequest({ url })).rejects.toThrow(/Cloud API|outside/);
+	}
+	expect(fetch).not.toHaveBeenCalled();
+});
+test("preserves authentication, multipart boundaries and redirect rejection", async () => {
+	const fetch = vi.fn(async () => json({}));
+	const body = new FormData();
+	body.set("file", new Blob([new Uint8Array([0, 255, 128])]), "binary.bin");
+	await createConfluenceTransport(
+		{ ...config, headers: { Authorization: "stale", "Content-Type": "wrong" } },
+		fetch,
+	).sendRequest({ url: "/wiki/rest/api/content/123/child/attachment", method: "PUT", body });
+	const init = fetch.mock.calls[0]![1] as RequestInit;
+	expect(new Headers(init.headers).get("authorization")).toBe("Bearer secret");
+	expect(new Headers(init.headers).has("content-type")).toBe(false);
+	expect(init.redirect).toBe("error");
+	expect(init.body).toBe(body);
+});

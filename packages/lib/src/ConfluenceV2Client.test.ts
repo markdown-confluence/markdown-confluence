@@ -217,19 +217,43 @@ test("space key resolution is cached across calls within an invocation", async (
 	expect(keyLookups).toHaveLength(1);
 });
 
-test("rejects blog posts", async () => {
-	globalThis.fetch = vi.fn() as unknown as typeof fetch;
+test("uses v2 blog-post operations and preserves the content type", async () => {
+	const fetchMock = routedFetch([
+		{
+			match: "/spaces?keys=PCBF",
+			response: () => jsonResponse({ results: [{ id: "900", key: "PCBF" }] }),
+		},
+		{ match: "/spaces/900/blogposts", response: () => jsonResponse({ results: [PAGE] }) },
+		{ match: "/blogposts/123/attachments", response: () => jsonResponse({ results: [] }) },
+		{ match: "/blogposts/123/labels", response: () => jsonResponse({ results: [] }) },
+		{ match: "/blogposts", response: () => jsonResponse(PAGE) },
+	]);
+	globalThis.fetch = fetchMock as unknown as typeof fetch;
 	const client = new ConfluenceV2Client(BASE, TOKEN);
-
-	await expect(
-		client.getContent({ type: "blogpost", spaceKey: "PCBF", title: "X" }),
-	).rejects.toThrow(/does not support blog posts/);
+	const result = await client.getContent({
+		type: "blogpost",
+		spaceKey: "PCBF",
+		title: "My Page",
+	});
+	expect(result.results[0]?.type).toBe("blogpost");
+	await client.getContentById({ id: "123", expand: ["ancestors"] });
+	await client.createContent({ type: "blogpost", space: { key: "PCBF" }, title: "My Page" });
+	await client.updateContent({
+		type: "blogpost",
+		id: "123",
+		title: "My Page",
+		version: { number: 4 },
+	});
+	await client.getAttachments({ id: "123" });
+	await client.getLabelsForContent({ id: "123" });
+	expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/pages"))).toBe(false);
+	expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/ancestors"))).toBe(false);
 });
 
 test("wraps non-2xx responses in ConfluenceV2Error with status and body", async () => {
 	globalThis.fetch = routedFetch([
 		{
-			match: "/wiki/api/v2/pages/123",
+			match: "/wiki/api/v2/",
 			response: () => jsonResponse({ errors: [{ status: 404, title: "Not Found" }] }, 404),
 		},
 	]) as unknown as typeof fetch;

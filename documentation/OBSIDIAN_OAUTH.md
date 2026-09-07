@@ -1,8 +1,8 @@
 # Obsidian OAuth
 
 Cloud service-account OAuth, browser login and device-code login run in the desktop
-plugin. No separately hosted OAuth service is required. API tokens and Data Center
-personal access tokens remain available.
+plugin. No separately hosted OAuth service is required. Scoped and unscoped Cloud
+API tokens also remain available. Confluence Server and Data Center are unsupported.
 
 ## Interactive login
 

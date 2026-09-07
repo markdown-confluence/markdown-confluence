@@ -1,4 +1,10 @@
 import assert from "node:assert/strict";
+import {
+	createInlineCommentClient,
+	createInlineCommentFixture,
+	verifyInlineComment,
+	inlineCommentSelection,
+} from "./integration-comments.js";
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { Effect } from "effect";
@@ -71,6 +77,8 @@ export function runObsidianIntegration({
 			...ConfluenceUploadSettings.DEFAULT_SETTINGS,
 			...connection,
 		});
+		const commenter = yield* createInlineCommentClient(client, connection);
+
 		const get = (suffix) =>
 			Effect.tryPromise(() => {
 				const url = new URL(suffix, "https://verification.invalid/");
@@ -258,14 +266,23 @@ export function runObsidianIntegration({
 			evaluate(
 				`const result=await app.plugins.plugins['confluence-integration'].doPublish(); if(result.errorMessage || result.failedFiles.length || result.filesUploadResult.length < 7) throw Error('Desktop publish failed: '+JSON.stringify({message:result.errorMessage,failed:result.failedFiles,count:result.filesUploadResult.length})); return JSON.stringify({count:result.filesUploadResult.length});`,
 			);
+		yield* evaluate(
+			`const file=app.vault.getAbstractFileByPath('Release Tests/Formatting.md'); const text=await app.vault.read(file); if(!text.includes(${JSON.stringify(inlineCommentSelection)})) await app.vault.modify(file,text+${JSON.stringify("\n\n" + inlineCommentSelection + "\n")}); return JSON.stringify({fixtureReady:true});`,
+		);
+
 		yield* publish();
-		const first = yield* snapshot();
+		let first = yield* snapshot();
 		yield* publish();
 		assert.deepEqual(
 			yield* snapshot(),
 			first,
 			"Desktop republishing changed unchanged pages or attachments",
 		);
+		const inlineComment = yield* Effect.tryPromise(() =>
+			createInlineCommentFixture(commenter, first["Release Tests/Formatting.md"].id),
+		);
+		first = yield* snapshot();
+
 		const filename = "Release Tests/Formatting.md";
 		const sentinel = `DESKTOP INTEGRATION UPDATE ${Date.now()}`;
 		const original = yield* fs.readFileString(path.join(vaultPath, filename));
@@ -293,6 +310,17 @@ export function runObsidianIntegration({
 		);
 		// Restore the remote fixture too, so the next run starts from the same note.
 		yield* publish();
+		const inlineCommentEvidence = yield* Effect.tryPromise(() =>
+			verifyInlineComment(commenter, inlineComment),
+		);
+		const restored = yield* snapshot();
+		yield* publish();
+		assert.deepEqual(
+			yield* snapshot(),
+			restored,
+			"A page with an inline comment must remain unchanged on republish",
+		);
+
 		if (dataview) {
 			const result = yield* runDataviewIntegration({ evaluate, get, prefix: marker.prefix });
 			yield* fs.writeFileString(
@@ -306,6 +334,7 @@ export function runObsidianIntegration({
 			JSON.stringify(
 				{
 					status: "passed",
+					inlineComment: inlineCommentEvidence,
 					authentication: connection.confluenceAuthType,
 					oauthMode: runtimeAuthentication.mode,
 					oauthFlow: runtimeAuthentication.flow,
@@ -316,6 +345,7 @@ export function runObsidianIntegration({
 						"desktop-publish",
 						"unchanged",
 						"single-note-update",
+						"inline-comments-preserved",
 						"electron-mermaid",
 						"plantuml",
 						"hierarchy",

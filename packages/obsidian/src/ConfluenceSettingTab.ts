@@ -311,19 +311,6 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 		}
 
 		new Setting(containerEl)
-			.setName("Confluence API Prefix")
-			.setDesc('API route prefix eg "/wiki/rest" or "/rest"')
-			.addText((text) =>
-				text
-					.setPlaceholder("/wiki/rest")
-					.setValue(this.plugin.settings.confluenceApiPrefix)
-					.onChange(async (value) => {
-						this.plugin.settings.confluenceApiPrefix = value;
-						await saveSettingsAndRenderValidation();
-					}),
-			);
-
-		new Setting(containerEl)
 			.setName("Custom Request Headers")
 			.setDesc('JSON object eg {"X-Custom-Header":"value"}')
 			.addTextArea((text) =>

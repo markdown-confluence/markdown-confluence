@@ -40,7 +40,7 @@ test("fully decodes file URL components before reading binary files", async () =
 	);
 
 	expect(result?.status).toBe("uploaded");
-	const uploadRequestBody = getUploadRequestBody(uploadRequests);
+	const uploadRequestBody = await getUploadRequestBody(uploadRequests);
 	expect(uploadRequestBody).toContain('name="file"; filename="');
 	expect(uploadRequestBody).toContain('file#name.png"');
 	expect(uploadRequestBody).toContain("Content-Type: image/png");
@@ -64,7 +64,7 @@ test("derives upload buffer content type from the filename", async () => {
 	);
 
 	expect(result?.status).toBe("uploaded");
-	expect(getUploadRequestBody(uploadRequests)).toContain("Content-Type: text/plain");
+	expect(await getUploadRequestBody(uploadRequests)).toContain("Content-Type: text/plain");
 });
 
 test("falls back to octet-stream for unknown upload buffer file types", async () => {
@@ -81,7 +81,7 @@ test("falls back to octet-stream for unknown upload buffer file types", async ()
 	);
 
 	expect(result?.status).toBe("uploaded");
-	expect(getUploadRequestBody(uploadRequests)).toContain(
+	expect(await getUploadRequestBody(uploadRequests)).toContain(
 		"Content-Type: application/octet-stream",
 	);
 });
@@ -116,7 +116,7 @@ test("uploads non-image files without requiring image dimensions", async () => {
 		status: "uploaded",
 		width: 0,
 	});
-	expect(getUploadRequestBody(uploadRequests)).toContain("Content-Type: video/mp4");
+	expect(await getUploadRequestBody(uploadRequests)).toContain("Content-Type: video/mp4");
 });
 
 test("extracts SVG dimensions when image-size cannot detect them", async () => {
@@ -147,7 +147,7 @@ test("extracts SVG dimensions when image-size cannot detect them", async () => {
 
 	expect(result?.width).toBe(1911);
 	expect(result?.height).toBe(1391);
-	expect(getUploadRequestBody(uploadRequests)).toContain("Content-Type: image/svg+xml");
+	expect(await getUploadRequestBody(uploadRequests)).toContain("Content-Type: image/svg+xml");
 });
 
 class TestMarkdownWorkspace implements MarkdownWorkspace {
@@ -195,17 +195,11 @@ function makeConfluenceClient(uploadRequests: unknown[]): RequiredConfluenceClie
 	} as unknown as RequiredConfluenceClient;
 }
 
-function getUploadRequestBody(uploadRequests: unknown[]): string {
-	const request = uploadRequests[0] as
-		| {
-				data: {
-					getBuffer(): Buffer;
-				};
-		  }
-		| undefined;
-	if (!request) {
-		throw new Error("Missing upload request");
-	}
-
-	return request.data.getBuffer().toString();
+async function getUploadRequestBody(uploadRequests: unknown[]): Promise<string> {
+	const request = uploadRequests[0] as { body: FormData } | undefined;
+	if (!request) throw new Error("Missing upload request");
+	return new Request("https://example.atlassian.net", {
+		method: "PUT",
+		body: request.body,
+	}).text();
 }

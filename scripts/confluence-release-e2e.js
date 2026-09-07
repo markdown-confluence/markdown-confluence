@@ -1,4 +1,9 @@
 import assert from "node:assert/strict";
+import {
+	createInlineCommentClient,
+	createInlineCommentFixture,
+	verifyInlineComment,
+} from "./integration-comments.js";
 import { fileURLToPath } from "node:url";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
@@ -101,6 +106,8 @@ const program = Effect.scoped(
 			}),
 		);
 		settings.confluenceParentId = ownedParent.id;
+		const commenter = yield* createInlineCommentClient(client, settings);
+
 		const fetchedPages = new Map();
 		const updateComparisons = new Map();
 		const getContentById = client.content.getContentById.bind(client.content);
@@ -295,6 +302,13 @@ const program = Effect.scoped(
 				`Unchanged page version advanced: ${page.title}`,
 			);
 		}
+		const inlineComment = yield* Effect.tryPromise(() =>
+			createInlineCommentFixture(commenter, formatting.pageId),
+		);
+		yield* Console.log(
+			`Created inline comment ${inlineComment.commentId} on page ${formatting.pageId}`,
+		);
+
 		yield* fs.writeFileString(
 			formattingPath,
 			`${localFormatting}\n\nUPDATED END TO END SENTINEL.\n`,
@@ -307,6 +321,10 @@ const program = Effect.scoped(
 		const updated = yield* fetchPage(formatting.pageId);
 		assert.ok(updated.version.number > versions.get(formatting.pageId));
 		assert.ok(updated.body.atlas_doc_format.value.includes("UPDATED END TO END SENTINEL."));
+		const inlineCommentEvidence = yield* Effect.tryPromise(() =>
+			verifyInlineComment(commenter, inlineComment),
+		);
+
 		versions.set(formatting.pageId, updated.version.number);
 		const cliConfig = path.join(root, ".markdown-confluence.json");
 		yield* fs.writeFileString(
@@ -505,10 +523,12 @@ const program = Effect.scoped(
 			(yield* fetchPage(formatting.pageId)).version.number,
 			conflictPage.version.number,
 		);
+		yield* Effect.tryPromise(() => verifyInlineComment(commenter, inlineComment));
+
 		const pageLinks = first
 			.map((result) => `- [${result.node.file.pageTitle}](${result.node.file.pageUrl})`)
 			.join("\n");
-		const summary = `## Confluence release verification passed\n\nCreated/verified ${first.length} pages; unchanged publishing preserved content, attachments, labels and versions; one changed note updated successfully; the built CLI republished without further changes. Duplicate titles and missing embed headings were rejected without page updates. The same publisher recovered from an injected transport failure and a real HTTP version conflict, then preserved the unchanged page version.\n\n${pageLinks}\n`;
+		const summary = `## Confluence release verification passed\n\nCreated/verified ${first.length} pages; unchanged publishing preserved content, attachments, labels and versions; one changed note updated successfully; the built CLI republished without further changes. Duplicate titles and missing embed headings were rejected without page updates. The same publisher recovered from an injected transport failure and a real HTTP version conflict, then preserved the unchanged page version. A real inline comment retained its ID, body, open status and highlighted text after an edit elsewhere on the page and subsequent CLI publishing.\n\n${pageLinks}\n`;
 		const summaryPath = yield* runtime.getEnv("GITHUB_STEP_SUMMARY");
 		if (summaryPath) yield* fs.writeFileString(summaryPath, summary, { flag: "a" });
 		const reportPath = yield* runtime.getEnv("CONFLUENCE_E2E_REPORT_PATH");
@@ -518,6 +538,7 @@ const program = Effect.scoped(
 				JSON.stringify(
 					{
 						status: "passed",
+						inlineComment: inlineCommentEvidence,
 						checks: [
 							"create",
 							"formatting",
@@ -532,6 +553,7 @@ const program = Effect.scoped(
 							"missing-embed",
 							"transport-recovery",
 							"version-conflict",
+							"inline-comments-preserved",
 						],
 						pages: first.map((result) => ({
 							id: result.node.file.pageId,

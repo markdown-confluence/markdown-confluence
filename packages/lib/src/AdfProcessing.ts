@@ -196,10 +196,11 @@ function applyInlineComments(adf: JSONDocNode, pageInlineComments: ExtractedInli
 								],
 							});
 
-							newContent.push({
-								...child,
-								text: afterText,
-							});
+							if (afterText)
+								newContent.push({
+									...child,
+									text: afterText,
+								});
 						} else {
 							newContent.push(child);
 						}

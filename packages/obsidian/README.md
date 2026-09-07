@@ -35,7 +35,6 @@ Please log issues to https://github.com/markdown-confluence/markdown-confluence/
 - `Atlassian User Name`: Your Atlassian account's email address
 - `Atlassian API Token`: Your Atlassian API token. You can generate one from your [Atlassian Account Settings](https://id.atlassian.com/manage-profile/security/api-tokens).
 - `Authentication Type`: API token / Basic for Confluence Cloud API tokens, including scoped tokens; Bearer / PAT for bearer-token endpoints.
-- `Confluence API Prefix`: The REST API prefix, defaulting to `/wiki/rest`.
 - `Custom Request Headers`: Optional JSON object of extra headers to send with Confluence requests.
 - `Folder To Publish`: The name of the folder in Obsidian containing the notes you want to publish (default: "Confluence Pages")
 - `Tags to publish`: Optional comma-separated YAML tags. Notes with a matching `tags` value are published even when they are outside the configured folder.

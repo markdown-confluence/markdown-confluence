@@ -12,9 +12,9 @@ on:
         options: [basic, oauth2]
         default: basic
       profile:
-        description: Live fixtures or the 166-note container regression
+        description: Page fixtures, blog posts or the 166-note container regression
         type: choice
-        options: [live, regressions]
+        options: [live, blogs, regressions]
         default: live
 
 permissions:
@@ -55,7 +55,7 @@ jobs:
             CONFLUENCE_E2E_REGRESSION_SIZE=small vp run test:integration regressions --skip-build
             vp run test:integration regressions --skip-build
           else
-            vp run test:integration live
+            vp run test:integration "$TEST_PROFILE"
           fi
         env:
           TEST_PROFILE: ${{ inputs.profile || 'live' }}
@@ -64,6 +64,9 @@ jobs:
           ATLASSIAN_CLIENT_ID: ${{ secrets.ATLASSIAN_CLIENT_ID }}
           ATLASSIAN_CLIENT_SECRET: ${{ secrets.ATLASSIAN_CLIENT_SECRET }}
           CONFLUENCE_E2E_API_URL: https://api.atlassian.com/ex/confluence/c3c16874-09be-4bda-9016-2fbd2e925d90
+          # An independent collaborator seeds and verifies comments; publishing keeps its selected auth.
+          CONFLUENCE_E2E_COMMENTS_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
+          CONFLUENCE_E2E_COMMENTS_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
           ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
           ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
           CONFLUENCE_E2E_BASE_URL: https://markdown-confluence.atlassian.net

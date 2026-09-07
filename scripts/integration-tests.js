@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Console, Effect, Stream } from "effect";
 import { FileSystem } from "effect/FileSystem";
@@ -21,6 +22,7 @@ const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const help = `Integration profiles (vp run test:integration [profile] [options]):
   quick      Build, check all fixture conversions and render real Mermaid PNGs (default).
   packages   Pack all five npm packages, install into a fresh consumer and verify them.
+  blogs      Publish a blog post; verify attachments, labels, updates and CLI export.
   live       Publish synthetic fixtures to Confluence; verify unchanged/update/recovery.
   regressions Publish 166 notes with Mermaid/images using the released action container.
   docker     Build the local image and exercise its CLI without Confluence credentials.
@@ -254,7 +256,7 @@ function runIntegration() {
 			const node = argv[0];
 			const options = parseIntegrationOptions(argv.slice(2));
 			if (options.help) return yield* Console.log(help);
-			const runId = `${options.profile}-${new Date().toISOString().replaceAll(/[:.]/g, "-")}`;
+			const runId = `${options.profile}-${new Date().toISOString().replaceAll(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}`;
 			const reportDirectory = path.join(repositoryRoot, "reports/integration", runId);
 			yield* fs.makeDirectory(reportDirectory, { recursive: true });
 			const report = {
@@ -281,8 +283,8 @@ function runIntegration() {
 					);
 				});
 			const work = Effect.gen(function* () {
-				const live = ["live", "regressions", "obsidian"].includes(options.profile);
-				const environment = ["live", "regressions", "obsidian", "vault"].includes(
+				const live = ["live", "blogs", "regressions", "obsidian"].includes(options.profile);
+				const environment = ["live", "blogs", "regressions", "obsidian", "vault"].includes(
 					options.profile,
 				)
 					? yield* readTestEnvironment(options)
@@ -358,6 +360,22 @@ function runIntegration() {
 					);
 					return;
 				}
+				if (options.profile === "blogs") {
+					yield* step(
+						"Live blog-post CLI create/update/unchanged/export",
+						command(node, ["scripts/integration-blogs.js"], {
+							env: {
+								...environment,
+								CONFLUENCE_E2E_REPORT_PATH: path.join(
+									reportDirectory,
+									"blogs.json",
+								),
+							},
+						}),
+					);
+					return;
+				}
+
 				if (options.profile === "live") {
 					yield* step(
 						"Live Confluence create/unchanged/update/recovery",

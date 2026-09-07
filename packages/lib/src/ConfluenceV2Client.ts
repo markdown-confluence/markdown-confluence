@@ -1,5 +1,20 @@
-import type { Models, Parameters } from "confluence.js";
+import { createV2Client } from "confluence.js";
+import type { Client } from "confluence.js/core";
 import type { ConfluenceFetch } from "./ConfluenceFetch";
+import type {
+	ConfluenceContent,
+	ContentArray,
+	AttachmentArray,
+	LabelArray,
+	ContentQuery,
+	ContentById,
+	ContentWrite,
+	ContentUpdate,
+} from "./ConfluenceClient";
+import {
+	createConfluenceTransport,
+	ConfluenceRequestError as ConfluenceV2Error,
+} from "./ConfluenceTransport";
 import type {
 	V2Ancestor,
 	V2Attachment,
@@ -7,46 +22,16 @@ import type {
 	V2Label,
 	V2MultiEntityResult,
 	V2Page,
-	V2Space,
 	V2UpdatePageBody,
 } from "./ConfluenceV2Types";
-
-/**
- * Default representation used for page bodies. The publisher always works in
- * Atlassian Document Format.
- */
+export { ConfluenceV2Error };
 const ATLAS_DOC_FORMAT = "atlas_doc_format";
-
-/** Maximum time to wait for each Confluence v2 API request. */
-const CONFLUENCE_V2_TIMEOUT_MS = 15_000;
-
-/**
- * Error thrown when a v2 request fails. Mirrors the shape that `confluence.js`
- * surfaces (a `message` plus a `response.data` payload) so that the publisher's
- * existing error handling continues to work unchanged.
- */
-export class ConfluenceV2Error extends Error {
-	readonly response: { status: number; data: unknown };
-
-	constructor(message: string, status: number, data: unknown) {
-		super(message);
-		this.name = "ConfluenceV2Error";
-		this.response = { status, data };
-	}
-}
-
-/**
- * Resolves and caches Confluence space key <-> id mappings for the lifetime of
- * a single invocation. The v2 API addresses spaces by numeric id, while the
- * publisher works in terms of space keys, so both directions are needed.
- */
-type V2Request = <T>(method: string, path: string, body?: unknown) => Promise<T>;
 
 class SpaceKeyCache {
 	private readonly keyToId = new Map<string, string>();
 	private readonly idToKey = new Map<string, string>();
 
-	constructor(private readonly request: V2Request) {}
+	constructor(private readonly sdk: ReturnType<typeof createV2Client>) {}
 
 	record(key: string, id: string): void {
 		this.keyToId.set(key, id);
@@ -59,12 +44,9 @@ class SpaceKeyCache {
 			return cached;
 		}
 
-		const result = await this.request<V2MultiEntityResult<V2Space>>(
-			"GET",
-			`/spaces?keys=${encodeURIComponent(key)}&limit=1`,
-		);
-		const space = result.results[0];
-		if (!space) {
+		const result = await this.sdk.space.getSpaces({ keys: [key], limit: 1 });
+		const space = result.results?.[0];
+		if (!space?.id || !space.key) {
 			throw new ConfluenceV2Error(`Confluence space not found for key "${key}"`, 404, result);
 		}
 		this.record(space.key, space.id);
@@ -77,87 +59,12 @@ class SpaceKeyCache {
 			return cached;
 		}
 
-		const space = await this.request<V2Space>("GET", `/spaces/${encodeURIComponent(id)}`);
+		const space = await this.sdk.space.getSpaceById({ id: sdkId(id) });
+		if (!space.id || !space.key)
+			throw new ConfluenceV2Error("Confluence space response is incomplete", 502, undefined);
 		this.record(space.key, space.id);
 		return space.key;
 	}
-}
-
-/**
- * Performs a Confluence REST API v2 request and parses the JSON response,
- * wrapping failures in {@link ConfluenceV2Error}.
- *
- * @param baseUrl - The Confluence base URL, typically the OAuth API gateway
- *   (`https://api.atlassian.com/ex/confluence/{cloudId}`).
- * @param path - The v2 path beginning with `/` (e.g. `/pages/123`), appended
- *   after `/wiki/api/v2`.
- */
-async function requestV2<T>(
-	baseUrl: string,
-	accessToken: string,
-	method: string,
-	path: string,
-	body?: unknown,
-	requestHeaders: Record<string, string> = {},
-	fetchRequest: ConfluenceFetch = (url, init) => fetch(url, init),
-): Promise<T> {
-	const url = `${baseUrl.replace(/\/$/, "")}/wiki/api/v2${path}`;
-
-	let response: Awaited<ReturnType<ConfluenceFetch>>;
-	try {
-		response = await fetchRequest(url, {
-			method,
-			redirect: "error",
-			headers: buildRequestHeaders(accessToken, requestHeaders, body),
-			signal: AbortSignal.timeout(CONFLUENCE_V2_TIMEOUT_MS),
-			...(body === undefined ? {} : { body: JSON.stringify(body) }),
-		});
-	} catch (error) {
-		throw new ConfluenceV2Error(
-			`Failed to reach the Confluence v2 API (${method} ${path}): ${getErrorMessage(error)}`,
-			0,
-			undefined,
-		);
-	}
-
-	if (!response.ok) {
-		const data = await readJsonSafe(response);
-		throw new ConfluenceV2Error(
-			`Confluence v2 request failed (${method} ${path}) with status ${response.status} ${response.statusText}`,
-			response.status,
-			data,
-		);
-	}
-
-	if (response.status === 204) {
-		return undefined as T;
-	}
-
-	return (await response.json()) as T;
-}
-
-function buildRequestHeaders(
-	accessToken: string,
-	requestHeaders: Record<string, string>,
-	body: unknown,
-): Headers {
-	const headers = new Headers(requestHeaders);
-	headers.set("Authorization", `Bearer ${accessToken}`);
-	if (!headers.has("Accept")) headers.set("Accept", "application/json");
-	if (body !== undefined) headers.set("Content-Type", "application/json");
-	return headers;
-}
-
-async function readJsonSafe(response: Pick<Response, "json">): Promise<unknown> {
-	try {
-		return await response.json();
-	} catch {
-		return undefined;
-	}
-}
-
-function getErrorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 function notImplemented(method: string): never {
@@ -168,38 +75,37 @@ function notImplemented(method: string): never {
 	);
 }
 
-/**
- * A v2-backed implementation of the subset of `confluence.js`'s `Api.Content`
- * surface that the publisher uses. It exists because the legacy v1 `/content`
- * CRUD endpoints return `410 Gone` when accessed via OAuth on Confluence Cloud,
- * while the equivalent v2 (`/wiki/api/v2/pages`) endpoints work.
- *
- * Responses are adapted back into the v1 `Models.Content` / `Models.ContentArray`
- * shapes the publisher expects, so downstream code requires no changes.
- *
- * Only pages are supported; blog posts are intentionally out of scope and will
- * throw if requested.
- *
- * This implements the subset of `Api.Content` the publisher invokes. It is not
- * declared `implements Api.Content` because that interface exposes
- * callback-style overloads the publisher never uses; callers wire it in as the
- * `content` member of {@link RequiredConfluenceClient} via a cast.
- */
+/** Adapts the SDK's v2 page and blog-post responses to the publisher's content model. */
 export class ConfluenceV2Client {
 	private readonly spaces: SpaceKeyCache;
-	private readonly request: V2Request;
+	private readonly transport: Client;
+	private readonly sdk: ReturnType<typeof createV2Client>;
 	private readonly apiRoot: URL;
+	private readonly contentTypes = new Map<string, "page" | "blogpost">();
 
 	constructor(
 		baseUrl: string,
-		accessToken: string,
+		authentication: Client | string | { email: string; apiToken: string },
 		requestHeaders: Record<string, string> = {},
 		fetchRequest?: ConfluenceFetch,
 	) {
 		this.apiRoot = new URL(`${baseUrl.replace(/\/$/, "")}/wiki/api/v2/`);
-		this.request = (method, path, body) =>
-			requestV2(baseUrl, accessToken, method, path, body, requestHeaders, fetchRequest);
-		this.spaces = new SpaceKeyCache(this.request);
+		this.transport =
+			typeof authentication === "object" && "sendRequest" in authentication
+				? authentication
+				: createConfluenceTransport(
+						{
+							host: baseUrl,
+							headers: requestHeaders,
+							auth:
+								typeof authentication === "string"
+									? { type: "bearer", token: authentication }
+									: { type: "basic", ...authentication },
+						},
+						fetchRequest,
+					);
+		this.sdk = createV2Client(this.transport);
+		this.spaces = new SpaceKeyCache(this.sdk);
 	}
 
 	private nextPath(currentPath: string, next: string): string {
@@ -222,10 +128,14 @@ export class ConfluenceV2Client {
 		return `/${url.pathname.slice(this.apiRoot.pathname.length)}${url.search}`;
 	}
 
-	private async collectResults<T>(path: string): Promise<T[]> {
+	private async collectResults<T>(
+		path: string,
+		first: Promise<V2MultiEntityResult<T>>,
+	): Promise<T[]> {
 		const results: T[] = [];
 		const visited = new Set<string>();
 		let current: string | undefined = path;
+		let response = await first;
 		while (current) {
 			if (visited.has(current))
 				throw new ConfluenceV2Error(
@@ -234,21 +144,19 @@ export class ConfluenceV2Client {
 					undefined,
 				);
 			visited.add(current);
-			const response: V2MultiEntityResult<T> = await this.request("GET", current);
 			results.push(...response.results);
 			current = response._links?.next
 				? this.nextPath(current, response._links.next)
 				: undefined;
+			if (current && !visited.has(current))
+				response = await this.transport.sendRequest({ url: `/wiki/api/v2${current}` });
 		}
 		return results;
 	}
 
-	async getContent<T = Models.ContentArray>(
-		parameters?: Parameters.GetContent,
-		callback?: never,
-	): Promise<T> {
+	async getContent<T = ContentArray>(parameters?: ContentQuery, callback?: never): Promise<T> {
 		void callback;
-		assertNotBlogpost(parameters?.type);
+		const contentType = parameters?.type === "blogpost" ? "blogpost" : "page";
 
 		const spaceKey = parameters?.spaceKey;
 		if (!spaceKey) {
@@ -260,22 +168,25 @@ export class ConfluenceV2Client {
 		}
 
 		const spaceId = await this.spaces.resolveKeyToId(spaceKey);
-		const query = new URLSearchParams({ "body-format": ATLAS_DOC_FORMAT, limit: "1" });
-		if (parameters?.title) {
-			query.set("title", parameters.title);
-		}
-
-		const result = await this.request<V2MultiEntityResult<V2Page>>(
-			"GET",
-			`/spaces/${encodeURIComponent(spaceId)}/pages?${query.toString()}`,
-		);
+		const getInSpace =
+			contentType === "blogpost"
+				? this.sdk.blogPost.getBlogPostsInSpace
+				: this.sdk.page.getPagesInSpace;
+		const result = await getInSpace({
+			id: sdkId(spaceId),
+			bodyFormat: ATLAS_DOC_FORMAT,
+			limit: 1,
+			title: parameters?.title,
+		});
 
 		const wantsAncestors = expandIncludes(parameters?.expand, "ancestors");
 		const contents = await Promise.all(
-			result.results.map((page) => this.adaptPage(page, spaceKey, wantsAncestors)),
+			(result.results ?? []).map((page) =>
+				this.adaptPage(checkedPage(page), spaceKey, wantsAncestors, contentType),
+			),
 		);
 
-		const contentArray: Models.ContentArray = {
+		const contentArray: ContentArray = {
 			results: contents,
 			start: 0,
 			limit: 1,
@@ -285,29 +196,37 @@ export class ConfluenceV2Client {
 		return contentArray as T;
 	}
 
-	async getContentById<T = Models.Content>(
-		parameters: Parameters.GetContentById,
+	async getContentById<T = ConfluenceContent>(
+		parameters: ContentById,
 		callback?: never,
 	): Promise<T> {
 		void callback;
 
-		const page = await this.request<V2Page>(
-			"GET",
-			`/pages/${encodeURIComponent(parameters.id)}?body-format=${ATLAS_DOC_FORMAT}`,
+		let contentType = this.contentTypes.get(parameters.id) ?? "page";
+		const query = { id: sdkId(parameters.id), bodyFormat: ATLAS_DOC_FORMAT };
+		const page = checkedPage(
+			await (contentType === "blogpost"
+				? this.sdk.blogPost.getBlogPostById(query)
+				: this.sdk.page.getPageById(query).catch((error) => {
+						if (!(error instanceof ConfluenceV2Error) || error.response.status !== 404)
+							throw error;
+						contentType = "blogpost";
+						return this.sdk.blogPost.getBlogPostById(query);
+					})),
 		);
 
 		const spaceKey = await this.spaces.resolveIdToKey(page.spaceId);
 		const wantsAncestors = expandIncludes(parameters.expand, "ancestors");
-		const content = await this.adaptPage(page, spaceKey, wantsAncestors);
+		const content = await this.adaptPage(page, spaceKey, wantsAncestors, contentType);
 		return content as T;
 	}
 
-	async createContent<T = Models.Content>(
-		parameters?: Parameters.CreateContent,
+	async createContent<T = ConfluenceContent>(
+		parameters?: ContentWrite,
 		callback?: never,
 	): Promise<T> {
 		void callback;
-		assertNotBlogpost(parameters?.type);
+		const contentType = parameters?.type === "blogpost" ? "blogpost" : "page";
 
 		const spaceKey = parameters?.space?.key;
 		if (!spaceKey) {
@@ -324,32 +243,36 @@ export class ConfluenceV2Client {
 			spaceId,
 			status: "current",
 			title: parameters?.title ?? "",
-			...(parentId ? { parentId } : {}),
+			...(parentId && contentType === "page" ? { parentId } : {}),
 			body: {
 				representation: ATLAS_DOC_FORMAT,
 				value: parameters?.body?.atlas_doc_format?.value ?? "",
 			},
 		};
 
-		const page = await this.request<V2Page>("POST", "/pages", requestBody);
+		const page = checkedPage(
+			await (contentType === "blogpost"
+				? this.sdk.blogPost.createBlogPost({ body: requestBody })
+				: this.sdk.page.createPage({ body: requestBody })),
+		);
 
-		const content = await this.adaptPage(page, spaceKey, false);
+		const content = await this.adaptPage(page, spaceKey, false, contentType);
 		return content as T;
 	}
 
-	async updateContent<T = Models.Content>(
-		parameters: Parameters.UpdateContent,
+	async updateContent<T = ConfluenceContent>(
+		parameters: ContentUpdate,
 		callback?: never,
 	): Promise<T> {
 		void callback;
-		assertNotBlogpost(parameters.type);
+		const contentType = parameters.type === "blogpost" ? "blogpost" : "page";
 
 		const parentId = parameters.ancestors?.at(-1)?.id;
 		const requestBody: V2UpdatePageBody = {
 			id: parameters.id,
 			status: "current",
 			title: parameters.title,
-			...(parentId ? { parentId } : {}),
+			...(parentId && contentType === "page" ? { parentId } : {}),
 			body: {
 				representation: ATLAS_DOC_FORMAT,
 				value: parameters.body?.atlas_doc_format?.value ?? "",
@@ -360,35 +283,42 @@ export class ConfluenceV2Client {
 			},
 		};
 
-		const page = await this.request<V2Page>(
-			"PUT",
-			`/pages/${encodeURIComponent(parameters.id)}`,
-			requestBody,
+		const page = checkedPage(
+			await (contentType === "blogpost"
+				? this.sdk.blogPost.updateBlogPost({ id: sdkId(parameters.id), body: requestBody })
+				: this.sdk.page.updatePage({ id: sdkId(parameters.id), body: requestBody })),
 		);
 
 		const spaceKey = await this.spaces.resolveIdToKey(page.spaceId);
-		const content = await this.adaptPage(page, spaceKey, false);
+		const content = await this.adaptPage(page, spaceKey, false, contentType);
 		return content as T;
 	}
 
 	/**
-	 * Lists a page's attachments via v2 (`GET /wiki/api/v2/pages/{id}/attachments`)
-	 * and adapts them to the v1 `getAttachments` shape the publisher consumes.
+	 * Lists page or blog-post attachments via v2 and adapts them to the
+	 * publisher's attachment model.
 	 *
 	 * v2 does not return a media `collectionName`, but Confluence derives it
 	 * deterministically as `contentId-{pageId}` (the same value the v1 upload
 	 * path computes), so it is reconstructed here to preserve the publisher's
 	 * skip-unchanged-attachment optimization.
 	 */
-	async getAttachments<T = Models.ContentArray>(
-		parameters: Parameters.GetAttachments,
+	async getAttachments<T = AttachmentArray>(
+		parameters: ContentById,
 		callback?: never,
 	): Promise<T> {
 		void callback;
 
 		const pageId = parameters.id;
+		const blogpost = this.contentTypes.get(pageId) === "blogpost";
 		const attachments = await this.collectResults<V2Attachment>(
-			`/pages/${encodeURIComponent(pageId)}/attachments?limit=250`,
+			`/${blogpost ? "blogposts" : "pages"}/${encodeURIComponent(pageId)}/attachments?limit=250`,
+			(blogpost
+				? this.sdk.attachment.getBlogpostAttachments
+				: this.sdk.attachment.getPageAttachments)({
+				id: sdkId(pageId),
+				limit: 250,
+			}) as unknown as Promise<V2MultiEntityResult<V2Attachment>>,
 		);
 
 		const collectionName = `contentId-${pageId}`;
@@ -418,19 +348,22 @@ export class ConfluenceV2Client {
 	}
 
 	/**
-	 * Lists a page's labels via v2 (`GET /wiki/api/v2/pages/{id}/labels`) and
-	 * adapts them to the v1 `getLabelsForContent` shape (results with `name` and
-	 * `label`). The v1 label endpoint is gone under OAuth, but v2 labels read
-	 * works with the granted scopes.
+	 * Lists page or blog-post labels via v2. Label writes still use the
+	 * supported v1 endpoints; both versions share the same credentials.
 	 */
-	async getLabelsForContent<T = Models.LabelArray>(
-		parameters: Parameters.GetLabelsForContent,
+	async getLabelsForContent<T = LabelArray>(
+		parameters: ContentById,
 		callback?: never,
 	): Promise<T> {
 		void callback;
 
+		const blogpost = this.contentTypes.get(parameters.id) === "blogpost";
 		const result = await this.collectResults<V2Label>(
-			`/pages/${encodeURIComponent(parameters.id)}/labels?limit=250`,
+			`/${blogpost ? "blogposts" : "pages"}/${encodeURIComponent(parameters.id)}/labels?limit=250`,
+			(blogpost ? this.sdk.label.getBlogPostLabels : this.sdk.label.getPageLabels)({
+				id: sdkId(parameters.id),
+				limit: 250,
+			}) as Promise<V2MultiEntityResult<V2Label>>,
 		);
 
 		const labels = result.map((label) => ({
@@ -450,18 +383,21 @@ export class ConfluenceV2Client {
 		return labelArray as unknown as T;
 	}
 
-	/** Adapts a v2 page into the v1 `Models.Content` shape the publisher expects. */
+	/** Adapts a v2 page or blog post to the publisher's `ConfluenceContent` model. */
 	private async adaptPage(
 		page: V2Page,
 		spaceKey: string,
 		includeAncestors: boolean,
-	): Promise<Models.Content> {
-		const ancestors = includeAncestors ? await this.fetchAncestors(page) : [];
+		contentType: "page" | "blogpost",
+	): Promise<ConfluenceContent> {
+		this.contentTypes.set(page.id, contentType);
+		const ancestors =
+			includeAncestors && contentType === "page" ? await this.fetchAncestors(page) : [];
 		const adfValue = page.body?.atlas_doc_format?.value;
 
 		const content = {
 			id: page.id,
-			type: "page",
+			type: contentType,
 			status: page.status,
 			title: page.title,
 			space: { key: spaceKey },
@@ -478,7 +414,7 @@ export class ConfluenceV2Client {
 			},
 		};
 
-		return content as unknown as Models.Content;
+		return content as unknown as ConfluenceContent;
 	}
 
 	/** Follows the highest returned ancestor until the complete tree is known. */
@@ -486,23 +422,21 @@ export class ConfluenceV2Client {
 		const ancestors: V2Ancestor[] = [];
 		const visited = new Set<string>([page.id]);
 		let current: V2Ancestor | undefined = { id: page.id, type: "page" };
-		const routes: Record<string, string> = {
-			page: "pages",
-			whiteboard: "whiteboards",
-			database: "databases",
-			folder: "folders",
-			embed: "embeds",
+		const routes = {
+			page: this.sdk.ancestors.getPageAncestors,
+			whiteboard: this.sdk.ancestors.getWhiteboardAncestors,
+			database: this.sdk.ancestors.getDatabaseAncestors,
+			folder: this.sdk.ancestors.getFolderAncestors,
+			embed: this.sdk.ancestors.getSmartLinkAncestors,
 		};
+
 		while (current) {
-			const route: string | undefined = routes[current.type];
+			const route = routes[current.type as keyof typeof routes];
 			if (!route)
 				throw new ConfluenceV2Error("Unsupported ancestor content type", 502, undefined);
 			// Ancestor batches run root-to-parent; fetch the next batch above its first entry.
-			const response: V2MultiEntityResult<V2Ancestor> = await this.request(
-				"GET",
-				`/${route}/${encodeURIComponent(current.id)}/ancestors?limit=250`,
-			);
-			const batch = response.results;
+			const response = await route({ id: sdkId(current.id), limit: 250 });
+			const batch = (response.results ?? []) as V2Ancestor[];
 			for (const ancestor of batch) {
 				if (visited.has(ancestor.id))
 					throw new ConfluenceV2Error(
@@ -549,18 +483,8 @@ export class ConfluenceV2Client {
 	}
 }
 
-function assertNotBlogpost(type: string | undefined): void {
-	if (type === "blogpost") {
-		throw new ConfluenceV2Error(
-			"The v2 client does not support blog posts yet; only pages are supported",
-			400,
-			undefined,
-		);
-	}
-}
-
 function expandIncludes(
-	expand: Parameters.GetContent["expand"] | Parameters.GetContentById["expand"],
+	expand: ContentQuery["expand"] | ContentById["expand"],
 	field: string,
 ): boolean {
 	if (!expand) {
@@ -573,4 +497,21 @@ function expandIncludes(
 		.split(",")
 		.map((part) => part.trim())
 		.includes(field);
+}
+
+function sdkId(id: string): number {
+	const number = Number(id);
+	if (!/^\d+$/.test(id) || !Number.isSafeInteger(number) || number <= 0)
+		throw new Error("Confluence content ID must be a positive safe integer");
+	return number;
+}
+function checkedPage(page: {
+	id?: string | undefined;
+	spaceId?: string | undefined;
+	title?: string | undefined;
+	status?: string | undefined;
+}): V2Page {
+	if (!page.id || !page.spaceId || page.title === undefined || !page.status)
+		throw new ConfluenceV2Error("Confluence page response is incomplete", 502, undefined);
+	return page as V2Page;
 }

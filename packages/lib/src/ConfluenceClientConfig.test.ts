@@ -3,75 +3,38 @@ import {
 	createConfluenceClientConfig,
 	normalizeConfluenceApiPrefix,
 } from "./ConfluenceClientConfig";
-import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
+import { DEFAULT_SETTINGS } from "./Settings";
 
-test("creates default basic auth Confluence client config", () => {
-	const config = createConfluenceClientConfig(makeSettings());
-
-	expect(config).toEqual({
-		host: "https://example.atlassian.net",
-		apiPrefix: "/wiki/rest",
-		authentication: {
-			basic: {
-				email: "user@example.com",
-				apiToken: "token",
-			},
-		},
-		baseRequestConfig: { timeout: 30_000, adapter: expect.any(Function) },
-	});
-});
-
-test("creates bearer auth config with custom API prefix and request headers", () => {
-	const config = createConfluenceClientConfig(
-		makeSettings({
-			atlassianUserName: "",
-			atlassianApiToken: "personal-access-token",
-			confluenceAuthType: "bearer",
-			confluenceApiPrefix: "rest/",
-			confluenceRequestHeaders: {
-				"X-Custom-Header": "tenant",
-			},
+test("creates SDK v3 basic auth configuration with a shared Cloud host", () => {
+	expect(
+		createConfluenceClientConfig({
+			...DEFAULT_SETTINGS,
+			confluenceBaseUrl: "https://example.atlassian.net/",
+			atlassianUserName: "user@example.com",
+			atlassianApiToken: "token",
 		}),
-		{
-			middlewares: {
-				onError: () => undefined,
-			},
-		},
-	);
-
-	expect(config).toMatchObject({
+	).toEqual({
 		host: "https://example.atlassian.net",
-		apiPrefix: "/rest",
-		authentication: {
-			oauth2: {
-				accessToken: "personal-access-token",
-			},
-		},
-		baseRequestConfig: {
-			headers: {
-				"X-Custom-Header": "tenant",
-			},
-		},
-		middlewares: {
-			onError: expect.any(Function),
-		},
+		auth: { type: "basic", email: "user@example.com", apiToken: "token" },
+		headers: {},
 	});
 });
-
-test("normalizes Confluence API prefixes", () => {
-	expect(normalizeConfluenceApiPrefix("")).toBe("/wiki/rest");
-	expect(normalizeConfluenceApiPrefix("rest")).toBe("/rest");
-	expect(normalizeConfluenceApiPrefix("/rest/")).toBe("/rest");
-	expect(normalizeConfluenceApiPrefix("/")).toBe("");
+test("creates bearer configuration while endpoint paths belong to the SDK", () => {
+	expect(
+		createConfluenceClientConfig({
+			...DEFAULT_SETTINGS,
+			confluenceBaseUrl: "https://api.atlassian.com/ex/confluence/cloud-id",
+			confluenceAuthType: "bearer",
+			atlassianApiToken: "access-token",
+			confluenceRequestHeaders: { "X-Route": "tenant" },
+		}),
+	).toEqual({
+		host: "https://api.atlassian.com/ex/confluence/cloud-id",
+		auth: { type: "bearer", token: "access-token" },
+		headers: { "X-Route": "tenant" },
+	});
 });
-
-function makeSettings(settings: Partial<ConfluenceSettings> = {}): ConfluenceSettings {
-	return {
-		...DEFAULT_SETTINGS,
-		confluenceBaseUrl: "https://example.atlassian.net",
-		confluenceParentId: "123456",
-		atlassianUserName: "user@example.com",
-		atlassianApiToken: "token",
-		...settings,
-	};
-}
+test("retains the deprecated API-prefix normalizer for library callers", () => {
+	expect(normalizeConfluenceApiPrefix("")).toBe("/wiki/rest");
+	expect(normalizeConfluenceApiPrefix("rest/")).toBe("/rest");
+});
