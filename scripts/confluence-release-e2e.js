@@ -13,6 +13,7 @@ import {
 	Publisher,
 	RuntimeEnvironmentService,
 	createAuthenticatedConfluenceClient,
+	parseMarkdownToADF,
 } from "../packages/lib/dist/index.js";
 import { PuppeteerMermaidRenderer } from "../packages/mermaid-puppeteer-renderer/dist/index.js";
 import { HttpPlantumlRenderer } from "../packages/plantuml-renderer/dist/index.js";
@@ -79,10 +80,23 @@ const program = Effect.scoped(
 			expectedSpace,
 			"Refusing to publish outside the dedicated test space",
 		);
+		const fetchedPages = new Map();
+		const updateComparisons = new Map();
+		const getContentById = client.content.getContentById.bind(client.content);
+		client.content.getContentById = async (parameters) => {
+			const page = await getContentById(parameters);
+			if (page.body?.atlas_doc_format?.value)
+				fetchedPages.set(parameters.id, structuredClone(page));
+			return page;
+		};
 		const requestedBodies = new Map();
 		const updateContent = client.content.updateContent.bind(client.content);
 		client.content.updateContent = async (parameters) => {
 			requestedBodies.set(parameters.id, parameters.body?.atlas_doc_format?.value);
+			updateComparisons.set(parameters.id, {
+				previous: fetchedPages.get(parameters.id),
+				requested: structuredClone(parameters),
+			});
 			return updateContent(parameters);
 		};
 		const publisher = new Publisher(settings, client, [
@@ -229,6 +243,7 @@ const program = Effect.scoped(
 				yield* Console.log(
 					JSON.stringify({
 						title: result.node.file.pageTitle,
+						comparison: updateComparisons.get(result.node.file.pageId),
 						storedBody: JSON.parse(storedBodies.get(result.node.file.pageId)),
 						requestedBody: JSON.parse(requestedBodies.get(result.node.file.pageId)),
 					}),
@@ -277,6 +292,48 @@ const program = Effect.scoped(
 			JSON.stringify({ ...settings, atlassianApiToken: undefined }),
 		);
 		const cliPath = fileURLToPath(new URL("../packages/cli/dist/index.js", import.meta.url));
+		const conversionConfig = path.join(root, "read-only-conversion.json");
+		yield* fs.writeFileString(
+			conversionConfig,
+			JSON.stringify({ ...settings, confluenceParentId: "", atlassianApiToken: undefined }),
+		);
+		const exportedAdfPath = path.join(root, "exported.adf.json");
+		const exportedMarkdownPath = path.join(root, "exported.md");
+		const pageUrl = `${baseUrl}/wiki/spaces/${expectedSpace}/pages/${media.pageId}`;
+		for (const args of [
+			["to-adf", pageUrl, "--output", exportedAdfPath],
+			["to-markdown", "--page", media.pageId, "--output", exportedMarkdownPath],
+		]) {
+			const conversion = yield* ChildProcess.make(
+				"node",
+				[cliPath, ...args, "--config", conversionConfig],
+				{
+					cwd: root,
+					extendEnv: true,
+					stdout: "inherit",
+					stderr: "inherit",
+				},
+			);
+			assert.equal(
+				yield* conversion.exitCode,
+				0,
+				`Conversion command ${args[0]} must succeed without a parent ID`,
+			);
+		}
+		const exportedAdf = JSON.parse(yield* fs.readFileString(exportedAdfPath));
+		assert.deepEqual(
+			exportedAdf,
+			JSON.parse((yield* fetchPage(media.pageId)).body.atlas_doc_format.value),
+		);
+		assert.deepEqual(
+			parseMarkdownToADF(yield* fs.readFileString(exportedMarkdownPath), baseUrl),
+			exportedAdf,
+			"Live Confluence Markdown export must preserve attachment IDs and every ADF field",
+		);
+		yield* fs.remove(exportedMarkdownPath);
+		yield* Console.log(
+			"[confluence] Both CLI exports passed; exact Markdown/ADF round trip and read-only behavior verified below",
+		);
 		const cliProcess = yield* ChildProcess.make("node", [cliPath, "--config", cliConfig], {
 			cwd: root,
 			extendEnv: true,

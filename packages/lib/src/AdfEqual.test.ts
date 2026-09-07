@@ -126,3 +126,47 @@ test("ignores redundant server image width while retaining explicit resizing", (
 	expect(adfEqual(media(160), media())).toBe(true);
 	expect(adfEqual(media(80), media())).toBe(false);
 });
+
+test("ignores asynchronous Confluence link metadata without changing input or authored link fields", () => {
+	const original: ADFEntity = {
+		type: "doc",
+		version: 1,
+		content: [
+			{
+				type: "paragraph",
+				content: [
+					{
+						type: "text",
+						text: "Child page",
+						marks: [
+							{
+								type: "link",
+								attrs: {
+									href: "https://example.atlassian.net/wiki/spaces/D/pages/123#Heading",
+									title: "Authored title",
+								},
+							},
+						],
+					},
+				],
+			},
+		],
+	};
+	const stored = structuredClone(original);
+	const attrs = stored.content![0]!.content![0]!.marks![0]!.attrs!;
+	attrs["href"] = "https://example.atlassian.net/wiki/spaces/D/pages/123/Page+Title#Heading";
+	attrs["__confluenceMetadata"] = {
+		isRenamedTitle: true,
+		linkType: "page",
+		contentTitle: "Page Title",
+		versionAtSave: "1",
+		anchorName: "Heading",
+	};
+	expect(adfEqual(original, stored)).toBe(true);
+	expect(attrs["__confluenceMetadata"]).toBeDefined();
+	attrs["title"] = "Changed authored title";
+	expect(adfEqual(original, stored)).toBe(false);
+	attrs["title"] = "Authored title";
+	attrs["href"] = "https://example.atlassian.net/wiki/spaces/D/pages/123#Another-heading";
+	expect(adfEqual(original, stored)).toBe(false);
+});

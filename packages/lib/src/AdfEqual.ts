@@ -41,6 +41,10 @@ export function normalizeAdfForComparison(adf: ADFEntity): ADFEntity {
 			for (const mark of node.marks ?? []) {
 				if (mark.type === "link" && typeof mark.attrs?.["href"] === "string") {
 					mark.attrs["href"] = canonicalConfluencePageLink(mark.attrs["href"]);
+					// Confluence asynchronously adds the target title/version it resolved.
+					// This cache is not an authored link change. Keep it in exports, but
+					// ignore it when deciding whether an unchanged page needs an update.
+					delete mark.attrs["__confluenceMetadata"];
 				}
 			}
 			// Confluence writes the default pixel display width onto media wrappers.

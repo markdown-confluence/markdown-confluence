@@ -42,13 +42,21 @@ set ATLASSIAN_API_TOKEN="YOUR API TOKEN"
 vp dlx @markdown-confluence/cli
 ```
 
-**Convert Markdown to ADF**
+**Convert files or Confluence pages**
 
 ```bash
-npx @markdown-confluence/cli to-adf ./docs/page.md
-npx @markdown-confluence/cli to-adf ./docs/page.md --output page.adf.json
-cat ./docs/page.md | npx @markdown-confluence/cli to-adf
+vp dlx @markdown-confluence/cli to-adf "notes/page.md" --output "page.adf.json"
+vp dlx @markdown-confluence/cli to-markdown "page.adf.json" --output "page.md"
+vp dlx @markdown-confluence/cli to-markdown --page 123456 --output "confluence-page.md"
+vp dlx @markdown-confluence/cli to-adf "https://example.atlassian.net/wiki/spaces/DOCS/pages/123456/Page" --output "confluence-page.adf.json"
 ```
+
+Both commands support file input/output and stdin/stdout. `from-adf` is an alias
+for `to-markdown`. Local conversion needs no credentials; page input reuses your
+existing authentication and requires no publishing parent ID. Markdown export
+preserves rich content through the existing `adf` fences by default; `--readable`
+prefers readable Markdown. See the [conversion guide](../../documentation/CONVERSION.md)
+for examples, feature coverage, limitations, and acceptance criteria.
 
 ### Docker Container
 

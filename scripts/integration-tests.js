@@ -123,6 +123,88 @@ function verifyCli(node, cliPath, cwd, libraryUrl) {
 			);
 			count++;
 		}
+		const conversionRoot = yield* fs.makeTempDirectoryScoped({
+			prefix: "confluence-conversion-",
+		});
+		const adfPath = path.join(
+			repositoryRoot,
+			"test-fixtures/conversion/rich-document.adf.json",
+		);
+		const markdownPath = path.join(conversionRoot, "round trip.md");
+		const originalAdf = JSON.parse(yield* fs.readFileString(adfPath));
+		const spacedAdfPath = path.join(conversionRoot, "input document.adf.json");
+		yield* fs.copyFile(adfPath, spacedAdfPath);
+		yield* command(
+			node,
+			[cliPath, "to-markdown", "--input", spacedAdfPath, "--output", markdownPath],
+			{ cwd },
+		);
+		const roundTrip = yield* command(node, [cliPath, "to-adf", markdownPath], {
+			cwd,
+			capture: true,
+		});
+		assert.deepEqual(
+			JSON.parse(roundTrip),
+			originalAdf,
+			"Rich ADF file round trip must preserve all fields",
+		);
+		const stdinMarkdown = yield* command(node, [cliPath, "from-adf", "-", "--readable"], {
+			cwd,
+			capture: true,
+			stdin: Stream.make(new TextEncoder().encode(JSON.stringify(originalAdf))),
+		});
+		assert.ok(
+			stdinMarkdown.includes("Conversion example") &&
+				stdinMarkdown.includes("The final paragraph"),
+		);
+		const invalidOutput = path.join(conversionRoot, "invalid output.md");
+		const invalidJson = yield* command(
+			node,
+			[cliPath, "to-markdown", "-", "--output", invalidOutput],
+			{
+				cwd,
+				capture: true,
+				expectedExitCode: 1,
+				stdin: Stream.make(new TextEncoder().encode("{invalid")),
+			},
+		);
+		assert.equal(invalidJson, "", "Invalid JSON must not emit Markdown");
+		assert.equal(
+			yield* fs.exists(invalidOutput),
+			false,
+			"Invalid input must not create an output file",
+		);
+		const formatting = path.join(
+			repositoryRoot,
+			"test-fixtures/conversion/conversion-formatting.md",
+		);
+		const formattingAdf = JSON.parse(
+			yield* command(node, [cliPath, "to-adf", formatting], { cwd, capture: true }),
+		);
+		assert.ok(JSON.stringify(formattingAdf).includes('"type":"underline"'));
+		assert.ok(JSON.stringify(formattingAdf).includes('"align":"center"'));
+		const generatedAdfPath = path.join(conversionRoot, "generated page.adf.json");
+		yield* command(
+			node,
+			[cliPath, "to-adf", "--input", formatting, "--output", generatedAdfPath],
+			{ cwd },
+		);
+		assert.deepEqual(JSON.parse(yield* fs.readFileString(generatedAdfPath)), formattingAdf);
+		yield* command(node, [cliPath, "to-markdown", generatedAdfPath, "--output", markdownPath], {
+			cwd,
+		});
+		const generatedRoundTrip = JSON.parse(
+			yield* command(node, [cliPath, "to-adf", markdownPath], { cwd, capture: true }),
+		);
+		assert.deepEqual(
+			generatedRoundTrip,
+			formattingAdf,
+			"Markdown file to ADF file to Markdown file preserves generated ADF",
+		);
+
+		yield* Console.log(
+			"Both conversion commands: file/stdin/output, rich ADF round trip, formatting and invalid input verified.",
+		);
 		// CommonJS consumers use dynamic import because the public package is ESM.
 		yield* command(
 			node,

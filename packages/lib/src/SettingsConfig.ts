@@ -25,12 +25,11 @@ type ArgumentDefinition = {
 
 type ArgumentValue = boolean | string | undefined;
 
-export const confluenceSettingsConfig = Config.all({
+const confluenceConnectionFields = {
 	confluenceBaseUrl: Config.string("confluenceBaseUrl"),
 	confluenceSiteUrl: Config.string("confluenceSiteUrl").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.confluenceSiteUrl),
 	),
-	confluenceParentId: Config.string("confluenceParentId"),
 	mermaidProtocolTimeout: Config.number("mermaidProtocolTimeout").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.mermaidProtocolTimeout),
 	),
@@ -49,6 +48,15 @@ export const confluenceSettingsConfig = Config.all({
 		Config.Record(Schema.String, Schema.String),
 		"confluenceRequestHeaders",
 	).pipe(Config.withDefault(DEFAULT_SETTINGS.confluenceRequestHeaders)),
+};
+
+export const confluenceReadSettingsConfig = Config.all(confluenceConnectionFields).pipe(
+	Config.map((connection) => ({ ...DEFAULT_SETTINGS, ...connection })),
+);
+
+export const confluenceSettingsConfig = Config.all({
+	...confluenceConnectionFields,
+	confluenceParentId: Config.string("confluenceParentId"),
 	folderToPublish: Config.string("folderToPublish"),
 	tagsToPublish: Config.string("tagsToPublish").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.tagsToPublish),

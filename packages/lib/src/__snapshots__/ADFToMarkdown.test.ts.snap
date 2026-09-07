@@ -11,14 +11,15 @@ exports[`ADF To Markdown Test 1`] = `
 2023-05-05
 
 | **Testing** | **Testing 2** | **Testing 3** |
-| ----------- | ------------- | ------------- |
-| Row 1       | Row 1.2       | Row 1.3       |
-| Row 2.1     | Row 2.2       | Row 2.3       |
+| ----------- | ------------: | ------------- |
+| Row 1       |       Row 1.2 | Row 1.3       |
+| Row 2.1     |       Row 2.2 | Row 2.3       |
 Testing [*TESTING*](https://www.google.com/webmasters/tools/siteoverview)
 Testing **New** Line
 
-sdfsdf
-
+\`\`\`adf
+{"type":"paragraph","marks":[{"type":"indentation","attrs":{"level":1}}],"content":[{"text":"sdfsdf","type":"text"}]}
+\`\`\`
 
 
 ***TESTING***
@@ -44,7 +45,7 @@ TESTING BELOW
 ###### **Heading 6**
 
 
-\`\`\`ada 
+\`\`\`ada
 TESTING CODE
 \`\`\`
 
@@ -82,7 +83,7 @@ TESTING CODE
 
 
 
-Testing ~Text~ <sub>Again </sub><sup>Testing More</sup>
+Testing ~~Text~~ <sub>Again </sub><sup>Testing More</sup>
 
 
 
