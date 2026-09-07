@@ -254,12 +254,28 @@ test("collects attachments and labels across gateway-relative and absolute curso
 		expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${TOKEN}`);
 		if (url.endsWith("/attachments?limit=250"))
 			return jsonResponse({
-				results: [{ id: "1", title: "first.png", fileId: "f1", comment: "hash1" }],
+				results: [
+					{
+						id: "1",
+						title: "first.png",
+						fileId: "f1",
+						comment: "hash1",
+						version: { number: 3, authorId: "author-1" },
+					},
+				],
 				_links: { next: "/wiki/api/v2/pages/123/attachments?cursor=next" },
 			});
 		if (url.endsWith("/attachments?cursor=next"))
 			return jsonResponse({
-				results: [{ id: "2", title: "second.png", fileId: "f2", comment: "hash2" }],
+				results: [
+					{
+						id: "2",
+						title: "second.png",
+						fileId: "f2",
+						comment: "hash2",
+						version: { number: 4, authorId: "author-2" },
+					},
+				],
 			});
 		if (url.endsWith("/labels?limit=250"))
 			return jsonResponse({
@@ -277,6 +293,10 @@ test("collects attachments and labels across gateway-relative and absolute curso
 	});
 	const attachments = await client.getAttachments({ id: "123" });
 	expect(attachments.results.map((item) => item.title)).toEqual(["first.png", "second.png"]);
+	expect(attachments.results.map((item) => ({ id: item.id, version: item.version }))).toEqual([
+		{ id: "1", version: expect.objectContaining({ number: 3, by: { accountId: "author-1" } }) },
+		{ id: "2", version: expect.objectContaining({ number: 4, by: { accountId: "author-2" } }) },
+	]);
 	expect(attachments.results[1]?.extensions).toMatchObject({
 		fileId: "f2",
 		collectionName: "contentId-123",

@@ -104,7 +104,14 @@ vp run -r build:docker
 CONFLUENCE_E2E_IMAGE=markdown-confluence/markdown-confluence vp run test:integration regressions --skip-build
 ```
 
-The fixture contains 166 notes and 17 Mermaid diagrams. Image coverage includes
+For fast iteration, use two notes while retaining every image variant and both
+diagram failure/recovery checks (around 30 seconds locally):
+
+```sh
+CONFLUENCE_E2E_REGRESSION_SIZE=small CONFLUENCE_E2E_IMAGE=markdown-confluence/markdown-confluence vp run test:integration regressions --skip-build
+```
+
+The default full fixture contains 166 notes and 17 Mermaid diagrams. Image coverage includes
 relative PNGs, SVG, spaces, URL-encoded spaces, parentheses, Unicode, wiki embeds
 and a public remote URL. The test checks native media references and attachment
 reuse, then verifies that an unchanged publish preserves all page and attachment

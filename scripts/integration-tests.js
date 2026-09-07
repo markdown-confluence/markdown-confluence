@@ -32,7 +32,7 @@ const help = `Integration profiles (vp run test:integration [profile] [options])
 Configuration: .env.integration (see .env.integration.example).
 Reports: reports/integration/. See documentation/TESTING.md for coverage and setup.`;
 
-function command(executable, args, options = {}) {
+function command(executable, args, options = {}, timeout = "15 minutes") {
 	return Effect.scoped(
 		Effect.gen(function* () {
 			const child = yield* ChildProcess.make(executable, args, {
@@ -64,7 +64,7 @@ function command(executable, args, options = {}) {
 				);
 			return output;
 		}),
-	).pipe(Effect.timeout("15 minutes"));
+	).pipe(Effect.timeout(timeout));
 }
 
 function readTestEnvironment(options) {
@@ -331,13 +331,18 @@ function runIntegration() {
 				}
 				if (options.profile === "regressions") {
 					yield* step(
-						"Released container: 166 notes, Mermaid failure/recovery and image cases",
-						command(node, ["scripts/integration-regressions.js"], {
-							env: {
-								...environment,
-								CONFLUENCE_E2E_REPORT_DIRECTORY: reportDirectory,
+						"Container: Mermaid failure/recovery, image cases and publishing scale",
+						command(
+							node,
+							["scripts/integration-regressions.js"],
+							{
+								env: {
+									...environment,
+									CONFLUENCE_E2E_REPORT_DIRECTORY: reportDirectory,
+								},
 							},
-						}),
+							"25 minutes",
+						),
 					);
 					return;
 				}

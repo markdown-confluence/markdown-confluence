@@ -99,6 +99,7 @@ export type V2Attachment = {
 	comment?: string;
 	fileId?: string;
 	fileSize?: number;
+	version?: V2Version;
 };
 
 /** A v2 label object (subset of fields). */

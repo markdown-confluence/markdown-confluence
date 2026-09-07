@@ -50,7 +50,13 @@ jobs:
           vp run build
           vp run -r build:docker
       - name: Publish synthetic fixtures and verify create, unchanged and update behavior
-        run: vp run test:integration "$TEST_PROFILE"
+        run: |
+          if [ "$TEST_PROFILE" = "regressions" ]; then
+            CONFLUENCE_E2E_REGRESSION_SIZE=small vp run test:integration regressions --skip-build
+            vp run test:integration regressions --skip-build
+          else
+            vp run test:integration live
+          fi
         env:
           TEST_PROFILE: ${{ inputs.profile || 'live' }}
           CONFLUENCE_E2E_IMAGE: markdown-confluence/markdown-confluence

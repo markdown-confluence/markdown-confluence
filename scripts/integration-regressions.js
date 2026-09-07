@@ -34,6 +34,7 @@ await runEffect(
 				"CONFLUENCE_E2E_PARENT_ID",
 				"CONFLUENCE_E2E_SPACE_KEY",
 				"CONFLUENCE_E2E_IMAGE",
+				"CONFLUENCE_E2E_REGRESSION_SIZE",
 				"CONFLUENCE_E2E_REPORT_DIRECTORY",
 			]) {
 				const value = yield* runtime.getEnv(name);
@@ -49,6 +50,12 @@ await runEffect(
 				const connection = liveConnectionSettings(environment);
 				const image =
 					environment.CONFLUENCE_E2E_IMAGE || "ghcr.io/markdown-confluence/publish:6.0.0";
+				const size = environment.CONFLUENCE_E2E_REGRESSION_SIZE || "full";
+				assert.ok(
+					["small", "full"].includes(size),
+					"CONFLUENCE_E2E_REGRESSION_SIZE must be small or full",
+				);
+				const noteCount = size === "small" ? 2 : 166;
 				const reportDirectory = environment.CONFLUENCE_E2E_REPORT_DIRECTORY;
 				assert.ok(
 					reportDirectory,
@@ -157,7 +164,15 @@ await runEffect(
 							});
 							cleanup.once("close", () => child.kill("SIGKILL"));
 						}, 10 * 60_000);
-						child.stdout.on("data", (data) => (output += data));
+						let progressBuffer = "";
+						child.stdout.on("data", (data) => {
+							output += data;
+							progressBuffer += data;
+							const lines = progressBuffer.split("\n");
+							progressBuffer = lines.pop() ?? "";
+							for (const line of lines)
+								if (line.startsWith("[publish]")) console.log(redact(line));
+						});
 						child.stderr.on("data", (data) => (output += data));
 						child.once("error", (error) => {
 							clearTimeout(timer);
@@ -270,7 +285,7 @@ await runEffect(
 						await copyFile(imageSource, path.join(root, "assets", filename));
 					await copyFile(svgSource, path.join(root, "assets/green.svg"));
 					const files = [];
-					for (let index = 0; index < 166; index++) {
+					for (let index = 0; index < noteCount; index++) {
 						const filename =
 							index === 0
 								? "docs/docs.md"
@@ -301,10 +316,12 @@ await runEffect(
 						await writeFile(path.join(root, filename), body);
 					}
 					const firstOutput = await publish("create");
-					assert.equal((firstOutput.match(/SUCCESS:/g) ?? []).length, 166);
-					console.log("[regressions] Verifying all 166 pages and attachment versions");
+					assert.equal((firstOutput.match(/SUCCESS:/g) ?? []).length, noteCount);
+					console.log(
+						`[regressions] Verifying all ${noteCount} pages and attachment versions`,
+					);
 					const before = await snapshot(files);
-					assert.equal(Object.keys(before).length, 166);
+					assert.equal(Object.keys(before).length, noteCount);
 					const media = before["docs/Note 001.md"];
 					assert.equal(
 						nodes(media.adf, "media").filter((node) => node.attrs.type === "file")
@@ -335,14 +352,14 @@ await runEffect(
 						diagramCount += page.attachments.filter((item) =>
 							item.title.startsWith("RenderedMermaidChart-"),
 						).length;
-					assert.equal(diagramCount, 17);
+					assert.equal(diagramCount, Math.ceil(noteCount / 10));
 					report.pages = Object.values(before).map((page) => ({
 						id: page.id,
 						version: page.version,
 					}));
 					report.imagePageUrl = `${connection.confluenceSiteUrl}/wiki/spaces/${environment.CONFLUENCE_E2E_SPACE_KEY}/pages/${media.id}`;
 					report.diagramCount = diagramCount;
-					report.sourceNotes = 166;
+					report.sourceNotes = noteCount;
 					await writeFile(
 						path.join(reportDirectory, "images.adf.json"),
 						JSON.stringify(media.adf, null, 2),
