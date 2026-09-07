@@ -220,6 +220,9 @@ const program = Effect.scoped(
 		assert.ok(localFormatting.includes(formatting.pageId));
 
 		requestedBodies.clear();
+		yield* Console.log(
+			"[confluence] Verify unchanged content, attachments, labels and versions",
+		);
 		const second = yield* publish();
 		for (const result of second) {
 			if (result.successfulUploadResult.contentResult !== "same") {
@@ -387,7 +390,22 @@ const program = Effect.scoped(
 		assert.ok(
 			conflictPage.body.atlas_doc_format.value.includes("RECOVERED AFTER VERSION CONFLICT."),
 		);
+		let finalRequestedBody;
+		client.content.updateContent = async (parameters) => {
+			finalRequestedBody = parameters.body?.atlas_doc_format?.value;
+			return updateContent(parameters);
+		};
 		const finalPublish = yield* Effect.tryPromise(publishFormatting);
+		if (finalPublish[0].successfulUploadResult?.contentResult !== "same") {
+			yield* Console.log(
+				JSON.stringify({
+					check: "unchanged-after-conflict",
+					storedBody: conflictPage.body.atlas_doc_format.value,
+					requestedBody: finalRequestedBody,
+				}),
+			);
+		}
+		client.content.updateContent = updateContent;
 		assert.equal(finalPublish[0].successfulUploadResult?.contentResult, "same");
 		assert.equal(
 			(yield* fetchPage(formatting.pageId)).version.number,
@@ -398,7 +416,39 @@ const program = Effect.scoped(
 			.join("\n");
 		const summary = `## Confluence release verification passed\n\nCreated/verified ${first.length} pages; unchanged publishing preserved content, attachments, labels and versions; one changed note updated successfully; the built CLI republished without further changes. Duplicate titles and missing embed headings were rejected without page updates. The same publisher recovered from an injected transport failure and a real HTTP version conflict, then preserved the unchanged page version.\n\n${pageLinks}\n`;
 		const summaryPath = yield* runtime.getEnv("GITHUB_STEP_SUMMARY");
-		if (summaryPath) yield* fs.writeFileString(summaryPath, summary);
+		if (summaryPath) yield* fs.writeFileString(summaryPath, summary, { flag: "a" });
+		const reportPath = yield* runtime.getEnv("CONFLUENCE_E2E_REPORT_PATH");
+		if (reportPath)
+			yield* fs.writeFileString(
+				reportPath,
+				JSON.stringify(
+					{
+						status: "passed",
+						checks: [
+							"create",
+							"formatting",
+							"embeds",
+							"hierarchy",
+							"selection",
+							"attachments",
+							"unchanged",
+							"update",
+							"built-cli",
+							"duplicate-title",
+							"missing-embed",
+							"transport-recovery",
+							"version-conflict",
+						],
+						pages: first.map((result) => ({
+							id: result.node.file.pageId,
+							title: result.node.file.pageTitle,
+							url: result.node.file.pageUrl,
+						})),
+					},
+					null,
+					2,
+				),
+			);
 		yield* Console.log(summary);
 	}),
 );

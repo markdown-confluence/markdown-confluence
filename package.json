@@ -25,7 +25,13 @@
 		"mutation:dry-run": "stryker run --dryRunOnly",
 		"test": "vp test run",
 		"release:prepare": "node scripts/prepare-release-assets.js",
-		"test:confluence-e2e": "node scripts/confluence-release-e2e.js"
+		"test:confluence-e2e": "node scripts/confluence-release-e2e.js",
+		"test:integration": "node --env-file-if-exists=.env.integration scripts/integration-tests.js",
+		"test:integration:packages": "vp run test:integration packages",
+		"test:integration:live": "vp run test:integration live",
+		"test:integration:docker": "vp run test:integration docker",
+		"test:integration:obsidian": "vp run test:integration obsidian",
+		"test:vault": "vp run test:integration vault"
 	},
 	"devDependencies": {
 		"@effect-oxlint/effect-oxlint": "jsr:^0.2.0",
