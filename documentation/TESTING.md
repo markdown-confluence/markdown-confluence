@@ -78,6 +78,13 @@ is needed in OAuth mode. See [CLOUD_OAUTH.md](CLOUD_OAUTH.md) for account permis
 and scopes. The desktop/vault profiles also support service-account OAuth.
 For interactive browser login and token storage, see [OBSIDIAN_OAUTH.md](OBSIDIAN_OAUTH.md).
 
+Scoped API tokens use `CONFLUENCE_E2E_AUTH_TYPE=basic`, the account email and token,
+and `CONFLUENCE_E2E_API_URL=https://api.atlassian.com/ex/confluence/CLOUD_ID`.
+Keep `CONFLUENCE_E2E_BASE_URL` as the browsable site origin. This gateway setting
+applies to live, container and desktop verification as well as vault setup.
+Atlassian documents the required gateway and Basic authentication in its
+[API-token guidance](https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/).
+
 The live harness copies synthetic fixtures into a temporary directory and prefixes
 page titles per run. It verifies formatting, heading embeds, exclusions, folder
 hierarchy, tags, images, files, Mermaid and PlantUML attachments. Repeated publishing
@@ -201,11 +208,12 @@ keep live assertions focused on behavior that depends on Confluence or Obsidian.
 
 ### Diagnosing a live failure
 
-The post-conflict idempotency assertion failed once during local validation, then
-passed on two fresh runs. It remains strict: a failure logs the synthetic stored
-and requested ADF for diagnosis, rather than retrying an extra publish to hide an
-unexpected version update. Treat this as an observed intermittent behavior, not
-a resolved product defect. CI reports identify the failed step.
+The post-conflict idempotency assertion remains strict and logs the synthetic
+stored and requested ADF for diagnosis. This caught Confluence asynchronously
+adding an internal `_parentId` to its table-of-contents macro. Comparison ignores
+that server context while preserving authored TOC options and exported ADF; the
+regression test and a subsequent live run verify the fix. CI reports identify
+the failed step instead of retrying an extra publish to hide a version change.
 
 ### Conversion acceptance checks
 

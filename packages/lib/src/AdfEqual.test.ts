@@ -45,6 +45,23 @@ test("keeps semantic macro parameter differences in the ADF comparison", () => {
 	expect(adfEqual(serverAdf, generatedAdf)).toBe(false);
 });
 
+test("server-added TOC page context does not trigger another update after conflict recovery", () => {
+	const generated = docWithJiraMacro({ macroParams: { minLevel: { value: "2" } } });
+	generated.content![0]!.attrs!["extensionKey"] = "toc";
+	const stored = structuredClone(generated);
+	const parameters = getMacroParameters(stored);
+	const options = parameters["macroParams"] as Record<string, unknown>;
+	options["_parentId"] = { value: "988774859" };
+	expect(adfEqual(stored, generated)).toBe(true);
+	expect(options["_parentId"]).toEqual({ value: "988774859" });
+	options["minLevel"] = { value: "3" };
+	expect(adfEqual(stored, generated)).toBe(false);
+	options["minLevel"] = { value: "2" };
+	for (const document of [stored, generated])
+		document.content![0]!.attrs!["extensionKey"] = "jira";
+	expect(adfEqual(stored, generated)).toBe(false);
+});
+
 function docWithJiraMacro(parameters: Record<string, unknown>): ADFEntity {
 	return {
 		type: "doc",

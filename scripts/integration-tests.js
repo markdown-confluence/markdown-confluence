@@ -88,13 +88,20 @@ function readTestEnvironment(options) {
 			ATLASSIAN_CLIENT_SECRET: "atlassianClientSecret",
 			CONFLUENCE_E2E_AUTH_TYPE: undefined,
 			CONFLUENCE_E2E_API_URL: undefined,
-			CONFLUENCE_E2E_BASE_URL: "confluenceBaseUrl",
+			CONFLUENCE_E2E_BASE_URL: undefined,
 			CONFLUENCE_E2E_PARENT_ID: "confluenceParentId",
 			CONFLUENCE_E2E_SPACE_KEY: undefined,
 		};
 		const environment = {};
 		for (const [name, setting] of Object.entries(mapping))
 			environment[name] = (yield* runtime.getEnv(name)) || settings[setting];
+		environment.CONFLUENCE_E2E_BASE_URL ||=
+			settings.confluenceSiteUrl || settings.confluenceBaseUrl;
+		if (
+			settings.confluenceBaseUrl &&
+			new URL(settings.confluenceBaseUrl).hostname === "api.atlassian.com"
+		)
+			environment.CONFLUENCE_E2E_API_URL ||= settings.confluenceBaseUrl;
 		return environment;
 	});
 }
@@ -299,7 +306,9 @@ function runIntegration() {
 							environment.CONFLUENCE_E2E_AUTH_TYPE === "oauth2"
 								? liveConnectionSettings(environment)
 								: {
-										confluenceBaseUrl: environment.CONFLUENCE_E2E_BASE_URL,
+										confluenceBaseUrl:
+											environment.CONFLUENCE_E2E_API_URL ||
+											environment.CONFLUENCE_E2E_BASE_URL,
 										confluenceSiteUrl: environment.CONFLUENCE_E2E_BASE_URL,
 										confluenceParentId: environment.CONFLUENCE_E2E_PARENT_ID,
 										atlassianUserName: environment.ATLASSIAN_USERNAME,

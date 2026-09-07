@@ -65,6 +65,16 @@ export function normalizeAdfForComparison(adf: ADFEntity): ADFEntity {
 
 			const parameters = node.attrs?.["parameters"];
 			if (
+				node.attrs?.["extensionType"] === "com.atlassian.confluence.macro.core" &&
+				node.attrs["extensionKey"] === "toc" &&
+				isRecord(parameters) &&
+				isRecord(parameters["macroParams"])
+			) {
+				// Confluence asynchronously stamps the containing page onto its TOC
+				// macro. This is server context, not an authored TOC option.
+				delete parameters["macroParams"]["_parentId"];
+			}
+			if (
 				isRecord(parameters) &&
 				Object.prototype.hasOwnProperty.call(parameters, "macroMetadata")
 			) {

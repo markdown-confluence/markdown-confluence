@@ -231,7 +231,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOptions({
-						basic: "Basic",
+						basic: "API token / Basic",
 						bearer: "Bearer / PAT",
 						oauth2: "OAuth / Service account",
 						browser: "OAuth / Sign in",
@@ -280,18 +280,19 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 		if (browser) this.renderBrowserLogin(containerEl);
 		if (!browser)
 			addText(
-				oauth ? "Confluence API URL" : "Confluence Domain",
+				"Confluence API URL",
 				"confluenceBaseUrl",
 				oauth
 					? "https://api.atlassian.com/ex/confluence/{cloudId}"
-					: "Your Confluence site, for example https://mysite.atlassian.net",
+					: "Your Confluence site. Scoped API tokens require https://api.atlassian.com/ex/confluence/{cloudId}.",
 			);
-		if (oauth && !browser) {
+		if (!browser)
 			addText(
 				"Confluence Site URL",
 				"confluenceSiteUrl",
-				"The browser address, for example https://mysite.atlassian.net",
+				"The browser address, for example https://mysite.atlassian.net. Required when using the API gateway; otherwise optional.",
 			);
+		if (oauth && !browser) {
 			addText(
 				"OAuth Client ID",
 				"atlassianClientId",

@@ -97,3 +97,31 @@ test("OAuth live verification needs client credentials and a separate Cloud gate
 			"CONFLUENCE_E2E_API_URL",
 		);
 });
+
+test("scoped API tokens use Basic authentication through the Cloud gateway", () => {
+	const scoped = {
+		...configured,
+		CONFLUENCE_E2E_AUTH_TYPE: "basic",
+		CONFLUENCE_E2E_API_URL: "https://api.atlassian.com/ex/confluence/cloud-id",
+	};
+	expect(liveConnectionSettings(scoped)).toMatchObject({
+		confluenceAuthType: "basic",
+		confluenceBaseUrl: scoped.CONFLUENCE_E2E_API_URL,
+		confluenceSiteUrl: configured.CONFLUENCE_E2E_BASE_URL,
+		atlassianUserName: configured.ATLASSIAN_USERNAME,
+		atlassianApiToken: configured.ATLASSIAN_API_TOKEN,
+		atlassianClientSecret: "",
+	});
+	expect(liveConnectionSettings(configured).confluenceBaseUrl).toBe(
+		configured.CONFLUENCE_E2E_BASE_URL,
+	);
+	for (const api of [
+		"http://api.atlassian.com/ex/confluence/cloud-id",
+		"https://example.test/ex/confluence/cloud-id",
+		"https://api.atlassian.com/ex/jira/cloud-id",
+		"https://api.atlassian.com/ex/confluence/cloud-id?token=secret",
+	])
+		expect(() => validateLiveEnvironment({ ...scoped, CONFLUENCE_E2E_API_URL: api })).toThrow(
+			"CONFLUENCE_E2E_API_URL",
+		);
+});

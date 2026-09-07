@@ -135,7 +135,7 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 
 | JSON key | Environment variable | CLI option | Description |
 | --- | --- | --- | --- |
-| `confluenceBaseUrl` | `CONFLUENCE_BASE_URL` | `--baseUrl`, `-b` | Your Confluence site URL. For Confluence Cloud, use the Atlassian site URL without `/wiki`, for example `https://your-domain.atlassian.net`. When authenticating with OAuth 2.0, set this to the API gateway URL `https://api.atlassian.com/ex/confluence/{cloudId}`. |
+| `confluenceBaseUrl` | `CONFLUENCE_BASE_URL` | `--baseUrl`, `-b` | Your Confluence site URL. For unscoped API tokens, use the Atlassian site URL without `/wiki`, for example `https://your-domain.atlassian.net`. For scoped API tokens or OAuth 2.0, use the API gateway URL `https://api.atlassian.com/ex/confluence/{cloudId}` and set `confluenceSiteUrl` separately. Scoped API tokens use `basic` authentication with your account email. |
 | `confluenceSiteUrl` | `CONFLUENCE_SITE_URL` | `--siteUrl` | The browsable Confluence site URL used to build and match display links (for example `https://your-domain.atlassian.net`). Falls back to `confluenceBaseUrl` when unset. Required when `confluenceBaseUrl` points at the API gateway, otherwise published links would be unresolvable. |
 | `confluenceParentId` | `CONFLUENCE_PARENT_ID` | `--parentId`, `-p` | The numeric ID of an existing Confluence parent page. The parent page determines the target space. |
 | `atlassianUserName` | `ATLASSIAN_USERNAME` | `--userName`, `-u` | The Atlassian user name or email address used for publishing. |
