@@ -1,4 +1,7 @@
-# Cloud API and authentication verification
+# Version 7: Cloud API migration and verification
+
+The next release is **7.0.0** for all linked workspace packages: the publishing
+library, CLI, Obsidian plugin and renderers.
 
 The publisher uses `confluence.js` 3.2.0 with one shared transport in the CLI,
 container and desktop Obsidian plugin. Cloud is the supported target. The SDK

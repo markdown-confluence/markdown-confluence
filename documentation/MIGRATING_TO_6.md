@@ -62,4 +62,4 @@ Install `main.js` and `manifest.json` from the [integration releases](https://gi
 
 Back up the vault before upgrading. Test the new version in a separate vault and Confluence space before using it with an existing publishing tree.
 
-For the next major release after 6, see the [Cloud SDK migration](CLOUD_API_MIGRATION.md#library-migration-from-6). It changes the public client contract and adds native Obsidian OAuth.
+For version 7, see the [Cloud SDK migration](CLOUD_API_MIGRATION.md#library-migration-from-6). It changes the public client contract and adds native Obsidian OAuth.
