@@ -3,6 +3,7 @@
 import { expect, test } from "@effect/vitest";
 import { ConfluenceClient } from "confluence.js";
 import { Effect } from "effect";
+import { Path } from "effect/Path";
 import SparkMD5 from "spark-md5";
 import { orderMarks } from "./AdfEqual";
 import { ADFProcessingPlugin, PublisherFunctions } from "./ADFProcessingPlugins";
@@ -768,6 +769,12 @@ function md5(contents: Buffer): string {
 }
 
 test("publishes a large collection without exceeding two concurrent page updates", async () => {
+	const filesystemPath = await runEffect(
+		Effect.gen(function* () {
+			return yield* Path;
+		}),
+	);
+	const contentRoot = filesystemPath.join(filesystemPath.sep, "docs");
 	let active = 0;
 	let peak = 0;
 	const count = 32;
@@ -795,7 +802,7 @@ test("publishes a large collection without exceeding two concurrent page updates
 	const workspace = new InMemoryMarkdownWorkspace(
 		Array.from({ length: count }, (_, index) => ({
 			folderName: "docs",
-			absoluteFilePath: `/docs/page-${index}.md`,
+			absoluteFilePath: filesystemPath.join(contentRoot, `page-${index}.md`),
 			fileName: `page-${index}.md`,
 			pageTitle: `page-${index}`,
 			contents: "After",
@@ -804,7 +811,7 @@ test("publishes a large collection without exceeding two concurrent page updates
 	);
 	const progress: string[] = [];
 	const publisher = new Publisher(
-		{ ...testPublishSettings, contentRoot: "/docs" },
+		{ ...testPublishSettings, contentRoot },
 		client,
 		[],
 		(message) => progress.push(message),
