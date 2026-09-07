@@ -1,45 +1,72 @@
 name: Confluence End-to-End Verification
-
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, reopened, synchronize, labeled]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: confluence-release-e2e
   cancel-in-progress: false
-
 jobs:
-  publish-and-verify:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.head.repo.full_name == github.repository &&
-      contains(github.event.pull_request.labels.*.name, 'run-confluence-e2e'))
+  published-action:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
+      ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
     steps:
-      - name: Checkout code
+      - name: Checkout synthetic fixtures
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - name: Set up Vite+
-        uses: voidzero-dev/setup-vp@v1
+      - name: Prepare dedicated test space and fixtures
+        run: python3 scripts/verify-published-action.py prepare
+      - name: Publish create with the released Action
+        uses: markdown-confluence/publish-action@v6.0.0
         with:
-          node-version: "24.15.0"
-          run-install: false
-      - name: Install dependencies
-        run: vp install --frozen-lockfile
-      - name: Build the release artifacts
-        run: vp run build
-      - name: Publish synthetic fixtures and verify create, unchanged and update behavior
-        run: vp run test:confluence-e2e
-        env:
-          ATLASSIAN_USERNAME: ${{ secrets.ATLASSIAN_USERNAME }}
-          ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
-          CONFLUENCE_E2E_BASE_URL: https://markdown-confluence.atlassian.net
-          CONFLUENCE_E2E_PARENT_ID: "986448062"
-          CONFLUENCE_E2E_SPACE_KEY: MCRT20260907
+          confluenceBaseUrl: https://markdown-confluence.atlassian.net
+          confluenceParentId: "986448062"
+          atlassianUserName: ${{ secrets.ATLASSIAN_USERNAME }}
+          atlassianApiToken: ${{ secrets.ATLASSIAN_API_TOKEN }}
+          contentRoot: /github/workspace/action-test-vault
+          folderToPublish: Release Tests
+          configFile: /github/workspace/action-test-vault/.markdown-confluence.json
+          tagsToPublish: release-test
+          mermaidProtocolTimeout: "600000"
+          plantumlEnabled: "true"
+          plantumlServerUrl: https://www.plantuml.com/plantuml
+      - name: Verify create through the Confluence API
+        run: python3 scripts/verify-published-action.py create
+      - name: Publish unchanged with the released Action
+        uses: markdown-confluence/publish-action@v6.0.0
+        with:
+          confluenceBaseUrl: https://markdown-confluence.atlassian.net
+          confluenceParentId: "986448062"
+          atlassianUserName: ${{ secrets.ATLASSIAN_USERNAME }}
+          atlassianApiToken: ${{ secrets.ATLASSIAN_API_TOKEN }}
+          contentRoot: /github/workspace/action-test-vault
+          folderToPublish: Release Tests
+          configFile: /github/workspace/action-test-vault/.markdown-confluence.json
+          tagsToPublish: release-test
+          mermaidProtocolTimeout: "600000"
+          plantumlEnabled: "true"
+          plantumlServerUrl: https://www.plantuml.com/plantuml
+      - name: Verify unchanged through the Confluence API
+        run: python3 scripts/verify-published-action.py unchanged
+      - name: Modify one note
+        run: python3 scripts/verify-published-action.py modify
+      - name: Publish update with the released Action
+        uses: markdown-confluence/publish-action@v6.0.0
+        with:
+          confluenceBaseUrl: https://markdown-confluence.atlassian.net
+          confluenceParentId: "986448062"
+          atlassianUserName: ${{ secrets.ATLASSIAN_USERNAME }}
+          atlassianApiToken: ${{ secrets.ATLASSIAN_API_TOKEN }}
+          contentRoot: /github/workspace/action-test-vault
+          folderToPublish: Release Tests
+          configFile: /github/workspace/action-test-vault/.markdown-confluence.json
+          tagsToPublish: release-test
+          mermaidProtocolTimeout: "600000"
+          plantumlEnabled: "true"
+          plantumlServerUrl: https://www.plantuml.com/plantuml
+      - name: Verify update through the Confluence API
+        run: python3 scripts/verify-published-action.py update
