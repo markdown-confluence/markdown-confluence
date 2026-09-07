@@ -170,3 +170,26 @@ test("ignores asynchronous Confluence link metadata without changing input or au
 	attrs["href"] = "https://example.atlassian.net/wiki/spaces/D/pages/123#Another-heading";
 	expect(adfEqual(original, stored)).toBe(false);
 });
+
+test("ignores transient server media metadata without mutating exports", () => {
+	const generated: ADFEntity = {
+		type: "media",
+		attrs: { type: "file", id: "image-id", collection: "contentId-1", width: 160 },
+	};
+	const server: ADFEntity = {
+		type: "media",
+		attrs: {
+			...generated.attrs,
+			__fileName: "image.png",
+			__fileSize: 269,
+			__fileMimeType: "image/png",
+		},
+	};
+	expect(adfEqual(server, generated)).toBe(true);
+	expect(server.attrs?.["__fileName"]).toBe("image.png");
+	for (const attrs of [{ id: "other-image" }, { collection: "contentId-2" }, { width: 80 }]) {
+		expect(adfEqual(server, { type: "media", attrs: { ...generated.attrs, ...attrs } })).toBe(
+			false,
+		);
+	}
+});

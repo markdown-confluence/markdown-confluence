@@ -47,6 +47,12 @@ export function normalizeAdfForComparison(adf: ADFEntity): ADFEntity {
 					delete mark.attrs["__confluenceMetadata"];
 				}
 			}
+			// These file details are transient server caches, not authored media attributes.
+			if (node.type === "media" && node.attrs) {
+				delete node.attrs["__fileName"];
+				delete node.attrs["__fileSize"];
+				delete node.attrs["__fileMimeType"];
+			}
 			// Confluence writes the default pixel display width onto media wrappers.
 			if (
 				node.type === "mediaSingle" &&

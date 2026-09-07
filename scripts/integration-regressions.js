@@ -196,6 +196,13 @@ await runEffect(
 						const page = await pageFor(filename);
 						assert.equal(page.space?.key, environment.CONFLUENCE_E2E_SPACE_KEY);
 						const adf = JSON.parse(page.body.atlas_doc_format.value);
+						// Confluence may add/remove these cached details without a page update.
+						// Keep strict equality for authored media, page/attachment versions and IDs.
+						for (const media of nodes(adf, "media")) {
+							delete media.attrs.__fileName;
+							delete media.attrs.__fileSize;
+							delete media.attrs.__fileMimeType;
+						}
 						const attachments = await client.contentAttachments.getAttachments({
 							id: page.id,
 							expand: ["version"],
