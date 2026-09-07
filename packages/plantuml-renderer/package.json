@@ -35,7 +35,7 @@
 		"lint": "vp lint src"
 	},
 	"dependencies": {
-		"@markdown-confluence/lib": "workspace:5.5.2",
+		"@markdown-confluence/lib": "workspace:*",
 		"plantuml-encoder": "1.4.0"
 	},
 	"devDependencies": {

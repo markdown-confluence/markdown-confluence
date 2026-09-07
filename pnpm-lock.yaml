@@ -74,13 +74,13 @@ importers:
         version: 4.0.0-beta.70
     devDependencies:
       '@markdown-confluence/lib':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../lib
       '@markdown-confluence/mermaid-puppeteer-renderer':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../mermaid-puppeteer-renderer
       '@markdown-confluence/plantuml-renderer':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../plantuml-renderer
       boxen:
         specifier: 8.0.1
@@ -174,7 +174,7 @@ importers:
         specifier: ^2.1.3
         version: 2.1.3(electron@42.11.2)
       '@markdown-confluence/lib':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../lib
       mermaid:
         specifier: ^11.16.1
@@ -193,7 +193,7 @@ importers:
         specifier: 4.0.0-beta.70
         version: 4.0.0-beta.70(effect@4.0.0-beta.70)(ioredis@5.10.1)
       '@markdown-confluence/lib':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../lib
       effect:
         specifier: 4.0.0-beta.70
@@ -208,13 +208,13 @@ importers:
   packages/obsidian:
     dependencies:
       '@markdown-confluence/lib':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../lib
       '@markdown-confluence/mermaid-electron-renderer':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../mermaid-electron-renderer
       '@markdown-confluence/plantuml-renderer':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../plantuml-renderer
       confluence.js:
         specifier: ^2.1.0
@@ -257,7 +257,7 @@ importers:
   packages/plantuml-renderer:
     dependencies:
       '@markdown-confluence/lib':
-        specifier: workspace:5.5.2
+        specifier: workspace:*
         version: link:../lib
       plantuml-encoder:
         specifier: 1.4.0

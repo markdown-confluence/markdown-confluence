@@ -45,6 +45,21 @@ export function prepareReleaseAssets(repositoryRoot) {
 			if (metadata.version !== rootPackage.version) {
 				return yield* Effect.fail(new Error(`Release version mismatch: ${packageName}`));
 			}
+			for (const dependencies of [metadata.dependencies, metadata.devDependencies]) {
+				for (const [dependency, version] of Object.entries(dependencies ?? {})) {
+					if (
+						dependency.startsWith("@markdown-confluence/") &&
+						version !== "workspace:*" &&
+						version !== `workspace:${rootPackage.version}`
+					) {
+						return yield* Effect.fail(
+							new Error(
+								`Release dependency mismatch: ${packageName} -> ${dependency}@${version}`,
+							),
+						);
+					}
+				}
+			}
 			const entryPoint = packageName === "obsidian" ? "main.js" : "index.js";
 			const requiredFiles = [`${packageRoot}/dist/${entryPoint}`];
 			if (metadata.types) requiredFiles.push(`${packageRoot}/${metadata.types}`);

@@ -15,9 +15,9 @@
 		"lint": "vp lint --react-plugin src"
 	},
 	"dependencies": {
-		"@markdown-confluence/lib": "workspace:5.5.2",
-		"@markdown-confluence/mermaid-electron-renderer": "workspace:5.5.2",
-		"@markdown-confluence/plantuml-renderer": "workspace:5.5.2",
+		"@markdown-confluence/lib": "workspace:*",
+		"@markdown-confluence/mermaid-electron-renderer": "workspace:*",
+		"@markdown-confluence/plantuml-renderer": "workspace:*",
 		"confluence.js": "^2.1.0",
 		"mime-types": "^3.0.2",
 		"react": "^19.2.7",
