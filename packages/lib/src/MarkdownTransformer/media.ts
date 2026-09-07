@@ -23,7 +23,7 @@ export interface MdState {
 }
 
 function createRule() {
-	const imagePattern = String.raw`!\[[^\]]*\]\([^)]+\)|!\[[^\]]*\]\[[^\]]*]|!\[\[[^\]\n]*\.[^\]\n]*\]\]`;
+	const imagePattern = String.raw`!\[[^\]]*\]\(|!\[[^\]]*\]\[[^\]]*]|!\[\[[^\]\n]*\.[^\]\n]*\]\]`;
 	const imageMatchRegex = new RegExp(imagePattern, "g");
 	const referenceImageRegex = /^!\[(?<alt>[^\]]*)]\[(?<label>[^\]]*)]$/;
 	const validParentTokens = [
@@ -90,7 +90,9 @@ function createRule() {
 		const getUrl = (str: string) => {
 			const res = State.md.helpers.parseLinkDestination(
 				str,
-				str.indexOf("(") + 1,
+				str.indexOf("](") +
+					2 +
+					(str.slice(str.indexOf("](") + 2).match(/^\s*/)?.[0].length ?? 0),
 				str.length,
 			);
 			if (res.ok) {
@@ -168,10 +170,43 @@ function createRule() {
 			return [...openingTokens, inlineBefore, ...closingTokens];
 		};
 
+		const findImages = (content: string) => {
+			const matches = findMarkdownMatches(content, imageMatchRegex);
+			let consumedThrough = 0;
+			return matches.flatMap((match) => {
+				if (match.index! < consumedThrough) return [];
+				if (!match[0].endsWith("](")) {
+					consumedThrough = match.index! + match[0].length;
+					return [match];
+				}
+				// Let Markdown's destination/title parsers determine the end. A regex
+				// stopping at ')' truncates balanced or angle-bracket image paths.
+				let cursor = match.index! + match[0].length;
+				while (/\s/.test(content[cursor] ?? "") && cursor < content.length) cursor++;
+				const destination = State.md.helpers.parseLinkDestination(
+					content,
+					cursor,
+					content.length,
+				);
+				if (!destination.ok) return [];
+				cursor = destination.pos;
+				const destinationEnd = cursor;
+				while (/\s/.test(content[cursor] ?? "") && cursor < content.length) cursor++;
+				if (cursor > destinationEnd && content[cursor] !== ")") {
+					const title = State.md.helpers.parseLinkTitle(content, cursor, content.length);
+					if (!title.ok) return [];
+					cursor = title.pos;
+					while (/\s/.test(content[cursor] ?? "") && cursor < content.length) cursor++;
+				}
+				if (content[cursor] !== ")") return [];
+				consumedThrough = cursor + 1;
+				match[0] = content.slice(match.index!, consumedThrough);
+				return [match];
+			});
+		};
 		let processedTokens: string[] = [];
 		const newTokens = State.tokens.reduce((tokens: Token[], token: Token) => {
-			const matches =
-				token.type === "inline" ? findMarkdownMatches(token.content, imageMatchRegex) : [];
+			const matches = token.type === "inline" ? findImages(token.content) : [];
 			if (matches.length > 0) {
 				const openingTokens: Token[] = [];
 				const precedingTokens = [...tokens];

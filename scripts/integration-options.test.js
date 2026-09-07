@@ -1,5 +1,9 @@
 import { expect, test } from "@effect/vitest";
-import { parseIntegrationOptions, validateLiveEnvironment } from "./integration-options.js";
+import {
+	liveConnectionSettings,
+	parseIntegrationOptions,
+	validateLiveEnvironment,
+} from "./integration-options.js";
 import { parseObsidianOutput } from "./integration-obsidian.js";
 
 test("does not treat a successful CLI exit without a result as a passing desktop test", () => {
@@ -62,4 +66,34 @@ test("Dataview integration is explicitly limited to the desktop profile", () => 
 	expect(() => parseIntegrationOptions(["live", "--dataview"])).toThrow(
 		"requires the obsidian profile",
 	);
+});
+
+test("OAuth live verification needs client credentials and a separate Cloud gateway", () => {
+	const oauth = {
+		...configured,
+		CONFLUENCE_E2E_AUTH_TYPE: "oauth2",
+		CONFLUENCE_E2E_API_URL: "https://api.atlassian.com/ex/confluence/cloud-id",
+		ATLASSIAN_CLIENT_ID: "test-id",
+		ATLASSIAN_CLIENT_SECRET: "test-secret",
+		ATLASSIAN_USERNAME: "",
+		ATLASSIAN_API_TOKEN: "",
+	};
+	expect(liveConnectionSettings(oauth)).toMatchObject({
+		confluenceAuthType: "oauth2",
+		confluenceBaseUrl: oauth.CONFLUENCE_E2E_API_URL,
+		confluenceSiteUrl: configured.CONFLUENCE_E2E_BASE_URL,
+		atlassianApiToken: "",
+		atlassianClientSecret: "test-secret",
+	});
+	for (const key of ["ATLASSIAN_CLIENT_ID", "ATLASSIAN_CLIENT_SECRET", "CONFLUENCE_E2E_API_URL"])
+		expect(() => validateLiveEnvironment({ ...oauth, [key]: "" })).toThrow(`Missing ${key}`);
+	for (const api of [
+		"https://example.atlassian.net",
+		"https://api.atlassian.com/ex/jira/cloud-id",
+		"https://api.atlassian.com/ex/confluence/cloud-id?token=secret",
+		"https://user:password@api.atlassian.com/ex/confluence/cloud-id",
+	])
+		expect(() => validateLiveEnvironment({ ...oauth, CONFLUENCE_E2E_API_URL: api })).toThrow(
+			"CONFLUENCE_E2E_API_URL",
+		);
 });

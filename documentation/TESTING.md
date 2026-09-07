@@ -33,6 +33,7 @@ default always builds first. Unit tests and static checks remain separate:
 | `vp run test:integration:packages` | All five actual npm tarballs installed in a fresh consumer, then the same runtime checks | npm registry access; pnpm/browser caches are reused |
 | `vp run test:integration:live` | Live Confluence publish, unchanged republish, one-note update, built CLI, error recovery | Dedicated space and test credentials |
 | `vp run test:integration:docker` | Local image build, container CLI conversion, unconfigured-publishing failure exit | Running Docker engine |
+| `vp run test:integration regressions` | Container publishes 166 notes, 17 Mermaid diagrams and image path variants; unchanged republish and diagram failure recovery | Docker, dedicated space and test credentials |
 | `vp run test:vault` | Create a synthetic Obsidian vault or refresh only its built plugin | Desktop Obsidian for opening the result |
 | `vp run test:integration:obsidian` | Installed desktop plugin, Electron Mermaid, live publish, unchanged/update verification through the API | Prepared/open test vault, enabled plugin and Obsidian CLI |
 
@@ -65,6 +66,17 @@ Environment values take precedence over settings-file values.
 vp run test:integration live --skip-build
 ```
 
+For Cloud OAuth, configure `ATLASSIAN_CLIENT_ID`, `ATLASSIAN_CLIENT_SECRET` and
+`CONFLUENCE_E2E_API_URL=https://api.atlassian.com/ex/confluence/YOUR_CLOUD_ID`, then run:
+
+```sh
+CONFLUENCE_E2E_AUTH_TYPE=oauth2 vp run test:integration live
+```
+
+`CONFLUENCE_E2E_BASE_URL` remains the browsable site origin. No Basic credential
+is needed in OAuth mode. See [CLOUD_OAUTH.md](CLOUD_OAUTH.md) for account permissions
+and scopes. The desktop/vault profiles do not support client-credentials OAuth.
+
 The live harness copies synthetic fixtures into a temporary directory and prefixes
 page titles per run. It verifies formatting, heading embeds, exclusions, folder
 hierarchy, tags, images, files, Mermaid and PlantUML attachments. Repeated publishing
@@ -75,6 +87,34 @@ rejection, recovery after an injected upload failure, and a real HTTP 409 confli
 Local fixture copies are removed automatically. Remote test pages are deliberately
 retained for inspection; their links are in the report. Runs add pages to the
 dedicated space, so clear old test batches through Confluence when appropriate.
+
+## Action regressions
+
+```sh
+vp run test:integration regressions
+```
+
+This uses the released `ghcr.io/markdown-confluence/publish:6.0.0` container with
+the Action's user, mount, working directory and environment contract. To check a
+local candidate, build it first:
+
+```sh
+vp run build
+vp run -r build:docker
+CONFLUENCE_E2E_IMAGE=markdown-confluence/markdown-confluence vp run test:integration regressions --skip-build
+```
+
+The fixture contains 166 notes and 17 Mermaid diagrams. Image coverage includes
+relative PNGs, SVG, spaces, URL-encoded spaces, parentheses, Unicode, wiki embeds
+and a public remote URL. The test checks native media references and attachment
+reuse, then verifies that an unchanged publish preserves all page and attachment
+versions. It also requires invalid Mermaid syntax and an injected protocol
+timeout to exit unsuccessfully, followed by successful recovery. Each container
+invocation has a ten-minute limit. Remote pages stay inside a newly created test
+parent, and the report provides an image page for visual inspection.
+
+This exercises the container contract locally. The GitHub workflow runs the same
+candidate container on Linux AMD64; it does not update companion Action tags.
 
 ## Obsidian: setup once, then one command
 
@@ -107,7 +147,7 @@ The desktop app must remain running. CLI failures, a disabled plugin, wrong vaul
 or wrong destination fail the check rather than reporting a skipped success.
 
 This checks the plugin runtime and upload adapter. Visual layout, command-palette
-interaction, notices/modal appearance, live OAuth credentials and a second-editor
+interaction, notices/modal appearance and a second-editor
 permission boundary still need separate checks. The Docker profile is a local
 container smoke test; it does not verify published multi-architecture images or
 the companion GitHub Action release.
@@ -134,7 +174,9 @@ Release publication tests the packed npm artifacts before publishing them.
 For live Confluence testing, add `run-confluence-e2e` to an internal PR, or run
 **Confluence End-to-End Verification → Run workflow**. The workflow uses the same
 `vp run test:integration live` command and repository secrets, serializes live runs,
-and uploads reports. Fork pull requests cannot automatically run credentialed tests.
+and uploads reports. Manual runs can select `oauth2` authentication and the
+`regressions` profile (which builds the candidate container). OAuth runs use
+`ATLASSIAN_CLIENT_ID` and `ATLASSIAN_CLIENT_SECRET` repository secrets. Fork pull requests cannot automatically run credentialed tests.
 
 To add coverage for a feature, add a synthetic note to `test-fixtures/release-vault`
 and a concrete assertion in `scripts/confluence-release-e2e.js`. Simple conversion

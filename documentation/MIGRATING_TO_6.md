@@ -48,7 +48,7 @@ The CLI requires Node 24.15.0 or newer. The container uses Node 24.15.0 and Debi
 
 Basic API-token authentication remains the default. Bearer tokens, extra request headers and a configurable REST prefix are available. Those settings do not imply full Confluence Data Center compatibility.
 
-OAuth client credentials are available through the CLI/library. Configure both the Atlassian API gateway URL and the browsable Confluence site URL. The account needs the relevant page, attachment, label and space permissions, including `read:content.metadata:confluence` for ancestor checks. Tokens are obtained once per invocation; split runs that exceed the token lifetime. Obsidian currently exposes Basic and Bearer authentication.
+OAuth client credentials are available through the CLI/library and publishing Action. See the [Cloud OAuth setup guide](CLOUD_OAUTH.md) for service accounts, scopes and examples. Configure both the Atlassian API gateway URL and the browsable Confluence site URL. The account needs the relevant page, attachment, label and space permissions, including `read:content.metadata:confluence` for ancestor checks. Tokens are obtained once per invocation; split runs that exceed the token lifetime. Obsidian currently exposes Basic and Bearer authentication.
 
 ## Diagrams
 

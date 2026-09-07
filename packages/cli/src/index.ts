@@ -49,7 +49,9 @@ const program = Effect.gen(function* () {
 		);
 	}
 
-	const publisher = new Publisher(settings, confluenceClient, plugins);
+	const publisher = new Publisher(settings, confluenceClient, plugins, (message) => {
+		console.log(`[publish] ${message}`);
+	});
 
 	const publishFilter = "";
 	const results = yield* publisher.publishEffect(publishFilter) as any;

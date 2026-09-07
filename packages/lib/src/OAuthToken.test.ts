@@ -19,7 +19,7 @@ test("returns the access token on a successful response", async () => {
 	);
 	globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-	const token = await Effect.runPromise(fetchOAuthAccessToken("client-id", "client-secret"));
+	const token = await Effect.runPromise(fetchOAuthAccessToken("client-id", "client+secret&=%"));
 
 	expect(token).toBe("token-123");
 	expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -27,12 +27,13 @@ test("returns the access token on a successful response", async () => {
 	expect(url).toBe(ATLASSIAN_OAUTH_TOKEN_URL);
 	expect(init.method).toBe("POST");
 	expect(init.signal).toBeInstanceOf(AbortSignal);
-	const body = JSON.parse(String(init.body));
-	expect(body).toMatchObject({
+	expect(init.headers).toEqual({ "Content-Type": "application/x-www-form-urlencoded" });
+	expect(init.redirect).toBe("error");
+	const body = Object.fromEntries(new URLSearchParams(String(init.body)));
+	expect(body).toEqual({
 		grant_type: "client_credentials",
 		client_id: "client-id",
-		client_secret: "client-secret",
-		audience: "api.atlassian.com",
+		client_secret: "client+secret&=%",
 	});
 });
 

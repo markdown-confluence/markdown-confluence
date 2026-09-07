@@ -756,3 +756,32 @@ test("leaves literal images intact when an identical real image follows", () => 
 	expect(serialized).toContain("![[fenced.png]]");
 	expect(serialized).toContain("![alt](image.png)");
 });
+
+test.each([
+	["![Image](<../assets/parentheses (1).png>)", "file://../assets/parentheses%20(1).png"],
+	["![Image](../assets/parentheses(1).png)", "file://../assets/parentheses(1).png"],
+	[
+		'![Image](../assets/nested(a(b)).png "title with ) parentheses")',
+		"file://../assets/nested(a(b)).png",
+	],
+	["![Alt (description)]( image.png )", "file://image.png"],
+])("preserves the complete image destination in %s", (markdown, url) => {
+	const adf = parseMarkdownToADF(`Before ${markdown} after`, "https://example.com");
+	expect(collectMediaAttrs(adf)).toEqual([expect.objectContaining({ url, type: "file" })]);
+	expect(JSON.stringify(adf)).toContain('"text":" after"');
+	expect(JSON.stringify(adf)).not.toContain('"text":".png');
+});
+
+test("leaves an invalid image destination as literal Markdown", () => {
+	const adf = parseMarkdownToADF("![Image](<broken.png)", "https://example.com");
+	expect(collectMediaAttrs(adf)).toEqual([]);
+	expect(JSON.stringify(adf)).toContain("![Image](<broken.png)");
+});
+
+test("does not interpret image syntax inside another image title", () => {
+	const adf = parseMarkdownToADF(
+		'![Image](image.png "![Title](other.png)")',
+		"https://example.com",
+	);
+	expect(collectMediaAttrs(adf)).toEqual([expect.objectContaining({ url: "file://image.png" })]);
+});

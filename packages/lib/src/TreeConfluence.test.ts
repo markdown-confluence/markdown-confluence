@@ -353,3 +353,51 @@ const testSettings: ConfluenceSettings = {
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,
 };
+
+test("bounds hierarchy requests across wide and nested folders", async () => {
+	let active = 0;
+	let peak = 0;
+	let pageCount = 0;
+	const branch = (prefix: string, depth: number): LocalAdfFileTreeNode => {
+		pageCount++;
+		return createRootNode(
+			`docs/${prefix}.md`,
+			depth > 0
+				? Array.from({ length: 3 }, (_, index) => branch(`${prefix}-${index}`, depth - 1))
+				: [],
+			{ pageId: prefix, pageTitle: prefix },
+		);
+	};
+	const root = createRootNode(
+		"docs/Generated",
+		Array.from({ length: 3 }, (_, index) => branch(`page-${index}`, 2)),
+	);
+	const client = {
+		content: {
+			getContentById: async ({ id }: { id: string }) => {
+				active++;
+				peak = Math.max(peak, active);
+				await new Promise((resolve) => setTimeout(resolve, 2));
+				active--;
+				return createContentPage({
+					id,
+					title: id,
+					spaceKey: "SPACE",
+					ancestors: [{ id: "123456" }],
+				});
+			},
+		},
+	} as unknown as RequiredConfluenceClient;
+	const pages = await ensureAllFilesExistInConfluence(
+		client,
+		new TestMarkdownWorkspace([]),
+		root,
+		"SPACE",
+		"123456",
+		"123456",
+		testSettings,
+	);
+	expect(pages).toHaveLength(pageCount);
+	expect(peak).toBe(1);
+	expect(active).toBe(0);
+});

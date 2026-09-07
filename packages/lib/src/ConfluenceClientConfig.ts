@@ -1,5 +1,6 @@
 import type { Config } from "confluence.js";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
+import { createConfluenceTransport } from "./ConfluenceTransport";
 
 export const DEFAULT_CONFLUENCE_API_PREFIX = DEFAULT_SETTINGS.confluenceApiPrefix;
 
@@ -23,11 +24,13 @@ export function createConfluenceClientConfig(
 							apiToken: settings.atlassianApiToken,
 						},
 					},
-		baseRequestConfig: hasRequestHeaders(settings.confluenceRequestHeaders)
-			? {
-					headers: settings.confluenceRequestHeaders,
-				}
-			: undefined,
+		baseRequestConfig: {
+			timeout: 30_000,
+			adapter: createConfluenceTransport(),
+			...(Object.keys(settings.confluenceRequestHeaders).length
+				? { headers: settings.confluenceRequestHeaders }
+				: {}),
+		},
 		...config,
 	};
 }
@@ -45,8 +48,4 @@ export function normalizeConfluenceApiPrefix(apiPrefix: string): string {
 	let end = prefixedApiPrefix.length;
 	while (end > 0 && prefixedApiPrefix[end - 1] === "/") end--;
 	return prefixedApiPrefix.slice(0, end);
-}
-
-function hasRequestHeaders(headers: Record<string, string>): boolean {
-	return Object.keys(headers).length > 0;
 }

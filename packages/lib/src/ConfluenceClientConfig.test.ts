@@ -17,7 +17,7 @@ test("creates default basic auth Confluence client config", () => {
 				apiToken: "token",
 			},
 		},
-		baseRequestConfig: undefined,
+		baseRequestConfig: { timeout: 30_000, adapter: expect.any(Function) },
 	});
 });
 

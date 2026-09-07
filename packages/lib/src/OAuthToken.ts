@@ -6,7 +6,8 @@ import { Effect } from "effect";
 export const ATLASSIAN_OAUTH_TOKEN_URL = "https://auth.atlassian.com/oauth/token";
 
 /**
- * Audience required by Atlassian for service-account access tokens.
+ * Atlassian API audience, retained for integrations using the exported constant.
+ * Service-account client credentials do not require an audience parameter.
  */
 export const ATLASSIAN_OAUTH_AUDIENCE = "api.atlassian.com";
 
@@ -41,14 +42,14 @@ export function fetchOAuthAccessToken(
 			try: () =>
 				fetch(ATLASSIAN_OAUTH_TOKEN_URL, {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+					redirect: "error",
 					signal: AbortSignal.timeout(ATLASSIAN_OAUTH_TIMEOUT_MS),
-					body: JSON.stringify({
+					body: new URLSearchParams({
 						grant_type: "client_credentials",
 						client_id: clientId,
 						client_secret: clientSecret,
-						audience: ATLASSIAN_OAUTH_AUDIENCE,
-					}),
+					}).toString(),
 				}),
 			catch: (error) =>
 				new Error(
