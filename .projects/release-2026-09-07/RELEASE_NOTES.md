@@ -1,6 +1,6 @@
 # Version 6 release notes — draft
 
-This candidate brings the CLI, publishing library, Obsidian plugin and container onto the same maintained runtime. Publication and the final Obsidian desktop verification are still pending; version 5.5.2 remains the latest released version.
+This candidate brings the CLI, publishing library, Obsidian plugin and container onto the same maintained runtime. Publication is still pending; version 5.5.2 remains the latest released version.
 
 ## Upgrade requirements
 
@@ -23,6 +23,8 @@ This candidate brings the CLI, publishing library, Obsidian plugin and container
 - Unchanged publishing preserves page versions, attachments and labels, including Confluence's normalized TOC, page-link and media representations.
 - Folder notes and root pages map consistently into the publishing hierarchy. Ambiguous titles without explicit IDs fail validation.
 - Publishing protects edits by another user by default and retries version conflicts after refreshing the current version.
+- Desktop Mermaid rendering selects readable light/dark colors, refreshes styles and closes hidden windows after failures.
+- “Publish Current File” is unavailable when no Markdown note is open. The token field masks its value.
 - Mermaid uploads use the correct multipart transport. Large diagrams support a configurable Puppeteer protocol timeout.
 - ARM64 containers use Debian Chromium. The container accepts CLI subcommands directly through its entry point.
 - Published library bundles include the corrected image parser and Markdown link parser used by conversion.
@@ -30,7 +32,7 @@ This candidate brings the CLI, publishing library, Obsidian plugin and container
 
 ## Verification and known limits
 
-The regression suite passes 178 tests. Packed npm consumers, real diagram rendering, Linux/Windows CI, and live Confluence plus built-CLI create/unchanged/update flows pass. See [verification evidence](VERIFICATION.md) for exact revisions and the remaining desktop and distribution checks.
+The regression suite passes 181 tests. Packed npm consumers, real diagram rendering, Linux/Windows CI, and live Confluence plus built-CLI create/unchanged/update flows pass. See [verification evidence](VERIFICATION.md) for exact revisions and the remaining distribution checks.
 
 Live OAuth service-account testing is still pending. Basic and Bearer configuration do not establish full Confluence Data Center compatibility. PlantUML is disabled by default and sends source to the server selected by the user. Automatic remote deletion, bidirectional synchronization and complete ADF coverage are outside this release. Resolved inline-comment cleanup and reports without sufficient reproduction evidence remain open.
 

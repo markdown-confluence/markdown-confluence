@@ -7,7 +7,7 @@ The inventory covers 162 issues and 721 pull requests as retrieved on 7 Septembe
 - Latest main (`32306a8`) incorporated; the Rust port and its preserved local branches were discarded at the user's request.
 - Accepted feature changes integrated with shared settings, upload transport, hierarchy, overwrite protection, macro IDs and OAuth/v2 reconciled.
 - Added regression coverage for formatted/nested callouts, literal image examples, selected Markdown embeds, dates, task IDs in page chrome, renderer cleanup and large-diagram timeout configuration.
-- Node 24.15.0 / pnpm 11.1.2 / Vite+ 0.1.24: frozen installation, `vp run check`, `vp run fmt:check`, `vp test run` (178 passed, one opt-in live test skipped) and `vp run build` pass.
+- Node 24.15.0 / pnpm 11.1.2 / Vite+ 0.1.24: frozen installation, `vp run check`, `vp run fmt:check`, `vp test run` (181 passed, one opt-in live test skipped) and `vp run build` pass.
 - Five public package tarballs install in a clean project. The installed library works through ESM and CommonJS dynamic import. The installed CLI accepts stdin and writes valid ADF without credentials. PlantUML package exports load.
 - Real Puppeteer rendering passes from both the workspace and installed package. A 100-step diagram rendered at 129 × 10470 pixels using the configurable 600000 ms protocol timeout.
 - ARM64 Docker build and offline conversion pass. The rebuilt Puppeteer renderer uses the container's Debian Chromium and produces a valid 458 × 70 PNG. The first draft PR also passed the Linux AMD64 build; the final multi-architecture registry manifest remains to be verified.
@@ -35,11 +35,17 @@ A real PlantUML PNG was generated successfully from synthetic test content (230 
 - Latest rebuilt plugin and manifest are installed in the vault's `confluence-integration` directory. Settings target only the dedicated test space. No API token is committed or included in reports.
 - Fixtures cover formatting, callouts, Unicode, tables, nested lists, links, anchors, page hierarchy, PNG/SVG dimensions, non-image attachments, Mermaid, PlantUML, heading embeds, page headers/footers, TOC, ignored code blocks, folder/tag selection and explicit exclusions.
 
-The local vault token field is still empty, and Obsidian remains in Restricted Mode pending the requested approval. Existing GitHub repository secrets enabled a separate successful live publishing test without exposing credentials locally.
+The user approved leaving Restricted Mode in the dedicated vault and supplied its API token. The token is stored only in the local vault settings with mode 0600; it is omitted from commits and verification reports. Existing GitHub repository secrets also support the independent CI live test.
 
 The [live Confluence verification run](https://github.com/markdown-confluence/markdown-confluence/actions/runs/34066365424) at `4358288` created/verified eight pages, checked remote ADF, attachments, labels, hierarchy, source frontmatter and exclusions, confirmed an unchanged run preserved every page version, and updated only the modified note. Browser inspection confirmed formatting, callouts, tables, Unicode, task checkboxes, TOC, PNG/SVG images, nested images, file attachments, Mermaid and PlantUML rendering. The [built CLI verification](https://github.com/markdown-confluence/markdown-confluence/actions/runs/34066860979) at `61dd133` also passes. It republishes the same fixture tree through the actual executable, configuration file and environment credentials without advancing page versions. This exposed and fixed a browser WebSocket export accidentally bundled into the Node CLI.
 
 Live testing found and fixed three round-trip differences: TOC inline-to-block rewriting, title slugs added to Confluence page links, and default image dimensions/display metadata. Non-image attachments now use the media-group representation Confluence stores. Regression tests retain detection of real page/anchor/origin and image-resizing changes.
+
+The [extended live test](https://github.com/markdown-confluence/markdown-confluence/actions/runs/34067858934) at `a73f83e` also rejects duplicate titles and missing embed headings without changing remote pages, recovers using the same publisher after an injected transport failure, and provokes a real HTTP version conflict before successfully retrying with the refreshed version.
+
+Desktop Obsidian 1.13.4 verification passes for all eight published pages. An unchanged run reports zero content/image/label updates; independent API snapshots confirm identical ADF and versions for every source note. Editing Formatting through the Obsidian editor and using Publish Current File updates only that page. A concurrent second publish is blocked. An invalid Mermaid diagram produces a clear failed-file result without remote updates, and the same plugin instance publishes successfully after restoring the valid note.
+
+Browser inspection of [Formatting](https://markdown-confluence.atlassian.net/wiki/spaces/MCRT20260907/pages/986579028/) and [Media](https://markdown-confluence.atlassian.net/wiki/spaces/MCRT20260907/pages/986644578/) confirms formatting, callouts, Unicode, tasks, TOC, working same-page anchors, images, file attachments, Mermaid and PlantUML. The desktop test found and fixed dark-mode diagram contrast, incorrect light-mode selection, stale renderer styles, hidden-window cleanup after failures, and a current-note command that could publish everything with no note open. The unfinished hard-coded ADF debug command was removed; API-token input now masks its value. Three renderer lifecycle and Unicode regressions bring the suite to 181 passing tests.
 
 OAuth regression tests cover attachment/label pagination, custom headers, pagination origin confinement, complete ancestor traversal and failure when ancestor permissions are missing. A live OAuth client-credentials account has not been configured.
 
@@ -49,13 +55,12 @@ The companion Action update is prepared in [publish-action PR #11](https://githu
 
 ## Remaining release gates
 
-1. Complete the separate Obsidian create → inspect → unchanged publish → update flow. The library and built CLI live Confluence flows pass. Obsidian still needs its local API token and the requested Restricted Mode approval.
-2. Exercise overwrite protection, failure recovery, duplicate titles, missing references and OAuth/v2 behavior. Keep issues with insufficient reproduction evidence open.
-3. PlantUML rendering, publication and browser inspection pass with explicit synthetic-fixture opt-in.
-4. Pass the branch's Linux/Windows verification, CodeQL and dependency review; verify both container architectures.
-5. Finalize version 6 release notes and linked version manifests. The migration guide is in `documentation/MIGRATING_TO_6.md`. Regenerate the stale release PR.
-6. Publish and verify npm packages, immutable container version plus moving aliases, Obsidian release assets and companion publish-action. Verify the Obsidian community listing separately.
-7. Reconcile GitHub PR/issue state against the behavior actually delivered. Do not close roadmap or partial-coverage trackers as fully fixed.
+1. Pass CI on the final desktop-fix revision and verify the published container supports both architectures.
+2. Finalize version 6 release notes and linked version manifests. The migration guide is in `documentation/MIGRATING_TO_6.md`; draft release notes are in `RELEASE_NOTES.md`. Regenerate the stale release PR.
+3. Publish and verify npm packages, immutable container version plus moving aliases, Obsidian release assets and companion publish-action.
+4. Reconcile GitHub PR/issue state against the behavior actually delivered. Keep catalog reinstatement, partial ADF trackers and insufficiently reproduced reports open.
+
+A live OAuth service account and a separate Confluence editor account have not been configured. OAuth/v2 pagination and authorization boundaries, and the other-editor overwrite guard, have regression coverage; the live conflict test uses the publishing account. These coverage limits remain explicit rather than being claimed as fully exercised remotely.
 
 ## Release workflow recovery
 
@@ -63,8 +68,8 @@ The `release-please` workflow uses the maintained `googleapis/release-please-act
 
 A maintainer can dispatch the workflow from main with an existing `obsidian-confluence-root-vX.Y.Z` tag to finish publication. Published npm versions are skipped by recursive publishing. An existing container version must identify the same commit and include AMD64 and ARM64 before it can be reused. Existing GitHub release assets must match byte for byte and are never overwritten. Obsidian metadata updates are limited to the distribution files, with the versions compatibility map preserved.
 
-## Handoff state
+## Current state
 
-The final code revision `12ea6c6` passes [live Confluence and built CLI verification](https://github.com/markdown-confluence/markdown-confluence/actions/runs/34067152046), Linux/Windows build checks, CodeQL and dependency review. Snyk container and mutation checks were still running at handoff. The working tree is committed; no release version/tag, npm publication, container publication or integration release has been created.
+The desktop fixes are committed at `faa6e86`. Local format/lint, 181 tests, the full build and release preparation pass. The extended Confluence and built-CLI test passes at `a73f83e`; the final branch CI will validate the desktop changes as well. No release version/tag, npm publication, container publication or integration release has been created yet.
 
-The latest plugin bundle is copied to the dedicated test vault. The Mac is locked, its API token field remains empty, and approval to exit Restricted Mode is still pending. These prevent the desktop end-to-end test. The computer-use tool requires the user to unlock the Mac manually and requires action-time confirmation before weakening the vault's Restricted Mode protection.
+The dedicated vault remains configured and enabled for further testing. Temporary invalid content was restored after recovery verification. API snapshots and local logs are retained under `.git/codex-release-20260907/` without credentials.
