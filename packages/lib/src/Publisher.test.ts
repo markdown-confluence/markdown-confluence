@@ -803,8 +803,11 @@ test("publishes a large collection without exceeding two concurrent page updates
 		})),
 	);
 	const progress: string[] = [];
-	const publisher = new Publisher(testPublishSettings, client, [], (message) =>
-		progress.push(message),
+	const publisher = new Publisher(
+		{ ...testPublishSettings, contentRoot: "/docs" },
+		client,
+		[],
+		(message) => progress.push(message),
 	);
 	const results = await runEffect(
 		publisher.publishEffect().pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
