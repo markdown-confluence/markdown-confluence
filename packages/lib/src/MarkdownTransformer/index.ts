@@ -10,6 +10,7 @@ import myTokenizer from "./callout";
 import wikilinksPlugin from "./wikilinks";
 import highlightPlugin from "./highlight";
 import formattingPlugin from "./formatting";
+import mathPlugin, { mathAttributes } from "./math";
 
 interface Transformer<T> {
 	encode(node: PMNode): T;
@@ -57,6 +58,8 @@ const pmSchemaToMdMapping: SchemaMapping = {
 };
 
 const mdToPmMapping = {
+	math_inline: { node: "inlineExtension", attrs: mathAttributes },
+	math_block: { node: "extension", attrs: mathAttributes },
 	alignment: { mark: "alignment", attrs: (token: any) => ({ align: token.attrGet("align") }) },
 	underline: { mark: "underline" },
 	subsup: { mark: "subsup", attrs: (token: any) => ({ type: token.attrGet("type") }) },
@@ -176,6 +179,7 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 		tokenizer.use(wikilinksPlugin);
 		tokenizer.use(highlightPlugin);
 		tokenizer.use(formattingPlugin);
+		tokenizer.use(mathPlugin);
 
 		(["nodes", "marks"] as (keyof SchemaMapping)[]).forEach((key) => {
 			for (const idx in pmSchemaToMdMapping[key]) {

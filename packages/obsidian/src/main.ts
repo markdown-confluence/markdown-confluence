@@ -5,6 +5,7 @@ import {
 	Publisher,
 	ConfluencePageConfig,
 	MermaidRendererPlugin,
+	MathRendererPlugin,
 	PlantumlRendererPlugin,
 	UploadAdfFileResult,
 	MarkdownConfluencePlatform,
@@ -14,7 +15,10 @@ import {
 	shouldPublishMarkdownFile,
 } from "@markdown-confluence/lib";
 import { Effect, Layer } from "effect";
-import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-renderer";
+import {
+	ElectronMermaidRenderer,
+	ElectronMathRenderer,
+} from "@markdown-confluence/mermaid-electron-renderer";
 import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
 import { CompletedModal } from "./CompletedModal";
@@ -136,6 +140,7 @@ export default class ConfluencePlugin extends Plugin {
 		);
 
 		const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
+			new MathRendererPlugin(new ElectronMathRenderer()),
 			new MermaidRendererPlugin(mermaidRenderer),
 		];
 

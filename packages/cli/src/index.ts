@@ -12,12 +12,16 @@ import {
 	MarkdownConfluencePlatformLive,
 	Publisher,
 	MermaidRendererPlugin,
+	MathRendererPlugin,
 	PlantumlRendererPlugin,
 	RuntimeEnvironmentService,
 	createAuthenticatedConfluenceClient,
 	StandardInputLive,
 } from "@markdown-confluence/lib";
-import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
+import {
+	PuppeteerMermaidRenderer,
+	PuppeteerMathRenderer,
+} from "@markdown-confluence/mermaid-puppeteer-renderer";
 import { getErrorMessage } from "./errorMessage";
 import { convertDocument } from "./convert";
 import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
@@ -31,6 +35,7 @@ const program = Effect.gen(function* () {
 	const confluenceClient = yield* createAuthenticatedConfluenceClient(settings);
 
 	const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
+		new MathRendererPlugin(new PuppeteerMathRenderer()),
 		new MermaidRendererPlugin(
 			new PuppeteerMermaidRenderer({ protocolTimeout: settings.mermaidProtocolTimeout }),
 		),

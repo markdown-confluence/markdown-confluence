@@ -320,3 +320,7 @@ Use `ignoredCodeBlockLanguages` to drop source-only Obsidian plugin blocks from 
   "ignoredCodeBlockLanguages": ["dataview", "button"]
 }
 ```
+
+## LaTeX equations
+
+Inline `$…$` and display `$$…$$` math are rendered locally to PNG attachments when publishing. No extra setup is required. See [LaTeX support](../../documentation/LATEX.md) for syntax, limitations and testing.

@@ -14,13 +14,17 @@ import {
 	ConfluenceUploadSettings,
 	MarkdownConfluencePlatformLive,
 	MermaidRendererPlugin,
+	MathRendererPlugin,
 	PlantumlRendererPlugin,
 	Publisher,
 	RuntimeEnvironmentService,
 	createAuthenticatedConfluenceClient,
 	parseMarkdownToADF,
 } from "../packages/lib/dist/index.js";
-import { PuppeteerMermaidRenderer } from "../packages/mermaid-puppeteer-renderer/dist/index.js";
+import {
+	PuppeteerMermaidRenderer,
+	PuppeteerMathRenderer,
+} from "../packages/mermaid-puppeteer-renderer/dist/index.js";
 import { HttpPlantumlRenderer } from "../packages/plantuml-renderer/dist/index.js";
 import { liveConnectionSettings } from "./integration-options.js";
 
@@ -128,6 +132,7 @@ const program = Effect.scoped(
 			return updateContent(parameters);
 		};
 		const publisher = new Publisher(settings, client, [
+			new MathRendererPlugin(new PuppeteerMathRenderer()),
 			new MermaidRendererPlugin(
 				new PuppeteerMermaidRenderer({ protocolTimeout: settings.mermaidProtocolTimeout }),
 			),
@@ -198,6 +203,7 @@ const program = Effect.scoped(
 			JSON.parse(formattingPage.body.atlas_doc_format.value),
 		);
 		for (const expected of [
+			'"type":"mediaInline"',
 			'"type":"strong"',
 			'"type":"panel"',
 			'"extensionKey":"toc"',

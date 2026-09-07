@@ -69,8 +69,11 @@ export function runObsidianIntegration({
 						);
 					}),
 			);
-		const { createAuthenticatedConfluenceClient, ConfluenceUploadSettings } =
-			yield* Effect.tryPromise(() => import("../packages/lib/dist/index.js"));
+		const {
+			createAuthenticatedConfluenceClient,
+			ConfluenceUploadSettings,
+			normalizeAdfForComparison,
+		} = yield* Effect.tryPromise(() => import("../packages/lib/dist/index.js"));
 		const parentId = environment.CONFLUENCE_E2E_PARENT_ID;
 		const connection = liveConnectionSettings(environment);
 		const client = yield* createAuthenticatedConfluenceClient({
@@ -214,15 +217,8 @@ export function runObsidianIntegration({
 					pages[filename] = {
 						id: pageId,
 						version: page.version.number,
-						body: JSON.parse(page.body.atlas_doc_format.value, (key, value) =>
-							[
-								"__fileName",
-								"__fileSize",
-								"__fileMimeType",
-								"__confluenceMetadata",
-							].includes(key)
-								? undefined
-								: value,
+						body: normalizeAdfForComparison(
+							JSON.parse(page.body.atlas_doc_format.value),
 						),
 						ancestors: page.ancestors.map((ancestor) => ancestor.id),
 						attachments: Object.fromEntries(
@@ -270,8 +266,25 @@ export function runObsidianIntegration({
 			`const file=app.vault.getAbstractFileByPath('Release Tests/Formatting.md'); const text=await app.vault.read(file); if(!text.includes(${JSON.stringify(inlineCommentSelection)})) await app.vault.modify(file,text+${JSON.stringify("\n\n" + inlineCommentSelection + "\n")}); return JSON.stringify({fixtureReady:true});`,
 		);
 
+		const mathFixture =
+			"\n\n## LaTeX integration\n\nInline energy $E=mc^2$ stays in this sentence.\n\n$$\\frac{1}{2}$$\n";
+		yield* evaluate(
+			`const file=app.vault.getAbstractFileByPath('Release Tests/Formatting.md'); const text=await app.vault.read(file); if(!text.includes('Inline energy $E=mc^2$')) await app.vault.modify(file,text+${JSON.stringify(mathFixture)}); return JSON.stringify({mathFixtureReady:true});`,
+		);
 		yield* publish();
 		let first = yield* snapshot();
+		assert.ok(
+			JSON.stringify(first["Release Tests/Formatting.md"].body).includes(
+				'"type":"mediaInline"',
+			),
+			"Desktop math must remain inline",
+		);
+		assert.ok(
+			Object.keys(first["Release Tests/Formatting.md"].attachments).some((name) =>
+				name.startsWith("RenderedMath-"),
+			),
+			"Desktop math PNG attachments must exist",
+		);
 		yield* publish();
 		assert.deepEqual(
 			yield* snapshot(),
