@@ -35,9 +35,9 @@
 		"lint": "vp lint src"
 	},
 	"dependencies": {
-		"@effect/platform-node": "4.0.0-beta.70",
+		"@effect/platform-node": "4.0.0-rc.112",
 		"@markdown-confluence/lib": "workspace:*",
-		"effect": "4.0.0-beta.70",
+		"effect": "4.0.0-rc.112",
 		"mermaid": "^11.16.1",
 		"puppeteer": "^25.4.0"
 	}

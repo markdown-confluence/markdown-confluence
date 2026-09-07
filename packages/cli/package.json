@@ -34,16 +34,15 @@
 		"lint": "vp lint src"
 	},
 	"dependencies": {
-		"@effect/platform-node": "4.0.0-beta.70",
-		"effect": "4.0.0-beta.70"
+		"@effect/platform-node": "4.0.0-rc.112",
+		"effect": "4.0.0-rc.112"
 	},
 	"devDependencies": {
 		"@markdown-confluence/lib": "workspace:*",
 		"@markdown-confluence/mermaid-puppeteer-renderer": "workspace:*",
 		"@markdown-confluence/plantuml-renderer": "workspace:*",
 		"boxen": "8.0.1",
-		"chalk": "5.6.2",
-		"confluence.js": "^2.1.0"
+		"chalk": "6.0.0"
 	},
 	"engines": {
 		"node": ">=24.15.0"

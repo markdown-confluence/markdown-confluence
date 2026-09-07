@@ -1,78 +1,38 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
 version: 2
 updates:
+  # The root pnpm workspace owns every package manifest and the shared lockfile.
+  # Separate package-directory jobs produce manifest-only PRs without that lockfile.
   - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: weekly
+    groups:
+      effect:
+        patterns:
+          - "effect"
+          - "@effect/*"
+      atlaskit:
+        patterns:
+          - "@atlaskit/*"
     commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
+      prefix: deps
+      prefix-development: deps-dev
+      include: scope
 
   - package-ecosystem: github-actions
-    directory: /
+    directory: "/"
     schedule:
       interval: weekly
     commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
+      prefix: deps
+      prefix-development: deps-dev
+      include: scope
 
-  - package-ecosystem: npm
-    directory: /packages/lib
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
-  
   - package-ecosystem: docker
     directory: /packages/cli
     schedule:
       interval: weekly
     commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
-
-  - package-ecosystem: npm
-    directory: /packages/cli
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
-
-  - package-ecosystem: npm
-    directory: /packages/mermaid-electron-renderer
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
-    
-  - package-ecosystem: npm
-    directory: /packages/mermaid-puppeteer-renderer
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
-
-  - package-ecosystem: npm
-    directory: /packages/obsidian
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
+      prefix: deps
+      prefix-development: deps-dev
+      include: scope
