@@ -1,4 +1,4 @@
-FROM node:24.15.0-bookworm-slim
+FROM node:26.8.1-bookworm-slim
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates chromium fonts-liberation \
