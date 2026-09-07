@@ -1,3 +1,6 @@
+import { fetchConfluencePageAdf, resolveConfluencePageId } from "./ConfluencePage";
+import { convertADFToMarkdown, type AdfToMarkdownOptions } from "./AdfConversion";
+import { readAdfDocument } from "./AdfDocument";
 import * as ConfluencePageConfig from "./ConniePageConfig";
 import { createAuthenticatedConfluenceClient } from "./AuthenticatedConfluenceClient";
 import * as ConfluenceUploadSettings from "./Settings";
@@ -74,6 +77,7 @@ import {
 import {
 	ConfluenceSettingsLive,
 	confluenceSettingsConfig,
+	confluenceReadSettingsConfig,
 	loadConfluenceSettings,
 	loadConfluenceSettingsEffect,
 	makeConfluenceSettingsConfigProvider,
@@ -81,6 +85,11 @@ import {
 } from "./SettingsConfig";
 
 export {
+	fetchConfluencePageAdf,
+	resolveConfluencePageId,
+	convertADFToMarkdown,
+	type AdfToMarkdownOptions,
+	readAdfDocument,
 	AlwaysADFPreprocessors,
 	AlwaysADFProcessingPlugins,
 	ATLASSIAN_OAUTH_AUDIENCE,
@@ -104,6 +113,7 @@ export {
 	StandardInputService,
 	StandardInputLive,
 	confluenceSettingsConfig,
+	confluenceReadSettingsConfig,
 	convertMDtoADF,
 	createConfluenceClientConfig,
 	createAuthenticatedConfluenceClient,

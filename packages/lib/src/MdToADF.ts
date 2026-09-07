@@ -4,7 +4,7 @@ import { traverse } from "@atlaskit/adf-utils/traverse";
 import { MarkdownFile } from "./MarkdownWorkspace";
 import { LocalAdfFile } from "./Publisher";
 import { processConniePerPageConfig } from "./ConniePageConfig";
-import { p } from "@atlaskit/adf-utils/builders";
+import { restoreAdfCodeBlocks } from "./AdfDocument";
 import { MarkdownToConfluenceCodeBlockLanguageMap } from "./CodeBlockLanguageMap";
 import { isSafeUrl } from "@atlaskit/adf-schema";
 import { ConfluenceSettings, resolveSiteUrl } from "./Settings";
@@ -140,7 +140,7 @@ function parsePageFragmentToADF(
 			}),
 		}) as JSONDocNode;
 	}
-	return replaceSupportedMacroPlaceholders(nodes, pageFragment);
+	return restoreAdfCodeBlocks(replaceSupportedMacroPlaceholders(nodes, pageFragment));
 }
 
 function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
@@ -212,15 +212,15 @@ function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 			return node;
 		},
 		tableHeader: (node, _parent) => {
-			node.attrs = { colspan: 1, rowspan: 1, colwidth: [340] };
+			node.attrs = { colspan: 1, rowspan: 1, colwidth: [340], ...node.attrs };
 			return node;
 		},
 		tableCell: (node, _parent) => {
-			node.attrs = { colspan: 1, rowspan: 1, colwidth: [340] };
+			node.attrs = { colspan: 1, rowspan: 1, colwidth: [340], ...node.attrs };
 			return node;
 		},
 		orderedList: (node, _parent) => {
-			node.attrs = { order: 1 };
+			node.attrs = { ...node.attrs, order: node.attrs?.["order"] ?? 1 };
 			return node;
 		},
 		codeBlock: (node, _parent) => {
@@ -238,22 +238,6 @@ function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
 			if (codeBlockLanguage in MarkdownToConfluenceCodeBlockLanguageMap) {
 				node.attrs["language"] =
 					MarkdownToConfluenceCodeBlockLanguageMap[codeBlockLanguage];
-			}
-
-			if (codeBlockLanguage === "adf") {
-				if (!node?.content?.at(0)?.text) {
-					return node;
-				}
-				try {
-					const parsedAdf = JSON.parse(
-						node?.content?.at(0)?.text ??
-							JSON.stringify(p("ADF missing from ADF Code Block.")),
-					);
-					node = parsedAdf;
-					return node;
-				} catch {
-					return node;
-				}
 			}
 
 			return node;

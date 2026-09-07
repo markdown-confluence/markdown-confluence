@@ -9,6 +9,7 @@ import { markdownItMedia } from "./media";
 import myTokenizer from "./callout";
 import wikilinksPlugin from "./wikilinks";
 import highlightPlugin from "./highlight";
+import formattingPlugin from "./formatting";
 
 interface Transformer<T> {
 	encode(node: PMNode): T;
@@ -56,6 +57,18 @@ const pmSchemaToMdMapping: SchemaMapping = {
 };
 
 const mdToPmMapping = {
+	alignment: { mark: "alignment", attrs: (token: any) => ({ align: token.attrGet("align") }) },
+	underline: { mark: "underline" },
+	subsup: { mark: "subsup", attrs: (token: any) => ({ type: token.attrGet("type") }) },
+	text_color: { mark: "textColor", attrs: (token: any) => ({ color: token.attrGet("color") }) },
+	background_color: {
+		mark: "backgroundColor",
+		attrs: (token: any) => ({ color: token.attrGet("color") }),
+	},
+	confluence_emoji: {
+		node: "emoji",
+		attrs: (token: any) => ({ id: token.attrGet("id"), shortName: token.attrGet("shortName") }),
+	},
 	blockquote: { block: "blockquote" },
 	paragraph: { block: "paragraph" },
 	em: { mark: "em" },
@@ -79,7 +92,7 @@ const mdToPmMapping = {
 	bullet_list: { block: "bulletList" },
 	ordered_list: {
 		block: "orderedList",
-		attrs: (tok: any) => ({ order: +tok.attrGet("order") || 1 }),
+		attrs: (tok: any) => ({ order: +tok.attrGet("start") || 1 }),
 	},
 	code_inline: { mark: "code" },
 	fence: {
@@ -162,6 +175,7 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 
 		tokenizer.use(wikilinksPlugin);
 		tokenizer.use(highlightPlugin);
+		tokenizer.use(formattingPlugin);
 
 		(["nodes", "marks"] as (keyof SchemaMapping)[]).forEach((key) => {
 			for (const idx in pmSchemaToMdMapping[key]) {
@@ -174,6 +188,38 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 
 		if (schema.nodes["table"]) {
 			tokenizer.use(markdownItTable);
+			tokenizer.core.ruler.push("table_alignment", (state) => {
+				for (let index = 0; index < state.tokens.length; index++) {
+					const token = state.tokens[index]!;
+					if (token.type !== "th_open" && token.type !== "td_open") continue;
+					const alignment = token
+						.attrGet("style")
+						?.match(/text-align:\s*(left|right|center)/)?.[1];
+					const paragraph = state.tokens[index + 1];
+					if (alignment && paragraph?.type === "paragraph_open") {
+						const open = new state.Token("alignment_open", "", 1);
+						open.attrSet(
+							"align",
+							alignment === "right"
+								? "end"
+								: alignment === "left"
+									? "start"
+									: "center",
+						);
+						state.tokens.splice(index + 1, 0, open);
+						const closeIndex = state.tokens.findIndex(
+							(candidate, position) =>
+								position > index + 1 && candidate.type === "paragraph_close",
+						);
+						if (closeIndex !== -1)
+							state.tokens.splice(
+								closeIndex + 1,
+								0,
+								new state.Token("alignment_close", "", -1),
+							);
+					}
+				}
+			});
 		}
 
 		if (schema.nodes["media"] && schema.nodes["mediaSingle"]) {

@@ -19,7 +19,7 @@ import {
 } from "@markdown-confluence/lib";
 import { PuppeteerMermaidRenderer } from "@markdown-confluence/mermaid-puppeteer-renderer";
 import { getErrorMessage } from "./errorMessage";
-import { markdownToAdf } from "./toAdf";
+import { convertDocument } from "./convert";
 import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 
 const program = Effect.gen(function* () {
@@ -79,8 +79,16 @@ const program = Effect.gen(function* () {
 const command = Effect.gen(function* () {
 	const runtime = yield* RuntimeEnvironmentService;
 	const argv = yield* runtime.argv;
-	if (argv[2] === "to-adf") {
-		return yield* markdownToAdf(argv.slice(3)).pipe(Effect.provide(StandardInputLive));
+	if (argv[2] === "to-adf" || argv[2] === "to-markdown" || argv[2] === "from-adf") {
+		const conversion = argv[2] === "to-adf" ? "to-adf" : "to-markdown";
+		return yield* convertDocument(conversion, argv.slice(3)).pipe(
+			Effect.provide(StandardInputLive),
+		);
+	}
+	if (argv[2] === "--help" || argv[2] === "-h") {
+		return yield* Console.log(
+			"Usage: markdown-confluence [publishing options]\n\nCommands:\n  to-adf       Convert Markdown or export Confluence ADF\n  to-markdown  Convert ADF or a Confluence page to Markdown\n  from-adf     Alias for to-markdown\n\nUse COMMAND --help for conversion options. Without a command, publish using the configured settings.",
+		);
 	}
 	return yield* program.pipe(
 		Effect.provide(MarkdownWorkspaceLive),

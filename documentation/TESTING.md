@@ -135,3 +135,11 @@ passed on two fresh runs. It remains strict: a failure logs the synthetic stored
 and requested ADF for diagnosis, rather than retrying an extra publish to hide an
 unexpected version update. Treat this as an observed intermittent behavior, not
 a resolved product defect. CI reports identify the failed step.
+
+### Conversion acceptance checks
+
+The quick and packaged-consumer profiles also test both conversion CLI commands
+with file input/output and stdin, an exact rich ADF round trip, readable export,
+formatting and invalid JSON. The live profile exports a page by URL and ID,
+round-trips its media IDs, and verifies its version remains unchanged. See
+[CONVERSION.md](CONVERSION.md#acceptance-criteria) for the full acceptance criteria.

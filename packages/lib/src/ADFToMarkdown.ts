@@ -1,6 +1,6 @@
 import { ADFEntity } from "@atlaskit/adf-utils/dist/types/types";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
-import { Console, Effect } from "effect";
+import { fencedCode } from "./AdfDocument";
 import { markdownTable } from "markdown-table";
 
 export function renderADFDoc(adfDoc: JSONDocNode) {
@@ -27,10 +27,10 @@ export function renderADFDoc(adfDoc: JSONDocNode) {
 
 function renderTextMarks(element: ADFEntity) {
 	if (!element.marks || !element.text) {
-		return element.text;
+		return element.text ? escapeMarkdownText(element.text) : element.text;
 	}
 
-	let returnText = element.text;
+	let returnText = escapeMarkdownText(element.text);
 	for (const mark of element.marks) {
 		switch (mark.type) {
 			case "strong":
@@ -40,10 +40,10 @@ function renderTextMarks(element: ADFEntity) {
 				returnText = `*${returnText}*`;
 				break;
 			case "strike":
-				returnText = `~${returnText}~`;
+				returnText = `~~${returnText}~~`;
 				break;
 			case "code":
-				returnText = `\`${returnText}\``;
+				returnText = renderInlineCode(element.text);
 				break;
 			case "subsup": {
 				const subsupType = mark.attrs && mark.attrs["type"] ? mark.attrs["type"] : "sup";
@@ -51,8 +51,20 @@ function renderTextMarks(element: ADFEntity) {
 				break;
 			}
 			case "link": {
-				const linkHref = mark.attrs && mark.attrs["href"] ? mark.attrs["href"] : "#";
+				const linkHref = markdownDestination(mark.attrs?.["href"] ?? "#");
 				returnText = `[${returnText}](${linkHref})`;
+				break;
+			}
+			case "underline":
+				returnText = `<u>${returnText}</u>`;
+				break;
+			case "textColor":
+			case "backgroundColor": {
+				const color = mark.attrs?.["color"];
+				if (typeof color !== "string" || !/^#[\da-f]{3,8}$/i.test(color))
+					return new Error("Unsupported color");
+				const property = mark.type === "textColor" ? "color" : "background-color";
+				returnText = `<span style="${property}: ${color}">${returnText}</span>`;
 				break;
 			}
 			default:
@@ -67,6 +79,20 @@ function renderADFContent(
 	parent: ADFEntity,
 	currentIndex: number,
 ): string | Error | undefined {
+	if (
+		element.type !== "text" &&
+		element.marks?.length &&
+		!(
+			parent.type.startsWith("table") &&
+			element.marks.every((mark) => mark.type === "alignment")
+		)
+	)
+		return new Error("Block marks require ADF preservation");
+	if (element.type === "codeBlock")
+		return renderCodeBlock(
+			element.attrs?.["language"] ?? "",
+			(element.content ?? []).map((child) => child?.text ?? "").join(""),
+		);
 	const renderChildrenResult = renderChildren(element);
 	if (renderChildrenResult instanceof Error) {
 		return renderChildrenResult;
@@ -97,11 +123,6 @@ function renderADFContent(
 			const beforeText = "#".repeat(headingLevel);
 			return beforeText + " " + renderChildrenResult;
 		}
-		case "codeBlock": {
-			const language =
-				element.attrs && element.attrs["language"] ? element.attrs["language"] : "";
-			return renderCodeBlock(language, renderChildrenResult);
-		}
 		case "taskList":
 		case "bulletList":
 		case "orderedList": {
@@ -118,16 +139,18 @@ function renderADFContent(
 					break;
 				case "orderedList": {
 					const orderAttr =
-						element.attrs && element.attrs["order"]
-							? parseInt(element.attrs["order"])
-							: 1;
+						parent.attrs && parent.attrs["order"] ? parseInt(parent.attrs["order"]) : 1;
 					prefix = `${orderAttr + currentIndex}. `;
 					break;
 				}
 				default:
 					return new Error("Unhandled listItem parent");
 			}
-			return prefix + renderChildrenResult;
+			return (
+				prefix +
+				renderChildrenResult.trimEnd().replace(/\n/g, `\n${" ".repeat(prefix.length)}`) +
+				"\n"
+			);
 		}
 		case "blockquote": {
 			const result = renderChildrenResult
@@ -148,6 +171,7 @@ function renderADFContent(
 			const headerRow = `> [!${panelType}]\n`;
 			return headerRow + result;
 		}
+		case "nestedExpand":
 		case "expand": {
 			const title = element.attrs && element.attrs["title"] ? element.attrs["title"] : "info";
 			const result = renderChildrenResult
@@ -190,12 +214,38 @@ function renderADFContent(
 				shortName = `|${shortName.replaceAll(":", "")}`;
 			}
 
-			return `:${emojiId}${shortName}:`;
+			return emojiId
+				? `:${emojiId}${shortName}:`
+				: (element.attrs?.["text"] ?? element.attrs?.["shortName"] ?? "");
 		}
+		case "blockCard":
+		case "embedCard":
 		case "inlineCard": {
 			const inlineCardUrl =
 				element.attrs && element.attrs["url"] ? element.attrs["url"] : undefined;
-			return `[${inlineCardUrl}](${inlineCardUrl})`;
+			if (typeof inlineCardUrl !== "string")
+				return new Error("Card data requires ADF preservation");
+			return `[${escapeMarkdownText(inlineCardUrl)}](${markdownDestination(inlineCardUrl)})`;
+		}
+		case "status":
+			return `**${escapeMarkdownText(String(element.attrs?.["text"] ?? ""))}**`;
+		case "placeholder":
+			return escapeMarkdownText(String(element.attrs?.["text"] ?? ""));
+		case "caption":
+			return renderChildrenResult;
+		case "mediaSingle":
+		case "mediaGroup":
+			return (element.content ?? [])
+				.map((child, index) => renderADFContent(child!, element, index))
+				.join("\n\n");
+		case "media":
+		case "mediaInline":
+		case "image": {
+			const url = element.attrs?.["url"] ?? element.attrs?.["src"];
+			if (typeof url !== "string" || !url)
+				return new Error("Media IDs require ADF preservation");
+			const alt = escapeMarkdownText(String(element.attrs?.["alt"] ?? ""));
+			return `![${alt}](${markdownDestination(url.replace(/^file:\/\//, ""))})`;
 		}
 		case "table": {
 			return renderTable(element);
@@ -206,7 +256,6 @@ function renderADFContent(
 			return renderChildrenResult;
 		}
 		default:
-			Effect.runSync(Console.warn(`Unknown ADFEntity Type ${element.type}`));
 			return new Error(`Unknown ADFEntity Type ${element.type}`);
 	}
 }
@@ -218,30 +267,50 @@ function renderTable(element: ADFEntity) {
 
 	const tableCells: string[][] = [];
 
-	// TODO: Handle alignment
+	const alignments: ("left" | "right" | "center" | null)[] = [];
 	for (const tableRow of element.content) {
 		if (!tableRow || !tableRow.content) {
 			continue;
 		}
 
 		const rowCells: string[] = [];
-		for (const tableCell of tableRow.content) {
+		for (const [column, tableCell] of tableRow.content.entries()) {
 			if (!tableCell || !tableCell.content) {
 				continue;
 			}
+			if (
+				(tableCell.attrs?.["colspan"] ?? 1) !== 1 ||
+				(tableCell.attrs?.["rowspan"] ?? 1) !== 1
+			)
+				return new Error("Merged cells require ADF preservation");
+			const alignment = tableCell.content[0]?.marks?.find((mark) => mark.type === "alignment")
+				?.attrs?.["align"];
+			const markdownAlignment =
+				alignment === "end"
+					? "right"
+					: alignment === "center"
+						? "center"
+						: alignment === "start"
+							? "left"
+							: null;
+			if (alignments[column] !== undefined && alignments[column] !== markdownAlignment)
+				return new Error("Mixed column alignment requires ADF preservation");
+			alignments[column] = markdownAlignment;
 			const cellContent = renderChildren(tableCell);
 			if (typeof cellContent === "string") {
-				rowCells.push(cellContent);
+				// Text is escaped before adding Markdown marks. Re-escaping the rendered
+				// cell would change backslashes and pipes inside inline code and links.
+				rowCells.push(cellContent.replace(/\n/g, "<br>"));
 			}
 		}
 		tableCells.push(rowCells);
 	}
 
-	return markdownTable(tableCells);
+	return markdownTable(tableCells, { align: alignments });
 }
 
 function renderCodeBlock(language: string, code: string) {
-	return `\`\`\`${language} \n${code}\n\`\`\``;
+	return fencedCode(language, code);
 }
 
 function renderDate(timestamp: unknown) {
@@ -279,4 +348,22 @@ function renderChildren(element: ADFEntity) {
 	}
 	const result = lines.join("");
 	return result;
+}
+
+function escapeMarkdownText(text: string): string {
+	return text.replace(/([\\`*_[\]<>~|])/g, "\\$1");
+}
+
+function markdownDestination(value: unknown): string {
+	return String(value).replace(/[\s<>()[\]\\|]/g, (character) =>
+		encodeURIComponent(character).replaceAll("(", "%28").replaceAll(")", "%29"),
+	);
+}
+
+function renderInlineCode(text: string): string {
+	const marker = "`".repeat(
+		Math.max(1, ...(text.match(/`+/g) ?? []).map((run) => run.length + 1)),
+	);
+	const padding = /^[` ]|[` ]$/.test(text) ? " " : "";
+	return `${marker}${padding}${text}${padding}${marker}`;
 }

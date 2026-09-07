@@ -1,0 +1,88 @@
+{
+	"version": 1,
+	"type": "doc",
+	"content": [
+		{
+			"type": "heading",
+			"attrs": { "level": 1 },
+			"content": [{ "type": "text", "text": "Conversion example" }]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"type": "text",
+					"text": "A comment stays attached",
+					"marks": [
+						{
+							"type": "annotation",
+							"attrs": { "annotationType": "inlineComment", "id": "example-comment" }
+						}
+					]
+				},
+				{ "type": "text", "text": " and " },
+				{
+					"type": "status",
+					"attrs": { "text": "READY", "color": "green", "localId": "example-status" }
+				}
+			]
+		},
+		{
+			"type": "layoutSection",
+			"content": [
+				{
+					"type": "layoutColumn",
+					"attrs": { "width": 50 },
+					"content": [
+						{
+							"type": "paragraph",
+							"content": [{ "type": "text", "text": "Left column" }]
+						}
+					]
+				},
+				{
+					"type": "layoutColumn",
+					"attrs": { "width": 50 },
+					"content": [
+						{
+							"type": "paragraph",
+							"content": [{ "type": "text", "text": "Right column" }]
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "mediaSingle",
+			"attrs": { "layout": "center" },
+			"content": [
+				{
+					"type": "media",
+					"attrs": {
+						"type": "file",
+						"id": "example-media",
+						"collection": "example-attachments",
+						"width": 640,
+						"height": 480
+					}
+				},
+				{
+					"type": "caption",
+					"content": [{ "type": "text", "text": "Attachment IDs must survive export" }]
+				}
+			]
+		},
+		{
+			"type": "extension",
+			"attrs": {
+				"extensionType": "com.atlassian.confluence.macro.core",
+				"extensionKey": "toc",
+				"parameters": { "macroParams": { "maxLevel": { "value": "3" } } }
+			}
+		},
+		{
+			"type": "paragraph",
+			"content": [{ "type": "text", "text": "The final paragraph must remain." }]
+		}
+	]
+}
