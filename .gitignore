@@ -25,3 +25,4 @@ data.json
 dist/
 .env.integration
 .release-repo/
+.env.oauth

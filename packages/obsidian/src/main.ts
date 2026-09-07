@@ -11,7 +11,6 @@ import {
 	MarkdownWorkspaceLive,
 	MarkdownWorkspaceService,
 	MarkdownSourceTransformerService,
-	createConfluenceClientConfig,
 	shouldPublishMarkdownFile,
 } from "@markdown-confluence/lib";
 import { Effect, Layer } from "effect";
@@ -19,7 +18,8 @@ import { ElectronMermaidRenderer } from "@markdown-confluence/mermaid-electron-r
 import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 import { ConfluenceSettingTab } from "./ConfluenceSettingTab";
 import { CompletedModal } from "./CompletedModal";
-import { ObsidianConfluenceClient } from "./MyBaseClient";
+import { BrowserOAuth, type BrowserOAuthSettings } from "./BrowserOAuth";
+import { createObsidianConfluenceClient } from "./ObsidianAuthentication";
 import {
 	ConfluencePerPageForm,
 	ConfluencePerPageUIValues,
@@ -29,7 +29,8 @@ import { ObsidianPlatformLive } from "./effects/ObsidianPlatform";
 import type { Mermaid, MermaidConfig } from "mermaid";
 import { createDataviewTransformer } from "./DataviewTransformer";
 
-export interface ObsidianPluginSettings extends ConfluenceUploadSettings.ConfluenceSettings {
+export interface ObsidianPluginSettings
+	extends ConfluenceUploadSettings.ConfluenceSettings, BrowserOAuthSettings {
 	showPublishResultsModal: boolean;
 	renderDataview: boolean;
 	mermaidTheme:
@@ -65,6 +66,44 @@ interface FilePublishResult {
 
 export default class ConfluencePlugin extends Plugin {
 	settings!: ObsidianPluginSettings;
+	browserOAuth = new BrowserOAuth(
+		() => this.settings,
+		() => this.app.secretStorage,
+		() => this.saveSettings(),
+		(url) => {
+			window.open(url, "_blank", "noopener,noreferrer");
+		},
+	);
+	async authenticationClient() {
+		const browser =
+			this.settings.confluenceAuthType === "oauth2" && this.settings.oauthMode === "browser";
+		if (browser) {
+			const site = this.settings.oauthSites.find(
+				(item) => item.id === this.settings.oauthSiteId,
+			);
+			if (!site) throw new Error("Connect and choose a Confluence site in settings.");
+			if (
+				this.settings.confluenceBaseUrl !==
+				`https://api.atlassian.com/ex/confluence/${site.id}`
+			)
+				throw new Error(
+					"The selected OAuth site differs from the publish destination. Choose your site again.",
+				);
+		}
+		return createObsidianConfluenceClient(
+			this.settings,
+			browser ? await this.browserOAuth.accessToken() : undefined,
+		);
+	}
+	async selectOAuthSite(id: string) {
+		const site = this.settings.oauthSites.find((item) => item.id === id);
+		if (!site) throw new Error("Choose an authorized Confluence site.");
+		this.settings.oauthSiteId = id;
+		this.settings.confluenceBaseUrl = `https://api.atlassian.com/ex/confluence/${site.id}`;
+		this.settings.confluenceSiteUrl = site.url;
+		await this.saveSettings();
+	}
+
 	private isSyncing = false;
 	private platform!: Layer.Layer<MarkdownConfluencePlatform>;
 	private settingsLayer!: Layer.Layer<ConfluenceUploadSettings.ConfluenceSettingsService>;
@@ -84,27 +123,16 @@ export default class ConfluencePlugin extends Plugin {
 			this.settings,
 		);
 		this.workspace = workspace;
+	}
 
+	private async createPublisher() {
+		const confluenceClient = await this.authenticationClient();
 		const mermaidItems = await this.getMermaidItems();
 		const mermaidRenderer = new ElectronMermaidRenderer(
 			mermaidItems.extraStyleSheets,
 			mermaidItems.extraStyles,
 			mermaidItems.mermaidConfig,
 			mermaidItems.bodyStyles,
-		);
-		const confluenceClient = new ObsidianConfluenceClient(
-			createConfluenceClientConfig(this.settings, {
-				middlewares: {
-					onError(e) {
-						if ("response" in e && "data" in e.response) {
-							e.message =
-								typeof e.response.data === "string"
-									? e.response.data
-									: JSON.stringify(e.response.data);
-						}
-					},
-				},
-			}),
 		);
 
 		const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
@@ -127,7 +155,7 @@ export default class ConfluencePlugin extends Plugin {
 			}
 		}
 
-		this.publisher = new Publisher(this.settings, confluenceClient, plugins);
+		return new Publisher(this.settings, confluenceClient, plugins);
 	}
 
 	async getMermaidItems() {
@@ -207,6 +235,7 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	async doPublish(publishFilter?: string): Promise<UploadResults> {
+		this.publisher = await this.createPublisher();
 		const adrFiles: FilePublishResult[] = await this.runObsidianEffect(
 			this.publisher.publishEffect(publishFilter) as unknown as Effect.Effect<
 				FilePublishResult[],
@@ -377,7 +406,9 @@ export default class ConfluencePlugin extends Plugin {
 		this.addSettingTab(new ConfluenceSettingTab(this.app, this));
 	}
 
-	override async onunload() {}
+	override async onunload() {
+		this.browserOAuth.cancel();
+	}
 
 	async loadSettings() {
 		const loaded = ((await this.loadData()) ?? {}) as Partial<ObsidianPluginSettings>;
@@ -388,6 +419,14 @@ export default class ConfluencePlugin extends Plugin {
 				mermaidTheme: "match-obsidian",
 				showPublishResultsModal: true,
 				renderDataview: false,
+				oauthMode: "service-account",
+				oauthFlow: "authorization-code",
+				oauthClientId: "",
+				oauthClientSecretId: "",
+				oauthCallbackUrl: "http://127.0.0.1:8766/callback",
+				oauthSecretId: "",
+				oauthSites: [],
+				oauthSiteId: "",
 			},
 			loaded,
 			{

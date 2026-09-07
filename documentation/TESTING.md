@@ -10,7 +10,7 @@ vp run test:integration
 ```
 
 This builds all packages, validates the Obsidian release artifacts, imports the
-built packages, renders a real Mermaid PNG in Chromium, and converts all ten
+built packages, renders a real Mermaid PNG in Chromium, and converts all
 Markdown fixtures through the CLI. CLI output must match the library's ADF,
 including Unicode and TOC macros. It also checks CommonJS dynamic import and a
 nonzero CLI error exit. It does not publish anything or require Confluence credentials.
@@ -32,6 +32,7 @@ default always builds first. Unit tests and static checks remain separate:
 | `vp run test:integration` | Built library, CLI, real Chromium/Mermaid, artifact validation | Installed workspace dependencies |
 | `vp run test:integration:packages` | All five actual npm tarballs installed in a fresh consumer, then the same runtime checks | npm registry access; pnpm/browser caches are reused |
 | `vp run test:integration:live` | Live Confluence publish, unchanged republish, one-note update, built CLI, error recovery | Dedicated space and test credentials |
+| `vp run test:integration blogs` | Live blog create/update, attachments, label add/remove, unchanged publishing and CLI ADF file export | Dedicated space with Blogs enabled and blog-create permission |
 | `vp run test:integration:docker` | Local image build, container CLI conversion, unconfigured-publishing failure exit | Running Docker engine |
 | `vp run test:integration regressions` | Container publishes 166 notes, 17 Mermaid diagrams and image path variants; unchanged republish and diagram failure recovery | Docker, dedicated space and test credentials |
 | `vp run test:vault` | Create a synthetic Obsidian vault or refresh only its built plugin | Desktop Obsidian for opening the result |
@@ -39,7 +40,7 @@ default always builds first. Unit tests and static checks remain separate:
 
 All profiles accept `--skip-build`. Run `vp run test:integration --help` for options.
 Successful and failed runs write timed `summary.json` and `summary.md` reports to
-`reports/integration/<profile>-<timestamp>/`. Live checks also record test page IDs.
+`reports/integration/<profile>-<timestamp>-<unique-id>/`. Live checks also record test page IDs.
 Reports contain no credentials. Temporary npm consumers are automatically removed,
 including after failure. No command publishes npm packages, tags, images, or releases.
 
@@ -75,14 +76,50 @@ CONFLUENCE_E2E_AUTH_TYPE=oauth2 vp run test:integration live
 
 `CONFLUENCE_E2E_BASE_URL` remains the browsable site origin. No Basic credential
 is needed in OAuth mode. See [CLOUD_OAUTH.md](CLOUD_OAUTH.md) for account permissions
-and scopes. The desktop/vault profiles do not support client-credentials OAuth.
+and scopes. The desktop/vault profiles also support service-account OAuth.
+For interactive browser login and token storage, see [OBSIDIAN_OAUTH.md](OBSIDIAN_OAUTH.md).
+
+Scoped API tokens use `CONFLUENCE_E2E_AUTH_TYPE=basic`, the account email and token,
+and `CONFLUENCE_E2E_API_URL=https://api.atlassian.com/ex/confluence/CLOUD_ID`.
+Keep `CONFLUENCE_E2E_BASE_URL` as the browsable site origin. This gateway setting
+applies to live, container and desktop verification as well as vault setup.
+Atlassian documents the required gateway and Basic authentication in its
+[API-token guidance](https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/).
 
 The live harness copies synthetic fixtures into a temporary directory and prefixes
 page titles per run. It verifies formatting, heading embeds, exclusions, folder
 hierarchy, tags, images, files, Mermaid and PlantUML attachments. Repeated publishing
 must preserve page versions, content, attachments and labels. It then verifies a
 single-note update, built-CLI republishing, duplicate-title and missing-embed
-rejection, recovery after an injected upload failure, and a real HTTP 409 conflict.
+rejection, recovery after an injected upload failure, and a real HTTP 409 conflict. A real inline comment must retain its ID, body, open
+status, marker and original highlighted text after an edit elsewhere on the page.
+The next unchanged publish must keep the page version unchanged.
+
+### Existing inline comments
+
+The live, desktop and container profiles create an actual inline comment on a
+synthetic paragraph, change another paragraph, publish and read both the comment
+and the page's ADF back from Confluence. The test rejects an orphaned or resolved
+comment, a changed highlight and the unmapped-comment fallback.
+
+By default the publishing account also creates/verifies the fixture comment.
+If its credentials do not permit comment creation, configure a separate test
+collaborator with `CONFLUENCE_E2E_COMMENTS_SETTINGS_FILE`, pointing to a private
+plugin settings JSON for the same test site. Alternatively inject
+`CONFLUENCE_E2E_COMMENTS_USERNAME` and `CONFLUENCE_E2E_COMMENTS_API_TOKEN`.
+The latter defaults to the site origin; set `CONFLUENCE_E2E_COMMENTS_API_URL` to
+the gateway when the commenter uses a scoped token. The comment account needs
+comment read/write access and page access. Publishing continues to use the
+selected credentials, which need no additional comment-write permission.
+
+### Blog posts
+
+Enable **Blogs** in the dedicated space's Features settings and grant the test
+account permission to create blog posts. Page creation permission is separate.
+Then run `vp run test:integration blogs --skip-build` for each authentication
+profile. The built CLI publishes a `connie-content-type: blogpost` file, writes
+its ID back to frontmatter, uploads an image, adds/removes labels, updates the
+body, verifies unchanged versions, and exports the ADF to a file.
 
 Local fixture copies are removed automatically. Remote test pages are deliberately
 retained for inspection; their links are in the report. Runs add pages to the
@@ -105,7 +142,7 @@ CONFLUENCE_E2E_IMAGE=markdown-confluence/markdown-confluence vp run test:integra
 ```
 
 For fast iteration, use two notes while retaining every image variant and both
-diagram failure/recovery checks (around 30 seconds locally):
+diagram failure/recovery checks:
 
 ```sh
 CONFLUENCE_E2E_REGRESSION_SIZE=small CONFLUENCE_E2E_IMAGE=markdown-confluence/markdown-confluence vp run test:integration regressions --skip-build
@@ -115,7 +152,8 @@ The default full fixture contains 166 notes and 17 Mermaid diagrams. Image cover
 relative PNGs, SVG, spaces, URL-encoded spaces, parentheses, Unicode, wiki embeds
 and a public remote URL. The test checks native media references and attachment
 reuse, then verifies that an unchanged publish preserves all page and attachment
-versions. It also requires invalid Mermaid syntax and an injected protocol
+versions. It creates a real inline comment, edits another paragraph and verifies
+comment preservation and a subsequent unchanged publish. It also requires invalid Mermaid syntax and an injected protocol
 timeout to exit unsuccessfully, followed by successful recovery. Each container
 invocation has a ten-minute limit. Remote pages stay inside a newly created test
 parent, and the report provides an image page for visual inspection.
@@ -149,9 +187,19 @@ The desktop check targets the named vault, verifies its full path, reloads the
 installed plugin, checks its destination, and awaits its real publishing method.
 It verifies remote content, attachment versions, labels, hierarchy and selection;
 publishes twice to check idempotency; updates one note; and restores the fixture.
+An actual inline comment must remain attached to its original text throughout,
+and publishing the restored note again must preserve the version.
 It uses Obsidian's vault API for edits so the application's file events participate.
 The desktop app must remain running. CLI failures, a disabled plugin, wrong vault,
 or wrong destination fail the check rather than reporting a skipped success.
+
+Interactive OAuth vaults also verify rotating refresh tokens, secret storage and
+the device-code settings controls. The device UI uses a simulated authority; a
+separate request reports the real app's device-grant availability. These isolated
+checks preserve the existing login. See [Obsidian OAuth](OBSIDIAN_OAUTH.md).
+While testing, the runner temporarily disables background timer throttling in the
+test vault's renderer and restores it on completion or failure. This prevents
+hidden windows from stalling login polling and Dataview indexing.
 
 This checks the plugin runtime and upload adapter. Visual layout, command-palette
 interaction, notices/modal appearance and a second-editor
@@ -182,8 +230,10 @@ For live Confluence testing, add `run-confluence-e2e` to an internal PR, or run
 **Confluence End-to-End Verification → Run workflow**. The workflow uses the same
 `vp run test:integration live` command and repository secrets, serializes live runs,
 and uploads reports. Manual runs can select `oauth2` authentication and the
-`regressions` profile (which builds the candidate container). OAuth runs use
-`ATLASSIAN_CLIENT_ID` and `ATLASSIAN_CLIENT_SECRET` repository secrets. Fork pull requests cannot automatically run credentialed tests.
+`blogs` profile or `regressions` profile (which builds the candidate container). OAuth runs use
+`ATLASSIAN_CLIENT_ID` and `ATLASSIAN_CLIENT_SECRET` repository secrets. The workflow
+uses the API-token account to seed/verify comments as an independent collaborator.
+Fork pull requests cannot automatically run credentialed tests.
 
 To add coverage for a feature, add a synthetic note to `test-fixtures/release-vault`
 and a concrete assertion in `scripts/confluence-release-e2e.js`. Simple conversion
@@ -192,11 +242,12 @@ keep live assertions focused on behavior that depends on Confluence or Obsidian.
 
 ### Diagnosing a live failure
 
-The post-conflict idempotency assertion failed once during local validation, then
-passed on two fresh runs. It remains strict: a failure logs the synthetic stored
-and requested ADF for diagnosis, rather than retrying an extra publish to hide an
-unexpected version update. Treat this as an observed intermittent behavior, not
-a resolved product defect. CI reports identify the failed step.
+The post-conflict idempotency assertion remains strict and logs the synthetic
+stored and requested ADF for diagnosis. This caught Confluence asynchronously
+adding an internal `_parentId` to its table-of-contents macro. Comparison ignores
+that server context while preserving authored TOC options and exported ADF; the
+regression test and a subsequent live run verify the fix. CI reports identify
+the failed step instead of retrying an extra publish to hide a version change.
 
 ### Conversion acceptance checks
 
@@ -205,3 +256,6 @@ with file input/output and stdin, an exact rich ADF round trip, readable export,
 formatting and invalid JSON. The live profile exports a page by URL and ID,
 round-trips its media IDs, and verifies its version remains unchanged. See
 [CONVERSION.md](CONVERSION.md#acceptance-criteria) for the full acceptance criteria.
+
+See [Cloud API verification](CLOUD_API_MIGRATION.md) for the current endpoint,
+authentication and feature matrix, including the live device-grant limitation.

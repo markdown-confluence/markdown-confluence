@@ -146,3 +146,48 @@ const testSettings: ConfluenceSettings = {
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,
 };
+
+test.each(["Anchor", "Before Anchor"])(
+	"preserves a comment at the end of '%s' without adding empty text nodes",
+	(paragraph) => {
+		const marker = {
+			type: "annotation",
+			attrs: { annotationType: "inlineComment", id: "existing-comment" },
+		};
+		const remote = {
+			type: "doc",
+			version: 1,
+			content: [
+				{
+					type: "paragraph",
+					content: [
+						...(paragraph.startsWith("Before")
+							? [{ type: "text", text: "Before " }]
+							: []),
+						{ type: "text", text: "Anchor", marks: [marker] },
+					],
+				},
+				{ type: "paragraph", content: [{ type: "text", text: "Old elsewhere" }] },
+			],
+		} as JSONDocNode;
+		const source = {
+			type: "doc",
+			version: 1,
+			content: [
+				{ type: "paragraph", content: [{ type: "text", text: paragraph }] },
+				{ type: "paragraph", content: [{ type: "text", text: "Updated elsewhere" }] },
+			],
+		} as JSONDocNode;
+		const node = createNode({ contents: structuredClone(source) });
+		node.existingPageData.adfContent = remote;
+		prepareAdfToUpload([node], testSettings);
+		const expected = structuredClone(remote);
+		expected.content[1]!.content![0]!.text = "Updated elsewhere";
+		expect(node.file.contents).toEqual(expected);
+		// Reading the stored result and publishing the same source must retain identical ADF.
+		node.existingPageData.adfContent = structuredClone(node.file.contents);
+		node.file.contents = structuredClone(source);
+		prepareAdfToUpload([node], testSettings);
+		expect(node.file.contents).toEqual(expected);
+	},
+);

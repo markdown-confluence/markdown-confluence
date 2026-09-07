@@ -1,5 +1,4 @@
 import { Effect } from "effect";
-import FormData from "form-data";
 import SparkMD5 from "spark-md5";
 import { lookup } from "mime-types";
 import { runEffect } from "./effects";
@@ -277,22 +276,21 @@ function uploadAttachment(
 	},
 ): Promise<AttachmentUploadResponse> {
 	const formData = new FormData();
-	formData.append("file", attachment.fileBuffer, {
-		filename: attachment.uploadFilename,
-		contentType: attachment.contentType,
-	});
+	formData.append(
+		"file",
+		new Blob([Uint8Array.from(attachment.fileBuffer)], { type: attachment.contentType }),
+		attachment.uploadFilename,
+	);
 	formData.append("minorEdit", "false");
 	formData.append("comment", attachment.comment);
 
 	return confluenceClient.sendRequest<AttachmentUploadResponse>({
-		url: `/api/content/${attachment.pageId}/child/attachment`,
+		url: `/wiki/rest/api/content/${attachment.pageId}/child/attachment`,
 		method: "PUT",
 		headers: {
 			"X-Atlassian-Token": "no-check",
-			...formData.getHeaders(),
 		},
-		params: {},
-		data: formData,
+		body: formData,
 	});
 }
 

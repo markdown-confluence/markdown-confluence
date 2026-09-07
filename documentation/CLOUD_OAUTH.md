@@ -14,6 +14,7 @@ target space. It does not need app or organization administrator access.
 Follow Atlassian's [service-account credential instructions](https://support.atlassian.com/user-management/docs/create-oauth-2-0-credential-for-service-accounts/).
 Select these Confluence granular scopes:
 
+- `read:confluence-user`
 - `read:page:confluence`
 - `write:page:confluence`
 - `read:space:confluence`
@@ -24,9 +25,11 @@ Select these Confluence granular scopes:
 - `read:label:confluence`
 - `write:label:confluence`
 
-The publisher uses v2 for pages and metadata and v1 for the current user,
+The publisher uses v2 for pages, blog posts and metadata and v1 for the current user,
 attachment uploads and label writes. Both scopes and the account's space
-permissions must allow these operations.
+permissions must allow these operations. For blog posts, enable **Blogs** in the
+space's Features settings and grant the account permission to create blog posts.
+Page creation permission alone does not grant blog-post creation.
 
 Store the client ID and secret as `ATLASSIAN_CLIENT_ID` and
 `ATLASSIAN_CLIENT_SECRET` GitHub Actions secrets. Keep them out of Markdown and
@@ -71,8 +74,7 @@ npx @markdown-confluence/cli
 
 Library settings use the same camel-case names as the Action inputs. Tokens are
 obtained once per invocation and expire after 60 minutes; split longer runs.
-The Obsidian settings interface currently supports Basic and Bearer credentials,
-so this client-credentials setup applies to the CLI, Action and library.
+The same service-account setup is available in the desktop Obsidian plugin.
 
 ## Verify the setup
 
@@ -80,3 +82,8 @@ Use the [live integration harness](TESTING.md#configure-live-testing-once) with
 `CONFLUENCE_E2E_AUTH_TYPE=oauth2`. A successful exchange alone is insufficient:
 the live test checks page creation, uploads, labels, unchanged publishing and
 updates with the service account.
+
+## Obsidian
+
+The desktop plugin supports service-account OAuth and native browser/device-code login.
+See [Obsidian OAuth](OBSIDIAN_OAUTH.md) for setup, token storage and integration testing.

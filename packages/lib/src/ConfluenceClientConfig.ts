@@ -1,40 +1,25 @@
-import type { Config } from "confluence.js";
+import type { ClientConfig } from "confluence.js/core";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
-import { createConfluenceTransport } from "./ConfluenceTransport";
 
 export const DEFAULT_CONFLUENCE_API_PREFIX = DEFAULT_SETTINGS.confluenceApiPrefix;
 
-export function createConfluenceClientConfig(
-	settings: ConfluenceSettings,
-	config: Pick<Config, "middlewares"> = {},
-): Config {
+/** The SDK owns endpoint paths. Both REST versions share the same Cloud host and authentication. */
+export function createConfluenceClientConfig(settings: ConfluenceSettings): ClientConfig {
 	return {
-		host: settings.confluenceBaseUrl,
-		apiPrefix: normalizeConfluenceApiPrefix(settings.confluenceApiPrefix),
-		authentication:
-			settings.confluenceAuthType === "bearer"
+		host: settings.confluenceBaseUrl.replace(/\/$/, ""),
+		auth:
+			settings.confluenceAuthType === "basic"
 				? {
-						oauth2: {
-							accessToken: settings.atlassianApiToken,
-						},
+						type: "basic",
+						email: settings.atlassianUserName,
+						apiToken: settings.atlassianApiToken,
 					}
-				: {
-						basic: {
-							email: settings.atlassianUserName,
-							apiToken: settings.atlassianApiToken,
-						},
-					},
-		baseRequestConfig: {
-			timeout: 30_000,
-			adapter: createConfluenceTransport(),
-			...(Object.keys(settings.confluenceRequestHeaders).length
-				? { headers: settings.confluenceRequestHeaders }
-				: {}),
-		},
-		...config,
+				: { type: "bearer", token: settings.atlassianApiToken },
+		headers: settings.confluenceRequestHeaders,
 	};
 }
 
+/** @deprecated Cloud endpoint paths are supplied by confluence.js v3. */
 export function normalizeConfluenceApiPrefix(apiPrefix: string): string {
 	const trimmedApiPrefix = apiPrefix.trim();
 	if (!trimmedApiPrefix) {

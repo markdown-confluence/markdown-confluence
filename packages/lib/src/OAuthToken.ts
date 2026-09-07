@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import type { ConfluenceFetch } from "./ConfluenceFetch";
 
 /**
  * Atlassian OAuth 2.0 token endpoint used for the client-credentials grant.
@@ -36,11 +37,12 @@ type OAuthTokenResponse = {
 export function fetchOAuthAccessToken(
 	clientId: string,
 	clientSecret: string,
+	fetchRequest: ConfluenceFetch = (url, init) => fetch(url, init),
 ): Effect.Effect<string, Error> {
 	return Effect.gen(function* () {
 		const response = yield* Effect.tryPromise({
 			try: () =>
-				fetch(ATLASSIAN_OAUTH_TOKEN_URL, {
+				fetchRequest(ATLASSIAN_OAUTH_TOKEN_URL, {
 					method: "POST",
 					headers: { "Content-Type": "application/x-www-form-urlencoded" },
 					redirect: "error",

@@ -1,4 +1,10 @@
 import assert from "node:assert/strict";
+import {
+	createInlineCommentClient,
+	createInlineCommentFixture,
+	verifyInlineComment,
+	inlineCommentSelection,
+} from "./integration-comments.js";
 import { spawn } from "node:child_process";
 import { Effect } from "effect";
 import { FileSystem } from "effect/FileSystem";
@@ -36,6 +42,7 @@ await runEffect(
 				"CONFLUENCE_E2E_IMAGE",
 				"CONFLUENCE_E2E_REGRESSION_SIZE",
 				"CONFLUENCE_E2E_REPORT_DIRECTORY",
+				"CONFLUENCE_E2E_COMMENTS_SETTINGS_FILE",
 			]) {
 				const value = yield* runtime.getEnv(name);
 				if (value !== undefined) environment[name] = value;
@@ -69,6 +76,8 @@ await runEffect(
 						...connection,
 					}),
 				);
+				const commenter = await runEffect(createInlineCommentClient(client, connection));
+
 				const parent = await client.content.getContentById({
 					id: connection.confluenceParentId,
 					expand: ["space"],
@@ -296,6 +305,7 @@ await runEffect(
 							body += `\n\`\`\`mermaid\nflowchart LR\n  A[Note ${index}] --> B[Rendered] --> C[Published]\n\`\`\`\n`;
 						if (index === 1)
 							body += [
+								`\n${inlineCommentSelection}`,
 								"\n## PNG",
 								"![PNG](../assets/blue.png)",
 								"## Space in filename",
@@ -372,6 +382,24 @@ await runEffect(
 						before,
 						"Unchanged publishing must preserve all page bodies, versions and attachments",
 					);
+
+					const inlineComment = await createInlineCommentFixture(commenter, media.id);
+					const mediaFile = path.join(root, "docs/Note 001.md");
+					await writeFile(
+						mediaFile,
+						(await readFile(mediaFile)) + "\n\nChanged away from the inline comment.\n",
+					);
+					await publish("inline-comment-update");
+					report.inlineComment = await verifyInlineComment(commenter, inlineComment);
+					const commented = await snapshot(files);
+					await publish("inline-comment-unchanged");
+					assert.deepEqual(
+						await snapshot(files),
+						commented,
+						"Commented pages must preserve their versions and attachments on republish",
+					);
+					await verifyInlineComment(commenter, inlineComment);
+					await record();
 
 					const failureParent = await client.content.createContent({
 						type: "page",

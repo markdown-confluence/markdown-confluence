@@ -13,6 +13,7 @@ export type ConfluenceSettings = {
 	atlassianUserName: string;
 	atlassianApiToken: string;
 	confluenceAuthType: ConfluenceAuthType;
+	/** @deprecated Cloud endpoint paths are managed by confluence.js v3. */
 	confluenceApiPrefix: string;
 	confluenceRequestHeaders: Record<string, string>;
 	atlassianClientId: string;
@@ -117,10 +118,7 @@ export function validateConfluenceSettings(
 			message: `Unsupported Confluence auth type "${settings.confluenceAuthType}". Expected basic, bearer, or oauth2`,
 		});
 	}
-	addRequiredSettingIssue(issues, settings.confluenceApiPrefix, {
-		field: "confluenceApiPrefix",
-		message: "Confluence API prefix is required",
-	});
+
 	if (settings.confluenceAuthType === "oauth2") {
 		addRequiredSettingIssue(issues, settings.atlassianClientId, {
 			field: "atlassianClientId",

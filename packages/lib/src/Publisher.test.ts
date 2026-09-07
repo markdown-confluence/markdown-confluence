@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { expect, test } from "@effect/vitest";
-import { ConfluenceClient } from "confluence.js";
+import { createAuthenticatedConfluenceClient } from "./AuthenticatedConfluenceClient";
 import { Effect } from "effect";
 import { Path } from "effect/Path";
 import SparkMD5 from "spark-md5";
@@ -504,19 +504,13 @@ confluenceIntegrationTest(
 		const settings = await loadConfluenceSettings();
 		const workspace = new InMemoryMarkdownWorkspace(markdownTestCases);
 		const mermaidRenderer = new TestMermaidRenderer();
-		const confluenceClient = new ConfluenceClient({
-			host: settings.confluenceBaseUrl,
-			authentication: {
-				basic: {
-					email: settings.atlassianUserName,
-					apiToken: settings.atlassianApiToken,
-				},
-			},
-		});
+		const confluenceClient = await Effect.runPromise(
+			createAuthenticatedConfluenceClient(settings),
+		);
 
 		const searchParams = {
 			type: "page",
-			space: "it",
+			spaceKey: "it",
 			title: "Test - bf8bb13d-21b4-31b6-4584-8b9683d82086",
 			expand: ["version", "body.atlas_doc_format", "ancestors"],
 		};

@@ -1,11 +1,20 @@
 import assert from "node:assert/strict";
+import {
+	createInlineCommentClient,
+	createInlineCommentFixture,
+	verifyInlineComment,
+	inlineCommentSelection,
+} from "./integration-comments.js";
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { Effect } from "effect";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { RuntimeEnvironmentService } from "../packages/lib/src/effects/index.ts";
+import { liveConnectionSettings } from "./integration-options.js";
 import { vaultMarker } from "./integration-vault.js";
 import { runDataviewIntegration } from "./integration-dataview.js";
+import { runOAuthUiIntegration, runDeviceAvailabilityIntegration } from "./integration-oauth-ui.js";
 
 const publishedNotes = [
 	"Release Tests/Release Tests.md",
@@ -60,21 +69,32 @@ export function runObsidianIntegration({
 						);
 					}),
 			);
-		const baseUrl = environment.CONFLUENCE_E2E_BASE_URL;
+		const { createAuthenticatedConfluenceClient, ConfluenceUploadSettings } =
+			yield* Effect.tryPromise(() => import("../packages/lib/dist/index.js"));
 		const parentId = environment.CONFLUENCE_E2E_PARENT_ID;
-		const authorization = `Basic ${Buffer.from(`${environment.ATLASSIAN_USERNAME}:${environment.ATLASSIAN_API_TOKEN}`).toString("base64")}`;
+		const connection = liveConnectionSettings(environment);
+		const client = yield* createAuthenticatedConfluenceClient({
+			...ConfluenceUploadSettings.DEFAULT_SETTINGS,
+			...connection,
+		});
+		const commenter = yield* createInlineCommentClient(client, connection);
+
 		const get = (suffix) =>
-			Effect.tryPromise(async () => {
-				const response = await fetch(`${baseUrl}/wiki/rest/api/${suffix}`, {
-					headers: { Authorization: authorization, Accept: "application/json" },
-					redirect: "error",
-					signal: AbortSignal.timeout(30000),
+			Effect.tryPromise(() => {
+				const url = new URL(suffix, "https://verification.invalid/");
+				const id = url.pathname.split("/")[2];
+				if (url.pathname.endsWith("/child/attachment"))
+					return client.contentAttachments.getAttachments({
+						id,
+						limit: 250,
+						expand: ["version"],
+					});
+				if (url.pathname.endsWith("/label"))
+					return client.contentLabels.getLabelsForContent({ id, limit: 250 });
+				return client.content.getContentById({
+					id,
+					expand: (url.searchParams.get("expand") || "").split(","),
 				});
-				if (!response.ok)
-					throw new Error(
-						`Confluence verification request failed: HTTP ${response.status}`,
-					);
-				return response.json();
 			});
 		const parent = yield* get(`content/${parentId}?expand=space`);
 		assert.equal(
@@ -82,27 +102,96 @@ export function runObsidianIntegration({
 			environment.CONFLUENCE_E2E_SPACE_KEY,
 			"Refusing to publish outside the dedicated space",
 		);
-		const evaluate = (body) =>
+		const evaluate = (body, waitForRuntime = false) =>
 			Effect.gen(function* () {
-				// The prefix checks the vault path on every operation, including read-only probes.
-				const code = `(async () => { if(app.vault.adapter.getBasePath() !== ${JSON.stringify(vaultPath)}) throw Error('Wrong test vault'); ${body} })()`;
-				const output = yield* desktopCommand([
-					`vault=${path.basename(vaultPath)}`,
-					"eval",
-					`code=${code}`,
-				]);
-				return parseObsidianOutput(output);
+				// CLI eval does not await promises in every Obsidian version. Start once,
+				// then poll a synchronous result; never retry a publishing mutation.
+				const id = randomUUID();
+				const guard = `if(app.vault.adapter.getBasePath() !== ${JSON.stringify(vaultPath)}) throw Error('Wrong test vault');`;
+				const run = (code) =>
+					desktopCommand([`vault=${path.basename(vaultPath)}`, "eval", `code=${code}`]);
+				if (waitForRuntime) {
+					for (let attempt = 0; attempt < 20; attempt++) {
+						const output = yield* run(
+							`(()=>{${guard} return JSON.stringify({ready:true});})()`,
+						);
+						if (output.includes("=> ")) break;
+						yield* Effect.sleep("250 millis");
+					}
+				}
+				const key = JSON.stringify(id);
+				yield* run(
+					`(()=>{${guard} const jobs=app.__confluenceIntegrationJobs??={}; jobs[${key}]={status:'running'}; Promise.resolve().then(async()=>{${body}}).then(value=>jobs[${key}]={status:'done',value},error=>{let message=String(error?.message??error); const settings=app.plugins.plugins['confluence-integration']?.settings??{}; for(const field of ['atlassianApiToken','atlassianClientSecret']) if(settings[field]) message=message.split(settings[field]).join('[redacted]'); jobs[${key}]={status:'error',message};}); return JSON.stringify({started:true});})()`,
+				);
+				return yield* Effect.gen(function* () {
+					for (let attempt = 0; attempt < 360; attempt++) {
+						const output = yield* run(
+							`(()=>{${guard} return JSON.stringify(app.__confluenceIntegrationJobs?.[${key}]??{status:'missing'});})()`,
+						);
+						if (output.includes("=> ")) {
+							const job = parseObsidianOutput(output);
+							if (job.status === "done") return JSON.parse(job.value);
+							if (job.status === "error") throw new Error(job.message);
+							if (job.status === "missing")
+								throw new Error("Obsidian did not start the integration operation");
+						}
+						yield* Effect.sleep("500 millis");
+					}
+					throw new Error("Obsidian integration operation timed out after three minutes");
+				}).pipe(
+					Effect.ensuring(
+						run(
+							`(()=>{${guard} delete app.__confluenceIntegrationJobs?.[${key}]; return JSON.stringify({cleaned:true});})()`,
+						),
+					),
+				);
 			});
 		// Validate runtime settings as well as the API account used to verify results.
-		yield* evaluate("return JSON.stringify({vault:true});");
+		yield* evaluate("return JSON.stringify({vault:true});", true);
+		// A hidden Electron renderer can throttle timers to once a minute. Keep
+		// automated UI/index waits responsive, then restore the user's setting.
+		yield* Effect.acquireRelease(
+			evaluate(`
+				const contents=require('@electron/remote').getCurrentWindow().webContents;
+				const previous=contents.getBackgroundThrottling();
+				contents.setBackgroundThrottling(false);
+				return JSON.stringify(previous);
+			`),
+			(previous) =>
+				evaluate(`
+					require('@electron/remote').getCurrentWindow().webContents.setBackgroundThrottling(${previous});
+					return JSON.stringify({restored:true});
+				`).pipe(Effect.orDie),
+		);
 		yield* desktopCommand([
 			`vault=${path.basename(vaultPath)}`,
 			"plugin:reload",
 			"id=confluence-integration",
 		]);
-		yield* evaluate(
-			`const p=app.plugins.plugins['confluence-integration']; if(!p) throw Error('Enable Confluence Integration in the test vault'); if(p.settings.confluenceBaseUrl !== ${JSON.stringify(baseUrl)} || String(p.settings.confluenceParentId) !== ${JSON.stringify(parentId)}) throw Error('Plugin destination differs from test configuration'); return JSON.stringify({ready:true});`,
+		const runtimeAuthentication = yield* evaluate(
+			`const p=app.plugins.plugins['confluence-integration']; if(!p) throw Error('Enable Confluence Integration in the test vault'); if(p.settings.confluenceBaseUrl !== ${JSON.stringify(connection.confluenceBaseUrl)} || p.settings.confluenceAuthType !== ${JSON.stringify(connection.confluenceAuthType)} || String(p.settings.confluenceParentId) !== ${JSON.stringify(parentId)}) throw Error('Plugin destination differs from test configuration'); return JSON.stringify({ready:true,mode:p.settings.oauthMode || "basic",flow:p.settings.oauthFlow});`,
+			true,
 		);
+		const oauthUi =
+			runtimeAuthentication.mode === "browser"
+				? yield* runOAuthUiIntegration({ evaluate })
+				: undefined;
+		const deviceAvailability =
+			runtimeAuthentication.mode === "browser"
+				? yield* runDeviceAvailabilityIntegration({ evaluate })
+				: undefined;
+		let browserRefresh;
+		if (runtimeAuthentication.mode === "browser") {
+			browserRefresh = yield* evaluate(
+				`const p=app.plugins.plugins['confluence-integration']; const secretId=p.settings.oauthSecretId; const stored=app.secretStorage?.getSecret(secretId); if(!stored) throw Error('Connect to Atlassian in the test vault first'); const before=JSON.parse(stored); app.secretStorage.setSecret(secretId,JSON.stringify({...before,expiresAt:0})); await p.browserOAuth.accessToken(); const after=JSON.parse(app.secretStorage.getSecret(secretId)); if(before.refreshToken===after.refreshToken || after.expiresAt<=Date.now()+120000) throw Error('Browser OAuth did not rotate the expired token'); const serialized=JSON.stringify(p.settings); if(serialized.includes(after.accessToken)||serialized.includes(after.refreshToken)) throw Error('Browser tokens leaked into plugin settings'); return JSON.stringify({rotated:true,secretStorage:true});`,
+			);
+			yield* fs.writeFileString(
+				path.join(reportDirectory, "oauth.json"),
+				JSON.stringify({ oauthUi, deviceAvailability, browserRefresh }, null, 2),
+			);
+			yield* Effect.log("OAuth: UI checks and real token refresh passed");
+		}
+
 		const snapshot = () =>
 			Effect.gen(function* () {
 				const pages = {};
@@ -125,7 +214,16 @@ export function runObsidianIntegration({
 					pages[filename] = {
 						id: pageId,
 						version: page.version.number,
-						body: JSON.parse(page.body.atlas_doc_format.value),
+						body: JSON.parse(page.body.atlas_doc_format.value, (key, value) =>
+							[
+								"__fileName",
+								"__fileSize",
+								"__fileMimeType",
+								"__confluenceMetadata",
+							].includes(key)
+								? undefined
+								: value,
+						),
 						ancestors: page.ancestors.map((ancestor) => ancestor.id),
 						attachments: Object.fromEntries(
 							attachments.results.map((attachment) => [
@@ -166,16 +264,25 @@ export function runObsidianIntegration({
 			});
 		const publish = () =>
 			evaluate(
-				`const result=await app.plugins.plugins['confluence-integration'].doPublish(); if(result.errorMessage || result.failedFiles.length || result.filesUploadResult.length < 7) throw Error('Desktop publish failed'); return JSON.stringify({count:result.filesUploadResult.length});`,
+				`const result=await app.plugins.plugins['confluence-integration'].doPublish(); if(result.errorMessage || result.failedFiles.length || result.filesUploadResult.length < 7) throw Error('Desktop publish failed: '+JSON.stringify({message:result.errorMessage,failed:result.failedFiles,count:result.filesUploadResult.length})); return JSON.stringify({count:result.filesUploadResult.length});`,
 			);
+		yield* evaluate(
+			`const file=app.vault.getAbstractFileByPath('Release Tests/Formatting.md'); const text=await app.vault.read(file); if(!text.includes(${JSON.stringify(inlineCommentSelection)})) await app.vault.modify(file,text+${JSON.stringify("\n\n" + inlineCommentSelection + "\n")}); return JSON.stringify({fixtureReady:true});`,
+		);
+
 		yield* publish();
-		const first = yield* snapshot();
+		let first = yield* snapshot();
 		yield* publish();
 		assert.deepEqual(
 			yield* snapshot(),
 			first,
 			"Desktop republishing changed unchanged pages or attachments",
 		);
+		const inlineComment = yield* Effect.tryPromise(() =>
+			createInlineCommentFixture(commenter, first["Release Tests/Formatting.md"].id),
+		);
+		first = yield* snapshot();
+
 		const filename = "Release Tests/Formatting.md";
 		const sentinel = `DESKTOP INTEGRATION UPDATE ${Date.now()}`;
 		const original = yield* fs.readFileString(path.join(vaultPath, filename));
@@ -203,6 +310,17 @@ export function runObsidianIntegration({
 		);
 		// Restore the remote fixture too, so the next run starts from the same note.
 		yield* publish();
+		const inlineCommentEvidence = yield* Effect.tryPromise(() =>
+			verifyInlineComment(commenter, inlineComment),
+		);
+		const restored = yield* snapshot();
+		yield* publish();
+		assert.deepEqual(
+			yield* snapshot(),
+			restored,
+			"A page with an inline comment must remain unchanged on republish",
+		);
+
 		if (dataview) {
 			const result = yield* runDataviewIntegration({ evaluate, get, prefix: marker.prefix });
 			yield* fs.writeFileString(
@@ -216,10 +334,18 @@ export function runObsidianIntegration({
 			JSON.stringify(
 				{
 					status: "passed",
+					inlineComment: inlineCommentEvidence,
+					authentication: connection.confluenceAuthType,
+					oauthMode: runtimeAuthentication.mode,
+					oauthFlow: runtimeAuthentication.flow,
+					oauthUi,
+					deviceAvailability,
+					browserRefresh,
 					checks: [
 						"desktop-publish",
 						"unchanged",
 						"single-note-update",
+						"inline-comments-preserved",
 						"electron-mermaid",
 						"plantuml",
 						"hierarchy",
@@ -236,5 +362,5 @@ export function runObsidianIntegration({
 				2,
 			),
 		);
-	});
+	}).pipe(Effect.scoped);
 }

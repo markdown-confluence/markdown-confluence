@@ -29,12 +29,12 @@ Please log issues to https://github.com/markdown-confluence/markdown-confluence/
 1. Download `main.js` and `manifest.json` from the [Obsidian integration releases](https://github.com/markdown-confluence/obsidian-integration/releases). Create `.obsidian/plugins/confluence-integration` inside your vault and place both files there. Restart Obsidian, enable community plugins for the vault, and enable **Confluence Integration**. This plugin is currently absent from the community catalog; a GitHub release does not restore that listing.
 2. Open the plugin settings and configure the following fields:
 
-- `Confluence Base URL`: The base URL of your Atlassian Confluence instance (e.g., `https://your-domain.atlassian.net`)
+- `Confluence API URL`: Your Confluence site (e.g., `https://your-domain.atlassian.net`), or `https://api.atlassian.com/ex/confluence/{cloudId}` for scoped API tokens.
+- `Confluence Site URL`: The browsable site URL. Required when using the API gateway so published links point to your site.
 - `Confluence Parent Id`: The Confluence page ID where your notes will be published as child pages
 - `Atlassian User Name`: Your Atlassian account's email address
 - `Atlassian API Token`: Your Atlassian API token. You can generate one from your [Atlassian Account Settings](https://id.atlassian.com/manage-profile/security/api-tokens).
-- `Authentication Type`: Basic for Confluence Cloud API tokens, or Bearer / PAT for bearer-token endpoints.
-- `Confluence API Prefix`: The REST API prefix, defaulting to `/wiki/rest`.
+- `Authentication Type`: API token / Basic for Confluence Cloud API tokens, including scoped tokens; Bearer / PAT for bearer-token endpoints.
 - `Custom Request Headers`: Optional JSON object of extra headers to send with Confluence requests.
 - `Folder To Publish`: The name of the folder in Obsidian containing the notes you want to publish (default: "Confluence Pages")
 - `Tags to publish`: Optional comma-separated YAML tags. Notes with a matching `tags` value are published even when they are outside the configured folder.

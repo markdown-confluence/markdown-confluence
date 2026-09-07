@@ -43,7 +43,14 @@ export function runDataviewIntegration({ evaluate, get, prefix = `Desktop ${Date
 			);
 		const publish = (filename) =>
 			evaluate(`
-			const result = await app.plugins.plugins['confluence-integration'].doPublish(${JSON.stringify(filename)});
+			let result;
+			try { result = await app.plugins.plugins['confluence-integration'].doPublish(${JSON.stringify(filename)}); }
+			catch (error) {
+				const index=app.plugins.plugins.dataview?.api?.index;
+				const files=app.vault.getMarkdownFiles();
+				const waiting=files.flatMap(file=>{const indexed=index?.pages.get(file.path)?.mtime.toMillis();return indexed===undefined||indexed<file.stat.mtime?[{path:file.path,indexed,mtime:file.stat.mtime}]:[]});
+				throw Error(String(error.message)+'; index diagnostics: '+JSON.stringify({initialized:index?.initialized,waiting,removed:[...(index?.pages.keys()??[])].filter(path=>!files.some(file=>file.path===path))}));
+			}
 			if (result.errorMessage || result.failedFiles.length || result.filesUploadResult.length !== 1) throw Error('Dataview desktop publication failed');
 			return JSON.stringify({published:true});
 		`);
@@ -72,6 +79,9 @@ export function runDataviewIntegration({ evaluate, get, prefix = `Desktop ${Date
 				plugin.settings.ignoredCodeBlockLanguages = (plugin.settings.ignoredCodeBlockLanguages || []).filter(value => value.trim().toLowerCase() !== 'dataview');
 				await plugin.saveSettings(); return JSON.stringify({enabled:true});
 			`);
+			yield* Effect.log(
+				"Dataview: publish and verify TABLE, LIST, TASK and embedded context",
+			);
 			yield* publish(paperPath);
 			yield* publish(bibliographyPath);
 			const first = yield* page(bibliographyPath);
@@ -109,6 +119,7 @@ export function runDataviewIntegration({ evaluate, get, prefix = `Desktop ${Date
 			const paperSource = yield* read(paperPath);
 			assert.ok(bibliographySource.includes("```dataview"));
 			assert.ok(bibliographySource.includes("contains(this.file.outlinks, file.link)"));
+			yield* Effect.log("Dataview: verify unchanged publication");
 			yield* publish(bibliographyPath);
 			assert.deepEqual(
 				yield* page(bibliographyPath),
@@ -121,6 +132,7 @@ export function runDataviewIntegration({ evaluate, get, prefix = `Desktop ${Date
 					paperSource.includes("Ada"),
 					"Dataview fixture needs its original author restored",
 				);
+				yield* Effect.log("Dataview: verify immediate dependency update");
 				yield* write(paperPath, paperSource.replace("Ada", "Grace"));
 				// No delay: publication must wait for Dataview's asynchronous dependency indexing.
 				yield* publish(bibliographyPath);
@@ -128,6 +140,7 @@ export function runDataviewIntegration({ evaluate, get, prefix = `Desktop ${Date
 				assert.equal(updated.version, first.version + 1);
 				assert.ok(JSON.stringify(updated.body).includes("Grace"));
 				assert.ok(!JSON.stringify(updated.body).includes('"Ada"'));
+				yield* Effect.log("Dataview: verify invalid query leaves remote page unchanged");
 				yield* write(
 					bibliographyPath,
 					bibliographySource + "\n```dataview\nINVALID QUERY\n```\n",

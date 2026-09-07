@@ -117,7 +117,6 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
   "atlassianUserName": "your-email@example.com",
   "atlassianApiToken": "optional-token-from-config",
   "confluenceAuthType": "basic",
-  "confluenceApiPrefix": "/wiki/rest",
   "confluenceRequestHeaders": {
     "X-Custom-Header": "optional-value"
   },
@@ -135,13 +134,13 @@ The CLI, Docker image, and GitHub Action all read the same global settings. You 
 
 | JSON key | Environment variable | CLI option | Description |
 | --- | --- | --- | --- |
-| `confluenceBaseUrl` | `CONFLUENCE_BASE_URL` | `--baseUrl`, `-b` | Your Confluence site URL. For Confluence Cloud, use the Atlassian site URL without `/wiki`, for example `https://your-domain.atlassian.net`. When authenticating with OAuth 2.0, set this to the API gateway URL `https://api.atlassian.com/ex/confluence/{cloudId}`. |
+| `confluenceBaseUrl` | `CONFLUENCE_BASE_URL` | `--baseUrl`, `-b` | Your Confluence site URL. For unscoped API tokens, use the Atlassian site URL without `/wiki`, for example `https://your-domain.atlassian.net`. For scoped API tokens or OAuth 2.0, use the API gateway URL `https://api.atlassian.com/ex/confluence/{cloudId}` and set `confluenceSiteUrl` separately. Scoped API tokens use `basic` authentication with your account email. |
 | `confluenceSiteUrl` | `CONFLUENCE_SITE_URL` | `--siteUrl` | The browsable Confluence site URL used to build and match display links (for example `https://your-domain.atlassian.net`). Falls back to `confluenceBaseUrl` when unset. Required when `confluenceBaseUrl` points at the API gateway, otherwise published links would be unresolvable. |
 | `confluenceParentId` | `CONFLUENCE_PARENT_ID` | `--parentId`, `-p` | The numeric ID of an existing Confluence parent page. The parent page determines the target space. |
 | `atlassianUserName` | `ATLASSIAN_USERNAME` | `--userName`, `-u` | The Atlassian user name or email address used for publishing. |
 | `atlassianApiToken` | `ATLASSIAN_API_TOKEN` | `--apiToken` | The Atlassian API token. Prefer an environment variable or GitHub secret instead of committing this value to JSON. |
 | `confluenceAuthType` | `CONFLUENCE_AUTH_TYPE` | `--authType` | Authentication mode. Use `basic` for Confluence Cloud API tokens or `bearer` for PAT-style bearer tokens. |
-| `confluenceApiPrefix` | `CONFLUENCE_API_PREFIX` | `--apiPrefix` | API route prefix. Defaults to `/wiki/rest`; use values like `/rest` only when your Confluence API is exposed there. |
+| `confluenceApiPrefix` | `CONFLUENCE_API_PREFIX` | `--apiPrefix` | Deprecated and ignored. Confluence Cloud endpoint paths are supplied by confluence.js v3. |
 | `confluenceRequestHeaders` | `CONFLUENCE_REQUEST_HEADERS` | `--requestHeaders` | Extra request headers. JSON config accepts an object; env and CLI accept `Header=Value,Another=Value`. |
 | `folderToPublish` | `FOLDER_TO_PUBLISH` | `--enableFolder`, `-f` | The folder, relative to `contentRoot`, whose Markdown files default to `connie-publish: true`. Use `.` to publish all Markdown files under `contentRoot`. |
 | `contentRoot` | `CONFLUENCE_CONTENT_ROOT` | `--contentRoot`, `--cr` | The root directory to scan for Markdown files and referenced content. |

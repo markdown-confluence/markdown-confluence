@@ -2,6 +2,7 @@ export const integrationProfiles = [
 	"quick",
 	"packages",
 	"live",
+	"blogs",
 	"regressions",
 	"docker",
 	"vault",
@@ -67,7 +68,7 @@ export function validateLiveEnvironment(environment) {
 		);
 	if (!/^\d+$/.test(environment.CONFLUENCE_E2E_PARENT_ID))
 		throw new Error("CONFLUENCE_E2E_PARENT_ID must be a numeric page ID");
-	if (oauth) {
+	if (environment.CONFLUENCE_E2E_API_URL) {
 		const api = new URL(environment.CONFLUENCE_E2E_API_URL);
 		if (
 			api.origin !== "https://api.atlassian.com" ||
@@ -88,9 +89,8 @@ export function liveConnectionSettings(environment) {
 	const oauth = environment.CONFLUENCE_E2E_AUTH_TYPE === "oauth2";
 	return {
 		confluenceAuthType: oauth ? "oauth2" : "basic",
-		confluenceBaseUrl: oauth
-			? environment.CONFLUENCE_E2E_API_URL
-			: environment.CONFLUENCE_E2E_BASE_URL,
+		confluenceBaseUrl:
+			environment.CONFLUENCE_E2E_API_URL || environment.CONFLUENCE_E2E_BASE_URL,
 		confluenceSiteUrl: environment.CONFLUENCE_E2E_BASE_URL,
 		confluenceParentId: environment.CONFLUENCE_E2E_PARENT_ID,
 		atlassianUserName: oauth ? "" : environment.ATLASSIAN_USERNAME,

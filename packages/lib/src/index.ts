@@ -3,6 +3,7 @@ import {
 	type MarkdownSourceTransformer,
 	type MarkdownSourceContext,
 } from "./MarkdownSourceTransformer";
+import type { ConfluenceFetch } from "./ConfluenceFetch";
 import { transformMarkdownCodeBlocks, type MarkdownCodeBlock } from "./MarkdownCodeBlocks";
 import { fetchConfluencePageAdf, resolveConfluencePageId } from "./ConfluencePage";
 import { convertADFToMarkdown, type AdfToMarkdownOptions } from "./AdfConversion";
@@ -91,6 +92,7 @@ import {
 } from "./SettingsConfig";
 
 export {
+	type ConfluenceFetch,
 	MarkdownSourceTransformerService,
 	type MarkdownSourceTransformer,
 	type MarkdownSourceContext,

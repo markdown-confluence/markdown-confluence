@@ -61,3 +61,5 @@ PlantUML is disabled by default. Enabling it sends diagram source to the configu
 Install `main.js` and `manifest.json` from the [integration releases](https://github.com/markdown-confluence/obsidian-integration/releases) into `.obsidian/plugins/confluence-integration` in the vault. Enable the plugin in Obsidian's community-plugin settings. The plugin is currently absent from the community catalog; catalog reinstatement remains separate from releasing downloadable artifacts.
 
 Back up the vault before upgrading. Test the new version in a separate vault and Confluence space before using it with an existing publishing tree.
+
+For version 7, see the [Cloud SDK migration](CLOUD_API_MIGRATION.md#library-migration-from-6). It changes the public client contract and adds native Obsidian OAuth.

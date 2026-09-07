@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Console, Effect, Stream } from "effect";
 import { FileSystem } from "effect/FileSystem";
@@ -10,13 +11,18 @@ import {
 	RuntimeEnvironmentService,
 } from "../packages/lib/src/effects/index.ts";
 import { prepareReleaseAssets, releasePackages } from "./prepare-release-assets.js";
-import { parseIntegrationOptions, validateLiveEnvironment } from "./integration-options.js";
+import {
+	parseIntegrationOptions,
+	validateLiveEnvironment,
+	liveConnectionSettings,
+} from "./integration-options.js";
 import { prepareIntegrationVault } from "./integration-vault.js";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const help = `Integration profiles (vp run test:integration [profile] [options]):
   quick      Build, check all fixture conversions and render real Mermaid PNGs (default).
   packages   Pack all five npm packages, install into a fresh consumer and verify them.
+  blogs      Publish a blog post; verify attachments, labels, updates and CLI export.
   live       Publish synthetic fixtures to Confluence; verify unchanged/update/recovery.
   regressions Publish 166 notes with Mermaid/images using the released action container.
   docker     Build the local image and exercise its CLI without Confluence credentials.
@@ -84,13 +90,20 @@ function readTestEnvironment(options) {
 			ATLASSIAN_CLIENT_SECRET: "atlassianClientSecret",
 			CONFLUENCE_E2E_AUTH_TYPE: undefined,
 			CONFLUENCE_E2E_API_URL: undefined,
-			CONFLUENCE_E2E_BASE_URL: "confluenceBaseUrl",
+			CONFLUENCE_E2E_BASE_URL: undefined,
 			CONFLUENCE_E2E_PARENT_ID: "confluenceParentId",
 			CONFLUENCE_E2E_SPACE_KEY: undefined,
 		};
 		const environment = {};
 		for (const [name, setting] of Object.entries(mapping))
 			environment[name] = (yield* runtime.getEnv(name)) || settings[setting];
+		environment.CONFLUENCE_E2E_BASE_URL ||=
+			settings.confluenceSiteUrl || settings.confluenceBaseUrl;
+		if (
+			settings.confluenceBaseUrl &&
+			new URL(settings.confluenceBaseUrl).hostname === "api.atlassian.com"
+		)
+			environment.CONFLUENCE_E2E_API_URL ||= settings.confluenceBaseUrl;
 		return environment;
 	});
 }
@@ -243,7 +256,7 @@ function runIntegration() {
 			const node = argv[0];
 			const options = parseIntegrationOptions(argv.slice(2));
 			if (options.help) return yield* Console.log(help);
-			const runId = `${options.profile}-${new Date().toISOString().replaceAll(/[:.]/g, "-")}`;
+			const runId = `${options.profile}-${new Date().toISOString().replaceAll(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}`;
 			const reportDirectory = path.join(repositoryRoot, "reports/integration", runId);
 			yield* fs.makeDirectory(reportDirectory, { recursive: true });
 			const report = {
@@ -270,20 +283,13 @@ function runIntegration() {
 					);
 				});
 			const work = Effect.gen(function* () {
-				const live = ["live", "regressions", "obsidian"].includes(options.profile);
-				const environment = ["live", "regressions", "obsidian", "vault"].includes(
+				const live = ["live", "blogs", "regressions", "obsidian"].includes(options.profile);
+				const environment = ["live", "blogs", "regressions", "obsidian", "vault"].includes(
 					options.profile,
 				)
 					? yield* readTestEnvironment(options)
 					: {};
 				if (live) validateLiveEnvironment(environment);
-				if (
-					["obsidian", "vault"].includes(options.profile) &&
-					environment.CONFLUENCE_E2E_AUTH_TYPE === "oauth2"
-				)
-					throw new Error(
-						"Desktop profiles currently support Basic authentication; use live for OAuth verification",
-					);
 				if (!options.skipBuild)
 					yield* step("Build workspace", command("vp", ["run", "build"]));
 				yield* step("Validate release artifacts", prepareReleaseAssets(repositoryRoot));
@@ -296,13 +302,21 @@ function runIntegration() {
 				if (options.profile === "vault") {
 					const result = yield* step(
 						"Prepare dedicated Obsidian vault",
-						prepareIntegrationVault(repositoryRoot, vaultPath, {
-							confluenceBaseUrl: environment.CONFLUENCE_E2E_BASE_URL,
-							confluenceSiteUrl: environment.CONFLUENCE_E2E_BASE_URL,
-							confluenceParentId: environment.CONFLUENCE_E2E_PARENT_ID,
-							atlassianUserName: environment.ATLASSIAN_USERNAME,
-							atlassianApiToken: environment.ATLASSIAN_API_TOKEN,
-						}),
+						prepareIntegrationVault(
+							repositoryRoot,
+							vaultPath,
+							environment.CONFLUENCE_E2E_AUTH_TYPE === "oauth2"
+								? liveConnectionSettings(environment)
+								: {
+										confluenceBaseUrl:
+											environment.CONFLUENCE_E2E_API_URL ||
+											environment.CONFLUENCE_E2E_BASE_URL,
+										confluenceSiteUrl: environment.CONFLUENCE_E2E_BASE_URL,
+										confluenceParentId: environment.CONFLUENCE_E2E_PARENT_ID,
+										atlassianUserName: environment.ATLASSIAN_USERNAME,
+										atlassianApiToken: environment.ATLASSIAN_API_TOKEN,
+									},
+						),
 					);
 					report.vault = result;
 					yield* Console.log(
@@ -346,6 +360,22 @@ function runIntegration() {
 					);
 					return;
 				}
+				if (options.profile === "blogs") {
+					yield* step(
+						"Live blog-post CLI create/update/unchanged/export",
+						command(node, ["scripts/integration-blogs.js"], {
+							env: {
+								...environment,
+								CONFLUENCE_E2E_REPORT_PATH: path.join(
+									reportDirectory,
+									"blogs.json",
+								),
+							},
+						}),
+					);
+					return;
+				}
+
 				if (options.profile === "live") {
 					yield* step(
 						"Live Confluence create/unchanged/update/recovery",
