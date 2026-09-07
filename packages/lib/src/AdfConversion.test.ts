@@ -289,6 +289,24 @@ test("preserves Markdown table column alignment and numbered list starting value
 	expect(markdown).toMatch(/\| :-+ \| :-+: \| -+: \|/);
 });
 
+test("formatting closing tags inside inline code and escaped text stay literal", () => {
+	const converted = parseMarkdownToADF("<u>Before `</u>` \\</u> after</u> outside", baseUrl);
+	expect(converted.content[0]?.content).toEqual([
+		{ ...text("Before "), marks: [{ type: "underline" }] },
+		{ ...text("</u>"), marks: [{ type: "code" }] },
+		{ ...text(" </u> after"), marks: [{ type: "underline" }] },
+		text(" outside"),
+	]);
+});
+
+test("readable media export preserves unsupported children as ADF, never error text", () => {
+	const original = document(richNodes[2]!);
+	const markdown = convertADFToMarkdown(original, { lossless: false });
+	expect(markdown).toContain("```adf");
+	expect(markdown).not.toContain("Error:");
+	expect(parseMarkdownToADF(markdown, baseUrl)).toEqual(original);
+});
+
 test("readable export renders cards, media captions, status and dates", () => {
 	const markdown = convertADFToMarkdown(
 		document(
@@ -313,6 +331,46 @@ test("readable export renders cards, media captions, status and dates", () => {
 	expect(markdown).toContain("[https://example.com](https://example.com)");
 	expect(markdown).toContain("![](https://example.com/image.png)\n\nCaption");
 	expect(markdown).toContain("**READY** 1970-01-01");
+});
+
+test("table export keeps literal backslashes, pipes, inline code and links in their cells", () => {
+	const cells = [
+		text("literal \\| pipe | and \\ backslash"),
+		{ ...text("code \\| and |"), marks: [{ type: "code" }] },
+		{
+			...text("label \\| and |"),
+			marks: [{ type: "link", attrs: { href: "https://example.com/a(b)(c)?q=a|b" } }],
+		},
+	];
+	const original = document({
+		type: "table",
+		content: [
+			{
+				type: "tableRow",
+				content: cells.map((cell) => ({ type: "tableHeader", content: [paragraph(cell)] })),
+			},
+		],
+	});
+	const markdown = renderADFDoc(readAdfDocument(original));
+	expect(markdown).not.toContain("```adf");
+	const converted = parseMarkdownToADF(markdown, baseUrl);
+	expect(
+		converted.content[0]?.content?.[0]?.content?.map((cell) => cell?.content?.[0]?.content),
+	).toEqual([
+		[cells[0]],
+		[cells[1]],
+		[
+			{
+				...text("label \\| and |"),
+				marks: [
+					{
+						type: "link",
+						attrs: { href: "https://example.com/a%28b%29%28c%29?q=a%7Cb" },
+					},
+				],
+			},
+		],
+	]);
 });
 
 test("escapes literal Markdown and uses longer code delimiters when needed", () => {
@@ -369,4 +427,30 @@ test("lossless export retains Confluence link metadata even though publishing ig
 	expect(parseMarkdownToADF(convertADFToMarkdown(original, { baseUrl }), baseUrl)).toEqual(
 		original,
 	);
+});
+
+test("parses formatting inside link labels and consumes closing-tag whitespace", () => {
+	const adf = parseMarkdownToADF(
+		'[<u>Underlined link</u>](https://example.com) <span style="color: #ff0000">Red</span >',
+		baseUrl,
+	);
+	expect(adf.content?.[0]?.content).toEqual(
+		expect.arrayContaining([
+			expect.objectContaining({
+				text: "Underlined link",
+				marks: expect.arrayContaining([
+					{ type: "underline" },
+					expect.objectContaining({
+						type: "link",
+						attrs: expect.objectContaining({ href: "https://example.com" }),
+					}),
+				]),
+			}),
+			expect.objectContaining({
+				text: "Red",
+				marks: [{ type: "textColor", attrs: { color: "#ff0000" } }],
+			}),
+		]),
+	);
+	expect(JSON.stringify(adf)).not.toContain('"text":">"');
 });

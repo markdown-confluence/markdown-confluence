@@ -298,7 +298,9 @@ function renderTable(element: ADFEntity) {
 			alignments[column] = markdownAlignment;
 			const cellContent = renderChildren(tableCell);
 			if (typeof cellContent === "string") {
-				rowCells.push(cellContent.replace(/\|/g, "\\|").replace(/\n/g, "<br>"));
+				// Text is escaped before adding Markdown marks. Re-escaping the rendered
+				// cell would change backslashes and pipes inside inline code and links.
+				rowCells.push(cellContent.replace(/\n/g, "<br>"));
 			}
 		}
 		tableCells.push(rowCells);
@@ -349,12 +351,12 @@ function renderChildren(element: ADFEntity) {
 }
 
 function escapeMarkdownText(text: string): string {
-	return text.replace(/([\\`*_[\]<>~])/g, "\\$1");
+	return text.replace(/([\\`*_[\]<>~|])/g, "\\$1");
 }
 
 function markdownDestination(value: unknown): string {
-	return String(value).replace(/[\s<>()[\]\\]/g, (character) =>
-		encodeURIComponent(character).replace("(", "%28").replace(")", "%29"),
+	return String(value).replace(/[\s<>()[\]\\|]/g, (character) =>
+		encodeURIComponent(character).replaceAll("(", "%28").replaceAll(")", "%29"),
 	);
 }
 

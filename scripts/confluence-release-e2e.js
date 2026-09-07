@@ -244,6 +244,7 @@ const program = Effect.scoped(
 					JSON.stringify({
 						title: result.node.file.pageTitle,
 						comparison: updateComparisons.get(result.node.file.pageId),
+						existingPageData: result.node.existingPageData,
 						storedBody: JSON.parse(storedBodies.get(result.node.file.pageId)),
 						requestedBody: JSON.parse(requestedBodies.get(result.node.file.pageId)),
 					}),
@@ -450,6 +451,10 @@ const program = Effect.scoped(
 		let finalRequestedBody;
 		client.content.updateContent = async (parameters) => {
 			finalRequestedBody = parameters.body?.atlas_doc_format?.value;
+			updateComparisons.set(parameters.id, {
+				previous: fetchedPages.get(parameters.id),
+				requested: structuredClone(parameters),
+			});
 			return updateContent(parameters);
 		};
 		const finalPublish = yield* Effect.tryPromise(publishFormatting);
@@ -459,6 +464,8 @@ const program = Effect.scoped(
 					check: "unchanged-after-conflict",
 					storedBody: conflictPage.body.atlas_doc_format.value,
 					requestedBody: finalRequestedBody,
+					comparison: updateComparisons.get(formatting.pageId),
+					existingPageData: finalPublish[0].node.existingPageData,
 				}),
 			);
 		}

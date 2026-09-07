@@ -8,7 +8,6 @@ import {
 	fetchConfluencePageAdf,
 	confluenceReadSettingsConfig,
 	makeConfluenceSettingsConfigProvider,
-	validateConfluenceSettings,
 } from "@markdown-confluence/lib";
 import { conversionHelp, parseConversionOptions } from "./conversionOptions";
 
@@ -27,14 +26,6 @@ export function convertDocument(command: "to-adf" | "to-markdown", args: string[
 			const settings = yield* confluenceReadSettingsConfig
 				.parse(provider)
 				.pipe(Effect.mapError(toError));
-			const issues = validateConfluenceSettings(settings).issues.filter(
-				(issue) =>
-					!["confluenceParentId", "folderToPublish", "contentRoot"].includes(issue.field),
-			);
-			if (issues.length)
-				return yield* Effect.fail(
-					new Error(issues.map((issue) => issue.message).join("\n")),
-				);
 			input = yield* fetchConfluencePageAdf(settings, options.page);
 			options.baseUrl = settings.confluenceSiteUrl || settings.confluenceBaseUrl;
 		} else {

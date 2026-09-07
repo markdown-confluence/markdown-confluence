@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import { createAuthenticatedConfluenceClient } from "./AuthenticatedConfluenceClient";
 import { readAdfDocument } from "./AdfDocument";
-import { resolveSiteUrl, type ConfluenceSettings } from "./Settings";
+import { resolveSiteUrl, validateConfluenceSettings, type ConfluenceSettings } from "./Settings";
 
 export function resolveConfluencePageId(reference: string, siteUrl: string): string {
 	if (/^\d+$/.test(reference)) return reference;
@@ -29,6 +29,12 @@ export function resolveConfluencePageId(reference: string, siteUrl: string): str
 /** Read only: uses the configured client, never sends credentials to the input URL. */
 export function fetchConfluencePageAdf(settings: ConfluenceSettings, reference: string) {
 	return Effect.gen(function* () {
+		const issues = validateConfluenceSettings(settings).issues.filter(
+			(issue) =>
+				!["confluenceParentId", "folderToPublish", "contentRoot"].includes(issue.field),
+		);
+		if (issues.length)
+			return yield* Effect.fail(new Error(issues.map((issue) => issue.message).join("\n")));
 		const id = yield* Effect.try({
 			try: () => resolveConfluencePageId(reference, resolveSiteUrl(settings)),
 			catch: toError,

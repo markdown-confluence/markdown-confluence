@@ -9,6 +9,12 @@ import type { RequiredConfluenceClient } from "./ConfluenceClient";
 afterEach(() => vi.restoreAllMocks());
 
 const site = "https://example.atlassian.net";
+const readSettings = {
+	...DEFAULT_SETTINGS,
+	confluenceBaseUrl: site,
+	atlassianUserName: "tester@example.com",
+	atlassianApiToken: "test-token",
+};
 
 test("connection-only configuration requires no publishing parent or folder", async () => {
 	const settings = await Effect.runPromise(
@@ -42,7 +48,7 @@ test("reads ADF through the configured authenticated client without mutating con
 	vi.spyOn(authentication, "createAuthenticatedConfluenceClient").mockReturnValue(
 		Effect.succeed({ content: { getContentById } } as unknown as RequiredConfluenceClient),
 	);
-	const settings = { ...DEFAULT_SETTINGS, confluenceBaseUrl: site };
+	const settings = readSettings;
 	expect(
 		await Effect.runPromise(
 			fetchConfluencePageAdf(settings, `${site}/wiki/spaces/D/pages/123/Title`),
@@ -69,11 +75,27 @@ test("reports failed reads without exposing transport headers or credentials", a
 			},
 		} as unknown as RequiredConfluenceClient),
 	);
+	await expect(Effect.runPromise(fetchConfluencePageAdf(readSettings, "123"))).rejects.toThrow(
+		"Unable to read Confluence page 123 (HTTP 403)",
+	);
+});
+
+test("rejects invalid connection settings before creating an authenticated client", async () => {
+	const createClient = vi
+		.spyOn(authentication, "createAuthenticatedConfluenceClient")
+		.mockReturnValue(Effect.die("Client must not be created"));
 	await expect(
 		Effect.runPromise(
-			fetchConfluencePageAdf({ ...DEFAULT_SETTINGS, confluenceBaseUrl: site }, "123"),
+			fetchConfluencePageAdf(
+				{
+					...readSettings,
+					confluenceBaseUrl: "file:///tmp/confluence",
+				},
+				"123",
+			),
 		),
-	).rejects.toThrow("Unable to read Confluence page 123 (HTTP 403)");
+	).rejects.toThrow(/https/i);
+	expect(createClient).not.toHaveBeenCalled();
 });
 
 test("reads canonical, legacy and overview Confluence page references", () => {
