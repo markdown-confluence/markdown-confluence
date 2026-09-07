@@ -12,21 +12,94 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 
 	private renderBrowserLogin(containerEl: HTMLElement) {
 		const auth = this.plugin.browserOAuth;
+		const disabled = auth.pending || auth.connected;
 		new Setting(containerEl)
-			.setName("Login service")
+			.setName("Login method")
 			.setDesc(
-				"The HTTPS service operated for this integration. For local testing, use http://127.0.0.1:8766.",
+				"Login runs inside this plugin. Device code requires Atlassian to enable the grant for your app.",
 			)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOptions({ "authorization-code": "Browser login", device: "Device code" })
+					.setValue(this.plugin.settings.oauthFlow)
+					.setDisabled(disabled)
+					.onChange(async (value) => {
+						if (value !== "authorization-code" && value !== "device") return;
+						this.plugin.settings.oauthFlow = value;
+						auth.status = "";
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			);
+		new Setting(containerEl)
+			.setName("OAuth client ID")
+			.setDesc("The app registered with Atlassian for this integration.")
 			.addText((text) =>
 				text
-					.setPlaceholder("https://login.example.com")
-					.setValue(this.plugin.settings.oauthServiceUrl)
-					.setDisabled(auth.pending || auth.connected)
+					.setValue(this.plugin.settings.oauthClientId)
+					.setDisabled(disabled)
 					.onChange(async (value) => {
-						this.plugin.settings.oauthServiceUrl = value.trim();
+						this.plugin.settings.oauthClientId = value.trim();
+						auth.status = "";
 						await this.plugin.saveSettings();
 					}),
 			);
+		new Setting(containerEl)
+			.setName("OAuth client secret")
+			.setDesc(
+				"Saved in Obsidian secret storage. Required by standard Atlassian browser apps; leave empty only for an approved public client.",
+			)
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setPlaceholder(
+					auth.hasClientSecret ? "Secret saved" : "Enter app secret if required",
+				)
+					.setDisabled(disabled)
+					.onChange(async (value) => {
+						try {
+							await auth.saveClientSecret(value);
+						} catch (error) {
+							new Notice(
+								error instanceof Error ? error.message : "Could not save secret",
+							);
+						}
+					});
+			})
+			.addButton((button) =>
+				button
+					.setButtonText("Clear secret")
+					.setDisabled(disabled || !auth.hasClientSecret)
+					.onClick(async () => {
+						await auth.saveClientSecret("");
+						this.display();
+					}),
+			);
+		if (this.plugin.settings.oauthFlow === "authorization-code")
+			new Setting(containerEl)
+				.setName("Callback URL")
+				.setDesc(
+					"Register this exact URL in Atlassian. Obsidian listens on this computer only while signing in.",
+				)
+				.addText((text) =>
+					text
+						.setValue(this.plugin.settings.oauthCallbackUrl)
+						.setDisabled(disabled)
+						.onChange(async (value) => {
+							this.plugin.settings.oauthCallbackUrl = value.trim();
+							await this.plugin.saveSettings();
+						}),
+				);
+		if (auth.deviceAuthorization) {
+			new Setting(containerEl)
+				.setName("Your device code")
+				.setDesc(auth.deviceAuthorization.userCode)
+				.addButton((button) =>
+					button.setButtonText("Copy code").onClick(async () => {
+						if (auth.deviceAuthorization)
+							await navigator.clipboard.writeText(auth.deviceAuthorization.userCode);
+					}),
+				);
+		}
 		const status = new Setting(containerEl)
 			.setName("Atlassian connection")
 			.setDesc(
@@ -35,11 +108,14 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 						? "Connected"
 						: "Sign in to choose the Confluence site this vault can publish to."),
 			);
-		if (auth.pending)
+		if (auth.pending) {
+			status.addButton((button) =>
+				button.setButtonText("Open browser").onClick(() => auth.openBrowser()),
+			);
 			status.addButton((button) =>
 				button.setButtonText("Cancel login").onClick(() => auth.cancel()),
 			);
-		else
+		} else
 			status.addButton((button) =>
 				button
 					.setButtonText(auth.connected ? "Reconnect" : "Connect to Atlassian")
@@ -158,7 +234,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 						basic: "Basic",
 						bearer: "Bearer / PAT",
 						oauth2: "OAuth / Service account",
-						browser: "OAuth / Browser login",
+						browser: "OAuth / Sign in",
 					})
 					.setValue(
 						oauth && this.plugin.settings.oauthMode === "browser"

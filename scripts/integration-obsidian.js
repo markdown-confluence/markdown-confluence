@@ -4,14 +4,11 @@ import { randomUUID } from "node:crypto";
 import { Effect } from "effect";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
-import {
-	RuntimeEnvironmentService,
-	createAuthenticatedConfluenceClient,
-	ConfluenceUploadSettings,
-} from "../packages/lib/dist/index.js";
+import { RuntimeEnvironmentService } from "../packages/lib/src/effects/index.ts";
 import { liveConnectionSettings } from "./integration-options.js";
 import { vaultMarker } from "./integration-vault.js";
 import { runDataviewIntegration } from "./integration-dataview.js";
+import { runOAuthUiIntegration, runDeviceAvailabilityIntegration } from "./integration-oauth-ui.js";
 
 const publishedNotes = [
 	"Release Tests/Release Tests.md",
@@ -66,6 +63,8 @@ export function runObsidianIntegration({
 						);
 					}),
 			);
+		const { createAuthenticatedConfluenceClient, ConfluenceUploadSettings } =
+			yield* Effect.tryPromise(() => import("../packages/lib/dist/index.js"));
 		const parentId = environment.CONFLUENCE_E2E_PARENT_ID;
 		const connection = liveConnectionSettings(environment);
 		const client = yield* createAuthenticatedConfluenceClient({
@@ -141,20 +140,48 @@ export function runObsidianIntegration({
 			});
 		// Validate runtime settings as well as the API account used to verify results.
 		yield* evaluate("return JSON.stringify({vault:true});", true);
+		// A hidden Electron renderer can throttle timers to once a minute. Keep
+		// automated UI/index waits responsive, then restore the user's setting.
+		yield* Effect.acquireRelease(
+			evaluate(`
+				const contents=require('@electron/remote').getCurrentWindow().webContents;
+				const previous=contents.getBackgroundThrottling();
+				contents.setBackgroundThrottling(false);
+				return JSON.stringify(previous);
+			`),
+			(previous) =>
+				evaluate(`
+					require('@electron/remote').getCurrentWindow().webContents.setBackgroundThrottling(${previous});
+					return JSON.stringify({restored:true});
+				`).pipe(Effect.orDie),
+		);
 		yield* desktopCommand([
 			`vault=${path.basename(vaultPath)}`,
 			"plugin:reload",
 			"id=confluence-integration",
 		]);
 		const runtimeAuthentication = yield* evaluate(
-			`const p=app.plugins.plugins['confluence-integration']; if(!p) throw Error('Enable Confluence Integration in the test vault'); if(p.settings.confluenceBaseUrl !== ${JSON.stringify(connection.confluenceBaseUrl)} || p.settings.confluenceAuthType !== ${JSON.stringify(connection.confluenceAuthType)} || String(p.settings.confluenceParentId) !== ${JSON.stringify(parentId)}) throw Error('Plugin destination differs from test configuration'); return JSON.stringify({ready:true,mode:p.settings.oauthMode || "basic"});`,
+			`const p=app.plugins.plugins['confluence-integration']; if(!p) throw Error('Enable Confluence Integration in the test vault'); if(p.settings.confluenceBaseUrl !== ${JSON.stringify(connection.confluenceBaseUrl)} || p.settings.confluenceAuthType !== ${JSON.stringify(connection.confluenceAuthType)} || String(p.settings.confluenceParentId) !== ${JSON.stringify(parentId)}) throw Error('Plugin destination differs from test configuration'); return JSON.stringify({ready:true,mode:p.settings.oauthMode || "basic",flow:p.settings.oauthFlow});`,
 			true,
 		);
+		const oauthUi =
+			runtimeAuthentication.mode === "browser"
+				? yield* runOAuthUiIntegration({ evaluate })
+				: undefined;
+		const deviceAvailability =
+			runtimeAuthentication.mode === "browser"
+				? yield* runDeviceAvailabilityIntegration({ evaluate })
+				: undefined;
 		let browserRefresh;
 		if (runtimeAuthentication.mode === "browser") {
 			browserRefresh = yield* evaluate(
 				`const p=app.plugins.plugins['confluence-integration']; const secretId=p.settings.oauthSecretId; const stored=app.secretStorage?.getSecret(secretId); if(!stored) throw Error('Connect to Atlassian in the test vault first'); const before=JSON.parse(stored); app.secretStorage.setSecret(secretId,JSON.stringify({...before,expiresAt:0})); await p.browserOAuth.accessToken(); const after=JSON.parse(app.secretStorage.getSecret(secretId)); if(before.refreshToken===after.refreshToken || after.expiresAt<=Date.now()+120000) throw Error('Browser OAuth did not rotate the expired token'); const serialized=JSON.stringify(p.settings); if(serialized.includes(after.accessToken)||serialized.includes(after.refreshToken)) throw Error('Browser tokens leaked into plugin settings'); return JSON.stringify({rotated:true,secretStorage:true});`,
 			);
+			yield* fs.writeFileString(
+				path.join(reportDirectory, "oauth.json"),
+				JSON.stringify({ oauthUi, deviceAvailability, browserRefresh }, null, 2),
+			);
+			yield* Effect.log("OAuth: UI checks and real token refresh passed");
 		}
 
 		const snapshot = () =>
@@ -281,6 +308,9 @@ export function runObsidianIntegration({
 					status: "passed",
 					authentication: connection.confluenceAuthType,
 					oauthMode: runtimeAuthentication.mode,
+					oauthFlow: runtimeAuthentication.flow,
+					oauthUi,
+					deviceAvailability,
 					browserRefresh,
 					checks: [
 						"desktop-publish",
@@ -302,5 +332,5 @@ export function runObsidianIntegration({
 				2,
 			),
 		);
-	});
+	}).pipe(Effect.scoped);
 }

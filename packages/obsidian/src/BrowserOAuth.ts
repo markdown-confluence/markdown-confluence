@@ -1,56 +1,47 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import type { SecretStorage } from "obsidian";
-import { oauthServiceOrigin, requestOAuthBroker } from "./OAuthBrokerClient";
+import {
+	AtlassianOAuth,
+	type DeviceAuthorization,
+	type OAuthDependencies,
+	type OAuthSite,
+	type OAuthTokens,
+} from "./AtlassianOAuth";
+import { oauthCallbackUrl } from "./OAuthCallback";
 
-export interface OAuthSite {
-	id: string;
-	url: string;
-	name: string;
-}
 export interface BrowserOAuthSettings {
 	oauthMode: "service-account" | "browser";
-	oauthServiceUrl: string;
+	oauthFlow: "authorization-code" | "device";
+	oauthClientId: string;
+	oauthClientSecretId: string;
+	oauthCallbackUrl: string;
 	oauthSecretId: string;
 	oauthSites: OAuthSite[];
 	oauthSiteId: string;
 }
-interface Tokens {
-	accessToken: string;
-	refreshToken: string;
-	expiresAt: number;
+interface StoredTokens extends OAuthTokens {
+	configuration: string;
 }
-interface StoredTokens extends Tokens {
-	service: string;
-}
-const parseTokens = (data: unknown): Tokens => {
-	const value = data as Tokens;
-	if (
-		!value ||
-		typeof value.accessToken !== "string" ||
-		!value.accessToken ||
-		typeof value.refreshToken !== "string" ||
-		!value.refreshToken ||
-		!Number.isFinite(value.expiresAt)
-	)
-		throw new Error("Login service returned invalid credentials. Please reconnect.");
-	return {
-		accessToken: value.accessToken,
-		refreshToken: value.refreshToken,
-		expiresAt: value.expiresAt,
-	};
-};
+
+/** Owns desktop browser/device login and rotating credentials for one vault. */
 export class BrowserOAuth {
 	private controller: AbortController | undefined;
+	private refreshController: AbortController | undefined;
 	private refreshing: Promise<string> | undefined;
 	private generation = 0;
+	private readonly client: AtlassianOAuth;
+	private authorizationUrl = "";
+	deviceAuthorization: DeviceAuthorization | undefined;
 	status = "";
 	constructor(
 		private readonly settings: () => BrowserOAuthSettings,
 		private readonly storage: () => SecretStorage | undefined,
 		private readonly save: () => Promise<void>,
 		private readonly openUrl: (url: string) => void,
-		private readonly request = requestOAuthBroker,
-	) {}
+		dependencies: OAuthDependencies = {},
+	) {
+		this.client = new AtlassianOAuth(dependencies);
+	}
 	get pending() {
 		return !!this.controller;
 	}
@@ -61,107 +52,133 @@ export class BrowserOAuth {
 			return false;
 		}
 	}
-	private read(): StoredTokens | undefined {
-		const settings = this.settings();
-		const value = settings.oauthSecretId && this.storage()?.getSecret(settings.oauthSecretId);
-		if (!value) return undefined;
-		const parsed = JSON.parse(value) as StoredTokens;
-		if (parsed.service !== oauthServiceOrigin(settings.oauthServiceUrl)) return undefined;
-		return { ...parseTokens(parsed), service: parsed.service };
+	get hasClientSecret() {
+		return !!this.clientSecret();
 	}
-	private async store(tokens: Tokens, service: string, generation: number) {
+	private clientSecret() {
+		const id = this.settings().oauthClientSecretId;
+		return id ? this.storage()?.getSecret(id) || undefined : undefined;
+	}
+	async saveClientSecret(value: string) {
+		if (this.pending || this.connected)
+			throw new Error("Disconnect before changing OAuth app credentials.");
+		const storage = this.requireStorage();
+		if (!this.settings().oauthClientSecretId)
+			this.settings().oauthClientSecretId = `confluence-oauth-client-${randomUUID()}`;
+		storage.setSecret(this.settings().oauthClientSecretId, value.trim());
+		await this.save();
+	}
+	private requireStorage() {
 		const storage = this.storage();
 		if (!storage)
-			throw new Error("Browser login requires Obsidian 1.11.4 or later with secret storage.");
+			throw new Error("OAuth login requires Obsidian 1.11.4 or later with secret storage.");
+		return storage;
+	}
+	private configuration() {
+		const settings = this.settings();
+		if (!settings.oauthClientId.trim())
+			throw new Error("Enter the OAuth client ID before connecting.");
+		if (!["authorization-code", "device"].includes(settings.oauthFlow))
+			throw new Error("Choose a supported OAuth login method.");
+		return JSON.stringify({
+			client: settings.oauthClientId.trim(),
+			secret: settings.oauthClientSecretId,
+			flow: settings.oauthFlow,
+			callback:
+				settings.oauthFlow === "authorization-code"
+					? oauthCallbackUrl(settings.oauthCallbackUrl).href
+					: "",
+		});
+	}
+	private read(): StoredTokens | undefined {
+		const id = this.settings().oauthSecretId;
+		const value = id && this.storage()?.getSecret(id);
+		if (!value) return undefined;
+		let parsed: StoredTokens;
+		try {
+			parsed = JSON.parse(value);
+		} catch {
+			throw new Error("Saved login is invalid. Reconnect to Atlassian.");
+		}
+		if (parsed.configuration !== this.configuration()) return undefined;
+		if (
+			typeof parsed.accessToken !== "string" ||
+			!parsed.accessToken ||
+			typeof parsed.refreshToken !== "string" ||
+			!parsed.refreshToken ||
+			!Number.isFinite(parsed.expiresAt)
+		)
+			throw new Error("Saved login is invalid. Reconnect to Atlassian.");
+		return parsed;
+	}
+	private checkConnection(generation: number, configuration: string) {
+		if (generation !== this.generation || configuration !== this.configuration())
+			throw new Error("Connection changed. Please try again.");
+	}
+	private async store(tokens: OAuthTokens, configuration: string, generation: number) {
+		const storage = this.requireStorage();
 		if (!this.settings().oauthSecretId) {
 			this.settings().oauthSecretId = `confluence-oauth-${randomUUID()}`;
 			await this.save();
 		}
-		if (generation !== this.generation)
-			throw new Error("Connection changed. Please try again.");
-		storage.setSecret(this.settings().oauthSecretId, JSON.stringify({ ...tokens, service }));
+		this.checkConnection(generation, configuration);
+		storage.setSecret(
+			this.settings().oauthSecretId,
+			JSON.stringify({ ...tokens, configuration }),
+		);
+	}
+	openBrowser() {
+		if (this.pending && this.authorizationUrl) this.openUrl(this.authorizationUrl);
 	}
 	async connect(onChange: () => void = () => {}) {
 		if (this.pending) return;
-		if (!this.storage())
-			throw new Error("Browser login requires Obsidian 1.11.4 or later with secret storage.");
-		const service = oauthServiceOrigin(this.settings().oauthServiceUrl);
+		this.requireStorage();
+		const configuration = this.configuration();
+		const credentials = {
+			clientId: this.settings().oauthClientId.trim(),
+			clientSecret: this.clientSecret(),
+		};
+		this.cancel();
 		const controller = new AbortController();
 		this.controller = controller;
-		const generation = ++this.generation;
-		const verifier = randomBytes(32).toString("base64url");
-		let id: string | undefined;
-		this.status = "Opening Atlassian login…";
+		const generation = this.generation;
+		this.status =
+			this.settings().oauthFlow === "device"
+				? "Requesting a device code…"
+				: "Opening Atlassian login…";
 		onChange();
 		try {
-			const start = await this.request(
-				service,
-				"/sessions",
-				{ challenge: createHash("sha256").update(verifier).digest("base64url") },
-				controller.signal,
-			);
-			const session = start.data as { id: string; verificationUrl: string };
-			if (start.status !== 201 || !/^[\w-]{43}$/.test(session?.id))
-				throw new Error("Could not start login. Check the login service configuration.");
-			id = session.id;
-			const verification = new URL(session.verificationUrl);
-			if (
-				verification.origin !== service ||
-				verification.pathname !== "/authorize" ||
-				verification.searchParams.get("session") !== id
-			)
-				throw new Error("Login service returned an invalid browser address.");
-			if (controller.signal.aborted) throw new Error("Login cancelled");
-			this.openUrl(verification.href);
-			this.status = "Waiting for approval in your browser…";
-			onChange();
-			const expires = Date.now() + 300000;
-			while (Date.now() < expires) {
+			const showBrowser = (url: string) => {
 				if (controller.signal.aborted) throw new Error("Login cancelled");
-				const response = await this.request(
-					service,
-					"/token",
-					{ id, verifier },
-					controller.signal,
-				);
-				if (response.status === 200) {
-					const result = response.data as Tokens & { sites: OAuthSite[] };
-					const tokens = parseTokens(result);
-					if (
-						!Array.isArray(result.sites) ||
-						!result.sites.length ||
-						result.sites.some(
-							(site) =>
-								!/^[a-f0-9-]{36}$/.test(site.id) ||
-								!/^https:\/\/[^/]+\.atlassian\.net\/?$/.test(site.url) ||
-								typeof site.name !== "string",
-						)
-					)
-						throw new Error("No Confluence site was granted. Please reconnect.");
-					if (
-						controller.signal.aborted ||
-						generation !== this.generation ||
-						service !== oauthServiceOrigin(this.settings().oauthServiceUrl)
-					)
-						throw new Error("Login cancelled");
-					await this.store(tokens, service, generation);
-					this.settings().oauthSites = result.sites;
-					this.settings().oauthSiteId =
-						result.sites.find((site) => site.id === this.settings().oauthSiteId)?.id ??
-						result.sites[0]!.id;
-					await this.save();
-					this.status = "Connected";
-					return;
-				}
-				if (response.status !== 202)
-					throw new Error(
-						(response.data as { error?: string })?.error === "access_denied"
-							? "Login cancelled in Atlassian. You can try again."
-							: "Login expired or failed. Please try again.",
-					);
-				await new Promise((resolve) => setTimeout(resolve, 1000));
-			}
-			throw new Error("Login timed out. Please try again.");
+				this.authorizationUrl = url;
+				this.status = this.deviceAuthorization
+					? "Enter the code in your browser and approve access…"
+					: "Waiting for approval in your browser…";
+				onChange();
+				this.openBrowser();
+			};
+			const tokens =
+				this.settings().oauthFlow === "device"
+					? await this.client.device(credentials, controller.signal, (device) => {
+							this.deviceAuthorization = device;
+							showBrowser(device.verificationUrl);
+						})
+					: await this.client.browser(
+							credentials,
+							this.settings().oauthCallbackUrl,
+							controller.signal,
+							showBrowser,
+						);
+			const sites = await this.client.sites(tokens.accessToken, controller.signal);
+			this.checkConnection(generation, configuration);
+			await this.store(tokens, configuration, generation);
+			this.checkConnection(generation, configuration);
+			this.settings().oauthSites = sites;
+			this.settings().oauthSiteId =
+				sites.find((site) => site.id === this.settings().oauthSiteId)?.id ?? sites[0]!.id;
+			await this.save();
+			this.checkConnection(generation, configuration);
+			this.status = "Connected";
 		} catch (error) {
 			this.status = controller.signal.aborted
 				? "Login cancelled"
@@ -170,14 +187,19 @@ export class BrowserOAuth {
 					: "Login failed. Please try again.";
 			throw new Error(this.status);
 		} finally {
-			if (id) await this.request(service, "/cancel", { id, verifier }).catch(() => {});
-			if (this.controller === controller) this.controller = undefined;
+			if (this.controller === controller) {
+				this.controller = undefined;
+				this.authorizationUrl = "";
+				this.deviceAuthorization = undefined;
+			}
 			onChange();
 		}
 	}
 	cancel() {
 		this.generation++;
 		this.controller?.abort();
+		this.refreshController?.abort();
+		this.refreshing = undefined;
 	}
 	async disconnect() {
 		this.cancel();
@@ -189,30 +211,32 @@ export class BrowserOAuth {
 		await this.save();
 	}
 	async accessToken(): Promise<string> {
-		if (this.refreshing) return this.refreshing;
 		const stored = this.read();
 		if (!stored)
 			throw new Error("Connect to Atlassian in Confluence settings before publishing.");
 		if (stored.expiresAt > Date.now() + 120000) return stored.accessToken;
+		if (this.refreshing) return this.refreshing;
 		const generation = this.generation;
-		this.refreshing = (async () => {
-			const response = await this.request(stored.service, "/refresh", {
-				refreshToken: stored.refreshToken,
-			});
-			if (generation !== this.generation)
-				throw new Error("Connection changed. Please try again.");
-			if (response.status !== 200) {
-				this.status = "Session expired. Reconnect to Atlassian.";
-				throw new Error(this.status);
-			}
-			const tokens = parseTokens(response.data);
-			await this.store(tokens, stored.service, generation);
+		const controller = new AbortController();
+		this.refreshController = controller;
+		const refreshing = (async () => {
+			const tokens = await this.client.refresh(
+				{
+					clientId: this.settings().oauthClientId.trim(),
+					clientSecret: this.clientSecret(),
+				},
+				stored.refreshToken,
+				controller.signal,
+			);
+			await this.store(tokens, stored.configuration, generation);
 			return tokens.accessToken;
 		})();
+		this.refreshing = refreshing;
 		try {
-			return await this.refreshing;
+			return await refreshing;
 		} finally {
-			this.refreshing = undefined;
+			if (this.refreshing === refreshing) this.refreshing = undefined;
+			if (this.refreshController === controller) this.refreshController = undefined;
 		}
 	}
 }

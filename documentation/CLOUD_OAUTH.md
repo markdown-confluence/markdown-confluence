@@ -83,5 +83,5 @@ updates with the service account.
 
 ## Obsidian
 
-The desktop plugin supports service-account OAuth and interactive browser login.
+The desktop plugin supports service-account OAuth and native browser/device-code login.
 See [Obsidian OAuth](OBSIDIAN_OAUTH.md) for setup, token storage and integration testing.

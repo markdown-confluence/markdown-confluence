@@ -31,8 +31,7 @@
 		"test:integration:live": "vp run test:integration live",
 		"test:integration:docker": "vp run test:integration docker",
 		"test:integration:obsidian": "vp run test:integration obsidian",
-		"test:vault": "vp run test:integration vault",
-		"oauth:broker": "node --env-file-if-exists=.env.oauth services/oauth-broker/start.js"
+		"test:vault": "vp run test:integration vault"
 	},
 	"devDependencies": {
 		"@effect-oxlint/effect-oxlint": "jsr:^0.2.0",

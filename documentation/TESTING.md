@@ -154,6 +154,14 @@ It uses Obsidian's vault API for edits so the application's file events particip
 The desktop app must remain running. CLI failures, a disabled plugin, wrong vault,
 or wrong destination fail the check rather than reporting a skipped success.
 
+Interactive OAuth vaults also verify rotating refresh tokens, secret storage and
+the device-code settings controls. The device UI uses a simulated authority; a
+separate request reports the real app's device-grant availability. These isolated
+checks preserve the existing login. See [Obsidian OAuth](OBSIDIAN_OAUTH.md).
+While testing, the runner temporarily disables background timer throttling in the
+test vault's renderer and restores it on completion or failure. This prevents
+hidden windows from stalling login polling and Dataview indexing.
+
 This checks the plugin runtime and upload adapter. Visual layout, command-palette
 interaction, notices/modal appearance and a second-editor
 permission boundary still need separate checks. The Docker profile is a local
