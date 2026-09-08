@@ -343,6 +343,54 @@ export function runObsidianIntegration({
 			"A page with an inline comment must remain unchanged on republish",
 		);
 
+		// Exercise the real settings control, then publish an unchanged note with locking enabled.
+		const originalLock = yield* evaluate(
+			`return JSON.stringify(app.plugins.plugins['confluence-integration'].settings.lockPublishedPages ?? false);`,
+		);
+		yield* Effect.acquireRelease(Effect.succeed(undefined), () =>
+			evaluate(
+				`const p=app.plugins.plugins['confluence-integration']; p.settings.lockPublishedPages=${JSON.stringify(originalLock)}; await p.saveSettings(); app.setting.close(); return JSON.stringify({restored:true});`,
+			).pipe(Effect.orDie),
+		);
+		const editLockUi = yield* evaluate(`
+			app.setting.open(); app.setting.openTabById('confluence-integration');
+			const row=[...app.setting.activeTab.containerEl.querySelectorAll('.setting-item')].find(el=>el.querySelector('.setting-item-name')?.textContent==='Restrict editing to the publishing account');
+			if(!row) throw Error('Edit lock setting is missing');
+			const toggle=row.querySelector('.checkbox-container');
+			if(!toggle) throw Error('Edit lock toggle is missing');
+			if(!toggle.classList.contains('is-enabled')) toggle.click();
+			if(!app.plugins.plugins['confluence-integration'].settings.lockPublishedPages) throw Error('Edit lock toggle did not update settings');
+			await app.plugins.plugins['confluence-integration'].saveSettings();
+			return JSON.stringify({visible:true,enabled:true});
+		`);
+		const lockedNote = "Release Tests/Formatting.md";
+		yield* evaluate(
+			`const r=await app.plugins.plugins['confluence-integration'].doPublish(${JSON.stringify("Release Tests/Formatting.md")}); if(r.errorMessage || r.failedFiles.length) throw Error('Locked desktop publish failed'); return JSON.stringify({published:true});`,
+		);
+		const lockedPageId = restored[lockedNote].id;
+		const editor = yield* Effect.tryPromise(() => client.users.getCurrentUser());
+		const restriction = yield* Effect.tryPromise(() =>
+			client.sendRequest({
+				url: `/wiki/rest/api/content/${lockedPageId}/restriction/byOperation/update`,
+				searchParams: { expand: "restrictions.user,restrictions.group" },
+			}),
+		);
+		assert.deepEqual(
+			restriction.restrictions.user.results.map((user) => user.accountId),
+			[editor.accountId],
+		);
+		assert.equal(restriction.restrictions.group.results.length, 0);
+		yield* evaluate(
+			`const p=app.plugins.plugins['confluence-integration']; p.settings.lockPublishedPages=false; await p.saveSettings(); return JSON.stringify({disabled:true});`,
+		);
+		const stillLocked = yield* Effect.tryPromise(() =>
+			client.sendRequest({
+				url: `/wiki/rest/api/content/${lockedPageId}/restriction/byOperation/update`,
+				searchParams: { expand: "restrictions.user,restrictions.group" },
+			}),
+		);
+		assert.deepEqual(stillLocked.restrictions, restriction.restrictions);
+
 		if (dataview) {
 			const result = yield* runDataviewIntegration({ evaluate, get, prefix: marker.prefix });
 			yield* fs.writeFileString(
@@ -356,6 +404,7 @@ export function runObsidianIntegration({
 			JSON.stringify(
 				{
 					status: "passed",
+					editLockUi,
 					inlineComment: inlineCommentEvidence,
 					authentication: connection.confluenceAuthType,
 					oauthMode: runtimeAuthentication.mode,
