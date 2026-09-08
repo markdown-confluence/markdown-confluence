@@ -222,6 +222,26 @@ See [DATAVIEW.md](DATAVIEW.md) for setup, supported query forms and hook details
 
 ## GitHub Actions
 
+### Mutation testing
+
+`vp run mutation` runs the complete library mutation scope locally. CI distributes
+that same scope across eight jobs using `vp run mutation:shard -- 1` through `8`.
+`vp run mutation:plan` shows the deterministic groups, balanced by source size from
+tracked files and the include/exclude patterns in `stryker.config.mjs`.
+
+The Vitest runner selects covering tests and related test files. Static mutations
+and TypeScript checking remain enabled. Workspace tests inject their relative path
+base so they can run in worker threads without changing the process directory.
+
+The final `mutation` check requires all eight jobs to succeed. It verifies each
+completion manifest against the expected source scope and mutant counts, combines
+the reports, and applies the configured score threshold to the combined result.
+The `mutation-report` artifact contains the combined HTML, JSON, and metrics;
+individual `mutation-shard-*` artifacts retain the detailed reports. Incremental
+caches are reused only for identical source, tests, tooling and configuration.
+
+### Integration testing
+
 Pull requests run package integration on Linux and the built CLI/Chromium check
 on Windows. Both reuse the existing workflows and upload reports even on failure.
 Release publication tests the packed npm artifacts before publishing them.
