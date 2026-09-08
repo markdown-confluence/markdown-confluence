@@ -542,3 +542,69 @@ test("falls back to default plantuml settings when nothing is configured", async
 		serverUrl: "",
 	});
 });
+
+test("loads nested kroki settings with CLI > env > file > default precedence", async () => {
+	const { configPath } = await runEffect(
+		Effect.gen(function* () {
+			const fs = yield* FileSystem;
+			const path = yield* Path;
+
+			tmpRoot = yield* fs.makeTempDirectory({ prefix: "markdown-confluence-settings-" });
+			const filePath = path.join(tmpRoot, ".markdown-confluence.json");
+
+			yield* fs.writeFileString(
+				filePath,
+				JSON.stringify({
+					confluenceBaseUrl: "https://file.example.atlassian.net",
+					confluenceParentId: "file-parent",
+					atlassianUserName: "file-user@example.com",
+					atlassianApiToken: "file-token",
+					folderToPublish: "file-folder",
+					contentRoot: "file-root",
+					firstHeadingPageTitle: true,
+					kroki: {
+						enabled: false,
+						serverUrl: "https://file-kroki.example.com",
+					},
+				}),
+			);
+
+			return { configPath: filePath };
+		}),
+	);
+
+	const runtimeEnvironment = makeRuntimeEnvironment({
+		argv: [
+			"node",
+			"markdown-confluence",
+			"--config",
+			configPath,
+			"--krokiServerUrl",
+			"https://cli-kroki.example.com",
+		],
+		cwd: tmpRoot ?? ".",
+		env: {
+			CONFLUENCE_KROKI_ENABLED: "true",
+		},
+	});
+
+	const settings = await Effect.runPromise(
+		loadConfluenceSettingsEffect().pipe(
+			Effect.provide(
+				Layer.mergeAll(
+					NodeFileSystem.layer,
+					NodePath.layer,
+					Layer.succeed(RuntimeEnvironmentService, runtimeEnvironment),
+				),
+			),
+		),
+	);
+
+	// serverUrl from CLI (highest precedence with a value), enabled from env.
+	expect(settings.kroki).toEqual({
+		enabled: true,
+		serverUrl: "https://cli-kroki.example.com",
+		format: "png",
+		timeoutMs: 30000,
+	});
+});

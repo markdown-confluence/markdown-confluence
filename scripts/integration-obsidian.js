@@ -394,6 +394,46 @@ export function runObsidianIntegration({
 			JSON.stringify(rendererOptions, null, 2),
 		);
 
+		const krokiUi = yield* evaluate(`
+            const p=app.plugins.plugins['confluence-integration'];
+            const original={...p.settings.kroki};
+            const note='Release Tests/Kroki.md';
+            try {
+                app.setting.open(); app.setting.openTabById('confluence-integration');
+                const rows=[...app.setting.activeTab.containerEl.querySelectorAll('.setting-item')];
+                const row=name=>rows.find(el=>el.querySelector('.setting-item-name')?.textContent===name);
+                const input=row('Kroki server URL')?.querySelector('input');
+                const toggle=row('Enable Kroki rendering')?.querySelector('.checkbox-container');
+                const output=row('Kroki output')?.querySelector('select');
+                if(!input||!toggle||!output) throw Error('Missing Kroki settings controls');
+                input.value='https://kroki.io'; input.dispatchEvent(new Event('input'));
+                if(!toggle.classList.contains('is-enabled')) toggle.click();
+                output.value='png'; output.dispatchEvent(new Event('change'));
+                if(!p.settings.kroki.enabled||p.settings.kroki.serverUrl!=='https://kroki.io') throw Error('Kroki controls did not update settings');
+                await p.saveSettings(); app.setting.close();
+                const source='---\\nconnie-publish: true\\nconnie-title: Desktop Kroki '+Date.now()+'\\n---\\n\\n'+String.fromCharCode(96).repeat(3)+'kroki-graphviz\\ndigraph G { Desktop -> Confluence }\\n'+String.fromCharCode(96).repeat(3)+'\\n';
+                const existing=app.vault.getAbstractFileByPath(note);
+                if(existing) await app.vault.modify(existing,source); else await app.vault.create(note,source);
+                const result=await p.doPublish(note);
+                if(result.errorMessage||result.failedFiles.length) throw Error('Desktop Kroki publish failed');
+                const file=app.vault.getAbstractFileByPath(note);
+                const content=await app.vault.read(file);
+                const pageId=content.match(/connie-page-id: ['"]?(\\d+)/)?.[1];
+                if(!pageId) throw Error('Kroki page ID missing');
+                return JSON.stringify({controls:true,published:true,pageId});
+            } finally {p.settings.kroki=original; await p.saveSettings(); app.setting.close();}
+        `);
+		const krokiPage = yield* get(`content/${krokiUi.pageId}?expand=body.atlas_doc_format`);
+		assert.ok(
+			JSON.parse(krokiPage.body.atlas_doc_format.value).content.some(
+				(node) => node.type === "mediaSingle",
+			),
+		);
+		yield* fs.writeFileString(
+			path.join(reportDirectory, "kroki-ui.json"),
+			JSON.stringify(krokiUi, null, 2),
+		);
+
 		// Exercise the real settings control, then publish an unchanged note with locking enabled.
 		const originalLock = yield* evaluate(
 			`return JSON.stringify(app.plugins.plugins['confluence-integration'].settings.lockPublishedPages ?? false);`,

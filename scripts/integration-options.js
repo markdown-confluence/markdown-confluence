@@ -5,6 +5,7 @@ export const integrationProfiles = [
 	"blogs",
 	"edit-lock",
 	"fork-ports",
+	"kroki",
 	"regressions",
 	"docker",
 	"vault",

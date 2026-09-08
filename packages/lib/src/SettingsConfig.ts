@@ -93,6 +93,14 @@ export const confluenceSettingsConfig = Config.all({
 		Schema.Array(Schema.String),
 		"ignoredCodeBlockLanguages",
 	).pipe(Config.withDefault([])),
+	kroki: Config.all({
+		enabled: Config.boolean("enabled").pipe(Config.withDefault(false)),
+		serverUrl: Config.string("serverUrl").pipe(Config.withDefault("")),
+		format: Config.schema(Schema.Literals(["png", "svg"]), "format").pipe(
+			Config.withDefault("png"),
+		),
+		timeoutMs: Config.number("timeoutMs").pipe(Config.withDefault(30000)),
+	}).pipe(Config.nested("kroki")),
 	plantuml: Config.all({
 		enabled: Config.boolean("enabled").pipe(
 			Config.withDefault(DEFAULT_SETTINGS.plantuml.enabled),
@@ -279,6 +287,10 @@ function makeEnvironmentProvider(
 				// fromEnv splits nested config paths on "_", so plantuml.enabled
 				// and plantuml.serverUrl are supplied as plantuml_enabled /
 				// plantuml_serverUrl here.
+				kroki_enabled: yield* runtimeEnvironment.getEnv("CONFLUENCE_KROKI_ENABLED"),
+				kroki_serverUrl: yield* runtimeEnvironment.getEnv("CONFLUENCE_KROKI_SERVER_URL"),
+				kroki_format: yield* runtimeEnvironment.getEnv("CONFLUENCE_KROKI_FORMAT"),
+				kroki_timeoutMs: yield* runtimeEnvironment.getEnv("CONFLUENCE_KROKI_TIMEOUT_MS"),
 				plantuml_enabled: plantumlEnabled,
 				plantuml_serverUrl: plantumlServerUrl,
 			}),
@@ -313,6 +325,10 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
 		{ name: "pageHeaderMarkdown", type: "string" },
 		{ name: "pageFooterMarkdown", type: "string" },
+		{ name: "krokiEnabled", type: "boolean" },
+		{ name: "krokiServerUrl", type: "string" },
+		{ name: "krokiFormat", type: "string" },
+		{ name: "krokiTimeoutMs", type: "string" },
 		{ name: "plantumlEnabled", type: "boolean" },
 		{ name: "plantumlServerUrl", type: "string" },
 	]);
@@ -321,6 +337,12 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		format: options["mermaidFormat"],
 		scale: options["mermaidScale"],
 		theme: options["mermaidTheme"],
+	});
+	const kroki = compactRecord({
+		enabled: options["krokiEnabled"],
+		serverUrl: options["krokiServerUrl"],
+		format: options["krokiFormat"],
+		timeoutMs: options["krokiTimeoutMs"],
 	});
 	const plantuml = compactRecord({
 		enabled: options["plantumlEnabled"],
@@ -358,6 +380,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			pageHeaderMarkdown: options["pageHeaderMarkdown"],
 			pageFooterMarkdown: options["pageFooterMarkdown"],
 		}),
+		...(Object.keys(kroki).length > 0 ? { kroki } : {}),
 		...(Object.keys(plantuml).length > 0 ? { plantuml } : {}),
 		...(Object.keys(mermaid).length > 0 ? { mermaid } : {}),
 	});
@@ -438,6 +461,12 @@ function pickConfluenceSettings(config: Record<string, unknown>): Partial<Conflu
 
 		// `plantuml` is a nested object; copy its known sub-keys through with
 		// the right types so a partial config file still merges cleanly.
+		if (key === "kroki") {
+			const value = config[key];
+			if (value && typeof value === "object" && !Array.isArray(value))
+				result.kroki = value as NonNullable<ConfluenceSettings["kroki"]>;
+			continue;
+		}
 		if (key === "plantuml") {
 			const value = config[key];
 			if (value && typeof value === "object" && !Array.isArray(value)) {

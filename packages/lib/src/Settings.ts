@@ -1,3 +1,4 @@
+import type { KrokiSettings } from "./ADFProcessingPlugins/KrokiRendererPlugin";
 import type { MermaidOptions } from "./MermaidOptions";
 import { Context } from "effect";
 
@@ -33,6 +34,7 @@ export type ConfluenceSettings = {
 	forceOverwrite: boolean;
 	lockPublishedPages?: boolean;
 	plantuml: PlantumlSettings;
+	kroki?: KrokiSettings;
 	mermaidProtocolTimeout: number;
 };
 
@@ -70,6 +72,7 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	pageHeaderMarkdown: "",
 	pageFooterMarkdown: "",
 	ignoredCodeBlockLanguages: [],
+	kroki: { enabled: false, serverUrl: "", format: "png", timeoutMs: 30000 },
 	plantuml: {
 		enabled: false,
 		serverUrl: "",

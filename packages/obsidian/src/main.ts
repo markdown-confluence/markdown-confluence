@@ -1,3 +1,9 @@
+import { krokiFetch } from "./KrokiFetch";
+import {
+	KrokiRendererPlugin,
+	HttpKrokiRenderer,
+	DEFAULT_KROKI_SETTINGS,
+} from "@markdown-confluence/lib";
 import { Plugin, Notice, MarkdownView, Workspace, loadMermaid } from "obsidian";
 import {
 	ADFProcessingPlugin,
@@ -147,6 +153,12 @@ export default class ConfluencePlugin extends Plugin {
 			new MermaidRendererPlugin(mermaidRenderer),
 		];
 
+		if (this.settings.kroki?.enabled)
+			plugins.push(
+				new KrokiRendererPlugin(
+					new HttpKrokiRenderer({ ...this.settings.kroki, fetchImpl: krokiFetch }),
+				),
+			);
 		if (this.settings.plantuml.enabled) {
 			if (this.settings.plantuml.serverUrl) {
 				plugins.push(
@@ -454,6 +466,7 @@ export default class ConfluencePlugin extends Plugin {
 			{
 				// Deep-merge the nested plantuml object so a persisted partial (or
 				// an older settings file missing it) keeps the defaults.
+				kroki: { ...DEFAULT_KROKI_SETTINGS, ...loaded.kroki },
 				plantuml: {
 					...ConfluenceUploadSettings.DEFAULT_SETTINGS.plantuml,
 					...loaded.plantuml,
