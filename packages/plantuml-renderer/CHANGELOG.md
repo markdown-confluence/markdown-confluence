@@ -1,5 +1,19 @@
 # Changelog
 
+## [7.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/plantuml-renderer-v6.0.0...@markdown-confluence/plantuml-renderer-v7.0.0) (2026-09-08)
+
+
+### Miscellaneous Chores
+
+* **@markdown-confluence/plantuml-renderer:** Synchronize obsidian packages versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped to 7.0.0
+
 ## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/plantuml-renderer-v5.5.2...@markdown-confluence/plantuml-renderer-v6.0.0) (2026-09-07)
 
 

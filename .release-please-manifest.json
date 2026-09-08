@@ -1,9 +1,9 @@
 {
-  ".": "6.0.0",
-  "packages/obsidian": "6.0.0",
-  "packages/lib": "6.0.0",
-  "packages/mermaid-electron-renderer": "6.0.0",
-  "packages/cli": "6.0.0",
-  "packages/mermaid-puppeteer-renderer": "6.0.0",
-  "packages/plantuml-renderer": "6.0.0"
+  ".": "7.0.0",
+  "packages/obsidian": "7.0.0",
+  "packages/lib": "7.0.0",
+  "packages/mermaid-electron-renderer": "7.0.0",
+  "packages/cli": "7.0.0",
+  "packages/mermaid-puppeteer-renderer": "7.0.0",
+  "packages/plantuml-renderer": "7.0.0"
 }

@@ -1,5 +1,21 @@
 # Changelog
 
+## [7.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v6.0.0...@markdown-confluence/mermaid-puppeteer-renderer-v7.0.0) (2026-09-08)
+
+
+### Features
+
+* port community publishing features and fixes ([#918](https://github.com/markdown-confluence/markdown-confluence/issues/918)) ([98d3a97](https://github.com/markdown-confluence/markdown-confluence/commit/98d3a97e40bc26cbc8bcfb961ce252b53f66d6b2))
+* publish inline and display LaTeX equations ([#914](https://github.com/markdown-confluence/markdown-confluence/issues/914)) ([25d7ce6](https://github.com/markdown-confluence/markdown-confluence/commit/25d7ce688cdb7ce64e60dfced3490d50a869d6a3)), closes [#498](https://github.com/markdown-confluence/markdown-confluence/issues/498)
+
+
+### Dependencies
+
+* align Effect and Atlaskit upgrades and update Chalk ([#894](https://github.com/markdown-confluence/markdown-confluence/issues/894)) ([c6a5fdd](https://github.com/markdown-confluence/markdown-confluence/commit/c6a5fdddf2530b3b8f46237828004222d980c9ca))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped to 7.0.0
+
 ## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v5.5.2...@markdown-confluence/mermaid-puppeteer-renderer-v6.0.0) (2026-09-07)
 
 
