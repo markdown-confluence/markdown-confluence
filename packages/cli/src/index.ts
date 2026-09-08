@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { KrokiRendererPlugin, HttpKrokiRenderer } from "@markdown-confluence/lib";
 
 import { NodeRuntime } from "@effect/platform-node";
 import chalk from "chalk";
@@ -52,6 +53,8 @@ const program = Effect.gen(function* () {
 		),
 	];
 
+	if (settings.kroki?.enabled)
+		plugins.push(new KrokiRendererPlugin(new HttpKrokiRenderer(settings.kroki)));
 	if (settings.plantuml.enabled) {
 		if (!settings.plantuml.serverUrl) {
 			throw new Error(
