@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from "@effect/vitest";
 import type { SendRequestOptions } from "confluence.js/core";
 import { createConfluenceTransport } from "./ConfluenceTransport";
+import { cancellableClient } from "./PublishCancellation";
 
 const config = {
 	host: "https://example.atlassian.net",
@@ -86,6 +87,35 @@ test("does not send an already aborted request", async () => {
 	);
 	expect(fetch).not.toHaveBeenCalled();
 });
+test.each(["network-read", "limited-read", "limited-write"])(
+	"publishing cancellation interrupts a %s retry wait without cancelling the dispatched request",
+	async (scenario) => {
+		vi.useFakeTimers();
+		const controller = new AbortController();
+		const fetch = vi.fn(async () => {
+			if (scenario === "network-read")
+				throw Object.assign(new Error("disconnected"), { code: "ECONNRESET" });
+			return json({}, 429, "10");
+		});
+		const client = cancellableClient(
+			createConfluenceTransport(config, fetch),
+			controller.signal,
+		);
+		const result = client
+			.sendRequest({ ...options, method: scenario === "limited-write" ? "PUT" : "GET" })
+			.catch((error) => error);
+		await vi.advanceTimersByTimeAsync(0);
+		controller.abort();
+		expect((await result).message).toBe(
+			"Publishing cancelled. Completed writes have been kept.",
+		);
+		expect(fetch).toHaveBeenCalledOnce();
+		expect((fetch.mock.calls[0]![1] as RequestInit).signal?.aborted).toBe(false);
+		expect(vi.getTimerCount()).toBe(0);
+		await vi.advanceTimersByTimeAsync(10_000);
+		expect(fetch).toHaveBeenCalledOnce();
+	},
+);
 test.each(["multipart", "long-delay", "forbidden"])(
 	"does not retry %s responses unsafely",
 	async (scenario) => {

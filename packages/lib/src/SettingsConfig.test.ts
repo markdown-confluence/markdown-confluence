@@ -3,7 +3,11 @@ import { Path } from "effect/Path";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { afterEach, expect, test } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
-import { loadConfluenceSettingsEffect, parseConfluenceSettingsEffect } from "./SettingsConfig";
+import {
+	loadConfluenceSettingsEffect,
+	parseConfluenceCommandLineOptions,
+	parseConfluenceSettingsEffect,
+} from "./SettingsConfig";
 import { DEFAULT_SETTINGS, type ConfluenceSettings, validateConfluenceSettings } from "./Settings";
 import { RuntimeEnvironment, RuntimeEnvironmentService, runEffect } from "./effects";
 
@@ -240,6 +244,83 @@ test("parses boolean CLI values passed as separate arguments", async () => {
 	expect(settings.tagsToPublish).toBe("public,docs");
 	expect(settings.pageFooterMarkdown).toBe("CLI footer");
 	expect(settings.contentRoot).toBe(expectedContentRoot);
+});
+
+test("accepts only recognized boolean literals in both CLI value forms", () => {
+	for (const [literal, expected] of [
+		["true", true],
+		["TRUE", true],
+		["1", true],
+		["yes", true],
+		["on", true],
+		["false", false],
+		["FALSE", false],
+		["0", false],
+		["no", false],
+		["off", false],
+	] as const) {
+		for (const args of [[`--forceOverwrite=${literal}`], ["--fo", literal]])
+			expect(parseConfluenceCommandLineOptions(args)["forceOverwrite"]).toBe(expected);
+	}
+	expect(parseConfluenceCommandLineOptions(["-fo"])["forceOverwrite"]).toBe(true);
+});
+
+test.each([
+	{ args: ["--forceOverwrite=fales"], error: "--forceOverwrite requires a boolean value" },
+	{ args: ["--forceOverwrite", "fales"], error: "--forceOverwrite requires a boolean value" },
+	{ args: ["--forceOverwrite="], error: "--forceOverwrite requires a boolean value" },
+	{ args: ["--parentId"], error: "--parentId requires a value" },
+	{ args: ["--parentId", "--forceOverwrite"], error: "--parentId requires a value" },
+	{ args: ["--parentId="], error: "--parentId requires a value" },
+	{ args: ["--parentId", "-123"], error: "--parentId requires a value" },
+	{ args: ["--config"], error: "--config requires a value" },
+])(
+	"rejects malformed CLI values $args despite valid fallback settings",
+	async ({ args, error }) => {
+		const runtimeEnvironment = makeRuntimeEnvironment({
+			argv: ["node", "markdown-confluence", ...args],
+			cwd: "/settings-test",
+			env: {
+				CONFLUENCE_BASE_URL: "https://example.atlassian.net",
+				CONFLUENCE_PARENT_ID: "fallback-parent",
+				ATLASSIAN_USERNAME: "test@example.com",
+				ATLASSIAN_API_TOKEN: "test-token",
+				CONFLUENCE_FORCE_OVERWRITE: "false",
+			},
+		});
+		await expect(
+			Effect.runPromise(
+				loadConfluenceSettingsEffect().pipe(
+					Effect.provide(
+						Layer.mergeAll(
+							NodeFileSystem.layer,
+							NodePath.layer,
+							Layer.succeed(RuntimeEnvironmentService, runtimeEnvironment),
+						),
+					),
+				),
+			),
+		).rejects.toThrow(error);
+	},
+);
+
+test("keeps inline strings beginning with a dash and existing CLI aliases", () => {
+	expect(
+		parseConfluenceCommandLineOptions([
+			"-b=https://example.atlassian.net",
+			"--p=123",
+			"--fh=false",
+			"-cr",
+			"docs",
+			"--pageHeaderMarkdown=- Published note",
+		]),
+	).toEqual({
+		baseUrl: "https://example.atlassian.net",
+		parentId: "123",
+		firstHeaderPageTitle: false,
+		contentRoot: "docs",
+		pageHeaderMarkdown: "- Published note",
+	});
 });
 
 test("reports shared settings validation issues", () => {

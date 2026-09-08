@@ -11,6 +11,8 @@ import { isSafeUrl } from "@atlaskit/adf-schema";
 import { ConfluenceSettings, resolveSiteUrl } from "./Settings";
 import { cleanUpUrlIfConfluence } from "./ConfluenceUrlParser";
 import SparkMD5 from "spark-md5";
+import MarkdownIt from "markdown-it";
+import { markdownItTable } from "markdown-it-table";
 
 const frontmatterRegex = /^\s*?---\n([\s\S]*?)\n---\s*/g;
 
@@ -32,89 +34,116 @@ type TaskListCounters = {
 };
 type PageFragment = "header" | "body" | "footer";
 
+// Use the same CommonMark block grammar as MarkdownTransformer, enabling only
+// HTML comments. Other HTML remains ordinary Markdown in the converter.
+const commentParser = new MarkdownIt("commonmark", { html: true });
+commentParser.use(markdownItTable);
+const htmlBlockParser = new MarkdownIt("commonmark", { html: true });
+htmlBlockParser.block.ruler.enableOnly("html_block");
+const htmlBlockRule = htmlBlockParser.block.ruler.getRules("")[0]!;
+commentParser.block.ruler.at(
+	"html_block",
+	(state, startLine, endLine, silent) =>
+		state.src.startsWith("<!--", state.bMarks[startLine]! + state.tShift[startLine]!) &&
+		htmlBlockRule(state, startLine, endLine, silent),
+	// HTML must not interrupt paragraphs: the converter allows multiline code
+	// spans containing a line that starts with a comment delimiter.
+	{ alt: ["reference", "blockquote"] },
+);
+
 export function stripMarkdownHtmlComments(markdown: string): string {
-	const lines = markdown.split("\n");
-	const strippedLines: string[] = [];
-	let inComment = false;
-	let fenceMarker: string | undefined;
+	if (!markdown.includes("<!--")) return markdown;
 
-	for (const line of lines) {
-		const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
-		if (fenceMarker) {
-			strippedLines.push(line);
-			if (
-				fenceMatch &&
-				fenceMatch[1]?.startsWith(fenceMarker.charAt(0)) &&
-				fenceMatch[1].length >= fenceMarker.length
-			) {
-				fenceMarker = undefined;
-			}
-			continue;
-		}
-
-		if (fenceMatch) {
-			fenceMarker = fenceMatch[1];
-			strippedLines.push(line);
-			continue;
-		}
-
-		if (/^( {4,}|\t)/.test(line)) {
-			strippedLines.push(line);
-			continue;
-		}
-
-		let strippedLine = "";
-		let position = 0;
-
-		while (position < line.length) {
-			if (inComment) {
-				const commentEnd = line.indexOf("-->", position);
-				if (commentEnd === -1) {
-					position = line.length;
-				} else {
-					inComment = false;
-					position = commentEnd + 3;
-				}
-				continue;
-			}
-
-			if (line.startsWith("<!--", position)) {
-				inComment = true;
-				position += 4;
-				continue;
-			}
-
-			if (line[position] === "`") {
-				const runEnd = position + countBacktickRun(line, position);
-				const backtickRun = line.slice(position, runEnd);
-				const closingRun = line.indexOf(backtickRun, runEnd);
-
-				if (closingRun === -1) {
-					strippedLine += backtickRun;
-					position = runEnd;
-				} else {
-					strippedLine += line.slice(position, closingRun + backtickRun.length);
-					position = closingRun + backtickRun.length;
-				}
-				continue;
-			}
-
-			strippedLine += line[position];
-			position++;
-		}
-
-		strippedLines.push(strippedLine);
+	const ranges = commentCodeRanges(markdown);
+	const markers = [...markdown.matchAll(/`+|<!--/g)];
+	const nextBackticks = new Map<number, number>();
+	const closingBackticks = new Map<number, number>();
+	for (let index = markers.length - 1; index >= 0; index--) {
+		const marker = markers[index]![0];
+		if (marker === "<!--") continue;
+		// A backslash escapes only the first backtick in a run when opening a
+		// span. Within code, the complete raw run still acts as a closer.
+		const openingLength =
+			marker.length - Number(isMarkdownCharacterEscaped(markdown, markers[index]!.index));
+		const closing = nextBackticks.get(openingLength);
+		if (closing !== undefined) closingBackticks.set(index, closing);
+		nextBackticks.set(marker.length, index);
 	}
 
-	return strippedLines.join("\n");
+	const output: string[] = [];
+	let retainedFrom = 0;
+	let rangeIndex = 0;
+	for (let index = 0; index < markers.length; index++) {
+		const marker = markers[index]!;
+		const start = marker.index;
+		if (start < retainedFrom) continue;
+		while (ranges[rangeIndex] && ranges[rangeIndex]!.end <= start) rangeIndex++;
+		const range = ranges[rangeIndex];
+		const inRange = range && range.start <= start;
+		if (inRange && range.type !== "inline") continue;
+		if (
+			isMarkdownCharacterEscaped(markdown, start) &&
+			(marker[0] === "<!--" || marker[0].length === 1)
+		)
+			continue;
+
+		if (marker[0] === "<!--") {
+			const closing = markdown.indexOf("-->", start + 4);
+			const end = closing === -1 ? markdown.length : closing + 3;
+			output.push(markdown.slice(retainedFrom, start));
+			// Retain line boundaries so removing a comment cannot join separate blocks.
+			output.push(markdown.slice(start, end).replace(/[^\r\n]/g, ""));
+			retainedFrom = end;
+		} else {
+			const closing = closingBackticks.get(index);
+			if (inRange && closing !== undefined && markers[closing]!.index < range.end)
+				index = closing;
+		}
+	}
+	output.push(markdown.slice(retainedFrom));
+	return output.join("");
 }
 
-function countBacktickRun(line: string, position: number): number {
-	let count = 0;
-	while (line[position + count] === "`") {
-		count++;
+function commentCodeRanges(markdown: string) {
+	// MarkdownIt treats CR, CRLF, and LF as line endings. Keep offsets into the
+	// original source so stripping comments preserves the user's line endings.
+	const offsets = [0];
+	for (const newline of markdown.matchAll(/\r\n|\r|\n/g))
+		offsets.push(newline.index + newline[0].length);
+	offsets.push(markdown.length);
+	const ranges: { start: number; end: number; type: string }[] = [];
+	const cellEnds = new Map<number, number>();
+	let tableDepth = 0;
+	for (const token of commentParser.parse(markdown, {})) {
+		if (token.type === "table_open") tableDepth++;
+		if (token.type === "table_close") tableDepth--;
+		if (!token.map) continue;
+		let start = offsets[token.map[0]]!;
+		let end = offsets[token.map[1]]!;
+		if (tableDepth > 0 && token.map[1] === token.map[0] + 1 && token.content) {
+			// Table tokens share line maps, but each cell is parsed independently.
+			// Locate their source content in order, including HTML cells that do not
+			// produce code ranges, so repeated text cannot point into an earlier cell.
+			const content = token.content.replace(/\n$/, "");
+			const cellStart = cellEnds.get(token.map[0]) ?? start;
+			const contentOffset = markdown.slice(cellStart, end).indexOf(content);
+			if (contentOffset < 0) continue;
+			start = cellStart + contentOffset;
+			end = start + content.length;
+			cellEnds.set(token.map[0], end);
+		} else if (tableDepth > 0) {
+			continue;
+		}
+		if (["inline", "fence", "code_block"].includes(token.type))
+			ranges.push({ start, end, type: token.type });
 	}
-	return count;
+	return ranges;
+}
+
+function isMarkdownCharacterEscaped(markdown: string, position: number): boolean {
+	let backslashes = 0;
+	while (position > 0 && markdown[--position] === "\\") backslashes++;
+	return backslashes % 2 === 1;
 }
 
 export function parseMarkdownToADF(markdown: string, confluenceBaseUrl: string) {

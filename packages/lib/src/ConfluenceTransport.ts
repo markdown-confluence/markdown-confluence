@@ -1,6 +1,11 @@
 import { Buffer } from "node:buffer";
 import type { Client, ClientConfig, SendRequestOptions } from "confluence.js/core";
 import type { ConfluenceFetch } from "./ConfluenceFetch";
+import {
+	assertPublishingActive,
+	PublishCancelledError,
+	registerPublishCancellation,
+} from "./PublishCancellation";
 
 /** Errors expose status and response data, never credentials or request configuration. */
 export class ConfluenceRequestError extends Error {
@@ -16,6 +21,7 @@ export class ConfluenceRequestError extends Error {
 export function createConfluenceTransport(
 	config: ClientConfig,
 	fetchRequest: ConfluenceFetch = (url, init) => fetch(url, init),
+	publishSignal?: AbortSignal,
 ): Client {
 	const host = new URL((config.host ?? "").replace(/\/$/, "") + "/");
 	if (host.protocol !== "https:" || host.username || host.password || host.search || host.hash)
@@ -31,7 +37,7 @@ export function createConfluenceTransport(
 				: undefined;
 	if (!authorization)
 		throw new Error("Resolve Confluence credentials before creating the transport");
-	return {
+	const transport: Client = {
 		async sendRequest<T>(options: SendRequestOptions<T>): Promise<T> {
 			// Endpoint paths come from the SDK or a validated pagination link, never another host.
 			if (!options.url.startsWith("/wiki/") || options.url.includes("\\"))
@@ -61,8 +67,11 @@ export function createConfluenceTransport(
 			if (multipart) headers.delete("Content-Type");
 			else if (body !== undefined) headers.set("Content-Type", "application/json");
 			const signal = AbortSignal.timeout(30_000);
+			// Cancellation stops subsequent requests, but never aborts an in-flight write.
+			const retrySignal = publishSignal ? AbortSignal.any([signal, publishSignal]) : signal;
 			const read = method === "GET" || method === "HEAD";
 			for (let attempt = 0; ; attempt++) {
+				assertPublishingActive(publishSignal);
 				if (signal.aborted) throw new Error("Confluence request aborted");
 				let response: Awaited<ReturnType<ConfluenceFetch>>;
 				try {
@@ -89,7 +98,7 @@ export function createConfluenceTransport(
 							"UND_ERR_CONNECT_TIMEOUT",
 						].includes(code)
 					) {
-						await waitForRetry(250 * 2 ** attempt, signal);
+						await waitForRetry(250 * 2 ** attempt, retrySignal, publishSignal);
 						continue;
 					}
 					throw new ConfluenceRequestError(
@@ -104,7 +113,7 @@ export function createConfluenceTransport(
 						attempt,
 					);
 					if (delay !== undefined) {
-						await waitForRetry(delay, signal);
+						await waitForRetry(delay, retrySignal, publishSignal);
 						continue;
 					}
 				}
@@ -137,6 +146,13 @@ export function createConfluenceTransport(
 			}
 		},
 	};
+	return registerPublishCancellation(transport, (signal) =>
+		createConfluenceTransport(
+			config,
+			fetchRequest,
+			publishSignal ? AbortSignal.any([publishSignal, signal]) : signal,
+		),
+	);
 }
 
 function networkErrorCode(error: unknown): string {
@@ -155,12 +171,20 @@ function rateLimitDelay(value: string | undefined, attempt: number): number | un
 				: Date.parse(value) - Date.now();
 	return Number.isFinite(delay) && delay <= 30_000 ? Math.max(0, delay) : undefined;
 }
-function waitForRetry(delay: number, signal: AbortSignal): Promise<void> {
+function waitForRetry(
+	delay: number,
+	signal: AbortSignal,
+	publishSignal?: AbortSignal,
+): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const abort = () => {
 			clearTimeout(timer);
 			signal.removeEventListener("abort", abort);
-			reject(new Error("Confluence request aborted"));
+			reject(
+				publishSignal?.aborted
+					? new PublishCancelledError()
+					: new Error("Confluence request aborted"),
+			);
 		};
 		const timer = setTimeout(() => {
 			signal.removeEventListener("abort", abort);

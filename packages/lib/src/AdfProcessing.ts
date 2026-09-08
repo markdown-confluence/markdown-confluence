@@ -171,6 +171,23 @@ function applyInlineComments(adf: JSONDocNode, pageInlineComments: ExtractedInli
 								whereToApplyComment.commentEnd,
 								child.text.length,
 							);
+							const marks = [...(child.marks ?? [])];
+							if (
+								!marks.some(
+									(mark) =>
+										mark.type === "annotation" &&
+										mark.attrs?.["annotationType"] === "inlineComment" &&
+										mark.attrs?.["id"] === comment.inlineCommentId,
+								)
+							) {
+								marks.push({
+									type: "annotation",
+									attrs: {
+										annotationType: "inlineComment",
+										id: comment.inlineCommentId,
+									},
+								});
+							}
 
 							if (beforeText) {
 								newContent.push({
@@ -184,16 +201,7 @@ function applyInlineComments(adf: JSONDocNode, pageInlineComments: ExtractedInli
 								...(comment.textForComment
 									? { text: comment.textForComment }
 									: undefined),
-								marks: [
-									...(child.marks ? child.marks : []),
-									{
-										type: "annotation",
-										attrs: {
-											annotationType: "inlineComment",
-											id: comment.inlineCommentId,
-										},
-									},
-								],
+								marks,
 							});
 
 							if (afterText)
@@ -517,7 +525,7 @@ function extractInlineComments(adf: JSONDocNode) {
 						mark.attrs?.["annotationType"] === "inlineComment",
 				)
 			) {
-				const inlineCommentMark = node.marks?.find(
+				const inlineCommentMarks = node.marks.filter(
 					(mark) =>
 						mark.type === "annotation" &&
 						mark.attrs?.["annotationType"] === "inlineComment",
@@ -541,15 +549,15 @@ function extractInlineComments(adf: JSONDocNode) {
 					return prev + curr?.text;
 				}, "");
 
-				const extract: ExtractedInlineComment = {
-					pluginInternalId: uuidv4(),
-					inlineCommentId: inlineCommentMark?.attrs?.["id"],
-					textForComment: node.text,
-					beforeText,
-					afterText,
-				};
-
-				result.push(extract);
+				for (const mark of inlineCommentMarks) {
+					result.push({
+						pluginInternalId: uuidv4(),
+						inlineCommentId: mark.attrs?.["id"],
+						textForComment: node.text,
+						beforeText,
+						afterText,
+					});
+				}
 			}
 		},
 	});
@@ -763,42 +771,17 @@ function mergeTextNodes(adf: JSONDocNode) {
 				return node;
 			}
 			const processedContent: Array<ADFEntity | undefined> = [];
-			const indexToSkip: number[] = [];
-			const nodesToCheck = node.content.length ?? 0;
-			for (let index = 0; index < nodesToCheck; index++) {
-				if (indexToSkip.includes(index)) {
-					continue;
-				}
-
-				const currentNode = node.content[index];
-				const nextNode = node.content[index + 1];
-
+			for (const currentNode of node.content) {
+				const previousNode = processedContent.at(-1);
 				if (
-					nextNode === undefined ||
-					currentNode === undefined ||
-					currentNode.type !== "text" ||
-					nextNode.type !== "text"
+					previousNode?.type === "text" &&
+					currentNode?.type === "text" &&
+					marksEqual(previousNode.marks, currentNode.marks)
 				) {
+					previousNode.text = (previousNode.text ?? "") + (currentNode.text ?? "");
+				} else {
 					processedContent.push(currentNode);
-					continue;
 				}
-
-				for (
-					let lookAheadIndex = index + 1;
-					lookAheadIndex < nodesToCheck;
-					lookAheadIndex++
-				) {
-					const futureNode = node.content[lookAheadIndex];
-
-					if (marksEqual(currentNode?.marks, futureNode?.marks)) {
-						currentNode.text = (currentNode.text ?? "") + (futureNode?.text ?? "");
-						indexToSkip.push(lookAheadIndex);
-					} else {
-						break;
-					}
-				}
-
-				processedContent.push(currentNode);
 			}
 
 			if (processedContent.length > 0) {

@@ -14,10 +14,15 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 	extract(adf: JSONDocNode): string[] {
 		const mediaNodes = filter(
 			adf,
-			(node) => node.type === "media" && (node.attrs || {})?.["type"] === "file",
+			(node) => node.type === "media" && localMediaUrl(node) !== undefined,
 		);
 
-		const imagesToUpload = new Set(mediaNodes.map((node) => node?.attrs?.["url"]));
+		const imagesToUpload = new Set(
+			mediaNodes.flatMap((node) => {
+				const url = localMediaUrl(node);
+				return url === undefined ? [] : [url];
+			}),
+		);
 
 		return Array.from(imagesToUpload);
 	},
@@ -41,7 +46,7 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 			let imageMap: Record<string, UploadedImageData | null> = {};
 
 			for (const imageUrl of imagesToUpload.values()) {
-				const filename = imageUrl.split("://")[1];
+				const filename = imageUrl.startsWith("file://") ? imageUrl.slice(7) : undefined;
 				if (!filename) {
 					continue;
 				}
@@ -63,11 +68,12 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 		afterAdf =
 			traverse(afterAdf, {
 				media: (node, _parent) => {
-					if (node?.attrs?.["type"] === "file") {
-						if (!imageMap[node?.attrs?.["url"]]) {
+					const url = localMediaUrl(node);
+					if (url !== undefined && node.attrs) {
+						if (!imageMap[url]) {
 							return;
 						}
-						const mappedImage = imageMap[node.attrs["url"]];
+						const mappedImage = imageMap[url];
 						if (mappedImage) {
 							// Size hints cannot turn a non-image attachment into an image.
 							const isImage = mappedImage.width > 0 || mappedImage.height > 0;
@@ -99,8 +105,7 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 						delete media.attrs["height"];
 						return { type: "mediaGroup", content: [media] };
 					}
-					const url = node.content.at(0)?.attrs?.["url"];
-					if (typeof url === "string" && url.startsWith("file://")) {
+					if (media && localMediaUrl(media) !== undefined) {
 						return p("Invalid Image Path");
 					}
 					return;
@@ -110,6 +115,16 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 		return afterAdf as JSONDocNode;
 	},
 };
+
+function localMediaUrl(node: ADFEntity): string | undefined {
+	const url: unknown = node.attrs?.["url"];
+	return node.attrs?.["type"] === "file" &&
+		!node.attrs?.["id"] &&
+		typeof url === "string" &&
+		url.startsWith("file://")
+		? url
+		: undefined;
+}
 
 function mediaDimension(value: unknown): number | undefined {
 	if (typeof value !== "number" && typeof value !== "string") return undefined;

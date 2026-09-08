@@ -1,6 +1,11 @@
 import { createV2Client } from "confluence.js";
 import type { Client } from "confluence.js/core";
 import type { ConfluenceFetch } from "./ConfluenceFetch";
+import {
+	cancellableClient,
+	PublishCancelledError,
+	registerPublishCancellation,
+} from "./PublishCancellation";
 import type {
 	ConfluenceContent,
 	ContentArray,
@@ -36,6 +41,14 @@ class SpaceKeyCache {
 	record(key: string, id: string): void {
 		this.keyToId.set(key, id);
 		this.idToKey.set(id, key);
+	}
+
+	copyFrom(source: SpaceKeyCache): void {
+		for (const [key, id] of source.keyToId) this.record(key, id);
+	}
+
+	keyForId(id: string): string | undefined {
+		return this.idToKey.get(id);
 	}
 
 	async resolveKeyToId(key: string): Promise<string> {
@@ -82,6 +95,7 @@ export class ConfluenceV2Client {
 	private readonly sdk: ReturnType<typeof createV2Client>;
 	private readonly apiRoot: URL;
 	private readonly contentTypes = new Map<string, "page" | "blogpost">();
+	private readonly contentSpaces = new Map<string, string>();
 
 	constructor(
 		baseUrl: string,
@@ -106,6 +120,16 @@ export class ConfluenceV2Client {
 					);
 		this.sdk = createV2Client(this.transport);
 		this.spaces = new SpaceKeyCache(this.sdk);
+		registerPublishCancellation(this, (signal) => {
+			const scoped = new ConfluenceV2Client(
+				baseUrl,
+				cancellableClient(this.transport, signal),
+			);
+			scoped.spaces.copyFrom(this.spaces);
+			for (const [id, type] of this.contentTypes) scoped.contentTypes.set(id, type);
+			for (const [id, key] of this.contentSpaces) scoped.contentSpaces.set(id, key);
+			return scoped;
+		});
 	}
 
 	private nextPath(currentPath: string, next: string): string {
@@ -266,6 +290,10 @@ export class ConfluenceV2Client {
 	): Promise<T> {
 		void callback;
 		const contentType = parameters.type === "blogpost" ? "blogpost" : "page";
+		// Resolve response metadata before writing so a completed PUT needs no follow-up
+		// request and can still be returned successfully if publishing is cancelled.
+		if (!this.spaces.keyForId(this.contentSpaces.get(parameters.id) ?? ""))
+			await this.getContentById({ id: parameters.id });
 
 		const parentId = parameters.ancestors?.at(-1)?.id;
 		const requestBody: V2UpdatePageBody = {
@@ -289,7 +317,16 @@ export class ConfluenceV2Client {
 				: this.sdk.page.updatePage({ id: sdkId(parameters.id), body: requestBody })),
 		);
 
-		const spaceKey = await this.spaces.resolveIdToKey(page.spaceId);
+		let spaceKey = this.spaces.keyForId(page.spaceId);
+		if (!spaceKey) {
+			try {
+				spaceKey = await this.spaces.resolveIdToKey(page.spaceId);
+			} catch (error) {
+				// A move can return a previously unknown space. Keep the completed write
+				// successful if cancellation prevents resolving that optional metadata.
+				if (!(error instanceof PublishCancelledError)) throw error;
+			}
+		}
 		const content = await this.adaptPage(page, spaceKey, false, contentType);
 		return content as T;
 	}
@@ -386,11 +423,12 @@ export class ConfluenceV2Client {
 	/** Adapts a v2 page or blog post to the publisher's `ConfluenceContent` model. */
 	private async adaptPage(
 		page: V2Page,
-		spaceKey: string,
+		spaceKey: string | undefined,
 		includeAncestors: boolean,
 		contentType: "page" | "blogpost",
 	): Promise<ConfluenceContent> {
 		this.contentTypes.set(page.id, contentType);
+		this.contentSpaces.set(page.id, page.spaceId);
 		const ancestors =
 			includeAncestors && contentType === "page" ? await this.fetchAncestors(page) : [];
 		const adfValue = page.body?.atlas_doc_format?.value;
@@ -400,7 +438,7 @@ export class ConfluenceV2Client {
 			type: contentType,
 			status: page.status,
 			title: page.title,
-			space: { key: spaceKey },
+			...(spaceKey ? { space: { key: spaceKey } } : {}),
 			version: {
 				number: page.version?.number ?? 1,
 				by: { accountId: page.version?.authorId ?? "" },

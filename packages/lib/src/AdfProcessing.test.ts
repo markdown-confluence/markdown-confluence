@@ -2,6 +2,7 @@ import { expect, test } from "@effect/vitest";
 import { TextDefinition } from "@atlaskit/adf-schema";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { prepareAdfToUpload } from "./AdfProcessing";
+import { parseMarkdownToADF } from "./MdToADF";
 import { ConfluenceAdfFile, ConfluenceNode } from "./Publisher";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 
@@ -204,4 +205,138 @@ test("unresolved formatted wikilinks retain dense formatting marks", () => {
 		text: "Missing",
 		marks: [{ type: "strong" }],
 	});
+});
+
+test.each([
+	{ type: "hardBreak" },
+	{ type: "mention", attrs: { id: "account", text: "@User" } },
+	{ type: "emoji", attrs: { shortName: ":smile:", text: "🙂" } },
+	{ type: "date", attrs: { timestamp: "1690000000000" } },
+	{ type: "inlineCard", attrs: { url: "https://example.com" } },
+])("merges only adjacent text around $type nodes", (barrier) => {
+	const node = createNode({
+		contents: {
+			version: 1,
+			type: "doc",
+			content: [
+				{
+					type: "paragraph",
+					content: [
+						{ type: "text", text: "a" },
+						{ type: "text", text: "b" },
+						barrier,
+						{ type: "text", text: "c" },
+						{ type: "text", text: "d" },
+					],
+				},
+			],
+		} as JSONDocNode,
+	});
+	prepareAdfToUpload([node], testSettings);
+	expect(node.file.contents.content[0]!.content).toEqual([
+		{ type: "text", text: "ab" },
+		barrier,
+		{ type: "text", text: "cd" },
+	]);
+});
+
+test("preserves mentions after resolving an unpublished wikilink", () => {
+	const node = createNode({
+		contents: parseMarkdownToADF(
+			"alpha [[missing|beta]] [[mention:account|@User]] gamma",
+			testSettings.confluenceBaseUrl,
+		),
+	});
+	prepareAdfToUpload([node], testSettings);
+	expect(node.file.contents.content[0]!.content).toEqual([
+		{ type: "text", text: "alpha beta " },
+		{ type: "mention", attrs: { id: "account", text: "@User" } },
+		{ type: "text", text: " gamma" },
+	]);
+});
+
+test("keeps differently marked text separate while merging identical marks", () => {
+	const node = createNode({
+		contents: {
+			version: 1,
+			type: "doc",
+			content: [
+				{
+					type: "paragraph",
+					content: [
+						{ type: "text", text: "a", marks: [{ type: "strong" }] },
+						{ type: "text", text: "b", marks: [{ type: "strong" }] },
+						{ type: "text", text: "c", marks: [{ type: "em" }] },
+						{ type: "text", text: "d" },
+					],
+				},
+			],
+		} as JSONDocNode,
+	});
+	prepareAdfToUpload([node], testSettings);
+	expect(node.file.contents.content[0]!.content).toEqual([
+		{ type: "text", text: "ab", marks: [{ type: "strong" }] },
+		{ type: "text", text: "c", marks: [{ type: "em" }] },
+		{ type: "text", text: "d" },
+	]);
+});
+
+test("retains every overlapping inline comment through repeated publication", () => {
+	const marks = ["comment-one", "comment-two"].map((id) => ({
+		type: "annotation",
+		attrs: { annotationType: "inlineComment", id },
+	}));
+	const remote = {
+		version: 1,
+		type: "doc",
+		content: [
+			{
+				type: "paragraph",
+				content: [
+					{ type: "text", text: "Before " },
+					{ type: "text", text: "Anchor", marks },
+					{ type: "text", text: " after" },
+				],
+			},
+		],
+	} as JSONDocNode;
+	const source = {
+		version: 1,
+		type: "doc",
+		content: [{ type: "paragraph", content: [{ type: "text", text: "Before Anchor after" }] }],
+	} as JSONDocNode;
+	const node = createNode({ contents: structuredClone(source) });
+	node.existingPageData.adfContent = remote;
+	for (let attempt = 0; attempt < 2; attempt++) {
+		prepareAdfToUpload([node], testSettings);
+		expect(node.file.contents).toEqual(remote);
+		node.existingPageData.adfContent = structuredClone(node.file.contents);
+		node.file.contents = structuredClone(source);
+	}
+});
+
+test("does not duplicate annotations already present in losslessly imported source", () => {
+	const document = {
+		version: 1,
+		type: "doc",
+		content: [
+			{
+				type: "paragraph",
+				content: [
+					{
+						type: "text",
+						text: "Anchor",
+						marks: ["one", "two"].map((id) => ({
+							type: "annotation",
+							attrs: { annotationType: "inlineComment", id },
+						})),
+					},
+				],
+			},
+		],
+	} as JSONDocNode;
+	const node = createNode({ contents: structuredClone(document) });
+	node.existingPageData.adfContent = structuredClone(document);
+	prepareAdfToUpload([node], testSettings);
+	expect(node.file.contents).toEqual(document);
 });

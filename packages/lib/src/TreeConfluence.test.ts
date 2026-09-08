@@ -64,7 +64,7 @@ test("does not try to update generated folder placeholder pages", async () => {
 	expect(updateCalls).toEqual([]);
 });
 
-test("clears stale page ids and creates the page by title", async () => {
+test("replaces stale page ids with one final metadata update after title resolution", async () => {
 	const updateCalls: UpdateCall[] = [];
 	const workspace = new TestMarkdownWorkspace(updateCalls);
 	const notFound = Object.assign(new Error("Not Found"), {
@@ -129,14 +129,6 @@ test("clears stale page ids and creates the page by title", async () => {
 				publish: true,
 				pageId: "123456",
 				pageUrl: "https://example.atlassian.net/wiki/spaces/SPACE/pages/123456/",
-			},
-		},
-		{
-			absoluteFilePath: "docs/child.md",
-			values: {
-				publish: false,
-				pageId: undefined,
-				pageUrl: undefined,
 			},
 		},
 		{
@@ -222,6 +214,108 @@ test("creates children in the space resolved from an explicit parent page id", a
 			title: "Child",
 		},
 	]);
+});
+
+test("resolves existing descendants in an explicitly selected cross-space parent tree", async () => {
+	const updateCalls: UpdateCall[] = [];
+	const lookups: unknown[] = [];
+	const client = {
+		content: {
+			getContentById: async ({ id }: { id: string }) =>
+				createContentPage({
+					id,
+					title: "Other parent",
+					spaceKey: "OTHER",
+					ancestors: [{ id: "other-home" }],
+				}),
+			getContent: async (request: unknown) => {
+				lookups.push(request);
+				return {
+					results: [
+						createContentPage({
+							id: "other-child",
+							title: "Child",
+							spaceKey: "OTHER",
+							ancestors: [{ id: "other-parent" }],
+						}),
+					],
+				};
+			},
+		},
+	} as unknown as RequiredConfluenceClient;
+	const pages = await ensureAllFilesExistInConfluence(
+		client,
+		new TestMarkdownWorkspace(updateCalls),
+		createRootNode("docs", [
+			createRootNode(
+				"docs/other/index.md",
+				[createRootNode("docs/other/child.md", { pageTitle: "Child" })],
+				{ pageId: "other-parent" },
+			),
+		]),
+		"SPACE",
+		"123456",
+		"123456",
+		testSettings,
+	);
+	expect(lookups).toMatchObject([{ title: "Child", spaceKey: "OTHER" }]);
+	expect(
+		pages.map((page) => ({
+			id: page.file.pageId,
+			space: page.file.spaceKey,
+			ancestors: page.ancestors,
+		})),
+	).toEqual([
+		{ id: "other-parent", space: "OTHER", ancestors: ["other-home"] },
+		{ id: "other-child", space: "OTHER", ancestors: ["other-parent"] },
+	]);
+	expect(updateCalls).toHaveLength(2);
+});
+
+test("discovers nested missing pages before creating their hierarchy and committing metadata", async () => {
+	const updateCalls: UpdateCall[] = [];
+	const events: string[] = [];
+	const client = {
+		content: {
+			getContent: async ({ title }: { title: string }) => {
+				events.push(`find ${title}`);
+				return { results: [] };
+			},
+			createContent: async ({
+				title,
+				ancestors,
+			}: {
+				title: string;
+				ancestors: { id: string }[];
+			}) => {
+				events.push(`create ${title} under ${ancestors[0]?.id}`);
+				return createContentPage({ id: title, title, spaceKey: "SPACE", ancestors });
+			},
+		},
+	} as unknown as RequiredConfluenceClient;
+	const pages = await ensureAllFilesExistInConfluence(
+		client,
+		new TestMarkdownWorkspace(updateCalls),
+		createRootNode("docs", [
+			createRootNode(
+				"docs/parent",
+				[createRootNode("docs/parent/child.md", { pageTitle: "Child" })],
+				{ pageTitle: "Parent" },
+			),
+		]),
+		"SPACE",
+		"123456",
+		"123456",
+		testSettings,
+	);
+	expect(events).toEqual([
+		"find Parent",
+		"find Child",
+		"create Parent under 123456",
+		"create Child under Parent",
+	]);
+	expect(pages.map((page) => page.ancestors)).toEqual([["123456"], ["123456", "Parent"]]);
+	expect(updateCalls.map((call) => call.absoluteFilePath)).toEqual(["docs/parent/child.md"]);
 });
 
 type UpdateCall = {

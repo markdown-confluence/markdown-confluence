@@ -250,6 +250,46 @@ const testSettings: ConfluenceSettings = {
 	forceOverwrite: false,
 };
 
+test.each([
+	{ folderToPublish: ".", tagsToPublish: "" },
+	{ folderToPublish: "Elsewhere", tagsToPublish: "public" },
+])("persists explicit opt-outs for selection by %j", async (selection) => {
+	const filePath = await runEffect(
+		Effect.gen(function* () {
+			const fs = yield* FileSystem;
+			const path = yield* Path;
+			tmpRoot = yield* fs.makeTempDirectory({ prefix: "markdown-confluence-opt-out-" });
+			const filePath = path.join(tmpRoot, "page.md");
+			yield* fs.writeFileString(
+				filePath,
+				"---\ntags: [public]\nconnie-publish: true\nconnie-dont-change-parent-page: true\nconnie-page-id: old\ncustom: retained\n---\n# Page\n",
+			);
+			return filePath;
+		}),
+	);
+	const settings = { ...testSettings, ...selection, contentRoot: tmpRoot! };
+	const workspace = await loadMarkdownWorkspace(settings);
+	await Effect.runPromise(
+		workspace.updateMarkdownValues(filePath, {
+			publish: false,
+			dontChangeParentPageId: false,
+			pageId: undefined,
+		}),
+	);
+	const reloaded = await loadMarkdownWorkspace(settings);
+	const file = await Effect.runPromise(reloaded.loadMarkdownFile(filePath));
+	expect(file.frontmatter).toMatchObject({
+		"connie-publish": false,
+		"connie-dont-change-parent-page": false,
+		custom: "retained",
+	});
+	expect(file.frontmatter).not.toHaveProperty("connie-page-id");
+	expect(file.contents).toContain("# Page");
+	expect(await Effect.runPromise(reloaded.getMarkdownFilesToUpload)).toEqual([]);
+	await Effect.runPromise(reloaded.updateMarkdownValues(filePath, { publish: undefined }));
+	expect(await Effect.runPromise(reloaded.getMarkdownFilesToUpload)).toHaveLength(1);
+});
+
 async function transformedWorkspace(
 	files: Record<string, string>,
 	transformer: MarkdownSourceTransformer,
