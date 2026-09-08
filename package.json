@@ -47,7 +47,7 @@
 		"tslib": "2.8.1",
 		"typescript": "^6.0.3",
 		"vite": "npm:@voidzero-dev/vite-plus-core@0.1.24",
-		"vite-plus": "0.1.24",
+		"vite-plus": "0.3.0",
 		"vitest": "npm:@voidzero-dev/vite-plus-test@0.1.24"
 	},
 	"packageManager": "pnpm@11.1.2"
