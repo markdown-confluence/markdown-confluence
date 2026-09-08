@@ -79,6 +79,11 @@ The registered Atlassian app needs the Confluence scopes in
 Resource-level grants restrict access to sites selected at consent. No shared
 client secret is embedded in the distributed plugin.
 
+After adding scopes to an existing app registration, use **Reconnect** and accept
+the updated grant. Refreshing an existing token does not add new permissions.
+Page edit locking requires both `read:content.restriction:confluence` and
+`write:content.restriction:confluence` in the app registration and user grant.
+
 Atlassian's [current guidance](https://developer.atlassian.com/cloud/confluence/oauth-2-3lo-apps/)
 states that integrations instructing customers to create individual 3LO apps do not
 comply with its requirements. The configurable credentials support integration

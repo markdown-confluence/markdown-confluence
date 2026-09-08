@@ -25,6 +25,12 @@ Select these Confluence granular scopes:
 - `read:label:confluence`
 - `write:label:confluence`
 
+To enable **Restrict editing to the publishing account**, also grant
+`read:content.restriction:confluence` and `write:content.restriction:confluence`,
+and allow the account to restrict pages in the target space. These additional
+scopes also apply to scoped API tokens. Without them, content can publish while
+the edit-lock step reports a permission failure.
+
 The publisher uses v2 for pages, blog posts and metadata and v1 for the current user,
 attachment uploads and label writes. Both scopes and the account's space
 permissions must allow these operations. For blog posts, enable **Blogs** in the
