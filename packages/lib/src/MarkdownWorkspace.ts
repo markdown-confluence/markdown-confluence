@@ -143,7 +143,7 @@ export function makeMarkdownWorkspaceEffect(
 					const { key } = config[propertyKey as keyof ConfluencePerPageConfig];
 					const value = values[propertyKey as keyof ConfluencePerPageAllValues];
 					if (propertyKey in values) {
-						if (value) {
+						if (value !== undefined) {
 							fm[key] = value;
 						} else if (key in fileContent.data) {
 							delete fileContent.data[key];

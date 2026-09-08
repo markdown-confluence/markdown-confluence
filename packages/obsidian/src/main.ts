@@ -4,7 +4,7 @@ import {
 	HttpKrokiRenderer,
 	DEFAULT_KROKI_SETTINGS,
 } from "@markdown-confluence/lib";
-import { Plugin, Notice, MarkdownView, Workspace, loadMermaid } from "obsidian";
+import { Plugin, Notice, MarkdownView, Workspace, loadMermaid, type TFile } from "obsidian";
 import {
 	ADFProcessingPlugin,
 	ConfluenceUploadSettings,
@@ -117,6 +117,7 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	private isSyncing = false;
+	private isUnloaded = false;
 	private platform!: Layer.Layer<MarkdownConfluencePlatform>;
 	private settingsLayer!: Layer.Layer<ConfluenceUploadSettings.ConfluenceSettingsService>;
 	workspace!: Workspace;
@@ -139,7 +140,9 @@ export default class ConfluencePlugin extends Plugin {
 
 	private async createPublisher() {
 		const confluenceClient = await this.authenticationClient();
+		if (this.isUnloaded) throw new Error("The Confluence plugin was unloaded.");
 		const mermaidItems = await this.getMermaidItems();
+		if (this.isUnloaded) throw new Error("The Confluence plugin was unloaded.");
 		const mermaidRenderer = new ElectronMermaidRenderer(
 			mermaidItems.extraStyleSheets,
 			mermaidItems.extraStyles,
@@ -290,7 +293,9 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	override async onload() {
+		this.isUnloaded = false;
 		await this.init();
+		if (this.isUnloaded) return;
 		this.publishStatus = this.addStatusBarItem();
 		this.publishStatus.onclick = () => this.publishAbort?.abort();
 		this.addCommand({
@@ -333,65 +338,15 @@ export default class ConfluencePlugin extends Plugin {
 		this.addCommand({
 			id: "enable-publishing",
 			name: "Enable publishing to Confluence",
-			editorCheckCallback: (checking, _editor, view) => {
-				if (!view.file) {
-					return false;
-				}
-
-				if (checking) {
-					const frontMatter = this.app.metadataCache.getCache(
-						view.file.path,
-					)?.frontmatter;
-					const file = view.file;
-					const enabledForPublishing = shouldPublishMarkdownFile(
-						file.path,
-						frontMatter,
-						this.settings,
-					);
-					return !enabledForPublishing;
-				}
-
-				this.app.fileManager.processFrontMatter(view.file, (frontmatter) => {
-					if (view.file && view.file.path.startsWith(this.settings.folderToPublish)) {
-						delete frontmatter["connie-publish"];
-					} else {
-						frontmatter["connie-publish"] = true;
-					}
-				});
-				return true;
-			},
+			editorCheckCallback: (checking, _editor, view) =>
+				this.setPublishingEnabled(checking, view.file, true),
 		});
 
 		this.addCommand({
 			id: "disable-publishing",
 			name: "Disable publishing to Confluence",
-			editorCheckCallback: (checking, _editor, view) => {
-				if (!view.file) {
-					return false;
-				}
-
-				if (checking) {
-					const frontMatter = this.app.metadataCache.getCache(
-						view.file.path,
-					)?.frontmatter;
-					const file = view.file;
-					const enabledForPublishing = shouldPublishMarkdownFile(
-						file.path,
-						frontMatter,
-						this.settings,
-					);
-					return enabledForPublishing;
-				}
-
-				this.app.fileManager.processFrontMatter(view.file, (frontmatter) => {
-					if (view.file && view.file.path.startsWith(this.settings.folderToPublish)) {
-						frontmatter["connie-publish"] = false;
-					} else {
-						delete frontmatter["connie-publish"];
-					}
-				});
-				return true;
-			},
+			editorCheckCallback: (checking, _editor, view) =>
+				this.setPublishingEnabled(checking, view.file, false),
 		});
 
 		this.addCommand({
@@ -441,7 +396,36 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	override async onunload() {
+		this.isUnloaded = true;
+		this.publishAbort?.abort();
+		this.publishStatus = undefined;
 		this.browserOAuth.cancel();
+	}
+
+	private setPublishingEnabled(checking: boolean, file: TFile | null, enabled: boolean) {
+		if (!file || this.isUnloaded) return false;
+		const frontmatter = this.app.metadataCache.getCache(file.path)?.frontmatter;
+		if (
+			shouldPublishMarkdownFile(file.path, frontmatter, this.settings) === enabled ||
+			(enabled &&
+				!shouldPublishMarkdownFile(
+					file.path,
+					{ ...frontmatter, "connie-publish": true },
+					this.settings,
+				))
+		)
+			return false;
+		if (!checking) {
+			void this.app.fileManager
+				.processFrontMatter(file, (values) => {
+					values["connie-publish"] = enabled;
+				})
+				.catch((error: unknown) => {
+					if (!this.isUnloaded)
+						new Notice(`Could not update publishing: ${toError(error).message}`);
+				});
+		}
+		return true;
 	}
 
 	async loadSettings() {
@@ -498,6 +482,7 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	private async runPublish(publishFilter?: string): Promise<void> {
+		if (this.isUnloaded) return;
 		if (this.isSyncing) {
 			new Notice("A Confluence publish is already in progress.");
 			return;
@@ -526,6 +511,7 @@ export default class ConfluencePlugin extends Plugin {
 	}
 
 	private showPublishResults(uploadResults: UploadResults) {
+		if (this.isUnloaded) return;
 		if (this.settings.showPublishResultsModal) {
 			new CompletedModal(this.app, {
 				uploadResults,

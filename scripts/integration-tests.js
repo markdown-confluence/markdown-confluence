@@ -43,19 +43,27 @@ Reports: reports/integration/. See documentation/TESTING.md for coverage and set
 function command(executable, args, options = {}, timeout = "15 minutes") {
 	return Effect.scoped(
 		Effect.gen(function* () {
+			const { expectedStderr, ...childOptions } = options;
 			const child = yield* ChildProcess.make(executable, args, {
 				cwd: repositoryRoot,
 				extendEnv: true,
 				stdin: "ignore",
 				stdout: options.capture ? "pipe" : "inherit",
-				stderr: "inherit",
-				...options,
+				stderr: expectedStderr ? "pipe" : "inherit",
+				...childOptions,
 			});
-			const [exitCode, output] = yield* Effect.all(
+			const [exitCode, output, stderr] = yield* Effect.all(
 				[
 					child.exitCode,
 					options.capture
 						? child.stdout.pipe(
+								Stream.decodeText(),
+								Stream.runCollect,
+								Effect.map((chunks) => chunks.join("")),
+							)
+						: Effect.succeed(""),
+					expectedStderr
+						? child.stderr.pipe(
 								Stream.decodeText(),
 								Stream.runCollect,
 								Effect.map((chunks) => chunks.join("")),
@@ -69,6 +77,11 @@ function command(executable, args, options = {}, timeout = "15 minutes") {
 					new Error(
 						`${executable} exited ${exitCode}; expected ${options.expectedExitCode ?? 0}`,
 					),
+				);
+			if (expectedStderr)
+				assert.ok(
+					stderr.includes(expectedStderr),
+					`Expected validation diagnostic: ${expectedStderr}`,
 				);
 			return output;
 		}),
@@ -242,6 +255,34 @@ function verifyCli(node, cliPath, cwd, libraryUrl) {
 			expectedExitCode: 1,
 		});
 		assert.ok(!invalid.trim(), "Failed conversion must not emit an ADF document");
+		for (const { args, diagnostic } of [
+			{ args: ["valdiate"], diagnostic: "Unknown command: valdiate" },
+			{ args: ["--dry-run"], diagnostic: "Unknown option: --dry-run" },
+			{
+				args: ["--forceOverwrite=fales"],
+				diagnostic: "--forceOverwrite requires a boolean value",
+			},
+			{
+				args: ["--forceOverwrite", "fales"],
+				diagnostic: "--forceOverwrite requires a boolean value",
+			},
+			{ args: ["--parentId"], diagnostic: "--parentId requires a value" },
+		]) {
+			const rejected = yield* command(node, [cliPath, ...args], {
+				cwd,
+				capture: true,
+				expectedExitCode: 1,
+				expectedStderr: diagnostic,
+			});
+			assert.equal(
+				rejected.trim(),
+				"",
+				`Rejected command ${JSON.stringify(args)} must not produce publishing output`,
+			);
+		}
+		yield* Console.log(
+			"Unknown commands, unsupported publishing options, malformed booleans and missing values fail without publishing output.",
+		);
 		yield* Console.log(
 			`Built CLI matches the library for ${count} Markdown fixtures; CommonJS import and failure exit verified.`,
 		);

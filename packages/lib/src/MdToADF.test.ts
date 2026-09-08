@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { expect, test } from "@effect/vitest";
 import { MarkdownFile } from "./MarkdownWorkspace";
-import { convertMDtoADF, parseMarkdownToADF } from "./MdToADF";
+import { convertMDtoADF, parseMarkdownToADF, stripMarkdownHtmlComments } from "./MdToADF";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
 
 const markdownTestCases: MarkdownFile[] = [
@@ -819,3 +819,115 @@ for (const image of ["![](image.png)", "![[image.png]]"]) {
 		}
 	}
 }
+
+test.each([
+	["indented body", "<!--\n    hidden\n-->\nvisible", "\n\n\nvisible"],
+	["indented closing marker", "<!--\n    hidden -->\nvisible", "\n\nvisible"],
+	["tab-indented body", "<!--\n\thidden\n\t-->\nvisible", "\n\n\nvisible"],
+	["fenced body", "<!--\n```md\nhidden\n```\n-->\nvisible", "\n\n\n\n\nvisible"],
+	["unclosed fence in body", "<!--\n```md\nhidden\n-->\nvisible", "\n\n\n\nvisible"],
+	["tilde-fenced body", "<!--\n~~~md\nhidden\n~~~\n-->\nvisible", "\n\n\n\n\nvisible"],
+	["blank lines", "<!--\n\n    hidden\n\n-->\nvisible", "\n\n\n\n\nvisible"],
+	["unclosed comment", "visible\n<!--\n    hidden\n```", "visible\n\n\n"],
+	["inline comment", "visible <!-- hidden --> after", "visible  after"],
+	["CRLF comment", "<!--\r\n    hidden\r\n-->\r\nvisible", "\r\n\r\n\r\nvisible"],
+	["paragraph continuation", "visible\n    <!-- hidden -->", "visible\n    "],
+	["inline code cannot cross blocks", "visible `\n\n<!-- hidden -->\n\n`", "visible `\n\n\n\n`"],
+	["blockquote comment", "> <!--\n>     hidden\n> -->\n\nvisible", "> \n\n\n\nvisible"],
+	["list comment", "- <!--\n      hidden\n  -->\n\nvisible", "- \n\n\n\nvisible"],
+])("does not publish an HTML comment with %s", (_description, markdown, expected) => {
+	expect(stripMarkdownHtmlComments(markdown)).toBe(expected);
+	const serialized = JSON.stringify(parseMarkdownToADF(markdown, "https://example.com"));
+	expect(serialized).not.toContain("hidden");
+	expect(serialized).toContain("visible");
+});
+
+test.each([
+	["inline code", "`<!-- literal -->`"],
+	["escaped first backtick", "\\``<!-- literal -->`"],
+	["escaped first backtick in longer run", "\\```<!-- literal -->``"],
+	["multiline inline code", "`before\n<!-- literal -->\nafter`"],
+	["multiple backticks", "`` before ` <!-- literal --> after ``"],
+	["different backtick runs", "`` before ``` <!-- literal --> after ``"],
+	["indented code", "    <!-- literal -->"],
+	["tab-indented code", "\t<!-- literal -->"],
+	["fenced code", "```html\n<!-- literal -->\n```"],
+	["tilde-fenced code", "~~~html\n<!-- literal -->\n~~~"],
+	["unclosed fenced code", "```html\n<!-- literal -->"],
+	["fence close with non-whitespace", "```html\n```not-closing\n<!-- literal -->\n```"],
+	["shorter closing fence", "````html\n```\n<!-- literal -->\n````"],
+	["tilde fence close with non-whitespace", "~~~html\n~~~not-closing\n<!-- literal -->\n~~~"],
+	["indented closing fence", "```html\n    ```\n<!-- literal -->\n```"],
+	["blockquote fenced code", "> ```html\n> <!-- literal -->\n> ```"],
+	["list fenced code", "- ```html\n  <!-- literal -->\n  ```"],
+	["blockquote indented code", ">     <!-- literal -->"],
+	["list indented code", "- item\n\n      <!-- literal -->"],
+	["fence following ordinary HTML", "<div>\n```html\n<!-- literal -->\n```"],
+	["escaped delimiter", "\\<!-- literal -->"],
+])("preserves comment-looking text in %s", (_description, markdown) => {
+	expect(stripMarkdownHtmlComments(markdown)).toBe(markdown);
+	const serialized = JSON.stringify(parseMarkdownToADF(markdown, "https://example.com"));
+	expect(serialized).toContain("<!-- literal -->");
+});
+
+test("resumes comment removal after a valid longer fence close", () => {
+	const markdown = "```html\n<!-- literal -->\n```` \t\n<!-- hidden -->\nvisible";
+	expect(stripMarkdownHtmlComments(markdown)).toBe(
+		"```html\n<!-- literal -->\n```` \t\n\nvisible",
+	);
+	const serialized = JSON.stringify(parseMarkdownToADF(markdown, "https://example.com"));
+	expect(serialized).toContain("<!-- literal -->");
+	expect(serialized).toContain("visible");
+	expect(serialized).not.toContain("hidden");
+});
+
+test.each([
+	["different table rows", "| ` | text |\n| <!-- hidden --> | ` |"],
+	["different table cells", "| `` | <!-- hidden --> `` |"],
+	["code fence in another cell", "| ``` | <!-- hidden --> |"],
+])("comment protection does not join code across %s", (_description, rows) => {
+	const markdown = `| a | b |\n| - | - |\n${rows}\n\nvisible`;
+	expect(stripMarkdownHtmlComments(markdown)).not.toContain("hidden");
+	const serialized = JSON.stringify(parseMarkdownToADF(markdown, "https://example.com"));
+	expect(serialized).not.toContain("hidden");
+	expect(serialized).toContain("visible");
+});
+
+test.each([
+	"| `<!-- literal -->` | text |",
+	"| ` | <!-- literal --> ` |",
+	"| text | ``<!-- literal -->`` |",
+	"| <!-- removed --> | `<!-- literal -->` |",
+])("preserves real inline code within a table row %s", (row) => {
+	const markdown = `| a | b |\n| - | - |\n${row}`;
+	const stripped = stripMarkdownHtmlComments(markdown);
+	expect(stripped).toContain("<!-- literal -->");
+	expect(stripped).not.toContain("removed");
+	const serialized = JSON.stringify(parseMarkdownToADF(markdown, "https://example.com"));
+	expect(serialized).toContain("<!-- literal -->");
+	expect(serialized).not.toContain("removed");
+});
+
+test.each(["\r", "\r\n", "\n"])(
+	"retains source line endings %j while removing comments after fences",
+	(newline) => {
+		const prefix = ["```html", "<!-- literal -->", "```", ""].join(newline);
+		const markdown = `${prefix}<!-- hidden -->${newline}visible`;
+		expect(stripMarkdownHtmlComments(markdown)).toBe(`${prefix}${newline}visible`);
+		const serialized = JSON.stringify(parseMarkdownToADF(markdown, "https://example.com"));
+		expect(serialized).toContain("<!-- literal -->");
+		expect(serialized).not.toContain("hidden");
+		expect(serialized).toContain("visible");
+	},
+);
+
+test("maps mixed source line endings after a fenced block", () => {
+	const markdown = "```html\r\n<!-- literal -->\r```\n<!-- hidden -->\r\nvisible";
+	expect(stripMarkdownHtmlComments(markdown)).toBe(
+		"```html\r\n<!-- literal -->\r```\n\r\nvisible",
+	);
+	const serialized = JSON.stringify(parseMarkdownToADF(markdown, "https://example.com"));
+	expect(serialized).toContain("<!-- literal -->");
+	expect(serialized).not.toContain("hidden");
+	expect(serialized).toContain("visible");
+});

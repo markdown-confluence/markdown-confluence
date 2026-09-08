@@ -90,6 +90,7 @@ import {
 	loadConfluenceSettingsEffect,
 	makeConfluenceSettingsConfigProvider,
 	parseConfluenceSettingsEffect,
+	parseConfluenceCommandLineOptions,
 } from "./SettingsConfig";
 
 export {
@@ -147,6 +148,7 @@ export {
 	normalizeConfluenceApiPrefix,
 	parseConfluenceSettingsEffect,
 	parseMarkdownToADF,
+	parseConfluenceCommandLineOptions,
 	renderADFDoc,
 	runEffect,
 	shouldPublishMarkdownFile,

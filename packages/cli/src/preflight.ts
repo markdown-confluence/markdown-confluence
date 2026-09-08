@@ -9,26 +9,16 @@ import {
 	planPublishingFiles,
 	createAuthenticatedConfluenceClient,
 } from "@markdown-confluence/lib";
+import type { PreflightOptions } from "./command";
 
-export function preflight(command: "validate" | "plan", args: string[]) {
+export function preflight(command: "validate" | "plan", options: PreflightOptions) {
 	return Effect.gen(function* () {
-		if (args.includes("--help"))
-			return yield* Console.log(
-				`${command} [--input FILE] [--output FILE|-] [publishing settings]\nvalidate works offline. plan performs only reads; existing pages are marked reconcile, not guessed unchanged.`,
-			);
-		const argument = (name: string) => {
-			const index = args.indexOf(name);
-			if (index < 0) return undefined;
-			const value = args[index + 1];
-			if (!value || value.startsWith("--")) throw new Error(`Missing value for ${name}`);
-			return value;
-		};
 		const provider = yield* makeConfluenceSettingsConfigProvider();
 		const settings = yield* confluenceSettingsConfig.parse(provider);
 		if (command === "validate" && !settings.confluenceBaseUrl)
 			settings.confluenceBaseUrl = "https://confluence.invalid";
 		const workspace = yield* Effect.tryPromise(() => loadMarkdownWorkspace(settings));
-		const input = argument("--input");
+		const input = options.input;
 		const files = input
 			? [yield* workspace.loadMarkdownFile(input)]
 			: yield* workspace.getMarkdownFilesToUpload;
@@ -46,7 +36,7 @@ export function preflight(command: "validate" | "plan", args: string[]) {
 				: validatePublishingFiles(files, settings);
 		const fs = yield* FileSystem;
 		const path = yield* Path;
-		const output = argument("--output");
+		const output = options.output;
 		const json = JSON.stringify(report, null, 2) + "\n";
 		if (output && output !== "-") yield* fs.writeFileString(path.resolve(output), json);
 		else yield* Console.log(json);

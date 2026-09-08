@@ -21,7 +21,7 @@ const CONFLUENCE_SETTINGS_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof Conflue
 type ArgumentDefinition = {
 	name: string;
 	aliases?: string[];
-	type: "boolean" | "string";
+	type: "boolean" | "string" | "flag";
 };
 
 type ArgumentValue = boolean | string | undefined;
@@ -153,14 +153,15 @@ export function makeConfluenceSettingsConfigProvider(): Effect.Effect<
 		const argv = yield* runtimeEnvironment.argv;
 		const envConfigPath = yield* runtimeEnvironment.getEnv("CONFLUENCE_CONFIG_FILE");
 
-		const configPath = yield* Effect.try({
-			try: () => getConfigPath(argv, envConfigPath, cwd, path),
+		const options = yield* Effect.try({
+			try: () => parseArgumentValues(argv.slice(2), CONFLUENCE_ARGUMENT_DEFINITIONS),
 			catch: toError,
 		});
+		const configPath = getConfigPath(options, envConfigPath, cwd, path);
 		const configFileProvider = yield* makeConfigFileProvider(fs, configPath);
 		const environmentProvider = yield* makeEnvironmentProvider(runtimeEnvironment);
 		const commandLineProvider = yield* Effect.try({
-			try: () => makeCommandLineProvider(argv),
+			try: () => makeCommandLineProvider(options),
 			catch: toError,
 		});
 		const defaultProvider = ConfigProvider.fromUnknown({
@@ -200,12 +201,11 @@ function validateConfluenceSettingsEffect(
 }
 
 function getConfigPath(
-	argv: readonly string[],
+	options: Record<string, ArgumentValue>,
 	envConfigPath: string | undefined,
 	cwd: string,
 	path: Path,
 ): string {
-	const options = parseArgumentValues(argv, [{ name: "config", aliases: ["c"], type: "string" }]);
 	const config = options["config"];
 
 	return typeof config === "string"
@@ -298,41 +298,55 @@ function makeEnvironmentProvider(
 	});
 }
 
-function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.ConfigProvider {
-	const options = parseArgumentValues(argv, [
-		{ name: "baseUrl", aliases: ["b"], type: "string" },
-		{ name: "siteUrl", type: "string" },
-		{ name: "parentId", aliases: ["p"], type: "string" },
-		{ name: "mermaidProtocolTimeout", type: "string" },
-		{ name: "userName", aliases: ["u"], type: "string" },
-		{ name: "apiToken", type: "string" },
-		{ name: "authType", type: "string" },
-		{ name: "apiPrefix", type: "string" },
-		{ name: "requestHeaders", type: "string" },
-		{ name: "clientId", type: "string" },
-		{ name: "clientSecret", type: "string" },
-		{ name: "enableFolder", aliases: ["f"], type: "string" },
-		{ name: "mermaidFormat", type: "string" },
-		{ name: "mermaidScale", type: "string" },
-		{ name: "mermaidTheme", type: "string" },
-		{ name: "jiraUrl", type: "string" },
-		{ name: "orderPages", type: "boolean" },
-		{ name: "excludeFolders", type: "string" },
-		{ name: "tagsToPublish", aliases: ["t"], type: "string" },
-		{ name: "contentRoot", aliases: ["cr"], type: "string" },
-		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
-		{ name: "lockPublishedPages", type: "boolean" },
-		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
-		{ name: "pageHeaderMarkdown", type: "string" },
-		{ name: "pageFooterMarkdown", type: "string" },
-		{ name: "krokiEnabled", type: "boolean" },
-		{ name: "krokiServerUrl", type: "string" },
-		{ name: "krokiFormat", type: "string" },
-		{ name: "krokiTimeoutMs", type: "string" },
-		{ name: "plantumlEnabled", type: "boolean" },
-		{ name: "plantumlServerUrl", type: "string" },
-	]);
+const CONFLUENCE_ARGUMENT_DEFINITIONS: readonly ArgumentDefinition[] = [
+	{ name: "config", aliases: ["c"], type: "string" },
+	{ name: "baseUrl", aliases: ["b"], type: "string" },
+	{ name: "siteUrl", type: "string" },
+	{ name: "parentId", aliases: ["p"], type: "string" },
+	{ name: "mermaidProtocolTimeout", type: "string" },
+	{ name: "userName", aliases: ["u"], type: "string" },
+	{ name: "apiToken", type: "string" },
+	{ name: "authType", type: "string" },
+	{ name: "apiPrefix", type: "string" },
+	{ name: "requestHeaders", type: "string" },
+	{ name: "clientId", type: "string" },
+	{ name: "clientSecret", type: "string" },
+	{ name: "enableFolder", aliases: ["f"], type: "string" },
+	{ name: "mermaidFormat", type: "string" },
+	{ name: "mermaidScale", type: "string" },
+	{ name: "mermaidTheme", type: "string" },
+	{ name: "jiraUrl", type: "string" },
+	{ name: "orderPages", type: "boolean" },
+	{ name: "excludeFolders", type: "string" },
+	{ name: "tagsToPublish", aliases: ["t"], type: "string" },
+	{ name: "contentRoot", aliases: ["cr"], type: "string" },
+	{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
+	{ name: "lockPublishedPages", type: "boolean" },
+	{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
+	{ name: "pageHeaderMarkdown", type: "string" },
+	{ name: "pageFooterMarkdown", type: "string" },
+	{ name: "krokiEnabled", type: "boolean" },
+	{ name: "krokiServerUrl", type: "string" },
+	{ name: "krokiFormat", type: "string" },
+	{ name: "krokiTimeoutMs", type: "string" },
+	{ name: "plantumlEnabled", type: "boolean" },
+	{ name: "plantumlServerUrl", type: "string" },
+];
 
+export function parseConfluenceCommandLineOptions(
+	args: readonly string[],
+	extraDefinitions: readonly ArgumentDefinition[] = [],
+): Record<string, ArgumentValue> {
+	return parseArgumentValues(
+		args,
+		[...CONFLUENCE_ARGUMENT_DEFINITIONS, ...extraDefinitions],
+		true,
+	);
+}
+
+function makeCommandLineProvider(
+	options: Record<string, ArgumentValue>,
+): ConfigProvider.ConfigProvider {
 	const mermaid = compactRecord({
 		format: options["mermaidFormat"],
 		scale: options["mermaidScale"],
@@ -387,8 +401,9 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 }
 
 function parseArgumentValues(
-	argv: readonly string[],
-	definitions: ArgumentDefinition[],
+	args: readonly string[],
+	definitions: readonly ArgumentDefinition[],
+	strict = false,
 ): Record<string, ArgumentValue> {
 	const definitionsByFlag = new Map<string, ArgumentDefinition>();
 
@@ -401,9 +416,11 @@ function parseArgumentValues(
 	}
 
 	const parsed: Record<string, ArgumentValue> = {};
-	for (let index = 2; index < argv.length; index += 1) {
-		const rawArgument = argv[index];
-		if (!rawArgument || rawArgument === "--") {
+	for (let index = 0; index < args.length; index += 1) {
+		const rawArgument = args[index]!;
+		if (rawArgument === "--") {
+			if (strict && index + 1 < args.length)
+				throw new Error(`Unexpected argument: ${args[index + 1]}`);
 			break;
 		}
 
@@ -412,16 +429,29 @@ function parseArgumentValues(
 		const inlineValue = equalsIndex >= 0 ? rawArgument.slice(equalsIndex + 1) : undefined;
 		const definition = definitionsByFlag.get(flag);
 		if (!definition) {
+			if (strict)
+				throw new Error(
+					rawArgument.startsWith("-")
+						? `Unknown option: ${flag}. Use --help for usage.`
+						: `Unexpected argument: ${rawArgument}. Use --help for usage.`,
+				);
+			continue;
+		}
+
+		if (definition.type === "flag") {
+			if (inlineValue !== undefined) throw new Error(`${flag} does not accept a value.`);
+			parsed[definition.name] = true;
 			continue;
 		}
 
 		if (definition.type === "boolean") {
-			const nextValue = inlineValue === undefined ? argv[index + 1] : undefined;
+			const nextValue = inlineValue === undefined ? args[index + 1] : undefined;
 			const usesSeparateValue =
 				inlineValue === undefined && nextValue !== undefined && !nextValue.startsWith("-");
 
 			parsed[definition.name] = parseBooleanArgument(
 				inlineValue ?? (usesSeparateValue ? nextValue : undefined),
+				flag,
 			);
 			if (usesSeparateValue) {
 				index += 1;
@@ -429,9 +459,9 @@ function parseArgumentValues(
 			continue;
 		}
 
-		const value = inlineValue ?? argv[index + 1];
-		if (value === undefined || value.startsWith("-")) {
-			continue;
+		const value = inlineValue ?? args[index + 1];
+		if (!value || (inlineValue === undefined && value.startsWith("-") && value !== "-")) {
+			throw new Error(`${flag} requires a value.`);
 		}
 
 		parsed[definition.name] = value;
@@ -443,12 +473,15 @@ function parseArgumentValues(
 	return parsed;
 }
 
-function parseBooleanArgument(value: string | undefined): boolean {
+function parseBooleanArgument(value: string | undefined, flag: string): boolean {
 	if (value === undefined) {
 		return true;
 	}
 
-	return !["0", "false", "no", "off"].includes(value.toLowerCase());
+	const literal = value.toLowerCase();
+	if (["1", "true", "yes", "on"].includes(literal)) return true;
+	if (["0", "false", "no", "off"].includes(literal)) return false;
+	throw new Error(`${flag} requires a boolean value (true/false, yes/no, on/off, or 1/0).`);
 }
 
 function pickConfluenceSettings(config: Record<string, unknown>): Partial<ConfluenceSettings> {

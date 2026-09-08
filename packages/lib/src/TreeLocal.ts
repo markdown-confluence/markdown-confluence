@@ -169,10 +169,37 @@ export const createFolderStructureEffect = (
 
 		processNode(treeRootPath, rootNode, path);
 
+		checkUniquePageIds(rootNode);
 		checkUniquePageTitle(rootNode);
 
 		return rootNode;
 	}).pipe(Effect.mapError(toError));
+
+export function checkUniquePageIds(rootNode: LocalAdfFileTreeNode): void {
+	const targets: { pageId: string | undefined; absoluteFilePath: string }[] = [];
+	const visit = (node: LocalAdfFileTreeNode) => {
+		if (node.file) targets.push(node.file);
+		node.children.forEach(visit);
+	};
+	visit(rootNode);
+	assertUniquePageTargets(targets);
+}
+
+export function assertUniquePageTargets(
+	files: Iterable<{ pageId: string | undefined; absoluteFilePath: string }>,
+): void {
+	const sourcesByPageId = new Map<string, string>();
+	for (const file of files) {
+		if (!file.pageId) continue;
+		const existingSource = sourcesByPageId.get(file.pageId);
+		if (existingSource !== undefined) {
+			throw new Error(
+				`Confluence page ID "${file.pageId}" is targeted by both "${existingSource}" and "${file.absoluteFilePath}". Each page must have only one source file.`,
+			);
+		}
+		sourcesByPageId.set(file.pageId, file.absoluteFilePath);
+	}
+}
 
 function checkUniquePageTitle(
 	rootNode: LocalAdfFileTreeNode,

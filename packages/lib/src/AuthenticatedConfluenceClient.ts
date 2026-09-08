@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import { createV1Client } from "confluence.js";
+import type { Client } from "confluence.js/core";
 import type { ConfluenceFetch } from "./ConfluenceFetch";
 import { ConfluenceSettings } from "./Settings";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
@@ -7,6 +8,7 @@ import { createConfluenceClientConfig } from "./ConfluenceClientConfig";
 import { createConfluenceTransport } from "./ConfluenceTransport";
 import { ConfluenceV2Client } from "./ConfluenceV2Client";
 import { fetchOAuthAccessToken } from "./OAuthToken";
+import { cancellableClient, registerPublishCancellation } from "./PublishCancellation";
 
 /** All Cloud authentication modes use the same v2 publishing operations and transport. */
 export function createAuthenticatedConfluenceClient(
@@ -41,9 +43,15 @@ export function createAuthenticatedConfluenceClient(
 			atlassianApiToken: accessToken,
 		});
 		const transport = createConfluenceTransport(config, options.fetch);
-		const v1 = createV1Client(transport);
-		const content = new ConfluenceV2Client(settings.confluenceBaseUrl, transport);
-		return {
+		return assembleAuthenticatedClient(settings.confluenceBaseUrl, transport);
+	});
+}
+
+function assembleAuthenticatedClient(baseUrl: string, transport: Client): RequiredConfluenceClient {
+	const v1 = createV1Client(transport);
+	const content = new ConfluenceV2Client(baseUrl, transport);
+	return registerPublishCancellation<RequiredConfluenceClient>(
+		{
 			...transport,
 			content,
 			contentAttachments: { getAttachments: content.getAttachments.bind(content) },
@@ -59,6 +67,7 @@ export function createAuthenticatedConfluenceClient(
 					return { ...user, accountId: user.accountId };
 				},
 			},
-		};
-	});
+		},
+		(signal) => assembleAuthenticatedClient(baseUrl, cancellableClient(transport, signal)),
+	);
 }
