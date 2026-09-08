@@ -63,6 +63,7 @@ export const confluenceSettingsConfig = Config.all({
 	),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
+	lockPublishedPages: Config.boolean("lockPublishedPages").pipe(Config.withDefault(false)),
 	forceOverwrite: Config.boolean("forceOverwrite").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.forceOverwrite),
 	),
@@ -217,6 +218,9 @@ function makeEnvironmentProvider(
 		const firstHeadingPageTitle = yield* runtimeEnvironment.getEnv(
 			"CONFLUENCE_FIRST_HEADING_PAGE_TITLE",
 		);
+		const lockPublishedPages = yield* runtimeEnvironment.getEnv(
+			"CONFLUENCE_LOCK_PUBLISHED_PAGES",
+		);
 		const forceOverwrite = yield* runtimeEnvironment.getEnv("CONFLUENCE_FORCE_OVERWRITE");
 		const plantumlEnabled = yield* runtimeEnvironment.getEnv("CONFLUENCE_PLANTUML_ENABLED");
 		const plantumlServerUrl = yield* runtimeEnvironment.getEnv(
@@ -245,6 +249,7 @@ function makeEnvironmentProvider(
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
 				firstHeadingPageTitle: firstHeadingPageTitle,
 				forceOverwrite,
+				lockPublishedPages,
 				pageHeaderMarkdown: yield* runtimeEnvironment.getEnv(
 					"CONFLUENCE_PAGE_HEADER_MARKDOWN",
 				),
@@ -278,6 +283,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "tagsToPublish", aliases: ["t"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
+		{ name: "lockPublishedPages", type: "boolean" },
 		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
 		{ name: "pageHeaderMarkdown", type: "string" },
 		{ name: "pageFooterMarkdown", type: "string" },
@@ -308,6 +314,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
 			forceOverwrite: options["forceOverwrite"],
+			lockPublishedPages: options["lockPublishedPages"],
 			pageHeaderMarkdown: options["pageHeaderMarkdown"],
 			pageFooterMarkdown: options["pageFooterMarkdown"],
 		}),

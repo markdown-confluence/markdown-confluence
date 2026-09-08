@@ -3,6 +3,7 @@ export const integrationProfiles = [
 	"packages",
 	"live",
 	"blogs",
+	"edit-lock",
 	"regressions",
 	"docker",
 	"vault",

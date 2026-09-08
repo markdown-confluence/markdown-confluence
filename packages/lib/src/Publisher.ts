@@ -1,3 +1,4 @@
+import { lockPageEditing } from "./PageEditLock";
 import { MarkdownPublishFilter } from "./MarkdownSourceTransformer";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { Effect, Layer } from "effect";
@@ -256,6 +257,9 @@ export class Publisher {
 		const getMyAccountId = () => this.myAccountId;
 
 		return Effect.gen(function* () {
+			const lock = adfFile.frontmatter["connie-lock"];
+			if (lock !== undefined && typeof lock !== "boolean")
+				return yield* Effect.fail(new Error("connie-lock must be a boolean"));
 			if (!settings.forceOverwrite && lastUpdatedBy !== getMyAccountId()) {
 				return yield* Effect.fail(
 					createUpdatedByAnotherUserError(getMyAccountId(), lastUpdatedBy),
@@ -427,6 +431,16 @@ export class Publisher {
 				});
 			}
 
+			if (lock ?? settings.lockPublishedPages ?? false) {
+				yield* Effect.tryPromise({
+					try: () =>
+						lockPageEditing(confluenceClient, adfFile.pageId, getMyAccountId() ?? ""),
+					catch: () =>
+						new Error(
+							"Content publishing completed, but edit locking failed. Check restriction permissions and scopes, then retry publishing.",
+						),
+				});
+			}
 			return result;
 		});
 	}
