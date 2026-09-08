@@ -158,6 +158,7 @@ export class Publisher {
 			return publisher.publishEffect(publishFilter);
 		}
 		const settings = this.settings;
+		const signal = this.signal;
 		const confluenceClient = this.confluenceClient;
 		const getMyAccountId = () => this.myAccountId;
 		const setMyAccountId = (accountId: string) => {
@@ -228,7 +229,7 @@ export class Publisher {
 				// Each page may launch Chromium and upload several attachments.
 				{ concurrency: 2 },
 			);
-			if (settings.orderPages && !publishFilter && !this.signal?.aborted)
+			if (settings.orderPages && !publishFilter && !signal?.aborted)
 				yield* Effect.tryPromise(() => orderPublishedPages(confluenceClient, results));
 			return results;
 		});
