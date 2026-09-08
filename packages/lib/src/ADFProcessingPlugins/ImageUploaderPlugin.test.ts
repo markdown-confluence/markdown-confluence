@@ -99,3 +99,18 @@ test("non-image attachments use Confluence media groups without image dimensions
 		collection: "contentId-page-id",
 	});
 });
+
+test("MP4 embeds remain attachment media groups even with image-style size hints", () => {
+	const result = ImageUploaderPlugin.load(
+		docWithMedia({ type: "file", url: "file://clip.mp4", width: "320", height: "180" }),
+		{
+			"file://clip.mp4": { ...uploadedImage, filename: "clip.mp4", width: 0, height: 0 },
+		},
+	);
+	expect(result.content[0]?.type).toBe("mediaGroup");
+	expect(getFirstMediaAttrs(result)).toEqual({
+		type: "file",
+		id: "attachment-id",
+		collection: "contentId-page-id",
+	});
+});

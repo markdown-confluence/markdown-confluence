@@ -69,10 +69,14 @@ export const ImageUploaderPlugin: ADFProcessingPlugin<
 						}
 						const mappedImage = imageMap[node.attrs["url"]];
 						if (mappedImage) {
-							node.attrs["width"] =
-								mediaDimension(node.attrs["width"]) ?? mappedImage.width;
-							node.attrs["height"] =
-								mediaDimension(node.attrs["height"]) ?? mappedImage.height;
+							// Size hints cannot turn a non-image attachment into an image.
+							const isImage = mappedImage.width > 0 || mappedImage.height > 0;
+							node.attrs["width"] = isImage
+								? (mediaDimension(node.attrs["width"]) ?? mappedImage.width)
+								: 0;
+							node.attrs["height"] = isImage
+								? (mediaDimension(node.attrs["height"]) ?? mappedImage.height)
+								: 0;
 							node.attrs["collection"] = mappedImage.collection;
 							node.attrs["id"] = mappedImage.id;
 							delete node.attrs["url"];
