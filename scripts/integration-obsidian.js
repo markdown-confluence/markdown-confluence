@@ -251,6 +251,13 @@ export function runObsidianIntegration({
 					),
 				);
 				assert.ok(Object.keys(media.attachments).length >= 5);
+				assert.equal(
+					Object.keys(media.attachments).filter((title) => title.endsWith("-sample.mp4"))
+						.length,
+					1,
+					"Desktop MP4 embeds must share one uploaded attachment",
+				);
+				assert.ok(JSON.stringify(media.body).includes("After the MP4 embeds."));
 				assert.ok(pages["Tagged/Tag selection.md"].labels.includes("release-test"));
 				assert.equal(
 					pages["Release Tests/Hierarchy/Child.md"].ancestors.at(-1),

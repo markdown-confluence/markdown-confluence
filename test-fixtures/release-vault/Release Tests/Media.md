@@ -46,3 +46,11 @@ Before adjacent image two.
 After adjacent image two.
 
 End of adjacent image regression.
+
+## Local MP4 attachments (#501)
+
+Before the MP4 embeds.
+![[assets/sample.mp4]]
+![[assets/sample.mp4|320x180]]
+![Sample video](../assets/sample.mp4)
+After the MP4 embeds.
