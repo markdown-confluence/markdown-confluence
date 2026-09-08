@@ -1,5 +1,35 @@
 # Changelog
 
+## [7.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v6.0.0...@markdown-confluence/cli-v7.0.0) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* public library client/configuration contracts now use confluence.js v3 (`host`/`auth`, `body`/`searchParams`, native FormData); the Axios client factory override and configurable REST-prefix routing are removed. Release-please must prepare version 7.0.0 for the linked package group.
+
+### Features
+
+* add lossless ADF conversion and Confluence export commands ([#908](https://github.com/markdown-confluence/markdown-confluence/issues/908)) ([37ef905](https://github.com/markdown-confluence/markdown-confluence/commit/37ef90566bf8e0e3e1026b691121ff8fc7225a40))
+* port community publishing features and fixes ([#918](https://github.com/markdown-confluence/markdown-confluence/issues/918)) ([98d3a97](https://github.com/markdown-confluence/markdown-confluence/commit/98d3a97e40bc26cbc8bcfb961ce252b53f66d6b2))
+* prepare v7 with native Obsidian OAuth and confluence.js v3 ([#913](https://github.com/markdown-confluence/markdown-confluence/issues/913)) ([9392b95](https://github.com/markdown-confluence/markdown-confluence/commit/9392b954dc50d48d1ea072d555cf7029d562e00f))
+* publish inline and display LaTeX equations ([#914](https://github.com/markdown-confluence/markdown-confluence/issues/914)) ([25d7ce6](https://github.com/markdown-confluence/markdown-confluence/commit/25d7ce688cdb7ce64e60dfced3490d50a869d6a3)), closes [#498](https://github.com/markdown-confluence/markdown-confluence/issues/498)
+* render Kroki diagrams in CLI and Obsidian ([#919](https://github.com/markdown-confluence/markdown-confluence/issues/919)) ([3cbf6c7](https://github.com/markdown-confluence/markdown-confluence/commit/3cbf6c70af130d476ec5c795e9ce2bf4eb5d718d))
+
+
+### Bug Fixes
+
+* verify Cloud OAuth, bound publishing and preserve image paths ([#912](https://github.com/markdown-confluence/markdown-confluence/issues/912)) ([6b504fe](https://github.com/markdown-confluence/markdown-confluence/commit/6b504feb30ceecd8e5a5cebb6f604b8c4f2886ad))
+
+
+### Dependencies
+
+* align Effect and Atlaskit upgrades and update Chalk ([#894](https://github.com/markdown-confluence/markdown-confluence/issues/894)) ([c6a5fdd](https://github.com/markdown-confluence/markdown-confluence/commit/c6a5fdddf2530b3b8f46237828004222d980c9ca))
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped to 7.0.0
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped to 7.0.0
+    * @markdown-confluence/plantuml-renderer bumped to 7.0.0
+
 ## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v5.5.2...@markdown-confluence/cli-v6.0.0) (2026-09-07)
 
 

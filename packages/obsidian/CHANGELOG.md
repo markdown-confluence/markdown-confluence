@@ -7,6 +7,32 @@
     * @markdown-confluence/lib bumped from 3.0.4 to 3.0.0
     * @markdown-confluence/mermaid-electron-renderer bumped from 3.0.4 to 3.0.0
 
+## [7.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v6.0.0...obsidian-confluence-v7.0.0) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* public library client/configuration contracts now use confluence.js v3 (`host`/`auth`, `body`/`searchParams`, native FormData); the Axios client factory override and configurable REST-prefix routing are removed. Release-please must prepare version 7.0.0 for the linked package group.
+
+### Features
+
+* port community publishing features and fixes ([#918](https://github.com/markdown-confluence/markdown-confluence/issues/918)) ([98d3a97](https://github.com/markdown-confluence/markdown-confluence/commit/98d3a97e40bc26cbc8bcfb961ce252b53f66d6b2))
+* prepare v7 with native Obsidian OAuth and confluence.js v3 ([#913](https://github.com/markdown-confluence/markdown-confluence/issues/913)) ([9392b95](https://github.com/markdown-confluence/markdown-confluence/commit/9392b954dc50d48d1ea072d555cf7029d562e00f))
+* publish Dataview results through an early Markdown source hook ([#909](https://github.com/markdown-confluence/markdown-confluence/issues/909)) ([f7048e1](https://github.com/markdown-confluence/markdown-confluence/commit/f7048e14ff8c931922baf70ca7f45440807d5416))
+* publish inline and display LaTeX equations ([#914](https://github.com/markdown-confluence/markdown-confluence/issues/914)) ([25d7ce6](https://github.com/markdown-confluence/markdown-confluence/commit/25d7ce688cdb7ce64e60dfced3490d50a869d6a3)), closes [#498](https://github.com/markdown-confluence/markdown-confluence/issues/498)
+* render Kroki diagrams in CLI and Obsidian ([#919](https://github.com/markdown-confluence/markdown-confluence/issues/919)) ([3cbf6c7](https://github.com/markdown-confluence/markdown-confluence/commit/3cbf6c70af130d476ec5c795e9ce2bf4eb5d718d))
+* restrict published page editing to the publishing account ([#917](https://github.com/markdown-confluence/markdown-confluence/issues/917)) ([dcafc85](https://github.com/markdown-confluence/markdown-confluence/commit/dcafc851517927e489a48c634684e35745b56167))
+
+
+### Dependencies
+
+* align Effect and Atlaskit upgrades and update Chalk ([#894](https://github.com/markdown-confluence/markdown-confluence/issues/894)) ([c6a5fdd](https://github.com/markdown-confluence/markdown-confluence/commit/c6a5fdddf2530b3b8f46237828004222d980c9ca))
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped to 7.0.0
+    * @markdown-confluence/mermaid-electron-renderer bumped to 7.0.0
+    * @markdown-confluence/plantuml-renderer bumped to 7.0.0
+
 ## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-v5.5.2...obsidian-confluence-v6.0.0) (2026-09-07)
 
 

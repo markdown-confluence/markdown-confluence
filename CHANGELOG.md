@@ -1,5 +1,44 @@
 # Changelog
 
+## [7.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v6.0.0...obsidian-confluence-root-v7.0.0) (2026-09-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* public library client/configuration contracts now use confluence.js v3 (`host`/`auth`, `body`/`searchParams`, native FormData); the Axios client factory override and configurable REST-prefix routing are removed. Release-please must prepare version 7.0.0 for the linked package group.
+
+### Features
+
+* add lossless ADF conversion and Confluence export commands ([#908](https://github.com/markdown-confluence/markdown-confluence/issues/908)) ([37ef905](https://github.com/markdown-confluence/markdown-confluence/commit/37ef90566bf8e0e3e1026b691121ff8fc7225a40))
+* port community publishing features and fixes ([#918](https://github.com/markdown-confluence/markdown-confluence/issues/918)) ([98d3a97](https://github.com/markdown-confluence/markdown-confluence/commit/98d3a97e40bc26cbc8bcfb961ce252b53f66d6b2))
+* prepare v7 with native Obsidian OAuth and confluence.js v3 ([#913](https://github.com/markdown-confluence/markdown-confluence/issues/913)) ([9392b95](https://github.com/markdown-confluence/markdown-confluence/commit/9392b954dc50d48d1ea072d555cf7029d562e00f))
+* publish Dataview results through an early Markdown source hook ([#909](https://github.com/markdown-confluence/markdown-confluence/issues/909)) ([f7048e1](https://github.com/markdown-confluence/markdown-confluence/commit/f7048e14ff8c931922baf70ca7f45440807d5416))
+* publish inline and display LaTeX equations ([#914](https://github.com/markdown-confluence/markdown-confluence/issues/914)) ([25d7ce6](https://github.com/markdown-confluence/markdown-confluence/commit/25d7ce688cdb7ce64e60dfced3490d50a869d6a3)), closes [#498](https://github.com/markdown-confluence/markdown-confluence/issues/498)
+* render Kroki diagrams in CLI and Obsidian ([#919](https://github.com/markdown-confluence/markdown-confluence/issues/919)) ([3cbf6c7](https://github.com/markdown-confluence/markdown-confluence/commit/3cbf6c70af130d476ec5c795e9ce2bf4eb5d718d))
+* restrict published page editing to the publishing account ([#917](https://github.com/markdown-confluence/markdown-confluence/issues/917)) ([dcafc85](https://github.com/markdown-confluence/markdown-confluence/commit/dcafc851517927e489a48c634684e35745b56167))
+
+
+### Bug Fixes
+
+* preserve MP4 embeds as attachment media groups ([#916](https://github.com/markdown-confluence/markdown-confluence/issues/916)) ([2b5a111](https://github.com/markdown-confluence/markdown-confluence/commit/2b5a11116be9c2f35c8ce9b8413e34fd4570480e))
+* verify Cloud OAuth, bound publishing and preserve image paths ([#912](https://github.com/markdown-confluence/markdown-confluence/issues/912)) ([6b504fe](https://github.com/markdown-confluence/markdown-confluence/commit/6b504feb30ceecd8e5a5cebb6f604b8c4f2886ad))
+
+
+### Dependencies
+
+* align CodeQL init, autobuild and analyze at v4.37.9 ([#901](https://github.com/markdown-confluence/markdown-confluence/issues/901)) ([62e169b](https://github.com/markdown-confluence/markdown-confluence/commit/62e169b65ac97f3b1ceb4417a96076783dc4e542))
+* align Effect and Atlaskit upgrades and update Chalk ([#894](https://github.com/markdown-confluence/markdown-confluence/issues/894)) ([c6a5fdd](https://github.com/markdown-confluence/markdown-confluence/commit/c6a5fdddf2530b3b8f46237828004222d980c9ca))
+* **deps:** bump actions/checkout from 6.0.2 to 7.0.1 ([#895](https://github.com/markdown-confluence/markdown-confluence/issues/895)) ([03b4641](https://github.com/markdown-confluence/markdown-confluence/commit/03b464133e720cdba0ac53345efe051c8a4c1c84))
+* **deps:** bump docker/login-action from 4.2.0 to 4.6.0 ([#902](https://github.com/markdown-confluence/markdown-confluence/issues/902)) ([e060c9d](https://github.com/markdown-confluence/markdown-confluence/commit/e060c9d88e4ff188506a68212236849324e6d1e7))
+* **deps:** bump ossf/scorecard-action from 2.4.3 to 2.4.4 ([#896](https://github.com/markdown-confluence/markdown-confluence/issues/896)) ([5f97393](https://github.com/markdown-confluence/markdown-confluence/commit/5f97393d61bbc46a872a645e590f37f71024c07a))
+
+
+### Tests
+
+* make integration checks repeatable across packages and Obsidian ([#907](https://github.com/markdown-confluence/markdown-confluence/issues/907)) ([ab9df93](https://github.com/markdown-confluence/markdown-confluence/commit/ab9df937b3130c8715786e1c0c7ba33e3588da51))
+* prevent image-adjacent text loss regressions ([#915](https://github.com/markdown-confluence/markdown-confluence/issues/915)) ([4a99928](https://github.com/markdown-confluence/markdown-confluence/commit/4a99928f08f76439a7bbdb6cf981b31e3cf8cffe))
+* verify edit locks against the Obsidian publisher ([#920](https://github.com/markdown-confluence/markdown-confluence/issues/920)) ([3cd2ff6](https://github.com/markdown-confluence/markdown-confluence/commit/3cd2ff6a0193a862763775b67eada7db42af0b4e))
+
 ## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/obsidian-confluence-root-v5.5.2...obsidian-confluence-root-v6.0.0) (2026-09-07)
 
 

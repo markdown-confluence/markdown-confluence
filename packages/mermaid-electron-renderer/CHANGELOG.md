@@ -6,6 +6,21 @@
   * dependencies
     * @markdown-confluence/lib bumped from 3.0.0 to 3.0.1
 
+## [7.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v6.0.0...@markdown-confluence/mermaid-electron-renderer-v7.0.0) (2026-09-08)
+
+
+### Features
+
+* port community publishing features and fixes ([#918](https://github.com/markdown-confluence/markdown-confluence/issues/918)) ([98d3a97](https://github.com/markdown-confluence/markdown-confluence/commit/98d3a97e40bc26cbc8bcfb961ce252b53f66d6b2))
+* publish inline and display LaTeX equations ([#914](https://github.com/markdown-confluence/markdown-confluence/issues/914)) ([25d7ce6](https://github.com/markdown-confluence/markdown-confluence/commit/25d7ce688cdb7ce64e60dfced3490d50a869d6a3)), closes [#498](https://github.com/markdown-confluence/markdown-confluence/issues/498)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped to 7.0.0
+
 ## [6.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-electron-renderer-v5.5.2...@markdown-confluence/mermaid-electron-renderer-v6.0.0) (2026-09-07)
 
 
