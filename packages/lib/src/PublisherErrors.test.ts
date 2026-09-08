@@ -1,11 +1,15 @@
 import { expect, test, vi } from "@effect/vitest";
+import { NodePath } from "@effect/platform-node";
 import { Effect } from "effect";
+import { Path } from "effect/Path";
 import { runEffect } from "./effects";
 import { MarkdownFile, MarkdownWorkspace, MarkdownWorkspaceService } from "./MarkdownWorkspace";
 import { validatePublishingFiles } from "./PublishingReport";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
 import { Publisher } from "./Publisher";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
+
+const filesystemPath = Effect.runSync(Path.pipe(Effect.provide(NodePath.layer)));
 
 test("explains how to resolve a missing parent page space key", async () => {
 	const publisher = new Publisher(testSettings, createConfluenceClientWithoutParentSpace(), []);
@@ -62,8 +66,8 @@ test.each([
 		const files = [publishingFile(first, frontmatter), publishingFile(second, frontmatter)];
 		const validation = validatePublishingFiles(files, testSettings);
 		expect(validation.valid).toBe(false);
-		expect(validation.errors.join(" ")).toContain(first);
-		expect(validation.errors.join(" ")).toContain(second);
+		expect(validation.errors.join(" ")).toContain(filesystemPath.normalize(first));
+		expect(validation.errors.join(" ")).toContain(filesystemPath.normalize(second));
 		const fixture = publishingFixture(files);
 		await expect(fixture.publish()).rejects.toThrow('Confluence page ID "2"');
 		expect(fixture.createContent).not.toHaveBeenCalled();
@@ -164,11 +168,14 @@ test.each(["lookup", "create"])(
 		fixture.getContent.mockResolvedValue({ results: [remotePage("3", "one")] });
 		const results = await fixture.publish();
 		expect(results[0]?.successfulUploadResult).toBeDefined();
-		expect(fixture.metadata).toHaveBeenCalledExactlyOnceWith("/docs/one.md", {
-			publish: true,
-			pageId: "3",
-			pageUrl: "https://example.atlassian.net/wiki/spaces/SPACE/pages/3/",
-		});
+		expect(fixture.metadata).toHaveBeenCalledExactlyOnceWith(
+			filesystemPath.normalize("/docs/one.md"),
+			{
+				publish: true,
+				pageId: "3",
+				pageUrl: "https://example.atlassian.net/wiki/spaces/SPACE/pages/3/",
+			},
+		);
 	},
 );
 
@@ -187,10 +194,11 @@ test("a metadata write failure does not trigger stale-ID recovery or clear publi
 });
 
 function publishingFile(source: string, frontmatter: Record<string, unknown> = {}): MarkdownFile {
-	const fileName = source.split("/").at(-1)!;
+	const absoluteFilePath = filesystemPath.normalize(source);
+	const fileName = filesystemPath.basename(absoluteFilePath);
 	return {
-		folderName: "docs",
-		absoluteFilePath: source,
+		folderName: filesystemPath.basename(filesystemPath.dirname(absoluteFilePath)),
+		absoluteFilePath,
 		fileName,
 		contents: `Body of ${source}`,
 		pageTitle: fileName.replace(/\.md$/, ""),
