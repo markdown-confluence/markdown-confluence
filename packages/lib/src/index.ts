@@ -194,3 +194,6 @@ export {
 	type MathExpression,
 	type MathRenderer,
 };
+
+import { lockPageEditing } from "./PageEditLock";
+export { lockPageEditing };

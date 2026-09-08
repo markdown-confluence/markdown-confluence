@@ -13,6 +13,7 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 	private renderBrowserLogin(containerEl: HTMLElement) {
 		const auth = this.plugin.browserOAuth;
 		const disabled = auth.pending || auth.connected;
+
 		new Setting(containerEl)
 			.setName("Login method")
 			.setDesc(
@@ -375,6 +376,20 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.firstHeadingPageTitle)
 					.onChange(async (value) => {
 						this.plugin.settings.firstHeadingPageTitle = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Restrict editing to the publishing account")
+			.setDesc(
+				"Keep published pages readable while limiting edits to your publishing account. Override per note with connie-lock. Turning this off leaves existing restrictions in place; unlock in Confluence.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.lockPublishedPages ?? false)
+					.onChange(async (value) => {
+						this.plugin.settings.lockPublishedPages = value;
 						await this.plugin.saveSettings();
 					}),
 			);

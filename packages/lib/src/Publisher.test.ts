@@ -596,6 +596,8 @@ type UpdateContentRequest = {
 
 async function publishSinglePage({
 	settings = testPublishSettings,
+	lock,
+	sendRequest,
 	markdown = "Hello",
 	existingAdf = parseMarkdownToADF(markdown, settings.confluenceBaseUrl),
 	lastUpdatedBy = "current-user",
@@ -610,6 +612,8 @@ async function publishSinglePage({
 	updateContent = async (request) => request,
 }: {
 	settings?: ConfluenceSettings;
+	lock?: boolean;
+	sendRequest?: RequiredConfluenceClient["sendRequest"];
 	markdown?: string;
 	existingAdf?: JSONDocNode;
 	lastUpdatedBy?: string;
@@ -638,6 +642,7 @@ async function publishSinglePage({
 			return updateContent(request);
 		},
 	});
+	if (sendRequest) confluenceClient.sendRequest = sendRequest;
 	const workspace = new InMemoryMarkdownWorkspace([
 		{
 			folderName: "docs",
@@ -647,6 +652,7 @@ async function publishSinglePage({
 			pageTitle: "Page",
 			frontmatter: {
 				"connie-page-id": "page-id",
+				...(lock === undefined ? {} : { "connie-lock": lock }),
 				"connie-dont-change-parent-page": dontChangeParentPageId,
 			},
 		},
@@ -848,4 +854,43 @@ test("moves a page when its immediate parent differs", async () => {
 	});
 	expect(result[0]?.successfulUploadResult?.contentResult).toBe("updated");
 	expect(updateContentRequests[0]?.ancestors).toEqual([{ id: "parent-id" }]);
+});
+
+test("applies edit locking even when page content is unchanged", async () => {
+	let reads = 0;
+	const { result, updateContentRequests } = await publishSinglePage({
+		lock: true,
+		sendRequest: async <T>(request): Promise<T> => {
+			reads++;
+			const kind = request.searchParams?.expand === "restrictions.user" ? "user" : "group";
+			return {
+				restrictions: {
+					[kind]: { results: kind === "user" ? [{ accountId: "current-user" }] : [] },
+				},
+			} as T;
+		},
+	});
+	expect(reads).toBe(2);
+	expect(updateContentRequests).toEqual([]);
+	expect(result[0]?.successfulUploadResult?.contentResult).toBe("same");
+});
+test("per-note false overrides global locking without removing existing restrictions", async () => {
+	const { result } = await publishSinglePage({
+		settings: { ...testPublishSettings, lockPublishedPages: true },
+		lock: false,
+		sendRequest: async () => {
+			throw Error("must not change restrictions");
+		},
+	});
+	expect(result[0]?.successfulUploadResult).toBeDefined();
+});
+test("reports a lock failure separately after content publishing", async () => {
+	const { result } = await publishSinglePage({
+		lock: true,
+		sendRequest: async () => {
+			throw Error("secret token");
+		},
+	});
+	expect(result[0]?.reason).toContain("Content publishing completed, but edit locking failed");
+	expect(result[0]?.reason).not.toContain("secret token");
 });

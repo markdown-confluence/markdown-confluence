@@ -26,6 +26,7 @@ export type ConfluenceSettings = {
 	pageFooterMarkdown?: string;
 	ignoredCodeBlockLanguages?: readonly string[];
 	forceOverwrite: boolean;
+	lockPublishedPages?: boolean;
 	plantuml: PlantumlSettings;
 	mermaidProtocolTimeout: number;
 };
@@ -56,6 +57,7 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,
+	lockPublishedPages: false,
 	pageHeaderMarkdown: "",
 	pageFooterMarkdown: "",
 	ignoredCodeBlockLanguages: [],
