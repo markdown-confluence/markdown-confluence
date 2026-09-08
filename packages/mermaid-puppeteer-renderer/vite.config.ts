@@ -53,6 +53,7 @@ function mermaidRendererHtmlPlugin(): Plugin {
 						);
 					}
 
+					// Vite emits ES-module helpers such as import.meta; a classic script cannot parse them.
 					const fileContents = `
 <!DOCTYPE html>
 <html>
@@ -62,7 +63,7 @@ function mermaidRendererHtmlPlugin(): Plugin {
   </head>
   <body>
     <div id="graphDiv"></div>
-    <script type="text/javascript">
+    <script type="module">
 ${chunk.code}
     </script>
   </body>
