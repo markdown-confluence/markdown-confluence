@@ -459,7 +459,10 @@ export function runObsidianIntegration({
 			`const r=await app.plugins.plugins['confluence-integration'].doPublish(${JSON.stringify("Release Tests/Formatting.md")}); if(r.errorMessage || r.failedFiles.length) throw Error('Locked desktop publish failed'); return JSON.stringify({published:true});`,
 		);
 		const lockedPageId = restored[lockedNote].id;
-		const editor = yield* Effect.tryPromise(() => client.users.getCurrentUser());
+		// Browser login can publish as a different user from the API verifier.
+		const editor = yield* evaluate(
+			`const client=await app.plugins.plugins['confluence-integration'].authenticationClient(); const user=await client.users.getCurrentUser(); return JSON.stringify({accountId:user.accountId});`,
+		);
 		const restriction = yield* Effect.tryPromise(() =>
 			client.sendRequest({
 				url: `/wiki/rest/api/content/${lockedPageId}/restriction/byOperation/update`,
