@@ -56,10 +56,10 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 			});
 			mermaid.initialize({
 				...mermaidInitConfig,
+				...(themeVariables ? { themeVariables } : {}),
 				startOnLoad: false,
 				suppressErrorRendering: true,
 			});
-			if (themeVariables) mermaid.mermaidAPI.updateSiteConfig({ themeVariables });
 
 			for (const chart of charts) {
 				const chartWindow = new BrowserWindow({

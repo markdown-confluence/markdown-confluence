@@ -136,6 +136,8 @@ The review's deferred MCP preview and Kroki proposals remain separate future wor
 
 On 8 September 2026, the live feature profile passed with an unscoped API token and OAuth. Both runs covered inline-comment preservation, repeated publishing, rendering, exclusions, cancellation/restart and ordering. OAuth testing found and fixed use of the retired v1 child-page listing endpoint.
 
-The real Obsidian desktop profile also passed with the new feature fixture and settings/command checks. Automated unit tests, formatting, linting and workspace builds passed.
+The real Obsidian desktop profile also passed with the new feature fixture and settings/command checks. Automated unit tests, formatting, linting and workspace builds passed. Browser verification confirmed the generated footnote target and second-reference backlink after republishing. Missing definitions remain literal; nested excerpts have separate footnote namespaces. The highlighted-link companion case already produces a valid inline card and now has regression coverage.
+
+Both integration profiles include a 12-entity ER diagram check for actual PNG resolution and SVG text/custom colors. This caught an Electron initialization issue: sanitized theme variables must be supplied during Mermaid initialization so derived colors are calculated correctly.
 
 Scoped-token verification is pending: the saved test credential returned HTTP 404 when reading the dedicated test parent, before feature execution. This is not recorded as a scoped-token pass.

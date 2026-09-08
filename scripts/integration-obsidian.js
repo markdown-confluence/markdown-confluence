@@ -365,6 +365,35 @@ export function runObsidianIntegration({
 			JSON.stringify(forkControls),
 		);
 
+		const rendererOptions = yield* evaluate(`
+            const p=app.plugins.plugins['confluence-integration'];
+            const original=p.settings.mermaid;
+            const diagram='erDiagram\\n'+Array.from({length:12},(_,i)=>'ENTITY_'+i+' {\\n string label\\n int count\\n}').join('\\n')+'\\n'+Array.from({length:11},(_,i)=>'ENTITY_'+i+' ||--o{ ENTITY_'+(i+1)+' : contains').join('\\n');
+            const results=[];
+            try {
+                for(const options of [{format:'png',scale:1},{format:'png',scale:2},{format:'svg',scale:2}]) {
+                    p.settings.mermaid={...options,theme:'base',themeVariables:{primaryColor:'#ddebff'}};
+                    const publisher=await p.createPublisher();
+                    const renderer=publisher.adfProcessingPlugins.find(plugin=>plugin.mermaidRenderer)?.mermaidRenderer;
+                    if(!renderer) throw Error('Mermaid renderer not found');
+                    const bytes=(await renderer.captureMermaidCharts([{name:'large-er',data:diagram}])).get('large-er');
+                    if(options.format==='svg') {
+                        const svg=bytes.toString();
+                        if(!svg.includes('<svg')||!svg.includes('ENTITY_11')||!svg.includes('#ddebff')) throw Error('SVG verification: '+JSON.stringify({svg:svg.includes('<svg'),text:svg.includes('ENTITY_11'),color:svg.includes('#ddebff')}));
+                        results.push({format:'svg',text:true,color:true});
+                    } else {
+                        results.push({format:'png',scale:options.scale,width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20)});
+                    }
+                }
+                if(results[1].width<results[0].width*1.5||results[1].height<results[0].height*1.5) throw Error('Mermaid scale did not increase raster resolution');
+                return JSON.stringify(results);
+            } finally {p.settings.mermaid=original;}
+        `);
+		yield* fs.writeFileString(
+			path.join(reportDirectory, "mermaid-options.json"),
+			JSON.stringify(rendererOptions, null, 2),
+		);
+
 		// Exercise the real settings control, then publish an unchanged note with locking enabled.
 		const originalLock = yield* evaluate(
 			`return JSON.stringify(app.plugins.plugins['confluence-integration'].settings.lockPublishedPages ?? false);`,

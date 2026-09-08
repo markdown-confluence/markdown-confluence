@@ -55,6 +55,54 @@ await runEffect(
 			});
 			assert.equal(parent.space.key, environment.CONFLUENCE_E2E_SPACE_KEY);
 
+			const diagram =
+				"erDiagram\n" +
+				Array.from(
+					{ length: 12 },
+					(_, i) => "ENTITY_" + i + " {\n string label\n int count\n}",
+				).join("\n") +
+				"\n" +
+				Array.from(
+					{ length: 11 },
+					(_, i) => "ENTITY_" + i + " ||--o{ ENTITY_" + (i + 1) + " : contains",
+				).join("\n");
+			const rendererEvidence = [];
+			for (const options of [
+				{ format: "png", scale: 1 },
+				{ format: "png", scale: 2 },
+				{ format: "svg", scale: 2 },
+			]) {
+				const renderer = new PuppeteerMermaidRenderer(
+					{},
+					{ ...options, theme: "base", themeVariables: { primaryColor: "#ddebff" } },
+				);
+				const bytes = (
+					await renderer.captureMermaidCharts([{ name: "large-er", data: diagram }])
+				).get("large-er");
+				if (options.format === "svg") {
+					const svg = bytes.toString();
+					assert.ok(
+						svg.includes("<svg") &&
+							svg.includes("ENTITY_11") &&
+							svg.includes("#ddebff"),
+					);
+					rendererEvidence.push({ format: "svg", text: true, color: true });
+				} else
+					rendererEvidence.push({
+						...options,
+						width: bytes.readUInt32BE(16),
+						height: bytes.readUInt32BE(20),
+					});
+			}
+			assert.ok(
+				rendererEvidence[1].width >= rendererEvidence[0].width * 1.5 &&
+					rendererEvidence[1].height >= rendererEvidence[0].height * 1.5,
+			);
+			await writeFile(
+				join(environment.CONFLUENCE_E2E_REPORT_DIRECTORY, "mermaid-options.json"),
+				JSON.stringify(rendererEvidence, null, 2),
+			);
+
 			await mkdir(join(directory, "private"));
 			const title = `Fork ports ${Date.now()}`;
 			const note = `---\nconnie-title: ${title}\n---\n\n${inlineCommentSelection}\n\n**Unresolved [[missing-note|formatted link]]**\n\nFootnote[^reference] and again[^reference].\n\n[^reference]: A **named** footnote.\n\n    Another paragraph.\n\n\`\`\`confluence-excerpt summary\nExcerpt **content**.\n\`\`\`\n\n\`\`\`confluence-properties record\n| Key | Value |\n| --- | --- |\n| Flag | false |\n\`\`\`\n\n\`\`\`yaml-table\n- Count: 0\n  Enabled: false\n  Literal: "<"\n\`\`\`\n\nJIRA: DOCS-1\n\n\`\`\`mermaid\nflowchart LR\n A[Before] --> B[After]\n\`\`\`\n`;
