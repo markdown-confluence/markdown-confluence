@@ -231,6 +231,13 @@ const program = Effect.scoped(
 			"Before the first image.",
 			"Between images.",
 			"After the images.",
+			"Before adjacent image one.",
+			"After adjacent image one.",
+			"Before adjacent image two.",
+			"After adjacent image two.",
+			"End of adjacent image regression.",
+			"Before the MP4 embeds.",
+			"After the MP4 embeds.",
 			"Final list item",
 		]) {
 			assert.ok(
@@ -255,6 +262,26 @@ const program = Effect.scoped(
 				attachment.title.startsWith("RenderedPlantumlChart-"),
 			),
 		);
+		const videos = attachments.results.filter((attachment) =>
+			attachment.title.endsWith("-sample.mp4"),
+		);
+		assert.equal(videos.length, 1, "Repeated MP4 embeds must share one attachment");
+		const videoId = videos[0].extensions.fileId;
+		assert.ok(videoId, "MP4 upload must return a media file ID");
+		const videoGroups = JSON.parse(mediaPage.body.atlas_doc_format.value).content.filter(
+			(node) =>
+				node.type === "mediaGroup" &&
+				node.content?.some((child) => child.attrs?.id === videoId),
+		);
+		assert.equal(
+			videoGroups.length,
+			3,
+			"Markdown, wikilink and sized MP4 embeds must reference uploaded media",
+		);
+		for (const group of videoGroups) {
+			assert.equal(group.content[0].attrs.width, undefined);
+			assert.equal(group.content[0].attrs.height, undefined);
+		}
 		const labels = yield* Effect.tryPromise(() =>
 			client.contentLabels.getLabelsForContent({ id: formatting.pageId, limit: 250 }),
 		);

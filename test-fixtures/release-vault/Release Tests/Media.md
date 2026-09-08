@@ -34,3 +34,23 @@ Bob --> Alice: Ready
 ```
 
 ![[assets/sequence.puml]]
+
+## Adjacent images regression (#647)
+
+Before adjacent image one.
+![[assets/blue.png|80]]
+After adjacent image one.
+
+Before adjacent image two.
+![Green rectangle](../assets/green.svg)
+After adjacent image two.
+
+End of adjacent image regression.
+
+## Local MP4 attachments (#501)
+
+Before the MP4 embeds.
+![[assets/sample.mp4]]
+![[assets/sample.mp4|320x180]]
+![Sample video](../assets/sample.mp4)
+After the MP4 embeds.

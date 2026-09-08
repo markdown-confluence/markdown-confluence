@@ -26,6 +26,8 @@ export const confluenceOAuthScopes = [
 	"offline_access",
 	"read:page:confluence",
 	"write:page:confluence",
+	"read:content.restriction:confluence",
+	"write:content.restriction:confluence",
 	"read:space:confluence",
 	"read:content.metadata:confluence",
 	"read:content-details:confluence",

@@ -1,3 +1,4 @@
+import { validateMermaidOptions, type MermaidOptions } from "./MermaidOptions";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { Config, ConfigProvider, Effect, Layer, Schema } from "effect";
@@ -26,7 +27,7 @@ type ArgumentDefinition = {
 type ArgumentValue = boolean | string | undefined;
 
 const confluenceConnectionFields = {
-	confluenceBaseUrl: Config.string("confluenceBaseUrl"),
+	confluenceBaseUrl: Config.string("confluenceBaseUrl").pipe(Config.withDefault("")),
 	confluenceSiteUrl: Config.string("confluenceSiteUrl").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.confluenceSiteUrl),
 	),
@@ -56,13 +57,33 @@ export const confluenceReadSettingsConfig = Config.all(confluenceConnectionField
 
 export const confluenceSettingsConfig = Config.all({
 	...confluenceConnectionFields,
-	confluenceParentId: Config.string("confluenceParentId"),
+	confluenceParentId: Config.string("confluenceParentId").pipe(Config.withDefault("")),
 	folderToPublish: Config.string("folderToPublish"),
+	orderPages: Config.boolean("orderPages").pipe(Config.withDefault(false)),
+	jiraUrl: Config.string("jiraUrl").pipe(Config.withDefault("")),
+	mermaid: Config.schema(
+		Schema.Struct({
+			format: Schema.optionalKey(Schema.Literals(["png", "svg"])),
+			scale: Schema.optionalKey(Schema.Number),
+			theme: Schema.optionalKey(
+				Schema.Literals(["default", "neutral", "dark", "forest", "base"]),
+			),
+			themeVariables: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+		}),
+		"mermaid",
+	).pipe(
+		Config.withDefault({}),
+		Config.map((value) => validateMermaidOptions(value as MermaidOptions)),
+	),
+	foldersToExclude: Config.schema(Schema.Array(Schema.String), "foldersToExclude").pipe(
+		Config.withDefault([]),
+	),
 	tagsToPublish: Config.string("tagsToPublish").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.tagsToPublish),
 	),
 	contentRoot: Config.string("contentRoot"),
 	firstHeadingPageTitle: Config.boolean("firstHeadingPageTitle"),
+	lockPublishedPages: Config.boolean("lockPublishedPages").pipe(Config.withDefault(false)),
 	forceOverwrite: Config.boolean("forceOverwrite").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.forceOverwrite),
 	),
@@ -72,6 +93,14 @@ export const confluenceSettingsConfig = Config.all({
 		Schema.Array(Schema.String),
 		"ignoredCodeBlockLanguages",
 	).pipe(Config.withDefault([])),
+	kroki: Config.all({
+		enabled: Config.boolean("enabled").pipe(Config.withDefault(false)),
+		serverUrl: Config.string("serverUrl").pipe(Config.withDefault("")),
+		format: Config.schema(Schema.Literals(["png", "svg"]), "format").pipe(
+			Config.withDefault("png"),
+		),
+		timeoutMs: Config.number("timeoutMs").pipe(Config.withDefault(30000)),
+	}).pipe(Config.nested("kroki")),
 	plantuml: Config.all({
 		enabled: Config.boolean("enabled").pipe(
 			Config.withDefault(DEFAULT_SETTINGS.plantuml.enabled),
@@ -217,6 +246,9 @@ function makeEnvironmentProvider(
 		const firstHeadingPageTitle = yield* runtimeEnvironment.getEnv(
 			"CONFLUENCE_FIRST_HEADING_PAGE_TITLE",
 		);
+		const lockPublishedPages = yield* runtimeEnvironment.getEnv(
+			"CONFLUENCE_LOCK_PUBLISHED_PAGES",
+		);
 		const forceOverwrite = yield* runtimeEnvironment.getEnv("CONFLUENCE_FORCE_OVERWRITE");
 		const plantumlEnabled = yield* runtimeEnvironment.getEnv("CONFLUENCE_PLANTUML_ENABLED");
 		const plantumlServerUrl = yield* runtimeEnvironment.getEnv(
@@ -245,6 +277,7 @@ function makeEnvironmentProvider(
 				contentRoot: yield* runtimeEnvironment.getEnv("CONFLUENCE_CONTENT_ROOT"),
 				firstHeadingPageTitle: firstHeadingPageTitle,
 				forceOverwrite,
+				lockPublishedPages,
 				pageHeaderMarkdown: yield* runtimeEnvironment.getEnv(
 					"CONFLUENCE_PAGE_HEADER_MARKDOWN",
 				),
@@ -254,6 +287,10 @@ function makeEnvironmentProvider(
 				// fromEnv splits nested config paths on "_", so plantuml.enabled
 				// and plantuml.serverUrl are supplied as plantuml_enabled /
 				// plantuml_serverUrl here.
+				kroki_enabled: yield* runtimeEnvironment.getEnv("CONFLUENCE_KROKI_ENABLED"),
+				kroki_serverUrl: yield* runtimeEnvironment.getEnv("CONFLUENCE_KROKI_SERVER_URL"),
+				kroki_format: yield* runtimeEnvironment.getEnv("CONFLUENCE_KROKI_FORMAT"),
+				kroki_timeoutMs: yield* runtimeEnvironment.getEnv("CONFLUENCE_KROKI_TIMEOUT_MS"),
 				plantuml_enabled: plantumlEnabled,
 				plantuml_serverUrl: plantumlServerUrl,
 			}),
@@ -275,16 +312,38 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "clientId", type: "string" },
 		{ name: "clientSecret", type: "string" },
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
+		{ name: "mermaidFormat", type: "string" },
+		{ name: "mermaidScale", type: "string" },
+		{ name: "mermaidTheme", type: "string" },
+		{ name: "jiraUrl", type: "string" },
+		{ name: "orderPages", type: "boolean" },
+		{ name: "excludeFolders", type: "string" },
 		{ name: "tagsToPublish", aliases: ["t"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
+		{ name: "lockPublishedPages", type: "boolean" },
 		{ name: "forceOverwrite", aliases: ["fo"], type: "boolean" },
 		{ name: "pageHeaderMarkdown", type: "string" },
 		{ name: "pageFooterMarkdown", type: "string" },
+		{ name: "krokiEnabled", type: "boolean" },
+		{ name: "krokiServerUrl", type: "string" },
+		{ name: "krokiFormat", type: "string" },
+		{ name: "krokiTimeoutMs", type: "string" },
 		{ name: "plantumlEnabled", type: "boolean" },
 		{ name: "plantumlServerUrl", type: "string" },
 	]);
 
+	const mermaid = compactRecord({
+		format: options["mermaidFormat"],
+		scale: options["mermaidScale"],
+		theme: options["mermaidTheme"],
+	});
+	const kroki = compactRecord({
+		enabled: options["krokiEnabled"],
+		serverUrl: options["krokiServerUrl"],
+		format: options["krokiFormat"],
+		timeoutMs: options["krokiTimeoutMs"],
+	});
 	const plantuml = compactRecord({
 		enabled: options["plantumlEnabled"],
 		serverUrl: options["plantumlServerUrl"],
@@ -304,14 +363,26 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			atlassianClientId: options["clientId"],
 			atlassianClientSecret: options["clientSecret"],
 			folderToPublish: options["enableFolder"],
+			jiraUrl: options["jiraUrl"],
+			orderPages: options["orderPages"],
 			tagsToPublish: options["tagsToPublish"],
+			foldersToExclude:
+				typeof options["excludeFolders"] === "string"
+					? options["excludeFolders"]
+							.split(",")
+							.map((folder) => folder.trim())
+							.filter(Boolean)
+					: undefined,
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
 			forceOverwrite: options["forceOverwrite"],
+			lockPublishedPages: options["lockPublishedPages"],
 			pageHeaderMarkdown: options["pageHeaderMarkdown"],
 			pageFooterMarkdown: options["pageFooterMarkdown"],
 		}),
+		...(Object.keys(kroki).length > 0 ? { kroki } : {}),
 		...(Object.keys(plantuml).length > 0 ? { plantuml } : {}),
+		...(Object.keys(mermaid).length > 0 ? { mermaid } : {}),
 	});
 }
 
@@ -390,6 +461,12 @@ function pickConfluenceSettings(config: Record<string, unknown>): Partial<Conflu
 
 		// `plantuml` is a nested object; copy its known sub-keys through with
 		// the right types so a partial config file still merges cleanly.
+		if (key === "kroki") {
+			const value = config[key];
+			if (value && typeof value === "object" && !Array.isArray(value))
+				result.kroki = value as NonNullable<ConfluenceSettings["kroki"]>;
+			continue;
+		}
 		if (key === "plantuml") {
 			const value = config[key];
 			if (value && typeof value === "object" && !Array.isArray(value)) {

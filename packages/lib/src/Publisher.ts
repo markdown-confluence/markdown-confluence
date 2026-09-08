@@ -1,3 +1,6 @@
+import { orderPublishedPages } from "./PageOrdering";
+import { cancellableClient } from "./PublishCancellation";
+import { lockPageEditing } from "./PageEditLock";
 import { MarkdownPublishFilter } from "./MarkdownSourceTransformer";
 import { JSONDocNode } from "@atlaskit/editor-json-transformer";
 import { Effect, Layer } from "effect";
@@ -27,7 +30,7 @@ export interface LocalAdfFileTreeNode {
 	file?: LocalAdfFile;
 }
 
-interface FilePublishResult {
+export interface FilePublishResult {
 	successfulUploadResult?: UploadAdfFileResult;
 	node: ConfluenceNode;
 	reason?: string;
@@ -107,6 +110,7 @@ export interface UploadAdfFileResult {
 export class Publisher {
 	private confluenceClient: RequiredConfluenceClient;
 	private myAccountId: string | undefined;
+	private signal: AbortSignal | undefined;
 	private settings: ConfluenceSettings;
 	private adfProcessingPlugins: ADFProcessingPlugin<unknown, unknown>[];
 
@@ -122,9 +126,12 @@ export class Publisher {
 		this.adfProcessingPlugins = adfProcessingPlugins.concat(AlwaysADFProcessingPlugins);
 	}
 
-	publish(publishFilter?: string): Promise<FilePublishResult[]> {
+	publish(
+		publishFilter?: string,
+		options?: { signal?: AbortSignal | undefined },
+	): Promise<FilePublishResult[]> {
 		return runEffect(
-			this.publishEffect(publishFilter).pipe(
+			this.publishEffect(publishFilter, options).pipe(
 				Effect.provide(MarkdownWorkspaceLive),
 				Effect.provide(Layer.succeed(ConfluenceSettingsService, this.settings)),
 			),
@@ -133,12 +140,25 @@ export class Publisher {
 
 	publishEffect(
 		publishFilter?: string,
+		options?: { signal?: AbortSignal | undefined },
 	): Effect.Effect<
 		FilePublishResult[],
 		unknown,
 		MarkdownConfluencePlatform | MarkdownWorkspaceService
 	> {
+		if (options?.signal) {
+			const publisher = new Publisher(
+				this.settings,
+				cancellableClient(this.confluenceClient, options.signal),
+				[],
+				this.onProgress,
+			);
+			publisher.adfProcessingPlugins = this.adfProcessingPlugins;
+			publisher.signal = options.signal;
+			return publisher.publishEffect(publishFilter);
+		}
 		const settings = this.settings;
+		const signal = this.signal;
 		const confluenceClient = this.confluenceClient;
 		const getMyAccountId = () => this.myAccountId;
 		const setMyAccountId = (accountId: string) => {
@@ -200,7 +220,7 @@ export class Publisher {
 				);
 			}
 
-			return yield* Effect.all(
+			const results = yield* Effect.all(
 				confluencePagesToPublish.map((file, index) =>
 					progress(
 						`Publishing ${index + 1}/${confluencePagesToPublish.length}: ${file.file.pageTitle}`,
@@ -209,6 +229,9 @@ export class Publisher {
 				// Each page may launch Chromium and upload several attachments.
 				{ concurrency: 2 },
 			);
+			if (settings.orderPages && !publishFilter && !signal?.aborted)
+				yield* Effect.tryPromise(() => orderPublishedPages(confluenceClient, results));
+			return results;
 		});
 	}
 
@@ -219,23 +242,30 @@ export class Publisher {
 		never,
 		MarkdownConfluencePlatform | MarkdownWorkspaceService
 	> {
-		return this.updatePageContentEffect(
-			node.ancestors,
-			node.version,
-			node.existingPageData,
-			node.file,
-			node.lastUpdatedBy,
-		).pipe(
-			Effect.map((successfulUploadResult) => ({
-				node,
-				successfulUploadResult,
-			})),
-			Effect.catch((e: unknown) =>
-				Effect.succeed({
-					node,
-					reason: e instanceof Error ? e.message : JSON.stringify(e),
-				}),
-			),
+		return Effect.suspend(() =>
+			this.signal?.aborted
+				? Effect.succeed({
+						node,
+						reason: "Publishing cancelled before this page was started",
+					})
+				: this.updatePageContentEffect(
+						node.ancestors,
+						node.version,
+						node.existingPageData,
+						node.file,
+						node.lastUpdatedBy,
+					).pipe(
+						Effect.map((successfulUploadResult) => ({
+							node,
+							successfulUploadResult,
+						})),
+						Effect.catch((e: unknown) =>
+							Effect.succeed({
+								node,
+								reason: e instanceof Error ? e.message : JSON.stringify(e),
+							}),
+						),
+					),
 		);
 	}
 
@@ -256,6 +286,9 @@ export class Publisher {
 		const getMyAccountId = () => this.myAccountId;
 
 		return Effect.gen(function* () {
+			const lock = adfFile.frontmatter["connie-lock"];
+			if (lock !== undefined && typeof lock !== "boolean")
+				return yield* Effect.fail(new Error("connie-lock must be a boolean"));
 			if (!settings.forceOverwrite && lastUpdatedBy !== getMyAccountId()) {
 				return yield* Effect.fail(
 					createUpdatedByAnotherUserError(getMyAccountId(), lastUpdatedBy),
@@ -427,6 +460,16 @@ export class Publisher {
 				});
 			}
 
+			if (lock ?? settings.lockPublishedPages ?? false) {
+				yield* Effect.tryPromise({
+					try: () =>
+						lockPageEditing(confluenceClient, adfFile.pageId, getMyAccountId() ?? ""),
+					catch: () =>
+						new Error(
+							"Content publishing completed, but edit locking failed. Check restriction permissions and scopes, then retry publishing.",
+						),
+				});
+			}
 			return result;
 		});
 	}

@@ -191,3 +191,17 @@ test.each(["Anchor", "Before Anchor"])(
 		expect(node.file.contents).toEqual(expected);
 	},
 );
+
+test("unresolved formatted wikilinks retain dense formatting marks", () => {
+	const contents = docWithLink("Missing", "wikilinks:missing");
+	const text = contents.content[0]!.content![0] as TextDefinition;
+	text.marks!.push({ type: "strong" });
+	const pages = [createNode({ contents })];
+	prepareAdfToUpload(pages, testSettings);
+	const serialized = JSON.parse(JSON.stringify(pages[0]!.file.contents));
+	expect(serialized.content[0].content[0]).toEqual({
+		type: "text",
+		text: "Missing",
+		marks: [{ type: "strong" }],
+	});
+});

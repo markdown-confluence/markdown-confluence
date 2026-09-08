@@ -1,3 +1,5 @@
+import type { KrokiSettings } from "./ADFProcessingPlugins/KrokiRendererPlugin";
+import type { MermaidOptions } from "./MermaidOptions";
 import { Context } from "effect";
 
 export type ConfluenceAuthType = "basic" | "bearer" | "oauth2";
@@ -19,6 +21,10 @@ export type ConfluenceSettings = {
 	atlassianClientId: string;
 	atlassianClientSecret: string;
 	folderToPublish: string;
+	foldersToExclude?: readonly string[];
+	jiraUrl?: string;
+	orderPages?: boolean;
+	mermaid?: MermaidOptions;
 	tagsToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
@@ -26,7 +32,9 @@ export type ConfluenceSettings = {
 	pageFooterMarkdown?: string;
 	ignoredCodeBlockLanguages?: readonly string[];
 	forceOverwrite: boolean;
+	lockPublishedPages?: boolean;
 	plantuml: PlantumlSettings;
+	kroki?: KrokiSettings;
 	mermaidProtocolTimeout: number;
 };
 
@@ -52,13 +60,19 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	atlassianClientId: "",
 	atlassianClientSecret: "",
 	folderToPublish: "Confluence Pages",
+	foldersToExclude: [],
+	jiraUrl: "",
+	orderPages: false,
+	mermaid: {},
 	tagsToPublish: "",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,
 	forceOverwrite: false,
+	lockPublishedPages: false,
 	pageHeaderMarkdown: "",
 	pageFooterMarkdown: "",
 	ignoredCodeBlockLanguages: [],
+	kroki: { enabled: false, serverUrl: "", format: "png", timeoutMs: 30000 },
 	plantuml: {
 		enabled: false,
 		serverUrl: "",

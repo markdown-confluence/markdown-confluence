@@ -19,6 +19,7 @@ import { runOAuthUiIntegration, runDeviceAvailabilityIntegration } from "./integ
 const publishedNotes = [
 	"Release Tests/Release Tests.md",
 	"Release Tests/Formatting.md",
+	"Release Tests/Fork Features.md",
 	"Release Tests/Media.md",
 	"Release Tests/Embeds.md",
 	"Release Tests/Hierarchy/README.md",
@@ -221,6 +222,9 @@ export function runObsidianIntegration({
 							JSON.parse(page.body.atlas_doc_format.value),
 						),
 						ancestors: page.ancestors.map((ancestor) => ancestor.id),
+						mp4AttachmentCount: attachments.results.filter((attachment) =>
+							attachment.title.endsWith("-sample.mp4"),
+						).length,
 						attachments: Object.fromEntries(
 							attachments.results.map((attachment) => [
 								attachment.title,
@@ -251,11 +255,26 @@ export function runObsidianIntegration({
 					),
 				);
 				assert.ok(Object.keys(media.attachments).length >= 5);
+				assert.equal(
+					media.mp4AttachmentCount,
+					1,
+					"Desktop MP4 embeds must share one uploaded attachment",
+				);
+				assert.ok(JSON.stringify(media.body).includes("After the MP4 embeds."));
 				assert.ok(pages["Tagged/Tag selection.md"].labels.includes("release-test"));
 				assert.equal(
 					pages["Release Tests/Hierarchy/Child.md"].ancestors.at(-1),
 					pages["Release Tests/Hierarchy/README.md"].id,
 				);
+				const features = JSON.stringify(pages["Release Tests/Fork Features.md"].body);
+				for (const expected of [
+					'"extensionKey":"excerpt"',
+					'"extensionKey":"details"',
+					'"extensionKey":"anchor"',
+					'"text":"0"',
+					'"text":"false"',
+				])
+					assert.ok(features.includes(expected), expected);
 				return pages;
 			});
 		const publish = () =>
@@ -334,6 +353,135 @@ export function runObsidianIntegration({
 			"A page with an inline comment must remain unchanged on republish",
 		);
 
+		const forkControls = yield* evaluate(`
+            app.setting.open(); app.setting.openTabById('confluence-integration');
+            const names=[...app.setting.activeTab.containerEl.querySelectorAll('.setting-item-name')].map(el=>el.textContent);
+            for(const name of ['Excluded folders','Jira site URL','Mermaid output','Mermaid scale','Mermaid theme variables','Apply page ordering']) if(!names.includes(name)) throw Error('Missing control: '+name);
+            if(!app.commands.commands['confluence-integration:cancel-publish']) throw Error('Missing cancel command');
+            app.setting.close(); return JSON.stringify({controls:true});
+        `);
+		yield* fs.writeFileString(
+			path.join(reportDirectory, "fork-controls.json"),
+			JSON.stringify(forkControls),
+		);
+
+		const rendererOptions = yield* evaluate(`
+            const p=app.plugins.plugins['confluence-integration'];
+            const original=p.settings.mermaid;
+            const diagram='erDiagram\\n'+Array.from({length:12},(_,i)=>'ENTITY_'+i+' {\\n string label\\n int count\\n}').join('\\n')+'\\n'+Array.from({length:11},(_,i)=>'ENTITY_'+i+' ||--o{ ENTITY_'+(i+1)+' : contains').join('\\n');
+            const results=[];
+            try {
+                for(const options of [{format:'png',scale:1},{format:'png',scale:2},{format:'svg',scale:2}]) {
+                    p.settings.mermaid={...options,theme:'base',themeVariables:{primaryColor:'#ddebff'}};
+                    const publisher=await p.createPublisher();
+                    const renderer=publisher.adfProcessingPlugins.find(plugin=>plugin.mermaidRenderer)?.mermaidRenderer;
+                    if(!renderer) throw Error('Mermaid renderer not found');
+                    const bytes=(await renderer.captureMermaidCharts([{name:'large-er',data:diagram}])).get('large-er');
+                    if(options.format==='svg') {
+                        const svg=bytes.toString();
+                        if(!svg.includes('<svg')||!svg.includes('ENTITY_11')||!svg.includes('#ddebff')) throw Error('SVG verification: '+JSON.stringify({svg:svg.includes('<svg'),text:svg.includes('ENTITY_11'),color:svg.includes('#ddebff')}));
+                        results.push({format:'svg',text:true,color:true});
+                    } else {
+                        results.push({format:'png',scale:options.scale,width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20)});
+                    }
+                }
+                if(results[1].width<results[0].width*1.5||results[1].height<results[0].height*1.5) throw Error('Mermaid scale did not increase raster resolution');
+                return JSON.stringify(results);
+            } finally {p.settings.mermaid=original;}
+        `);
+		yield* fs.writeFileString(
+			path.join(reportDirectory, "mermaid-options.json"),
+			JSON.stringify(rendererOptions, null, 2),
+		);
+
+		const krokiUi = yield* evaluate(`
+            const p=app.plugins.plugins['confluence-integration'];
+            const original={...p.settings.kroki};
+            const note='Release Tests/Kroki.md';
+            try {
+                app.setting.open(); app.setting.openTabById('confluence-integration');
+                const rows=[...app.setting.activeTab.containerEl.querySelectorAll('.setting-item')];
+                const row=name=>rows.find(el=>el.querySelector('.setting-item-name')?.textContent===name);
+                const input=row('Kroki server URL')?.querySelector('input');
+                const toggle=row('Enable Kroki rendering')?.querySelector('.checkbox-container');
+                const output=row('Kroki output')?.querySelector('select');
+                if(!input||!toggle||!output) throw Error('Missing Kroki settings controls');
+                input.value='https://kroki.io'; input.dispatchEvent(new Event('input'));
+                if(!toggle.classList.contains('is-enabled')) toggle.click();
+                output.value='png'; output.dispatchEvent(new Event('change'));
+                if(!p.settings.kroki.enabled||p.settings.kroki.serverUrl!=='https://kroki.io') throw Error('Kroki controls did not update settings');
+                await p.saveSettings(); app.setting.close();
+                const source='---\\nconnie-publish: true\\nconnie-title: Desktop Kroki '+Date.now()+'\\n---\\n\\n'+String.fromCharCode(96).repeat(3)+'kroki-graphviz\\ndigraph G { Desktop -> Confluence }\\n'+String.fromCharCode(96).repeat(3)+'\\n';
+                const existing=app.vault.getAbstractFileByPath(note);
+                if(existing) await app.vault.modify(existing,source); else await app.vault.create(note,source);
+                const result=await p.doPublish(note);
+                if(result.errorMessage||result.failedFiles.length) throw Error('Desktop Kroki publish failed');
+                const file=app.vault.getAbstractFileByPath(note);
+                const content=await app.vault.read(file);
+                const pageId=content.match(/connie-page-id: ['"]?(\\d+)/)?.[1];
+                if(!pageId) throw Error('Kroki page ID missing');
+                return JSON.stringify({controls:true,published:true,pageId});
+            } finally {p.settings.kroki=original; await p.saveSettings(); app.setting.close();}
+        `);
+		const krokiPage = yield* get(`content/${krokiUi.pageId}?expand=body.atlas_doc_format`);
+		assert.ok(
+			JSON.parse(krokiPage.body.atlas_doc_format.value).content.some(
+				(node) => node.type === "mediaSingle",
+			),
+		);
+		yield* fs.writeFileString(
+			path.join(reportDirectory, "kroki-ui.json"),
+			JSON.stringify(krokiUi, null, 2),
+		);
+
+		// Exercise the real settings control, then publish an unchanged note with locking enabled.
+		const originalLock = yield* evaluate(
+			`return JSON.stringify(app.plugins.plugins['confluence-integration'].settings.lockPublishedPages ?? false);`,
+		);
+		yield* Effect.acquireRelease(Effect.succeed(undefined), () =>
+			evaluate(
+				`const p=app.plugins.plugins['confluence-integration']; p.settings.lockPublishedPages=${JSON.stringify(originalLock)}; await p.saveSettings(); app.setting.close(); return JSON.stringify({restored:true});`,
+			).pipe(Effect.orDie),
+		);
+		const editLockUi = yield* evaluate(`
+			app.setting.open(); app.setting.openTabById('confluence-integration');
+			const row=[...app.setting.activeTab.containerEl.querySelectorAll('.setting-item')].find(el=>el.querySelector('.setting-item-name')?.textContent==='Restrict editing to the publishing account');
+			if(!row) throw Error('Edit lock setting is missing');
+			const toggle=row.querySelector('.checkbox-container');
+			if(!toggle) throw Error('Edit lock toggle is missing');
+			if(!toggle.classList.contains('is-enabled')) toggle.click();
+			if(!app.plugins.plugins['confluence-integration'].settings.lockPublishedPages) throw Error('Edit lock toggle did not update settings');
+			await app.plugins.plugins['confluence-integration'].saveSettings();
+			return JSON.stringify({visible:true,enabled:true});
+		`);
+		const lockedNote = "Release Tests/Formatting.md";
+		yield* evaluate(
+			`const r=await app.plugins.plugins['confluence-integration'].doPublish(${JSON.stringify("Release Tests/Formatting.md")}); if(r.errorMessage || r.failedFiles.length) throw Error('Locked desktop publish failed'); return JSON.stringify({published:true});`,
+		);
+		const lockedPageId = restored[lockedNote].id;
+		const editor = yield* Effect.tryPromise(() => client.users.getCurrentUser());
+		const restriction = yield* Effect.tryPromise(() =>
+			client.sendRequest({
+				url: `/wiki/rest/api/content/${lockedPageId}/restriction/byOperation/update`,
+				searchParams: { expand: "restrictions.user,restrictions.group" },
+			}),
+		);
+		assert.deepEqual(
+			restriction.restrictions.user.results.map((user) => user.accountId),
+			[editor.accountId],
+		);
+		assert.equal(restriction.restrictions.group.results.length, 0);
+		yield* evaluate(
+			`const p=app.plugins.plugins['confluence-integration']; p.settings.lockPublishedPages=false; await p.saveSettings(); return JSON.stringify({disabled:true});`,
+		);
+		const stillLocked = yield* Effect.tryPromise(() =>
+			client.sendRequest({
+				url: `/wiki/rest/api/content/${lockedPageId}/restriction/byOperation/update`,
+				searchParams: { expand: "restrictions.user,restrictions.group" },
+			}),
+		);
+		assert.deepEqual(stillLocked.restrictions, restriction.restrictions);
+
 		if (dataview) {
 			const result = yield* runDataviewIntegration({ evaluate, get, prefix: marker.prefix });
 			yield* fs.writeFileString(
@@ -347,6 +495,7 @@ export function runObsidianIntegration({
 			JSON.stringify(
 				{
 					status: "passed",
+					editLockUi,
 					inlineComment: inlineCommentEvidence,
 					authentication: connection.confluenceAuthType,
 					oauthMode: runtimeAuthentication.mode,

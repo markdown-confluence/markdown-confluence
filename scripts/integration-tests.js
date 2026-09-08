@@ -22,6 +22,8 @@ const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const help = `Integration profiles (vp run test:integration [profile] [options]):
   quick      Build, check all fixture conversions and render real Mermaid PNGs (default).
   packages   Pack all five npm packages, install into a fresh consumer and verify them.
+  kroki      Verify rendered diagrams, updates, no-op publication and inline comments.
+  edit-lock  Verify page edit locking, read preservation and publisher updates.
   blogs      Publish a blog post; verify attachments, labels, updates and CLI export.
   live       Publish synthetic fixtures to Confluence; verify unchanged/update/recovery.
   regressions Publish 166 notes with Mermaid/images using the released action container.
@@ -283,10 +285,25 @@ function runIntegration() {
 					);
 				});
 			const work = Effect.gen(function* () {
-				const live = ["live", "blogs", "regressions", "obsidian"].includes(options.profile);
-				const environment = ["live", "blogs", "regressions", "obsidian", "vault"].includes(
-					options.profile,
-				)
+				const live = [
+					"live",
+					"blogs",
+					"edit-lock",
+					"fork-ports",
+					"kroki",
+					"regressions",
+					"obsidian",
+				].includes(options.profile);
+				const environment = [
+					"live",
+					"blogs",
+					"edit-lock",
+					"fork-ports",
+					"kroki",
+					"regressions",
+					"obsidian",
+					"vault",
+				].includes(options.profile)
 					? yield* readTestEnvironment(options)
 					: {};
 				if (live) validateLiveEnvironment(environment);
@@ -357,6 +374,39 @@ function runIntegration() {
 							},
 							"25 minutes",
 						),
+					);
+					return;
+				}
+				if (options.profile === "kroki") {
+					yield* step(
+						"Kroki rendering and comment preservation",
+						command(node, ["scripts/integration-kroki.js"], {
+							env: {
+								...environment,
+								CONFLUENCE_E2E_REPORT_DIRECTORY: reportDirectory,
+							},
+						}),
+					);
+					return;
+				}
+
+				if (options.profile === "fork-ports") {
+					yield* step(
+						"Selective fork features and comment preservation",
+						command(node, ["scripts/integration-fork-ports.js"], {
+							env: {
+								...environment,
+								CONFLUENCE_E2E_REPORT_DIRECTORY: reportDirectory,
+							},
+						}),
+					);
+					return;
+				}
+
+				if (options.profile === "edit-lock") {
+					yield* step(
+						"Live edit lock and publisher update",
+						command(node, ["scripts/integration-edit-lock.js"], { env: environment }),
 					);
 					return;
 				}
