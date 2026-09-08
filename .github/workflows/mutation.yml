@@ -43,9 +43,16 @@ jobs:
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: reports/mutation/incremental.json
-        key: stryker-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.config.mjs', 'packages/lib/src/**/*.ts') }}
-        restore-keys: |
-          stryker-${{ runner.os }}-
+        # Reuse only results from the same runner, toolchain, source, and tests.
+        # A partial-key restore could retain stale results after test or dependency changes.
+        key: >-
+          stryker-vitest-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles(
+            'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc', '.node-version', '.tool-versions',
+            'package.json', 'manifest.json', '*config*', '.github/workflows/mutation.yml',
+            'packages/*/package.json', 'packages/*/*config*', 'packages/*/src/**',
+            'packages/*/test/**', 'packages/*/tests/**', 'packages/*/fixtures/**',
+            'scripts/**', 'config/**', 'test-fixtures/**', 'patches/**', '.build/**', 'vite.package-build.ts'
+          ) }}
 
     - name: Run mutation tests
       run: vp run mutation

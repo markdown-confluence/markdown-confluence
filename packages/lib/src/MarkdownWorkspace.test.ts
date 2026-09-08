@@ -3,7 +3,7 @@ import { Path } from "effect/Path";
 import { afterEach, expect, test } from "@effect/vitest";
 import { Effect } from "effect";
 import { ConfluenceSettings, DEFAULT_SETTINGS } from "./Settings";
-import { RuntimeEnvironmentService, runEffect } from "./effects";
+import { runEffect } from "./effects";
 import {
 	loadMarkdownWorkspace,
 	shouldPublishMarkdownFile,
@@ -24,18 +24,11 @@ test("folder selection respects directory boundaries on all platforms", () => {
 });
 
 let tmpRoot: string | undefined;
-let originalWorkingDirectory: string | undefined;
 
 afterEach(async () => {
 	await runEffect(
 		Effect.gen(function* () {
 			const fs = yield* FileSystem;
-			const runtimeEnvironment = yield* RuntimeEnvironmentService;
-
-			if (originalWorkingDirectory) {
-				yield* runtimeEnvironment.chdir(originalWorkingDirectory);
-				originalWorkingDirectory = undefined;
-			}
 
 			if (tmpRoot) {
 				yield* fs.remove(tmpRoot, { recursive: true, force: true });
@@ -45,27 +38,44 @@ afterEach(async () => {
 	);
 });
 
+async function loadMarkdownWorkspaceFrom(workingDirectory: string, settings: ConfluenceSettings) {
+	return runEffect(
+		Effect.gen(function* () {
+			const path = yield* Path;
+			// Model relative paths without changing the process cwd shared by test workers.
+			return yield* makeMarkdownWorkspaceEffect(settings).pipe(
+				Effect.provideService(Path, {
+					...path,
+					resolve: (...segments) => path.resolve(workingDirectory, ...segments),
+				}),
+			);
+		}),
+	);
+}
+
 test("matches folderToPublish under a relative contentRoot", async () => {
 	const expectedFilePath = await runEffect(
 		Effect.gen(function* () {
 			const fs = yield* FileSystem;
 			const path = yield* Path;
-			const runtimeEnvironment = yield* RuntimeEnvironmentService;
 
 			const workspaceRoot = yield* fs.makeTempDirectory({ prefix: "markdown-confluence-" });
 			tmpRoot = workspaceRoot;
-			originalWorkingDirectory = yield* runtimeEnvironment.cwd;
-			yield* runtimeEnvironment.chdir(workspaceRoot);
 
-			yield* fs.makeDirectory(path.join("phil", "thingy"), { recursive: true });
-			yield* fs.writeFileString(path.join("phil", "index.md"), "# Index");
-			yield* fs.writeFileString(path.join("phil", "thingy", "mydude.md"), "# My Dude");
+			yield* fs.makeDirectory(path.join(workspaceRoot, "phil", "thingy"), {
+				recursive: true,
+			});
+			yield* fs.writeFileString(path.join(workspaceRoot, "phil", "index.md"), "# Index");
+			yield* fs.writeFileString(
+				path.join(workspaceRoot, "phil", "thingy", "mydude.md"),
+				"# My Dude",
+			);
 
 			return path.join("thingy", "mydude.md");
 		}),
 	);
 
-	const workspace = await loadMarkdownWorkspace({
+	const workspace = await loadMarkdownWorkspaceFrom(tmpRoot!, {
 		...testSettings,
 		contentRoot: "./phil/",
 		folderToPublish: "thingy",
@@ -81,29 +91,29 @@ test("matches tagsToPublish outside the configured publish folder", async () => 
 		Effect.gen(function* () {
 			const fs = yield* FileSystem;
 			const path = yield* Path;
-			const runtimeEnvironment = yield* RuntimeEnvironmentService;
 
 			const workspaceRoot = yield* fs.makeTempDirectory({ prefix: "markdown-confluence-" });
 			tmpRoot = workspaceRoot;
-			originalWorkingDirectory = yield* runtimeEnvironment.cwd;
-			yield* runtimeEnvironment.chdir(workspaceRoot);
 
-			yield* fs.makeDirectory("Notes", { recursive: true });
+			yield* fs.makeDirectory(path.join(workspaceRoot, "Notes"), { recursive: true });
 			yield* fs.writeFileString(
-				path.join("Notes", "publish-me.md"),
+				path.join(workspaceRoot, "Notes", "publish-me.md"),
 				"---\ntags:\n  - public\n---\n# Public",
 			);
 			yield* fs.writeFileString(
-				path.join("Notes", "skip-me.md"),
+				path.join(workspaceRoot, "Notes", "skip-me.md"),
 				"---\ntags:\n  - public\nconnie-publish: false\n---\n# Private",
 			);
-			yield* fs.writeFileString(path.join("Notes", "untagged.md"), "# Untagged");
+			yield* fs.writeFileString(
+				path.join(workspaceRoot, "Notes", "untagged.md"),
+				"# Untagged",
+			);
 
 			return path.join("Notes", "publish-me.md");
 		}),
 	);
 
-	const workspace = await loadMarkdownWorkspace({
+	const workspace = await loadMarkdownWorkspaceFrom(tmpRoot!, {
 		...testSettings,
 		folderToPublish: "Confluence Pages",
 		tagsToPublish: "public",
@@ -119,21 +129,20 @@ test("expands Obsidian markdown embeds from outside the publish folder", async (
 		Effect.gen(function* () {
 			const fs = yield* FileSystem;
 			const path = yield* Path;
-			const runtimeEnvironment = yield* RuntimeEnvironmentService;
 
 			const workspaceRoot = yield* fs.makeTempDirectory({ prefix: "markdown-confluence-" });
 			tmpRoot = workspaceRoot;
-			originalWorkingDirectory = yield* runtimeEnvironment.cwd;
-			yield* runtimeEnvironment.chdir(workspaceRoot);
 
-			yield* fs.makeDirectory("Confluence Pages", { recursive: true });
-			yield* fs.makeDirectory("Notes", { recursive: true });
+			yield* fs.makeDirectory(path.join(workspaceRoot, "Confluence Pages"), {
+				recursive: true,
+			});
+			yield* fs.makeDirectory(path.join(workspaceRoot, "Notes"), { recursive: true });
 			yield* fs.writeFileString(
-				path.join("Confluence Pages", "page.md"),
+				path.join(workspaceRoot, "Confluence Pages", "page.md"),
 				"# Page\n\nBefore\n\n![[Notes/embed]]\n\nAfter",
 			);
 			yield* fs.writeFileString(
-				path.join("Notes", "embed.md"),
+				path.join(workspaceRoot, "Notes", "embed.md"),
 				"---\ntags:\n  - private\n---\n## Embedded content",
 			);
 
@@ -141,7 +150,7 @@ test("expands Obsidian markdown embeds from outside the publish folder", async (
 		}),
 	);
 
-	const workspace = await loadMarkdownWorkspace({
+	const workspace = await loadMarkdownWorkspaceFrom(tmpRoot!, {
 		...testSettings,
 		folderToPublish: "Confluence Pages",
 	});
@@ -159,15 +168,17 @@ test("updates markdown values for a cwd-relative file path inside contentRoot", 
 		Effect.gen(function* () {
 			const fs = yield* FileSystem;
 			const path = yield* Path;
-			const runtimeEnvironment = yield* RuntimeEnvironmentService;
 
 			const workspaceRoot = yield* fs.makeTempDirectory({ prefix: "markdown-confluence-" });
 			tmpRoot = workspaceRoot;
-			originalWorkingDirectory = yield* runtimeEnvironment.cwd;
-			yield* runtimeEnvironment.chdir(workspaceRoot);
 
-			yield* fs.makeDirectory(path.join("src", "development"), { recursive: true });
-			yield* fs.writeFileString(path.join("src", "development", "page.md"), "# Page");
+			yield* fs.makeDirectory(path.join(workspaceRoot, "src", "development"), {
+				recursive: true,
+			});
+			yield* fs.writeFileString(
+				path.join(workspaceRoot, "src", "development", "page.md"),
+				"# Page",
+			);
 
 			return {
 				updatePath: path.join("src", "development", "page.md"),
@@ -176,7 +187,7 @@ test("updates markdown values for a cwd-relative file path inside contentRoot", 
 		}),
 	);
 
-	const workspace = await loadMarkdownWorkspace({
+	const workspace = await loadMarkdownWorkspaceFrom(tmpRoot!, {
 		...testSettings,
 		contentRoot: "./src/",
 	});
@@ -202,21 +213,23 @@ test("updates markdown values for an absolute file path inside contentRoot", asy
 		Effect.gen(function* () {
 			const fs = yield* FileSystem;
 			const path = yield* Path;
-			const runtimeEnvironment = yield* RuntimeEnvironmentService;
 
 			const workspaceRoot = yield* fs.makeTempDirectory({ prefix: "markdown-confluence-" });
 			tmpRoot = workspaceRoot;
-			originalWorkingDirectory = yield* runtimeEnvironment.cwd;
-			yield* runtimeEnvironment.chdir(workspaceRoot);
 
-			yield* fs.makeDirectory(path.join("src", "development"), { recursive: true });
-			yield* fs.writeFileString(path.join("src", "development", "page.md"), "# Page");
+			yield* fs.makeDirectory(path.join(workspaceRoot, "src", "development"), {
+				recursive: true,
+			});
+			yield* fs.writeFileString(
+				path.join(workspaceRoot, "src", "development", "page.md"),
+				"# Page",
+			);
 
 			return path.join(workspaceRoot, "src", "development", "page.md");
 		}),
 	);
 
-	const workspace = await loadMarkdownWorkspace({
+	const workspace = await loadMarkdownWorkspaceFrom(tmpRoot!, {
 		...testSettings,
 		contentRoot: "./src/",
 	});

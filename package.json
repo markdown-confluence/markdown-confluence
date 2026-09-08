@@ -39,6 +39,7 @@
 		"@effect/vitest": "4.0.0-rc.112",
 		"@stryker-mutator/core": "9.6.1",
 		"@stryker-mutator/typescript-checker": "9.6.1",
+		"@stryker-mutator/vitest-runner": "9.6.1",
 		"@types/node": "^25.9.1",
 		"@vitest/runner": "4.1.11",
 		"effect": "4.0.0-rc.112",

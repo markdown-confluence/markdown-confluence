@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 const skippedDirectoryNames = new Set([
 	".git",
 	".release-repo",
+	".stryker-tmp",
 	".husky",
 	"coverage",
 	"dev-vault",

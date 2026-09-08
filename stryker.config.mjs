@@ -1,11 +1,12 @@
 export default {
 	packageManager: "pnpm",
-	plugins: ["@stryker-mutator/typescript-checker"],
-	testRunner: "command",
-	commandRunner: {
-		command: "vp test run",
+	plugins: ["@stryker-mutator/typescript-checker", "@stryker-mutator/vitest-runner"],
+	testRunner: "vitest",
+	vitest: {
+		configFile: "vitest.config.ts",
+		related: true,
 	},
-	coverageAnalysis: "off",
+	coverageAnalysis: "perTest",
 	checkers: ["typescript"],
 	tsconfigFile: "packages/lib/tsconfig.json",
 	concurrency: "50%",
