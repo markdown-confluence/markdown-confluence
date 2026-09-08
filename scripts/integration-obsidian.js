@@ -221,6 +221,9 @@ export function runObsidianIntegration({
 							JSON.parse(page.body.atlas_doc_format.value),
 						),
 						ancestors: page.ancestors.map((ancestor) => ancestor.id),
+						mp4AttachmentCount: attachments.results.filter((attachment) =>
+							attachment.title.endsWith("-sample.mp4"),
+						).length,
 						attachments: Object.fromEntries(
 							attachments.results.map((attachment) => [
 								attachment.title,
@@ -252,8 +255,7 @@ export function runObsidianIntegration({
 				);
 				assert.ok(Object.keys(media.attachments).length >= 5);
 				assert.equal(
-					Object.keys(media.attachments).filter((title) => title.endsWith("-sample.mp4"))
-						.length,
+					media.mp4AttachmentCount,
 					1,
 					"Desktop MP4 embeds must share one uploaded attachment",
 				);
