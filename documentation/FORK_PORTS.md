@@ -140,4 +140,4 @@ The real Obsidian desktop profile also passed with the new feature fixture and s
 
 Both integration profiles include a 12-entity ER diagram check for actual PNG resolution and SVG text/custom colors. This caught an Electron initialization issue: sanitized theme variables must be supplied during Mermaid initialization so derived colors are calculated correctly.
 
-Scoped-token verification is pending: the saved test credential returned HTTP 404 when reading the dedicated test parent, before feature execution. This is not recorded as a scoped-token pass.
+Scoped-token verification also passed on 8 September 2026 after replacing the expired test token with the same ten scopes and a one-day lifetime. The earlier HTTP 404 occurred before feature execution because that credential had expired. The replacement run covered the complete feature profile, including the larger renderer checks and inline-comment preservation.
