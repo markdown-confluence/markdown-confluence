@@ -556,6 +556,42 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 
+		containerEl.createEl("h2", { text: "Kroki diagrams" });
+		const kroki = this.plugin.settings.kroki!;
+		new Setting(containerEl)
+			.setName("Enable Kroki rendering")
+			.setDesc(
+				"Render kroki-* code blocks. Enabling sends their diagram source to the server below.",
+			)
+			.addToggle((toggle) =>
+				toggle.setValue(kroki.enabled).onChange(async (value) => {
+					kroki.enabled = value;
+					await this.plugin.saveSettings();
+				}),
+			);
+		new Setting(containerEl)
+			.setName("Kroki server URL")
+			.setDesc(
+				"Use a server you trust, such as a self-hosted Kroki instance. No Confluence credentials are sent to it.",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("https://kroki.io")
+					.setValue(kroki.serverUrl)
+					.onChange(async (value) => {
+						kroki.serverUrl = value.trim();
+						await this.plugin.saveSettings();
+					}),
+			);
+		new Setting(containerEl).setName("Kroki output").addDropdown((dropdown) =>
+			dropdown
+				.addOptions({ png: "PNG", svg: "SVG" })
+				.setValue(kroki.format)
+				.onChange(async (value) => {
+					kroki.format = value as "png" | "svg";
+					await this.plugin.saveSettings();
+				}),
+		);
 		containerEl.createEl("h2", { text: "PlantUML diagrams" });
 
 		new Setting(containerEl)

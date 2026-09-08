@@ -22,6 +22,7 @@ const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const help = `Integration profiles (vp run test:integration [profile] [options]):
   quick      Build, check all fixture conversions and render real Mermaid PNGs (default).
   packages   Pack all five npm packages, install into a fresh consumer and verify them.
+  kroki      Verify rendered diagrams, updates, no-op publication and inline comments.
   edit-lock  Verify page edit locking, read preservation and publisher updates.
   blogs      Publish a blog post; verify attachments, labels, updates and CLI export.
   live       Publish synthetic fixtures to Confluence; verify unchanged/update/recovery.
@@ -289,6 +290,7 @@ function runIntegration() {
 					"blogs",
 					"edit-lock",
 					"fork-ports",
+					"kroki",
 					"regressions",
 					"obsidian",
 				].includes(options.profile);
@@ -297,6 +299,7 @@ function runIntegration() {
 					"blogs",
 					"edit-lock",
 					"fork-ports",
+					"kroki",
 					"regressions",
 					"obsidian",
 					"vault",
@@ -374,6 +377,19 @@ function runIntegration() {
 					);
 					return;
 				}
+				if (options.profile === "kroki") {
+					yield* step(
+						"Kroki rendering and comment preservation",
+						command(node, ["scripts/integration-kroki.js"], {
+							env: {
+								...environment,
+								CONFLUENCE_E2E_REPORT_DIRECTORY: reportDirectory,
+							},
+						}),
+					);
+					return;
+				}
+
 				if (options.profile === "fork-ports") {
 					yield* step(
 						"Selective fork features and comment preservation",
