@@ -600,7 +600,7 @@ function processWikilinkToActualLink(
 							return node;
 						}
 					} else {
-						delete node.marks[0];
+						node.marks.splice(0, 1);
 					}
 					return node;
 				}

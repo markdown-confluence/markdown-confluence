@@ -1,3 +1,4 @@
+import { structuredMarkdown, jiraShorthand } from "./StructuredMarkdown";
 import { JSONDocNode, JSONTransformer } from "@atlaskit/editor-json-transformer";
 import { MarkdownTransformer } from "./MarkdownTransformer";
 import { traverse } from "@atlaskit/adf-utils/traverse";
@@ -124,8 +125,9 @@ function parsePageFragmentToADF(
 	markdown: string,
 	confluenceBaseUrl: string,
 	pageFragment: PageFragment,
-) {
-	const prosenodes = transformer.parse(stripMarkdownHtmlComments(markdown));
+	namespace: string = pageFragment,
+): JSONDocNode {
+	const prosenodes = transformer.parse(stripMarkdownHtmlComments(markdown), namespace);
 	const adfNodes = serializer.encode(prosenodes);
 	let nodes = processADF(adfNodes, confluenceBaseUrl);
 	if (pageFragment !== "body") {
@@ -140,7 +142,14 @@ function parsePageFragmentToADF(
 			}),
 		}) as JSONDocNode;
 	}
-	return restoreAdfCodeBlocks(replaceSupportedMacroPlaceholders(nodes, pageFragment));
+	return restoreAdfCodeBlocks(
+		structuredMarkdown(
+			replaceSupportedMacroPlaceholders(nodes, pageFragment),
+			(source, childNamespace) =>
+				parsePageFragmentToADF(source, confluenceBaseUrl, pageFragment, childNamespace),
+			namespace,
+		) as JSONDocNode,
+	);
 }
 
 function processADF(adf: JSONDocNode, confluenceBaseUrl: string): JSONDocNode {
@@ -511,10 +520,18 @@ function safeDecodeURIComponent(value: string): string {
 }
 
 export function convertMDtoADF(file: MarkdownFile, settings: ConfluenceSettings): LocalAdfFile {
+	const rank = file.frontmatter["sort-order"];
+	if (
+		settings.orderPages &&
+		rank !== undefined &&
+		(typeof rank !== "number" || !Number.isFinite(rank))
+	)
+		throw new Error("sort-order must be a finite number");
 	file.contents = file.contents.replace(frontmatterRegex, "");
 
 	const adfContent = parseMarkdownToADF(file.contents, resolveSiteUrl(settings));
 
+	if (settings.jiraUrl) jiraShorthand(adfContent, settings.jiraUrl);
 	const results = processConniePerPageConfig(file, settings, adfContent);
 	stripIgnoredCodeBlocks(adfContent as ADFNode, settings.ignoredCodeBlockLanguages ?? []);
 	addConfiguredPageChrome(adfContent, settings);

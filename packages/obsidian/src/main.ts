@@ -70,6 +70,8 @@ interface FilePublishResult {
 
 export default class ConfluencePlugin extends Plugin {
 	settings!: ObsidianPluginSettings;
+	private publishAbort: AbortController | undefined;
+	private publishStatus: HTMLElement | undefined;
 	browserOAuth = new BrowserOAuth(
 		() => this.settings,
 		() => this.app.secretStorage,
@@ -137,6 +139,7 @@ export default class ConfluencePlugin extends Plugin {
 			mermaidItems.extraStyles,
 			mermaidItems.mermaidConfig,
 			mermaidItems.bodyStyles,
+			this.settings.mermaid,
 		);
 
 		const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
@@ -160,7 +163,9 @@ export default class ConfluencePlugin extends Plugin {
 			}
 		}
 
-		return new Publisher(this.settings, confluenceClient, plugins);
+		return new Publisher(this.settings, confluenceClient, plugins, (message) => {
+			this.publishStatus?.setText(message + " · click to cancel");
+		});
 	}
 
 	async getMermaidItems() {
@@ -242,7 +247,9 @@ export default class ConfluencePlugin extends Plugin {
 	async doPublish(publishFilter?: string): Promise<UploadResults> {
 		this.publisher = await this.createPublisher();
 		const adrFiles: FilePublishResult[] = await this.runObsidianEffect(
-			this.publisher.publishEffect(publishFilter) as unknown as Effect.Effect<
+			this.publisher.publishEffect(publishFilter, {
+				signal: this.publishAbort?.signal,
+			}) as unknown as Effect.Effect<
 				FilePublishResult[],
 				unknown,
 				MarkdownConfluencePlatform | MarkdownWorkspaceService
@@ -272,6 +279,16 @@ export default class ConfluencePlugin extends Plugin {
 
 	override async onload() {
 		await this.init();
+		this.publishStatus = this.addStatusBarItem();
+		this.publishStatus.onclick = () => this.publishAbort?.abort();
+		this.addCommand({
+			id: "cancel-publish",
+			name: "Cancel publishing after the current request",
+			callback: () => {
+				this.publishAbort?.abort();
+				new Notice("Cancellation requested. Completed writes will be kept.");
+			},
+		});
 
 		this.addRibbonIcon("cloud", "Publish to Confluence", async () => {
 			await this.runPublish();
@@ -474,6 +491,7 @@ export default class ConfluencePlugin extends Plugin {
 		}
 
 		this.isSyncing = true;
+		this.publishAbort = new AbortController();
 		try {
 			const stats = await this.doPublish(publishFilter);
 			this.showPublishResults(stats);
@@ -481,6 +499,8 @@ export default class ConfluencePlugin extends Plugin {
 			this.showPublishError(error);
 		} finally {
 			this.isSyncing = false;
+			this.publishAbort = undefined;
+			this.publishStatus?.empty();
 		}
 	}
 

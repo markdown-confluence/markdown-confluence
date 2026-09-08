@@ -1,3 +1,4 @@
+import { validateMermaidOptions, type MermaidOptions } from "@markdown-confluence/lib";
 import { BrowserWindow } from "@electron/remote";
 import { ChartData, MermaidRenderer } from "@markdown-confluence/lib";
 import mermaid, { MermaidConfig } from "mermaid";
@@ -26,12 +27,17 @@ const pluginMermaidConfig: MermaidConfig = {
 };
 
 export class ElectronMermaidRenderer implements MermaidRenderer {
+	readonly format: "png" | "svg";
 	constructor(
 		private extraStyleSheets: string[],
 		private extraStyles: string[],
 		private mermaidConfig: MermaidConfig = pluginMermaidConfig,
 		private bodyClasses = "",
-	) {}
+		private renderOptions: MermaidOptions = {},
+	) {
+		validateMermaidOptions(renderOptions);
+		this.format = renderOptions.format ?? "png";
+	}
 
 	async captureMermaidCharts(charts: ChartData[]): Promise<Map<string, Buffer>> {
 		const mermaidRenderHtml = URL.createObjectURL(
@@ -39,9 +45,15 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 		);
 		const capturedCharts = new Map<string, Buffer>();
 		try {
-			const { themeVariables, ...mermaidInitConfig } = sanitizeMermaidConfig(
-				this.mermaidConfig,
-			);
+			const { themeVariables, ...mermaidInitConfig } = sanitizeMermaidConfig({
+				...this.mermaidConfig,
+				...(this.renderOptions.theme ? { theme: this.renderOptions.theme } : {}),
+				themeVariables: {
+					...this.mermaidConfig.themeVariables,
+					...this.renderOptions.themeVariables,
+				},
+				securityLevel: "strict",
+			});
 			mermaid.initialize({
 				...mermaidInitConfig,
 				startOnLoad: false,
@@ -60,9 +72,17 @@ export class ElectronMermaidRenderer implements MermaidRenderer {
 					await chartWindow.loadURL(mermaidRenderHtml);
 					const id = "mm" + uuidv4().replace(/-/g, "");
 					const { svg } = await mermaid.render(id, chart.data);
+					if (this.format === "svg") {
+						capturedCharts.set(chart.name, Buffer.from(svg));
+						continue;
+					}
+					const scale = this.renderOptions.scale ?? 1;
+					await chartWindow.webContents.setZoomFactor(scale);
 					const dimensions = await chartWindow.webContents.executeJavaScript(
 						`renderSvg(${JSON.stringify(svg)});`,
 					);
+					dimensions.width = Math.ceil(dimensions.width * scale);
+					dimensions.height = Math.ceil(dimensions.height * scale);
 					chartWindow.setSize(dimensions.width, dimensions.height);
 					const capturedImage = await chartWindow.webContents.capturePage(dimensions, {
 						stayHidden: true,

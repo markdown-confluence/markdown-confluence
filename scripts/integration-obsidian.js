@@ -19,6 +19,7 @@ import { runOAuthUiIntegration, runDeviceAvailabilityIntegration } from "./integ
 const publishedNotes = [
 	"Release Tests/Release Tests.md",
 	"Release Tests/Formatting.md",
+	"Release Tests/Fork Features.md",
 	"Release Tests/Media.md",
 	"Release Tests/Embeds.md",
 	"Release Tests/Hierarchy/README.md",
@@ -265,6 +266,15 @@ export function runObsidianIntegration({
 					pages["Release Tests/Hierarchy/Child.md"].ancestors.at(-1),
 					pages["Release Tests/Hierarchy/README.md"].id,
 				);
+				const features = JSON.stringify(pages["Release Tests/Fork Features.md"].body);
+				for (const expected of [
+					'"extensionKey":"excerpt"',
+					'"extensionKey":"details"',
+					'"extensionKey":"anchor"',
+					'"text":"0"',
+					'"text":"false"',
+				])
+					assert.ok(features.includes(expected), expected);
 				return pages;
 			});
 		const publish = () =>
@@ -341,6 +351,18 @@ export function runObsidianIntegration({
 			yield* snapshot(),
 			restored,
 			"A page with an inline comment must remain unchanged on republish",
+		);
+
+		const forkControls = yield* evaluate(`
+            app.setting.open(); app.setting.openTabById('confluence-integration');
+            const names=[...app.setting.activeTab.containerEl.querySelectorAll('.setting-item-name')].map(el=>el.textContent);
+            for(const name of ['Excluded folders','Jira site URL','Mermaid output','Mermaid scale','Mermaid theme variables','Apply page ordering']) if(!names.includes(name)) throw Error('Missing control: '+name);
+            if(!app.commands.commands['confluence-integration:cancel-publish']) throw Error('Missing cancel command');
+            app.setting.close(); return JSON.stringify({controls:true});
+        `);
+		yield* fs.writeFileString(
+			path.join(reportDirectory, "fork-controls.json"),
+			JSON.stringify(forkControls),
 		);
 
 		// Exercise the real settings control, then publish an unchanged note with locking enabled.

@@ -7,10 +7,13 @@ import SparkMD5 from "spark-md5";
 import { Effect } from "effect";
 import { MarkdownConfluencePlatform, runEffect } from "../effects";
 
-export function getMermaidFileName(mermaidContent: string | undefined) {
+export function getMermaidFileName(
+	mermaidContent: string | undefined,
+	format: "png" | "svg" = "png",
+) {
 	const mermaidText = mermaidContent ?? "flowchart LR\nid1[Missing Chart]";
 	const pathMd5 = SparkMD5.hash(mermaidText);
-	const uploadFilename = `RenderedMermaidChart-${pathMd5}.png`;
+	const uploadFilename = `RenderedMermaidChart-${pathMd5}.${format}`;
 	return { uploadFilename, mermaidText };
 }
 
@@ -20,6 +23,7 @@ export interface ChartData {
 }
 
 export interface MermaidRenderer {
+	format?: "png" | "svg";
 	captureMermaidCharts(charts: ChartData[]): Promise<Map<string, Buffer>>;
 }
 
@@ -37,7 +41,10 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 
 		const mermaidNodesToUpload = new Set(
 			mermaidNodes.map((node) => {
-				const mermaidDetails = getMermaidFileName(node?.content?.at(0)?.text);
+				const mermaidDetails = getMermaidFileName(
+					node?.content?.at(0)?.text,
+					this.mermaidRenderer.format,
+				);
 				return {
 					name: mermaidDetails.uploadFilename,
 					data: mermaidDetails.mermaidText,
@@ -80,7 +87,7 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 				const uploadedContent = yield* supportFunctions.uploadBufferEffect(
 					mermaidImage[0],
 					mermaidImage[1],
-					"image/png",
+					mermaidRenderer.format === "svg" ? "image/svg+xml" : "image/png",
 				);
 
 				imageMap = {
@@ -103,7 +110,10 @@ export class MermaidRendererPlugin implements ADFProcessingPlugin<
 						if (!mermaidContent) {
 							return;
 						}
-						const mermaidFilename = getMermaidFileName(mermaidContent);
+						const mermaidFilename = getMermaidFileName(
+							mermaidContent,
+							this.mermaidRenderer.format,
+						);
 
 						if (!imageMap[mermaidFilename.uploadFilename]) {
 							return;

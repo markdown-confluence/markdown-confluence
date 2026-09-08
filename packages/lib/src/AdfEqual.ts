@@ -47,6 +47,12 @@ export function normalizeAdfForComparison(adf: ADFEntity): ADFEntity {
 					delete mark.attrs["__confluenceMetadata"];
 				}
 			}
+			if (node.type === "inlineCard" && typeof node.attrs?.["url"] === "string") {
+				node.attrs["url"] = canonicalConfluencePageLink(node.attrs["url"]);
+			}
+			if (node.type === "table") {
+				node.attrs = { layout: "default", ...node.attrs };
+			}
 			// These file details are transient server caches, not authored media attributes.
 			if (node.type === "media" && node.attrs) {
 				delete node.attrs["__fileName"];
@@ -64,6 +70,27 @@ export function normalizeAdfForComparison(adf: ADFEntity): ADFEntity {
 			}
 
 			const parameters = node.attrs?.["parameters"];
+			if (
+				node.attrs?.["extensionType"] === "com.atlassian.confluence.macro.core" &&
+				node.attrs["extensionKey"] === "anchor" &&
+				isRecord(parameters) &&
+				isRecord(parameters["macroParams"])
+			) {
+				const options = parameters["macroParams"];
+				const name = isRecord(options[""]) ? options[""]["value"] : undefined;
+				const legacy = isRecord(options["legacyAnchorId"])
+					? options["legacyAnchorId"]["value"]
+					: undefined;
+				// Cloud stamps a title-prefixed legacy alias onto generated footnote anchors.
+				if (
+					typeof name === "string" &&
+					name.startsWith("connie-fn-") &&
+					typeof legacy === "string" &&
+					legacy.endsWith(`-${name}`)
+				)
+					delete options["legacyAnchorId"];
+			}
+
 			if (
 				node.attrs?.["extensionType"] === "com.atlassian.confluence.macro.core" &&
 				node.attrs["extensionKey"] === "toc" &&

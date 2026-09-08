@@ -356,6 +356,104 @@ export class ConfluenceSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Excluded folders")
+			.setDesc(
+				"One vault-relative folder per line. Exclusions override publish tags and frontmatter.",
+			)
+			.addTextArea((text) =>
+				text
+					.setValue((this.plugin.settings.foldersToExclude ?? []).join("\n"))
+					.onChange(async (value) => {
+						this.plugin.settings.foldersToExclude = value
+							.split("\n")
+							.map((folder) => folder.trim())
+							.filter(Boolean);
+						await this.plugin.saveSettings();
+					}),
+			);
+		new Setting(containerEl)
+			.setName("Jira site URL")
+			.setDesc("Optional HTTPS Jira site for JIRA: PROJECT-123 smart links.")
+			.addText((text) =>
+				text.setValue(this.plugin.settings.jiraUrl ?? "").onChange(async (value) => {
+					this.plugin.settings.jiraUrl = value;
+					await this.plugin.saveSettings();
+				}),
+			);
+		new Setting(containerEl)
+			.setName("Apply page ordering")
+			.setDesc(
+				"Order successfully published siblings with numeric sort-order frontmatter. Unranked pages are not managed.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.orderPages ?? false)
+					.onChange(async (value) => {
+						this.plugin.settings.orderPages = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl).setName("Mermaid output").addDropdown((dropdown) =>
+			dropdown
+				.addOption("png", "PNG")
+				.addOption("svg", "SVG")
+				.setValue(this.plugin.settings.mermaid?.format ?? "png")
+				.onChange(async (value) => {
+					this.plugin.settings.mermaid = {
+						...this.plugin.settings.mermaid,
+						format: value as "png" | "svg",
+					};
+					await this.plugin.saveSettings();
+				}),
+		);
+		new Setting(containerEl)
+			.setName("Mermaid scale")
+			.setDesc("PNG resolution multiplier, 1–4.")
+			.addSlider((slider) =>
+				slider
+					.setLimits(1, 4, 1)
+					.setValue(this.plugin.settings.mermaid?.scale ?? 1)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.mermaid = {
+							...this.plugin.settings.mermaid,
+							scale: value,
+						};
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Mermaid theme variables")
+			.setDesc("Optional JSON object of Mermaid color variables. Invalid JSON is not saved.")
+			.addTextArea((text) =>
+				text
+					.setValue(
+						JSON.stringify(this.plugin.settings.mermaid?.themeVariables ?? {}, null, 2),
+					)
+					.onChange(async (value) => {
+						try {
+							const variables: unknown = JSON.parse(value || "{}");
+							if (
+								!variables ||
+								typeof variables !== "object" ||
+								Array.isArray(variables) ||
+								Object.values(variables).some((color) => typeof color !== "string")
+							)
+								return;
+							this.plugin.settings.mermaid = {
+								...this.plugin.settings.mermaid,
+								themeVariables: variables as Record<string, string>,
+							};
+							await this.plugin.saveSettings();
+						} catch {
+							/* Keep the last valid settings while the user types. */
+						}
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Tags to publish")
 			.setDesc("Publish files with any matching YAML tag, separated by commas")
 			.addText((text) =>

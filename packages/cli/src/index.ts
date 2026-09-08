@@ -23,6 +23,9 @@ import {
 	PuppeteerMathRenderer,
 } from "@markdown-confluence/mermaid-puppeteer-renderer";
 import { getErrorMessage } from "./errorMessage";
+import { preflight } from "./preflight";
+import { FileSystem } from "effect/FileSystem";
+import { publishingReport } from "@markdown-confluence/lib";
 import { convertDocument } from "./convert";
 import { HttpPlantumlRenderer } from "@markdown-confluence/plantuml-renderer";
 
@@ -31,13 +34,21 @@ const program = Effect.gen(function* () {
 	yield* runtimeEnvironment.setMaxListeners(Infinity) as any;
 
 	const settings = yield* ConfluenceUploadSettings.ConfluenceSettingsService as any;
+	const argv: string[] = yield* runtimeEnvironment.argv;
+	const reportIndex = argv.indexOf("--report");
+	const destination = reportIndex >= 0 ? argv[reportIndex + 1] : undefined;
+	if (reportIndex >= 0 && (!destination || destination.startsWith("--")))
+		throw new Error("--report requires a file path or - for stdout");
 
 	const confluenceClient = yield* createAuthenticatedConfluenceClient(settings);
 
 	const plugins: ADFProcessingPlugin<unknown, unknown>[] = [
 		new MathRendererPlugin(new PuppeteerMathRenderer()),
 		new MermaidRendererPlugin(
-			new PuppeteerMermaidRenderer({ protocolTimeout: settings.mermaidProtocolTimeout }),
+			new PuppeteerMermaidRenderer(
+				{ protocolTimeout: settings.mermaidProtocolTimeout },
+				settings.mermaid,
+			),
 		),
 	];
 
@@ -55,15 +66,24 @@ const program = Effect.gen(function* () {
 	}
 
 	const publisher = new Publisher(settings, confluenceClient, plugins, (message) => {
-		console.log(`[publish] ${message}`);
+		console.error(`[publish] ${message}`);
 	});
 
 	const publishFilter = "";
 	const results = yield* publisher.publishEffect(publishFilter) as any;
 
+	if (destination) {
+		const json = JSON.stringify(publishingReport(results), null, 2) + "\n";
+		if (destination === "-") yield* Console.log(json);
+		else {
+			const fs = yield* FileSystem;
+			yield* fs.writeFileString(destination, json);
+		}
+	}
+
 	for (const file of results) {
 		if (file.successfulUploadResult) {
-			yield* Console.log(
+			yield* (destination === "-" ? Console.error : Console.log)(
 				chalk.green(
 					`SUCCESS: ${file.node.file.absoluteFilePath} Content: ${file.successfulUploadResult.contentResult}, Images: ${file.successfulUploadResult.imageResult}, Labels: ${file.successfulUploadResult.labelResult}, Page URL: ${file.node.file.pageUrl}`,
 				),
@@ -86,6 +106,8 @@ const program = Effect.gen(function* () {
 const command = Effect.gen(function* () {
 	const runtime = yield* RuntimeEnvironmentService;
 	const argv = yield* runtime.argv;
+	if (argv[2] === "validate" || argv[2] === "plan")
+		return yield* preflight(argv[2], argv.slice(3));
 	if (argv[2] === "to-adf" || argv[2] === "to-markdown" || argv[2] === "from-adf") {
 		const conversion = argv[2] === "to-adf" ? "to-adf" : "to-markdown";
 		return yield* convertDocument(conversion, argv.slice(3)).pipe(
@@ -94,7 +116,7 @@ const command = Effect.gen(function* () {
 	}
 	if (argv[2] === "--help" || argv[2] === "-h") {
 		return yield* Console.log(
-			"Usage: markdown-confluence [publishing options]\n\nCommands:\n  to-adf       Convert Markdown or export Confluence ADF\n  to-markdown  Convert ADF or a Confluence page to Markdown\n  from-adf     Alias for to-markdown\n\nUse COMMAND --help for conversion options. Without a command, publish using the configured settings.",
+			"Usage: markdown-confluence [publishing options]\n\nCommands:\n  validate     Validate selected Markdown without credentials\n  plan         Read-only Confluence page discovery\n  to-adf       Convert Markdown or export Confluence ADF\n  to-markdown  Convert ADF or a Confluence page to Markdown\n  from-adf     Alias for to-markdown\n\nUse COMMAND --help for conversion options. Without a command, publish using the configured settings.",
 		);
 	}
 	return yield* program.pipe(

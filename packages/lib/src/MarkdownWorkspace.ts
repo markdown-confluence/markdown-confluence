@@ -561,6 +561,22 @@ export function shouldPublishMarkdownFile(
 	frontmatter: Record<string, unknown> | undefined,
 	settings: ConfluenceSettings,
 ): boolean {
+	const normalize = (value: string) =>
+		value
+			.replaceAll("\\", "/")
+			.replace(/^\/+|\/+$/g, "")
+			.replace(/^\.\//, "");
+	const relativePath = normalize(absoluteFilePath);
+	if (
+		(settings.foldersToExclude ?? []).some((value) => {
+			const folder = normalize(value.trim());
+			return (
+				folder !== "" &&
+				(folder === "." || relativePath === folder || relativePath.startsWith(`${folder}/`))
+			);
+		})
+	)
+		return false;
 	if (frontmatter?.["connie-publish"] === false) {
 		return false;
 	}

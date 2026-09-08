@@ -1,3 +1,4 @@
+import { validateMermaidOptions, type MermaidOptions } from "@markdown-confluence/lib";
 import { ChartData, MermaidRenderer, ConfluenceUploadSettings } from "@markdown-confluence/lib";
 import puppeteer, { LaunchOptions } from "puppeteer";
 import { downloadBrowsers } from "puppeteer/lib/puppeteer/node/install.js";
@@ -12,7 +13,13 @@ interface RemoteWindowedCustomFunctions {
 export class PuppeteerMermaidRenderer implements MermaidRenderer {
 	private readonly protocolTimeout: number;
 
-	constructor(options: Pick<LaunchOptions, "protocolTimeout"> = {}) {
+	readonly format: "png" | "svg";
+	constructor(
+		options: Pick<LaunchOptions, "protocolTimeout"> = {},
+		private renderOptions: MermaidOptions = {},
+	) {
+		validateMermaidOptions(renderOptions);
+		this.format = renderOptions.format ?? "png";
 		this.protocolTimeout =
 			options.protocolTimeout ??
 			ConfluenceUploadSettings.DEFAULT_SETTINGS.mermaidProtocolTimeout;
@@ -89,13 +96,31 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 							return renderMermaidChart(mermaidData, mermaidConfig);
 						},
 						chart.data,
-						mermaidConfig,
+						{
+							...mermaidConfig,
+							...(this.renderOptions.theme
+								? { theme: this.renderOptions.theme }
+								: {}),
+							themeVariables: {
+								...mermaidConfig.themeVariables,
+								...this.renderOptions.themeVariables,
+							},
+							securityLevel: "strict",
+						},
 					);
 					await page.setViewport({
 						width: result.width,
 						height: result.height,
+						deviceScaleFactor: this.renderOptions.scale ?? 1,
 					});
-					const imageBuffer = Buffer.from(await page.screenshot());
+					const imageBuffer =
+						this.format === "svg"
+							? Buffer.from(
+									await page.evaluate(
+										() => document.querySelector("svg")!.outerHTML,
+									),
+								)
+							: Buffer.from(await page.screenshot());
 					capturedCharts.set(chart.name, imageBuffer);
 				} finally {
 					await page.close();

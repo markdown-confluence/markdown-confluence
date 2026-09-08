@@ -12,6 +12,7 @@ vi.doMock("@electron/remote", () => ({
 		close = mockedRenderer.close;
 		setSize = vi.fn();
 		webContents = {
+			setZoomFactor: vi.fn(),
 			executeJavaScript: async () => ({ width: 100, height: 50 }),
 			capturePage: async () => ({ toPNG: () => Buffer.from("rendered image") }),
 		};
