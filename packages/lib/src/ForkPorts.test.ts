@@ -1,3 +1,7 @@
+import { Effect } from "effect";
+import { Path } from "effect/Path";
+import { NodePath } from "@effect/platform-node";
+const nativePath = Effect.runSync(Path.pipe(Effect.provide(NodePath.layer)));
 import { expect, test } from "@effect/vitest";
 import { parseMarkdownToADF } from "./MdToADF";
 import { shouldPublishMarkdownFile } from "./MarkdownWorkspace";
@@ -97,7 +101,7 @@ test("Jira shorthand preserves formatting and skips code and existing links", ()
 
 const planningFiles = ["one", "two"].map((name) => ({
 	folderName: "docs",
-	absoluteFilePath: `docs/${name}.md`,
+	absoluteFilePath: nativePath.resolve("docs", `${name}.md`),
 	fileName: `${name}.md`,
 	contents: name,
 	pageTitle: name,
@@ -183,4 +187,32 @@ test("ordering follows v2 cursors without treating cursors as request URLs", asy
 		"/wiki/api/v2/pages/1/children",
 	]);
 	expect(requests[1]!.searchParams?.cursor).toBe("next-page");
+});
+
+test("missing footnotes stay literal and nested excerpt footnotes have separate anchors", () => {
+	const source =
+		"Missing[^missing].\n\n[^outer]: Outer.\n\nOuter[^outer].\n\n```confluence-excerpt one\nInner[^outer].\n\n[^outer]: Inner.\n```\n\n```confluence-excerpt two\nInner[^outer].\n\n[^outer]: Other inner.\n```";
+	const adf = parseMarkdownToADF(source, "https://example.atlassian.net");
+	expect(JSON.stringify(adf)).toContain("Missing[^missing].");
+	const anchors: string[] = [];
+	const visit = (node: any) => {
+		if (node.attrs?.extensionKey === "anchor")
+			anchors.push(node.attrs.parameters.macroParams[""].value);
+		for (const child of node.content ?? []) visit(child);
+	};
+	visit(adf);
+	expect(anchors.length).toBe(6);
+	expect(new Set(anchors).size).toBe(anchors.length);
+});
+
+test("highlighted URL links produce valid inline cards without invalid text marks", () => {
+	const adf = parseMarkdownToADF(
+		"Before ==[https://example.com](https://example.com)== after",
+		"https://example.atlassian.net",
+	);
+	expect(adf.content[0]!.content).toEqual([
+		{ type: "text", text: "Before " },
+		{ type: "inlineCard", attrs: { url: "https://example.com" } },
+		{ type: "text", text: " after" },
+	]);
 });
