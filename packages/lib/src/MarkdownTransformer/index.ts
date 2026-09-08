@@ -1,3 +1,4 @@
+import footnotes, { footnoteAnchorAttributes } from "./footnotes";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { defaultSchema } from "@atlaskit/adf-schema/schema-default";
@@ -58,6 +59,7 @@ const pmSchemaToMdMapping: SchemaMapping = {
 };
 
 const mdToPmMapping = {
+	footnote_target: { node: "inlineExtension", attrs: footnoteAnchorAttributes },
 	math_inline: { node: "inlineExtension", attrs: mathAttributes },
 	math_block: { node: "extension", attrs: mathAttributes },
 	alignment: { mark: "alignment", attrs: (token: any) => ({ align: token.attrGet("align") }) },
@@ -180,6 +182,7 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 		tokenizer.use(highlightPlugin);
 		tokenizer.use(formattingPlugin);
 		tokenizer.use(mathPlugin);
+		tokenizer.use(footnotes);
 
 		(["nodes", "marks"] as (keyof SchemaMapping)[]).forEach((key) => {
 			for (const idx in pmSchemaToMdMapping[key]) {
@@ -240,8 +243,8 @@ export class MarkdownTransformer implements Transformer<Markdown> {
 		throw new Error("This is not implemented yet");
 	}
 
-	parse(content: Markdown): PMNode {
-		const pmnodes = this.markdownParser.parse(content);
+	parse(content: Markdown, fragment = "body"): PMNode {
+		const pmnodes = this.markdownParser.parse(content, { confluenceFragment: fragment });
 		if (!pmnodes) {
 			throw new Error("Unable to parse Markdown");
 		}

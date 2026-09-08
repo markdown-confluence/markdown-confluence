@@ -19,6 +19,7 @@ import { runOAuthUiIntegration, runDeviceAvailabilityIntegration } from "./integ
 const publishedNotes = [
 	"Release Tests/Release Tests.md",
 	"Release Tests/Formatting.md",
+	"Release Tests/Fork Features.md",
 	"Release Tests/Media.md",
 	"Release Tests/Embeds.md",
 	"Release Tests/Hierarchy/README.md",
@@ -265,6 +266,15 @@ export function runObsidianIntegration({
 					pages["Release Tests/Hierarchy/Child.md"].ancestors.at(-1),
 					pages["Release Tests/Hierarchy/README.md"].id,
 				);
+				const features = JSON.stringify(pages["Release Tests/Fork Features.md"].body);
+				for (const expected of [
+					'"extensionKey":"excerpt"',
+					'"extensionKey":"details"',
+					'"extensionKey":"anchor"',
+					'"text":"0"',
+					'"text":"false"',
+				])
+					assert.ok(features.includes(expected), expected);
 				return pages;
 			});
 		const publish = () =>
@@ -341,6 +351,47 @@ export function runObsidianIntegration({
 			yield* snapshot(),
 			restored,
 			"A page with an inline comment must remain unchanged on republish",
+		);
+
+		const forkControls = yield* evaluate(`
+            app.setting.open(); app.setting.openTabById('confluence-integration');
+            const names=[...app.setting.activeTab.containerEl.querySelectorAll('.setting-item-name')].map(el=>el.textContent);
+            for(const name of ['Excluded folders','Jira site URL','Mermaid output','Mermaid scale','Mermaid theme variables','Apply page ordering']) if(!names.includes(name)) throw Error('Missing control: '+name);
+            if(!app.commands.commands['confluence-integration:cancel-publish']) throw Error('Missing cancel command');
+            app.setting.close(); return JSON.stringify({controls:true});
+        `);
+		yield* fs.writeFileString(
+			path.join(reportDirectory, "fork-controls.json"),
+			JSON.stringify(forkControls),
+		);
+
+		const rendererOptions = yield* evaluate(`
+            const p=app.plugins.plugins['confluence-integration'];
+            const original=p.settings.mermaid;
+            const diagram='erDiagram\\n'+Array.from({length:12},(_,i)=>'ENTITY_'+i+' {\\n string label\\n int count\\n}').join('\\n')+'\\n'+Array.from({length:11},(_,i)=>'ENTITY_'+i+' ||--o{ ENTITY_'+(i+1)+' : contains').join('\\n');
+            const results=[];
+            try {
+                for(const options of [{format:'png',scale:1},{format:'png',scale:2},{format:'svg',scale:2}]) {
+                    p.settings.mermaid={...options,theme:'base',themeVariables:{primaryColor:'#ddebff'}};
+                    const publisher=await p.createPublisher();
+                    const renderer=publisher.adfProcessingPlugins.find(plugin=>plugin.mermaidRenderer)?.mermaidRenderer;
+                    if(!renderer) throw Error('Mermaid renderer not found');
+                    const bytes=(await renderer.captureMermaidCharts([{name:'large-er',data:diagram}])).get('large-er');
+                    if(options.format==='svg') {
+                        const svg=bytes.toString();
+                        if(!svg.includes('<svg')||!svg.includes('ENTITY_11')||!svg.includes('#ddebff')) throw Error('SVG verification: '+JSON.stringify({svg:svg.includes('<svg'),text:svg.includes('ENTITY_11'),color:svg.includes('#ddebff')}));
+                        results.push({format:'svg',text:true,color:true});
+                    } else {
+                        results.push({format:'png',scale:options.scale,width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20)});
+                    }
+                }
+                if(results[1].width<results[0].width*1.5||results[1].height<results[0].height*1.5) throw Error('Mermaid scale did not increase raster resolution');
+                return JSON.stringify(results);
+            } finally {p.settings.mermaid=original;}
+        `);
+		yield* fs.writeFileString(
+			path.join(reportDirectory, "mermaid-options.json"),
+			JSON.stringify(rendererOptions, null, 2),
 		);
 
 		// Exercise the real settings control, then publish an unchanged note with locking enabled.

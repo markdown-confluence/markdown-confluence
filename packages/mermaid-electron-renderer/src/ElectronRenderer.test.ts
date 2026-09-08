@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "@effect/vitest";
 
 const mockedRenderer = {
 	load: vi.fn(),
+	initialize: vi.fn(),
 	render: vi.fn(),
 	close: vi.fn(),
 };
@@ -12,6 +13,7 @@ vi.doMock("@electron/remote", () => ({
 		close = mockedRenderer.close;
 		setSize = vi.fn();
 		webContents = {
+			setZoomFactor: vi.fn(),
 			executeJavaScript: async () => ({ width: 100, height: 50 }),
 			capturePage: async () => ({ toPNG: () => Buffer.from("rendered image") }),
 		};
@@ -20,7 +22,7 @@ vi.doMock("@electron/remote", () => ({
 
 vi.doMock("mermaid", () => ({
 	default: {
-		initialize: vi.fn(),
+		initialize: mockedRenderer.initialize,
 		mermaidAPI: { updateSiteConfig: vi.fn() },
 		render: mockedRenderer.render,
 	},
@@ -73,4 +75,24 @@ test("uses each renderer's current theme document and preserves Unicode CSS", as
 	expect(await documents[0]!.text()).toContain('class="theme-dark"');
 	expect(await documents[0]!.text()).toContain("中文 café");
 	expect(await documents[1]!.text()).toContain('class="theme-light"');
+});
+
+test("initializes derived theme colors before rendering SVG and closes its hidden window", async () => {
+	const renderer = new ElectronMermaidRenderer([], [], {}, "", {
+		format: "svg",
+		theme: "base",
+		themeVariables: { primaryColor: "#ddebff" },
+	});
+	const charts = await renderer.captureMermaidCharts([
+		{ name: "chart", data: "graph TD; A-->B" },
+	]);
+	expect(mockedRenderer.initialize).toHaveBeenCalledWith(
+		expect.objectContaining({
+			theme: "base",
+			themeVariables: { primaryColor: "#ddebff" },
+			securityLevel: "strict",
+		}),
+	);
+	expect(charts.get("chart")?.toString()).toBe("<svg />");
+	expect(mockedRenderer.close).toHaveBeenCalledOnce();
 });

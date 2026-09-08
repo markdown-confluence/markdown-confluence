@@ -197,3 +197,9 @@ export {
 
 import { lockPageEditing } from "./PageEditLock";
 export { lockPageEditing };
+
+import { validatePublishingFiles, planPublishingFiles, publishingReport } from "./PublishingReport";
+export { validatePublishingFiles, planPublishingFiles, publishingReport };
+
+import { validateMermaidOptions, type MermaidOptions } from "./MermaidOptions";
+export { validateMermaidOptions, type MermaidOptions };

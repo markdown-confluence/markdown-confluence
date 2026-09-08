@@ -1,3 +1,4 @@
+import type { MermaidOptions } from "./MermaidOptions";
 import { Context } from "effect";
 
 export type ConfluenceAuthType = "basic" | "bearer" | "oauth2";
@@ -19,6 +20,10 @@ export type ConfluenceSettings = {
 	atlassianClientId: string;
 	atlassianClientSecret: string;
 	folderToPublish: string;
+	foldersToExclude?: readonly string[];
+	jiraUrl?: string;
+	orderPages?: boolean;
+	mermaid?: MermaidOptions;
 	tagsToPublish: string;
 	contentRoot: string;
 	firstHeadingPageTitle: boolean;
@@ -53,6 +58,10 @@ export const DEFAULT_SETTINGS: ConfluenceSettings = {
 	atlassianClientId: "",
 	atlassianClientSecret: "",
 	folderToPublish: "Confluence Pages",
+	foldersToExclude: [],
+	jiraUrl: "",
+	orderPages: false,
+	mermaid: {},
 	tagsToPublish: "",
 	contentRoot: ".",
 	firstHeadingPageTitle: false,

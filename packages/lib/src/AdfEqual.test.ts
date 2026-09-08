@@ -210,3 +210,41 @@ test("ignores transient server media metadata without mutating exports", () => {
 		);
 	}
 });
+
+test("canonicalizes card slugs and default tables without hiding authored attributes", () => {
+	const card = (url: string): ADFEntity => ({ type: "inlineCard", attrs: { url } });
+	const url = "https://example.atlassian.net/wiki/spaces/DOCS/pages/123";
+	expect(adfEqual(card(url + "/Title#A"), card(url + "#A"))).toBe(true);
+	expect(adfEqual(card(url + "#A"), card(url + "#B"))).toBe(false);
+	const table: ADFEntity = { type: "table", content: [] };
+	expect(adfEqual(table, { ...table, attrs: { layout: "default" } })).toBe(true);
+	expect(adfEqual(table, { ...table, attrs: { layout: "wide" } })).toBe(false);
+	expect(adfEqual(table, { ...table, attrs: { localId: "authored" } })).toBe(false);
+	expect(table.attrs).toBeUndefined();
+});
+
+test("ignores Cloud legacy aliases only for generated footnote anchors", () => {
+	const anchor = (name: string, legacy?: string): ADFEntity => ({
+		type: "inlineExtension",
+		attrs: {
+			extensionType: "com.atlassian.confluence.macro.core",
+			extensionKey: "anchor",
+			parameters: {
+				macroParams: {
+					"": { value: name },
+					...(legacy ? { legacyAnchorId: { value: legacy } } : {}),
+				},
+			},
+		},
+	});
+	expect(
+		adfEqual(
+			anchor("connie-fn-body-test", "Title-connie-fn-body-test"),
+			anchor("connie-fn-body-test"),
+		),
+	).toBe(true);
+	expect(adfEqual(anchor("authored", "Title-authored"), anchor("authored"))).toBe(false);
+	expect(
+		adfEqual(anchor("connie-fn-body-test", "other-target"), anchor("connie-fn-body-test")),
+	).toBe(false);
+});

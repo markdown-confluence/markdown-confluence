@@ -284,13 +284,19 @@ function runIntegration() {
 					);
 				});
 			const work = Effect.gen(function* () {
-				const live = ["live", "blogs", "edit-lock", "regressions", "obsidian"].includes(
-					options.profile,
-				);
+				const live = [
+					"live",
+					"blogs",
+					"edit-lock",
+					"fork-ports",
+					"regressions",
+					"obsidian",
+				].includes(options.profile);
 				const environment = [
 					"live",
 					"blogs",
 					"edit-lock",
+					"fork-ports",
 					"regressions",
 					"obsidian",
 					"vault",
@@ -368,6 +374,19 @@ function runIntegration() {
 					);
 					return;
 				}
+				if (options.profile === "fork-ports") {
+					yield* step(
+						"Selective fork features and comment preservation",
+						command(node, ["scripts/integration-fork-ports.js"], {
+							env: {
+								...environment,
+								CONFLUENCE_E2E_REPORT_DIRECTORY: reportDirectory,
+							},
+						}),
+					);
+					return;
+				}
+
 				if (options.profile === "edit-lock") {
 					yield* step(
 						"Live edit lock and publisher update",

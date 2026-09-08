@@ -1,3 +1,4 @@
+import { validateMermaidOptions, type MermaidOptions } from "./MermaidOptions";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { Config, ConfigProvider, Effect, Layer, Schema } from "effect";
@@ -26,7 +27,7 @@ type ArgumentDefinition = {
 type ArgumentValue = boolean | string | undefined;
 
 const confluenceConnectionFields = {
-	confluenceBaseUrl: Config.string("confluenceBaseUrl"),
+	confluenceBaseUrl: Config.string("confluenceBaseUrl").pipe(Config.withDefault("")),
 	confluenceSiteUrl: Config.string("confluenceSiteUrl").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.confluenceSiteUrl),
 	),
@@ -56,8 +57,27 @@ export const confluenceReadSettingsConfig = Config.all(confluenceConnectionField
 
 export const confluenceSettingsConfig = Config.all({
 	...confluenceConnectionFields,
-	confluenceParentId: Config.string("confluenceParentId"),
+	confluenceParentId: Config.string("confluenceParentId").pipe(Config.withDefault("")),
 	folderToPublish: Config.string("folderToPublish"),
+	orderPages: Config.boolean("orderPages").pipe(Config.withDefault(false)),
+	jiraUrl: Config.string("jiraUrl").pipe(Config.withDefault("")),
+	mermaid: Config.schema(
+		Schema.Struct({
+			format: Schema.optionalKey(Schema.Literals(["png", "svg"])),
+			scale: Schema.optionalKey(Schema.Number),
+			theme: Schema.optionalKey(
+				Schema.Literals(["default", "neutral", "dark", "forest", "base"]),
+			),
+			themeVariables: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+		}),
+		"mermaid",
+	).pipe(
+		Config.withDefault({}),
+		Config.map((value) => validateMermaidOptions(value as MermaidOptions)),
+	),
+	foldersToExclude: Config.schema(Schema.Array(Schema.String), "foldersToExclude").pipe(
+		Config.withDefault([]),
+	),
 	tagsToPublish: Config.string("tagsToPublish").pipe(
 		Config.withDefault(DEFAULT_SETTINGS.tagsToPublish),
 	),
@@ -280,6 +300,12 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "clientId", type: "string" },
 		{ name: "clientSecret", type: "string" },
 		{ name: "enableFolder", aliases: ["f"], type: "string" },
+		{ name: "mermaidFormat", type: "string" },
+		{ name: "mermaidScale", type: "string" },
+		{ name: "mermaidTheme", type: "string" },
+		{ name: "jiraUrl", type: "string" },
+		{ name: "orderPages", type: "boolean" },
+		{ name: "excludeFolders", type: "string" },
 		{ name: "tagsToPublish", aliases: ["t"], type: "string" },
 		{ name: "contentRoot", aliases: ["cr"], type: "string" },
 		{ name: "firstHeaderPageTitle", aliases: ["fh"], type: "boolean" },
@@ -291,6 +317,11 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 		{ name: "plantumlServerUrl", type: "string" },
 	]);
 
+	const mermaid = compactRecord({
+		format: options["mermaidFormat"],
+		scale: options["mermaidScale"],
+		theme: options["mermaidTheme"],
+	});
 	const plantuml = compactRecord({
 		enabled: options["plantumlEnabled"],
 		serverUrl: options["plantumlServerUrl"],
@@ -310,7 +341,16 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			atlassianClientId: options["clientId"],
 			atlassianClientSecret: options["clientSecret"],
 			folderToPublish: options["enableFolder"],
+			jiraUrl: options["jiraUrl"],
+			orderPages: options["orderPages"],
 			tagsToPublish: options["tagsToPublish"],
+			foldersToExclude:
+				typeof options["excludeFolders"] === "string"
+					? options["excludeFolders"]
+							.split(",")
+							.map((folder) => folder.trim())
+							.filter(Boolean)
+					: undefined,
 			contentRoot: options["contentRoot"],
 			firstHeadingPageTitle: options["firstHeaderPageTitle"],
 			forceOverwrite: options["forceOverwrite"],
@@ -319,6 +359,7 @@ function makeCommandLineProvider(argv: readonly string[]): ConfigProvider.Config
 			pageFooterMarkdown: options["pageFooterMarkdown"],
 		}),
 		...(Object.keys(plantuml).length > 0 ? { plantuml } : {}),
+		...(Object.keys(mermaid).length > 0 ? { mermaid } : {}),
 	});
 }
 
