@@ -5,8 +5,8 @@ allowBuilds:
     puppeteer: true
 
 overrides:
-    vite: npm:@voidzero-dev/vite-plus-core@0.1.24
-    vitest: npm:@voidzero-dev/vite-plus-test@0.1.24
+    "vite@*": npm:@voidzero-dev/vite-plus-core@0.3.0
+    "vitest@*": 4.1.11
     # Security fixes for versions pinned by upstream dependencies.
     "qs@<6.16.0": 6.16.0
     "linkify-it@<5.0.2": 5.0.2
@@ -14,8 +14,8 @@ overrides:
 
 peerDependencyRules:
     allowedVersions:
-        vitest: 0.1.24
-        vite: 0.1.24
+        vitest: 4.1.11
+        vite: 0.3.0
 
 packages:
     - packages/lib

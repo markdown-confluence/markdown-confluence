@@ -193,7 +193,7 @@ await runEffect(
 			const reordered = await orderedPublisher.publish();
 			for (const result of reordered) assert.ok(result.successfulUploadResult, result.reason);
 			const siblings = { results: [] };
-			for (let cursor; ; ) {
+			for (let cursor; ;) {
 				const batch = await client.sendRequest({
 					method: "GET",
 					url: `/wiki/api/v2/pages/${settings.confluenceParentId}/children`,

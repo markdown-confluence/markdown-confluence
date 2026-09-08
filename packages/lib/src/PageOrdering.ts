@@ -31,7 +31,7 @@ export async function orderPublishedPages(
 			.sort((left, right) => left.rank - right.rank || left.id.localeCompare(right.id))
 			.map((page) => page.id);
 		const current: string[] = [];
-		for (let cursor: string | undefined; ; ) {
+		for (let cursor: string | undefined; ;) {
 			const response = await client.sendRequest<{
 				results: { id: string }[];
 				limit?: number;

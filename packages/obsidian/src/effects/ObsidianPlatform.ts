@@ -21,17 +21,14 @@ export function ObsidianPlatformLive(app: App) {
 }
 
 const ObsidianPathLive: Layer.Layer<EffectPath.Path> = Layer.effect(EffectPath.Path)(
-	Effect.map(
-		Effect.provide(EffectPath.Path, EffectPath.layer),
-		(path): EffectPath.Path => ({
-			...path,
-			resolve: (...pathSegments) => {
-				const pathText = pathSegments.filter((segment) => segment.length > 0).join("/");
-				const rootedPath = pathText.startsWith("/") ? pathText : `/${pathText}`;
-				return path.normalize(rootedPath);
-			},
-		}),
-	),
+	Effect.map(Effect.provide(EffectPath.Path, EffectPath.layer), (path): EffectPath.Path => ({
+		...path,
+		resolve: (...pathSegments) => {
+			const pathText = pathSegments.filter((segment) => segment.length > 0).join("/");
+			const rootedPath = pathText.startsWith("/") ? pathText : `/${pathText}`;
+			return path.normalize(rootedPath);
+		},
+	})),
 );
 
 function ObsidianFileSystemLive(app: App): Layer.Layer<EffectFileSystem.FileSystem> {

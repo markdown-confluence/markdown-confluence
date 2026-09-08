@@ -9,8 +9,8 @@ import type { PublisherFunctions } from "./ADFProcessingPlugins/types";
 
 const parse = (source: string) => parseMarkdownToADF(source, "https://example.atlassian.net");
 const expressions = (source: string) =>
-	filter(parse(source), (node) => !!readMathExpression(node)).map(
-		(node) => readMathExpression(node)!,
+	filter(parse(source), (node) => !!readMathExpression(node)).map((node) =>
+		readMathExpression(node)!,
 	);
 
 describe("math parsing", () => {

@@ -30,8 +30,8 @@ export class MathRendererPlugin implements ADFProcessingPlugin<
 > {
 	constructor(private renderer: MathRenderer) {}
 	extract(adf: JSONDocNode): MathExpression[] {
-		const expressions = filter(adf, (node) => !!readMathExpression(node)).map(
-			(node) => readMathExpression(node)!,
+		const expressions = filter(adf, (node) => !!readMathExpression(node)).map((node) =>
+			readMathExpression(node)!,
 		);
 		return [
 			...new Map(expressions.map((expression) => [expression.name, expression])).values(),
