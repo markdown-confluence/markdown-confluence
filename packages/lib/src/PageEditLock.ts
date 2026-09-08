@@ -14,7 +14,7 @@ type RestrictionPage = {
 /** Read each collection independently: restrictions paginate users and groups separately. */
 async function editors(client: Client, id: string, kind: "user" | "group") {
 	const values: string[] = [];
-	for (let start = 0; ; ) {
+	for (let start = 0; ;) {
 		const page = await client.sendRequest<RestrictionPage>({
 			method: "GET",
 			url: `/wiki/rest/api/content/${encodeURIComponent(id)}/restriction/byOperation/update`,
