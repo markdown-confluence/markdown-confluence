@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
@@ -53,19 +54,21 @@ function mermaidRendererHtmlPlugin(): Plugin {
 						);
 					}
 
+					const script = `\n${chunk.code.replace(/<\/script/giu, "<\\/script")}\n    `;
+					const scriptHash = createHash("sha256").update(script).digest("base64");
+
 					// Vite emits ES-module helpers such as import.meta; a classic script cannot parse them.
 					const fileContents = `
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-${scriptHash}'; style-src 'unsafe-inline'; img-src 'none'; font-src 'none'; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'" />
     <title>Mermaid Chart</title>
   </head>
   <body>
     <div id="graphDiv"></div>
-    <script type="module">
-${chunk.code}
-    </script>
+    <script type="module">${script}</script>
   </body>
 </html>
 `;

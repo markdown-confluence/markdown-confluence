@@ -213,7 +213,17 @@ export default class ConfluencePlugin extends Plugin {
 				throw new Error("Missing theme");
 		}
 
-		extraStyleSheets.push("app://obsidian.md/app.css");
+		// Copy trusted, already-loaded styles without allowing the render window to
+		// fetch app:// files, remote fonts, imports or other stylesheet resources.
+		for (const sheet of document.styleSheets) {
+			if (sheet.href === "app://obsidian.md/app.css") {
+				try {
+					extraStyles.push(Array.from(sheet.cssRules, (rule) => rule.cssText).join("\n"));
+				} catch {
+					// A stylesheet unavailable to CSSOM falls back to the selected Mermaid theme.
+				}
+			}
+		}
 
 		// @ts-expect-error
 		const cssTheme = this.app.vault?.getConfig("cssTheme") as string;

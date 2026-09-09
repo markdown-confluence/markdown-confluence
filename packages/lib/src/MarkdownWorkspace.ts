@@ -1,7 +1,15 @@
 import { FileSystem } from "effect/FileSystem";
 import { Path } from "effect/Path";
+import { PlatformError } from "effect/PlatformError";
 import { Console, Context, Effect, Layer } from "effect";
 import { lookup } from "mime-types";
+import { isPathInside, makeContentRootPaths } from "./ContentRootPaths";
+import {
+	makeMarkdownExpansionBudget,
+	MarkdownExpansionLimitsService,
+	validateMarkdownExpansionLimits,
+	type MarkdownExpansionBudget,
+} from "./MarkdownExpansionBudget";
 import {
 	ConfluencePerPageAllValues,
 	ConfluencePerPageConfig,
@@ -87,14 +95,27 @@ export function makeMarkdownWorkspaceEffect(
 		const sourceTransformer = yield* MarkdownSourceTransformerService;
 		const contentRoot = normalizeContentRoot(settings.contentRoot, path);
 		yield* validateContentRoot(fs, contentRoot);
+		const contentPaths = yield* makeContentRootPaths(fs, path, contentRoot);
+		const expansionLimits = { ...(yield* MarkdownExpansionLimitsService) };
+		yield* validateMarkdownExpansionLimits(expansionLimits);
 		const workspaceSettings = {
 			...settings,
 			contentRoot,
 		};
 
-		const getFileContent = (absoluteFilePath: string): Effect.Effect<MarkdownContent, Error> =>
+		const getFileContent = (
+			absoluteFilePath: string,
+			budget?: MarkdownExpansionBudget,
+		): Effect.Effect<MarkdownContent, Error> =>
 			Effect.gen(function* () {
-				const fileContent = yield* fs.readFileString(absoluteFilePath, "utf-8");
+				const canonicalFilePath = yield* contentPaths.existing(absoluteFilePath);
+				const stats = yield* fs.stat(canonicalFilePath);
+				const readBudget =
+					budget ?? makeMarkdownExpansionBudget(expansionLimits, absoluteFilePath);
+				yield* readBudget.checkSize(stats.size);
+				const fileContent = yield* fs.readFileString(canonicalFilePath, "utf-8");
+				yield* readBudget.checkText(fileContent);
+				yield* readBudget.charge(Buffer.byteLength(fileContent, "utf8"));
 				const parsed = parseMarkdownFrontmatter(fileContent);
 
 				return {
@@ -108,21 +129,19 @@ export function makeMarkdownWorkspaceEffect(
 			values: Partial<ConfluencePerPageAllValues>,
 		): Effect.Effect<void, Error> =>
 			Effect.gen(function* () {
-				const actualAbsoluteFilePath = yield* resolveContentFilePath(
-					fs,
-					path,
-					workspaceSettings.contentRoot,
-					absoluteFilePath,
-				);
-				const actualFile = yield* fs.stat(actualAbsoluteFilePath).pipe(
+				const actualAbsoluteFilePath = yield* contentPaths.input(absoluteFilePath);
+				const actualFile = yield* contentPaths.existing(actualAbsoluteFilePath).pipe(
+					Effect.flatMap((canonical) => fs.stat(canonical)),
 					Effect.map((stats) => stats.type === "File"),
 					Effect.catch((error) =>
-						logUpdateMarkdownValuesError({
-							actualAbsoluteFilePath,
-							absoluteFilePath,
-							contentRoot: workspaceSettings.contentRoot,
-							error,
-						}).pipe(Effect.as(false)),
+						error instanceof PlatformError && error.reason._tag === "NotFound"
+							? logUpdateMarkdownValuesError({
+									actualAbsoluteFilePath,
+									absoluteFilePath,
+									contentRoot: workspaceSettings.contentRoot,
+									error,
+								}).pipe(Effect.as(false))
+							: Effect.fail(error),
 					),
 				);
 
@@ -152,7 +171,8 @@ export function makeMarkdownWorkspaceEffect(
 				}
 
 				const updatedData = stringifyMarkdownFrontmatter(fileContent, fm);
-				yield* fs.writeFileString(actualAbsoluteFilePath, updatedData);
+				const canonicalWritePath = yield* contentPaths.existing(actualAbsoluteFilePath);
+				yield* fs.writeFileString(canonicalWritePath, updatedData);
 			}).pipe(Effect.mapError(toError));
 
 		const transformSource = (
@@ -174,7 +194,7 @@ export function makeMarkdownWorkspaceEffect(
 				const fileName = path.basename(absoluteFilePath);
 				return {
 					folderName: path.basename(path.parse(absoluteFilePath).dir),
-					absoluteFilePath: absoluteFilePath.replace(workspaceSettings.contentRoot, ""),
+					absoluteFilePath: path.relative(contentPaths.root, absoluteFilePath),
 					fileName,
 					pageTitle: path.basename(fileName, path.extname(fileName)),
 					contents: content,
@@ -188,42 +208,81 @@ export function makeMarkdownWorkspaceEffect(
 			applySourceTransforms = true,
 		): Effect.Effect<MarkdownFile, Error> =>
 			Effect.gen(function* () {
+				const budget = makeMarkdownExpansionBudget(expansionLimits, absoluteFilePath);
+				yield* budget.checkText(file.contents);
+				yield* budget.charge(Buffer.byteLength(file.contents, "utf8"));
+				const canonicalFilePath = yield* contentPaths.existing(absoluteFilePath);
 				const transformed = applySourceTransforms
 					? yield* transformSource(file.contents, absoluteFilePath, file.frontmatter)
 					: file.contents;
 				const contents = yield* expandMarkdownEmbeds(
 					transformed,
 					absoluteFilePath,
-					new Set([absoluteFilePath]),
+					new Set([canonicalFilePath]),
 					applySourceTransforms,
+					budget,
 				);
 				return { ...file, contents };
 			});
 
 		const loadMarkdownFile = (absoluteFilePath: string): Effect.Effect<MarkdownFile, Error> =>
-			Effect.flatMap(readMarkdownFile(absoluteFilePath), (file) =>
-				prepareMarkdownFile(file, absoluteFilePath),
-			);
+			Effect.gen(function* () {
+				const logicalPath = yield* contentPaths.input(absoluteFilePath);
+				return yield* prepareMarkdownFile(
+					yield* readMarkdownFile(logicalPath),
+					logicalPath,
+				);
+			}).pipe(Effect.mapError(toError));
 
-		const loadMarkdownFiles = (folderPath: string): Effect.Effect<MarkdownFile[], Error> =>
+		const loadMarkdownFiles = (
+			folderPath: string,
+			visitedDirectories = new Set<string>(),
+		): Effect.Effect<MarkdownFile[], Error> =>
 			Effect.gen(function* () {
 				const files: MarkdownFile[] = [];
-
-				const entries = yield* fs.readDirectory(folderPath);
-
-				for (const entry of entries) {
-					const absoluteFilePath = path.join(folderPath, entry);
-					const stats = yield* fs.stat(absoluteFilePath);
-
+				const canonicalFolder = yield* contentPaths.existing(folderPath);
+				if (visitedDirectories.has(canonicalFolder)) return files;
+				visitedDirectories.add(canonicalFolder);
+				const entries = yield* Effect.forEach(
+					(yield* fs.readDirectory(canonicalFolder)).sort(),
+					(entry) =>
+						Effect.gen(function* () {
+							const absoluteFilePath = path.join(folderPath, entry);
+							const canonicalFilePath =
+								yield* contentPaths.existing(absoluteFilePath);
+							const stats = yield* fs.stat(canonicalFilePath);
+							const publishFolder = path.resolve(
+								contentPaths.root,
+								settings.folderToPublish,
+							);
+							// Prefer the requested logical route, then the real directory route.
+							// An earlier alias must not consume a selected directory's identity.
+							const selectedRoute =
+								publishFolder !== contentPaths.root &&
+								stats.type === "Directory" &&
+								(isPathInside(path, absoluteFilePath, publishFolder) ||
+									isPathInside(path, publishFolder, absoluteFilePath));
+							const canonicalRoute =
+								path.relative(contentPaths.root, absoluteFilePath) ===
+								path.relative(contentPaths.canonicalRoot, canonicalFilePath);
+							return {
+								entry,
+								absoluteFilePath,
+								stats,
+								priority: selectedRoute ? 0 : canonicalRoute ? 1 : 2,
+							};
+						}),
+				);
+				entries.sort((first, second) => first.priority - second.priority);
+				for (const { entry, absoluteFilePath, stats } of entries) {
 					if (stats.type === "File" && path.extname(entry) === ".md") {
-						const file = yield* readMarkdownFile(absoluteFilePath);
-						files.push(file);
+						files.push(yield* readMarkdownFile(absoluteFilePath));
 					} else if (stats.type === "Directory") {
-						const subFiles = yield* loadMarkdownFiles(absoluteFilePath);
-						files.push(...subFiles);
+						files.push(
+							...(yield* loadMarkdownFiles(absoluteFilePath, visitedDirectories)),
+						);
 					}
 				}
-
 				return files;
 			}).pipe(Effect.mapError(toError));
 
@@ -275,52 +334,45 @@ export function makeMarkdownWorkspaceEffect(
 			startingDirectory: string,
 		): Effect.Effect<string | null, Error> {
 			return Effect.gen(function* () {
-				const potentialAbsolutePathForFileName = path.join(startingDirectory, fileName);
-				if (yield* isFile(fs, potentialAbsolutePathForFileName)) {
-					return potentialAbsolutePathForFileName;
-				}
-
-				const matchingFiles: string[] = [];
-				const directoriesToSearch: string[] = [startingDirectory];
-
-				while (directoriesToSearch.length > 0) {
-					const currentDirectory = directoriesToSearch.shift();
-					if (!currentDirectory) {
-						continue;
+				let searchRoot = yield* contentPaths.assertLogical(startingDirectory);
+				// Reject an escaping authored reference, but do not reinterpret a safe
+				// missing relative reference as an escape during ancestor fallback.
+				yield* contentPaths.assertLogical(path.resolve(searchRoot, fileName));
+				const visitedDirectories = new Set<string>();
+				while (true) {
+					const candidate = path.resolve(searchRoot, fileName);
+					if (
+						isPathInside(path, contentPaths.root, candidate) &&
+						(yield* fs.exists(candidate))
+					) {
+						const canonicalCandidate = yield* contentPaths.existing(candidate);
+						if ((yield* fs.stat(canonicalCandidate)).type === "File") return candidate;
 					}
-
-					const entries = yield* fs.readDirectory(currentDirectory);
-
-					for (const entry of entries) {
-						const fullPath = path.join(currentDirectory, entry);
-						const stats = yield* fs.stat(fullPath);
-
-						if (
-							stats.type === "File" &&
-							entry.toLowerCase() === fileName.toLowerCase()
-						) {
-							matchingFiles.push(fullPath);
-						} else if (
-							stats.type === "Directory" &&
-							fullPath.startsWith(workspaceSettings.contentRoot)
-						) {
-							directoriesToSearch.push(fullPath);
+					const directories = [searchRoot];
+					for (
+						let directoryIndex = 0;
+						directoryIndex < directories.length;
+						directoryIndex++
+					) {
+						const directory = directories[directoryIndex]!;
+						const canonicalDirectory = yield* contentPaths.existing(directory);
+						if (visitedDirectories.has(canonicalDirectory)) continue;
+						visitedDirectories.add(canonicalDirectory);
+						for (const entry of (yield* fs.readDirectory(canonicalDirectory)).sort()) {
+							const fullPath = path.join(directory, entry);
+							const canonicalEntry = yield* contentPaths.existing(fullPath);
+							const stats = yield* fs.stat(canonicalEntry);
+							if (
+								stats.type === "File" &&
+								entry.toLowerCase() === fileName.toLowerCase()
+							)
+								return fullPath;
+							if (stats.type === "Directory") directories.push(fullPath);
 						}
 					}
+					if (searchRoot === contentPaths.root) return null;
+					searchRoot = path.dirname(searchRoot);
 				}
-
-				const firstMatchedFile = matchingFiles[0];
-				if (firstMatchedFile) {
-					return firstMatchedFile;
-				}
-
-				const parentDirectory = path.dirname(startingDirectory);
-
-				if (parentDirectory === startingDirectory) {
-					return null;
-				}
-
-				return yield* findClosestFile(fileName, parentDirectory);
 			}).pipe(Effect.mapError(toError));
 		}
 
@@ -329,9 +381,21 @@ export function makeMarkdownWorkspaceEffect(
 			referencedFromFilePath: string,
 			seenFiles: Set<string>,
 			applySourceTransforms: boolean,
+			budget: MarkdownExpansionBudget,
 		): Effect.Effect<string, Error> {
 			return Effect.gen(function* () {
-				let expandedContents = "";
+				yield* budget.checkText(contents);
+				yield* budget.charge(Buffer.byteLength(contents, "utf8"));
+				const chunks: string[] = [];
+				let expandedBytes = 0;
+				const append = (chunk: string) =>
+					Effect.gen(function* () {
+						const bytes = Buffer.byteLength(chunk, "utf8");
+						yield* budget.checkSize(expandedBytes + bytes);
+						yield* budget.charge(bytes);
+						expandedBytes += bytes;
+						chunks.push(chunk);
+					});
 				let currentIndex = 0;
 
 				for (const match of findMarkdownEmbeds(contents)) {
@@ -339,11 +403,11 @@ export function makeMarkdownWorkspaceEffect(
 					const embedStart = match.index!;
 					const embedEnd = embedStart + match[0].length;
 
-					expandedContents += contents.slice(currentIndex, embedStart);
+					yield* append(contents.slice(currentIndex, embedStart));
 					currentIndex = embedEnd;
 
 					if (!embedTarget) {
-						expandedContents += match[0];
+						yield* append(match[0]);
 						continue;
 					}
 
@@ -353,12 +417,13 @@ export function makeMarkdownWorkspaceEffect(
 						referencedFromFilePath,
 						seenFiles,
 						applySourceTransforms,
+						budget,
 					);
-					expandedContents += replacement;
+					yield* append(replacement);
 				}
 
-				expandedContents += contents.slice(currentIndex);
-				return expandedContents;
+				yield* append(contents.slice(currentIndex));
+				return chunks.join("");
 			}).pipe(Effect.mapError(toError));
 		}
 
@@ -368,6 +433,7 @@ export function makeMarkdownWorkspaceEffect(
 			referencedFromFilePath: string,
 			seenFiles: Set<string>,
 			applySourceTransforms: boolean,
+			budget: MarkdownExpansionBudget,
 		): Effect.Effect<string, Error> {
 			return Effect.gen(function* () {
 				const [targetValue, fragment] = (rawTarget.split("|")[0] ?? "").split("#");
@@ -381,6 +447,7 @@ export function makeMarkdownWorkspaceEffect(
 					return originalEmbed;
 				}
 
+				yield* budget.visit();
 				const markdownTarget = targetExtension ? target : `${target}.md`;
 				const embeddedFilePath = yield* findClosestFile(
 					markdownTarget,
@@ -390,13 +457,14 @@ export function makeMarkdownWorkspaceEffect(
 				if (!embeddedFilePath) {
 					return originalEmbed;
 				}
-				if (seenFiles.has(embeddedFilePath) || seenFiles.size >= 50) {
+				const canonicalEmbeddedFile = yield* contentPaths.existing(embeddedFilePath);
+				if (seenFiles.has(canonicalEmbeddedFile) || seenFiles.size >= 50) {
 					return yield* Effect.fail(
 						new Error(`Circular or excessively nested Markdown embed: ${rawTarget}`),
 					);
 				}
 
-				const embeddedContent = yield* getFileContent(embeddedFilePath);
+				const embeddedContent = yield* getFileContent(embeddedFilePath, budget);
 				const selectedContent = yield* Effect.try({
 					try: () => selectEmbeddedMarkdown(embeddedContent.content, fragment),
 					catch: toError,
@@ -411,10 +479,12 @@ export function makeMarkdownWorkspaceEffect(
 				const expandedEmbeddedContent = yield* expandMarkdownEmbeds(
 					transformedContent,
 					embeddedFilePath,
-					new Set([...seenFiles, embeddedFilePath]),
+					new Set([...seenFiles, canonicalEmbeddedFile]),
 					applySourceTransforms,
+					budget,
 				);
 
+				yield* budget.charge(Buffer.byteLength(expandedEmbeddedContent, "utf8"));
 				const targets = new Set<string>();
 				rebaseEmbeddedLinks(expandedEmbeddedContent, (link) => {
 					targets.add(link);
@@ -422,6 +492,7 @@ export function makeMarkdownWorkspaceEffect(
 				});
 				const resolvedLinks = new Map<string, string>();
 				for (const link of targets) {
+					yield* budget.visit();
 					const sourcePath = yield* findClosestFile(
 						path.extname(link) ? link : `${link}.md`,
 						path.dirname(embeddedFilePath),
@@ -434,10 +505,20 @@ export function makeMarkdownWorkspaceEffect(
 								.replaceAll("\\", "/"),
 						);
 				}
-				const rebased = rebaseEmbeddedLinks(
-					expandedEmbeddedContent,
-					(link) => resolvedLinks.get(link) ?? link,
-				);
+				yield* budget.charge(Buffer.byteLength(expandedEmbeddedContent, "utf8"));
+				const rebased = yield* Effect.try({
+					try: () =>
+						rebaseEmbeddedLinks(
+							expandedEmbeddedContent,
+							(link) => resolvedLinks.get(link) ?? link,
+							expansionLimits.maxPageBytes,
+						),
+					catch: toError,
+				});
+				yield* budget.checkText(rebased);
+				const wrappedBytes = Buffer.byteLength(rebased.trim(), "utf8") + 4;
+				yield* budget.checkSize(wrappedBytes);
+				yield* budget.charge(wrappedBytes);
 				return `\n\n${rebased.trim()}\n\n`;
 			}).pipe(Effect.mapError(toError));
 		}
@@ -447,19 +528,21 @@ export function makeMarkdownWorkspaceEffect(
 			referencedFromFilePath: string,
 		): Effect.Effect<BinaryFile | false, Error> =>
 			Effect.gen(function* () {
+				const referencePath = yield* contentPaths.reference(referencedFromFilePath);
 				const absoluteFilePath = yield* findClosestFile(
 					searchPath,
-					path.dirname(path.join(workspaceSettings.contentRoot, referencedFromFilePath)),
+					path.dirname(referencePath),
 				);
 
 				if (absoluteFilePath) {
-					const fileContents = yield* fs.readFile(absoluteFilePath);
+					const canonicalFilePath = yield* contentPaths.existing(absoluteFilePath);
+					const fileContents = yield* fs.readFile(canonicalFilePath);
 
 					const mimeType =
 						lookup(path.extname(absoluteFilePath)) || "application/octet-stream";
 					return {
 						contents: fileContents,
-						filePath: absoluteFilePath.replace(workspaceSettings.contentRoot, ""),
+						filePath: path.relative(contentPaths.root, absoluteFilePath),
 						filename: path.basename(absoluteFilePath),
 						mimeType,
 					};
@@ -473,13 +556,17 @@ export function makeMarkdownWorkspaceEffect(
 			referencedFromFilePath: string,
 		): Effect.Effect<string | false, Error> =>
 			Effect.gen(function* () {
+				const referencePath = yield* contentPaths.reference(referencedFromFilePath);
 				const absoluteFilePath = yield* findClosestFile(
 					searchPath,
-					path.dirname(path.join(workspaceSettings.contentRoot, referencedFromFilePath)),
+					path.dirname(referencePath),
 				);
 
 				if (absoluteFilePath) {
-					return yield* fs.readFileString(absoluteFilePath, "utf-8");
+					return yield* fs.readFileString(
+						yield* contentPaths.existing(absoluteFilePath),
+						"utf-8",
+					);
 				}
 
 				return false;
@@ -509,51 +596,11 @@ function validateContentRoot(fs: FileSystem, contentRoot: string): Effect.Effect
 	});
 }
 
-function resolveContentFilePath(
-	fs: FileSystem,
-	path: Path,
-	contentRoot: string,
-	filePath: string,
-): Effect.Effect<string, Error> {
-	return Effect.gen(function* () {
-		if (path.isAbsolute(filePath)) {
-			return filePath;
-		}
-
-		const pathFromContentRoot = path.resolve(contentRoot, filePath);
-		const pathFromWorkingDirectory = path.resolve(filePath);
-
-		if (isPathInside(path, contentRoot, pathFromWorkingDirectory)) {
-			const workingDirectoryPathExists = yield* fs.exists(pathFromWorkingDirectory);
-			const contentRootPathExists = yield* fs.exists(pathFromContentRoot);
-			if (workingDirectoryPathExists || !contentRootPathExists) {
-				return pathFromWorkingDirectory;
-			}
-		}
-
-		return pathFromContentRoot;
-	});
-}
-
-function isPathInside(path: Path, parentPath: string, childPath: string): boolean {
-	const relativePath = path.relative(parentPath, childPath);
-	return (
-		relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
-	);
-}
-
 function normalizeContentRoot(contentRoot: string, path: Path): string {
 	const resolvedContentRoot = path.resolve(contentRoot);
 	return resolvedContentRoot.endsWith(path.sep)
 		? resolvedContentRoot
 		: `${resolvedContentRoot}${path.sep}`;
-}
-
-function isFile(fs: FileSystem, filePath: string): Effect.Effect<boolean, never> {
-	return fs.stat(filePath).pipe(
-		Effect.map((stats) => stats.type === "File"),
-		Effect.catch(() => Effect.succeed(false)),
-	);
 }
 
 export function shouldPublishMarkdownFile(

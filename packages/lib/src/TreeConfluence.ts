@@ -119,7 +119,7 @@ export function ensureAllFilesExistInConfluenceEffect(
 			catch: toError,
 		});
 
-		yield* Effect.sync(() => prepareAdfToUpload(pages, settings));
+		yield* Effect.sync(() => prepareAdfToUpload(pages, settings, { mapInlineComments: false }));
 		for (const page of pages) {
 			if (isMarkdownBackedFile(page.file)) {
 				yield* updateMarkdownValuesEffect(page.file.absoluteFilePath, {

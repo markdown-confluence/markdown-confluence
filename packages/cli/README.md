@@ -192,6 +192,8 @@ The CLI exchanges these credentials for a bearer token against the Atlassian tok
 
 Use `contentRoot` to choose the directory the tool scans. Use `folderToPublish` to choose which Markdown files under that root are published by default.
 
+All referenced files and metadata writes must remain inside `contentRoot`, including symlink destinations. Lookup stops at that root. Markdown expansion and comment matching use finite resource limits, and local Mermaid diagrams cannot load external resources. See [file access and publishing limits](../../documentation/SECURITY_LIMITS.md) for defaults and error behavior.
+
 This scans the whole repository but only publishes Markdown files under `docs` unless another file opts in with `connie-publish: true`:
 
 ```json

@@ -7,7 +7,7 @@ interface RemoteWindowedCustomFunctions {
 	renderMermaidChart: (
 		mermaidData: string,
 		mermaidConfig: unknown,
-	) => Promise<{ width: number; height: number }>;
+	) => Promise<{ width: number; height: number; svg: string }>;
 }
 
 export class PuppeteerMermaidRenderer implements MermaidRenderer {
@@ -45,7 +45,6 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 			headless: true,
 			protocolTimeout: this.protocolTimeout,
 			args: [
-				"--ignore-certificate-errors",
 				"--no-sandbox",
 				"--disable-setuid-sandbox",
 				"--disable-accelerated-2d-canvas",
@@ -64,6 +63,35 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 						"mermaid_renderer.html",
 						import.meta.url,
 					).href;
+					let initialDocumentPending = true;
+					let blockedResourceRequest = false;
+					await page.setRequestInterception(true);
+					page.on("request", (request) => {
+						const allowRendererDocument =
+							initialDocumentPending &&
+							request.url() === pathToLoad &&
+							request.isNavigationRequest() &&
+							request.resourceType() === "document" &&
+							request.frame() === page.mainFrame();
+						if (allowRendererDocument) initialDocumentPending = false;
+						else blockedResourceRequest = true;
+						// A page can close while an intercepted request is being resolved.
+						void (
+							allowRendererDocument
+								? request.continue()
+								: request.abort("blockedbyclient")
+						).catch(() => undefined);
+					});
+					await page.evaluateOnNewDocument(() => {
+						Object.defineProperty(window, "open", {
+							value: () => null,
+							writable: false,
+							configurable: false,
+						});
+					});
+					page.on("popup", (popup) => {
+						if (popup) void popup.close().catch(() => undefined);
+					});
 
 					await page.goto(pathToLoad);
 
@@ -108,6 +136,9 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 							securityLevel: "strict",
 						},
 					);
+					if (blockedResourceRequest) {
+						throw new Error("Mermaid rendering attempted to load a blocked resource");
+					}
 					await page.setViewport({
 						width: result.width,
 						height: result.height,
@@ -115,11 +146,7 @@ export class PuppeteerMermaidRenderer implements MermaidRenderer {
 					});
 					const imageBuffer =
 						this.format === "svg"
-							? Buffer.from(
-									await page.evaluate(
-										() => document.querySelector("svg")!.outerHTML,
-									),
-								)
+							? Buffer.from(result.svg)
 							: Buffer.from(await page.screenshot());
 					capturedCharts.set(chart.name, imageBuffer);
 				} finally {

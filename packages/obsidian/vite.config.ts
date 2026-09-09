@@ -4,6 +4,8 @@ import { Effect } from "effect";
 import { defineConfig } from "vite-plus";
 import { externalize, generatedBanner } from "../../vite.package-build.ts";
 
+import { mermaidRuntimeBundlePlugin } from "../mermaid-electron-renderer/rendererBundlePlugin";
+
 const resolvePath = (...pathSegments: ReadonlyArray<string>) =>
 	Effect.runSync(
 		Effect.gen(function* () {
@@ -32,6 +34,7 @@ export default defineConfig(({ mode }) => {
 	const isDevelopment = mode === "development";
 
 	return {
+		plugins: [mermaidRuntimeBundlePlugin()],
 		build: {
 			emptyOutDir: true,
 			lib: {
