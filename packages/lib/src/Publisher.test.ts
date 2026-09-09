@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { expect, test } from "@effect/vitest";
+import { expect, test, vi } from "@effect/vitest";
+import * as inlineComments from "./InlineCommentMapping";
 import { createAuthenticatedConfluenceClient } from "./AuthenticatedConfluenceClient";
 import { Effect } from "effect";
 import { Path } from "effect/Path";
@@ -599,6 +600,7 @@ async function publishSinglePage({
 	lock,
 	sendRequest,
 	markdown = "Hello",
+	publishFilter,
 	existingAdf = parseMarkdownToADF(markdown, settings.confluenceBaseUrl),
 	lastUpdatedBy = "current-user",
 	initialVersion = 1,
@@ -615,6 +617,7 @@ async function publishSinglePage({
 	lock?: boolean;
 	sendRequest?: RequiredConfluenceClient["sendRequest"];
 	markdown?: string;
+	publishFilter?: string;
 	existingAdf?: JSONDocNode;
 	lastUpdatedBy?: string;
 	initialVersion?: number;
@@ -660,7 +663,9 @@ async function publishSinglePage({
 	const publisher = new Publisher(settings, confluenceClient, plugins);
 
 	const result = await runEffect(
-		publisher.publishEffect().pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
+		publisher
+			.publishEffect(publishFilter)
+			.pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
 	);
 
 	return {
@@ -893,4 +898,139 @@ test("reports a lock failure separately after content publishing", async () => {
 	});
 	expect(result[0]?.reason).toContain("Content publishing completed, but edit locking failed");
 	expect(result[0]?.reason).not.toContain("secret token");
+});
+
+function annotatedPublisherDocument(count: number): JSONDocNode {
+	return {
+		type: "doc",
+		version: 1,
+		content: [
+			{
+				type: "paragraph",
+				content: [
+					{
+						type: "text",
+						text: "Anchor",
+						marks: Array.from({ length: count }, (_, index) => ({
+							type: "annotation",
+							attrs: { annotationType: "inlineComment", id: `comment-${index}` },
+						})),
+					},
+				],
+			},
+		],
+	} as JSONDocNode;
+}
+
+test("does not remap comments on conflicting or excluded pages", async () => {
+	const remap = vi.spyOn(inlineComments, "remapInlineComments");
+	try {
+		const conflict = await publishSinglePage({
+			markdown: "Anchor",
+			existingAdf: annotatedPublisherDocument(1_001),
+			lastUpdatedBy: "other-user",
+		});
+		expect(conflict.result[0]?.reason).toContain("Page last updated by another user");
+		expect(conflict.updateContentRequests).toEqual([]);
+		const excluded = await publishSinglePage({
+			markdown: "Anchor",
+			existingAdf: annotatedPublisherDocument(1_001),
+			publishFilter: "/docs/other.md",
+		});
+		expect(excluded.result).toEqual([]);
+		expect(excluded.updateContentRequests).toEqual([]);
+		expect(remap).not.toHaveBeenCalled();
+	} finally {
+		remap.mockRestore();
+	}
+});
+
+test("force overwrite still runs bounded comment remapping", async () => {
+	const remap = vi.spyOn(inlineComments, "remapInlineComments");
+	try {
+		const published = await publishSinglePage({
+			markdown: "Anchor",
+			existingAdf: annotatedPublisherDocument(1),
+			lastUpdatedBy: "other-user",
+			settings: { ...testPublishSettings, forceOverwrite: true },
+		});
+		expect(published.result[0]?.successfulUploadResult).toBeDefined();
+		expect(remap).toHaveBeenCalledTimes(1);
+	} finally {
+		remap.mockRestore();
+	}
+});
+
+test("an annotation extraction limit becomes a page failure without a content update", async () => {
+	const published = await publishSinglePage({
+		markdown: "Anchor",
+		existingAdf: annotatedPublisherDocument(1_001),
+	});
+	expect(published.result[0]?.reason).toContain(
+		"Inline comment safety limit reached (annotationsPerPage)",
+	);
+	expect(published.updateContentRequests).toEqual([]);
+});
+
+test("a comment limit on one page does not prevent another eligible page publishing", async () => {
+	const updated: string[] = [];
+	const client = makePublisherTestConfluenceClient({
+		existingAdf: annotatedPublisherDocument(1_001),
+		lastUpdatedBy: "current-user",
+		initialVersion: 1,
+		pageSpaceKey: "SPACE",
+		attachments: [],
+		uploadRequests: [],
+		getLatestVersion: () => 1,
+		updateContent: async (request) => {
+			updated.push(request.id);
+			return request;
+		},
+	});
+	const getContent = client.content.getContentById.bind(client.content);
+	client.content.getContentById = (async (request: { id: string; expand?: string[] }) => {
+		const page = await getContent(request);
+		if (request.id === "parent-id") return page;
+		return {
+			...page,
+			id: request.id,
+			title: request.id,
+			...(request.id === "good"
+				? {
+						body: {
+							atlas_doc_format: {
+								value: JSON.stringify(
+									parseMarkdownToADF(
+										"Before",
+										testPublishSettings.confluenceBaseUrl,
+									),
+								),
+							},
+						},
+					}
+				: {}),
+		};
+	}) as typeof client.content.getContentById;
+	const workspace = new InMemoryMarkdownWorkspace(
+		["limited", "good"].map((id) => ({
+			folderName: "docs",
+			absoluteFilePath: `/docs/${id}.md`,
+			fileName: `${id}.md`,
+			pageTitle: id,
+			contents: "After",
+			frontmatter: { "connie-page-id": id },
+		})),
+	);
+	const publisher = new Publisher(testPublishSettings, client, []);
+	const result = await runEffect(
+		publisher.publishEffect().pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
+	);
+	expect(result.find((page) => page.node.file.pageId === "limited")?.reason).toContain(
+		"Inline comment safety limit",
+	);
+	expect(
+		result.find((page) => page.node.file.pageId === "good")?.successfulUploadResult
+			?.contentResult,
+	).toBe("updated");
+	expect(updated).toEqual(["good"]);
 });

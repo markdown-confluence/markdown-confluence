@@ -23,6 +23,7 @@ import { ConfluenceSettings, ConfluenceSettingsService } from "./Settings";
 import { ensureAllFilesExistInConfluenceEffect } from "./TreeConfluence";
 import { createFolderStructureEffect as createLocalAdfTreeEffect } from "./TreeLocal";
 import { isEqual } from "./isEqual";
+import { remapInlineComments } from "./InlineCommentMapping";
 
 export interface LocalAdfFileTreeNode {
 	name: string;
@@ -284,6 +285,7 @@ export class Publisher {
 		const adfProcessingPlugins = this.adfProcessingPlugins;
 		const settings = this.settings;
 		const getMyAccountId = () => this.myAccountId;
+		const onProgress = this.onProgress;
 
 		return Effect.gen(function* () {
 			const lock = adfFile.frontmatter["connie-lock"];
@@ -298,6 +300,19 @@ export class Publisher {
 				return yield* Effect.fail(
 					new Error(
 						`Cannot convert between content types. From ${existingPageData.contentType} to ${adfFile.contentType}`,
+					),
+				);
+			}
+
+			const mappedComments = yield* Effect.try({
+				try: () => remapInlineComments(adfFile.contents, existingPageData.adfContent),
+				catch: (error) => error,
+			});
+			adfFile.contents = mappedComments.document;
+			if (mappedComments.limitReached) {
+				yield* Effect.sync(() =>
+					onProgress(
+						`Inline comment matching reached a safety limit for ${adfFile.pageTitle}; unmapped annotations were preserved.`,
 					),
 				);
 			}

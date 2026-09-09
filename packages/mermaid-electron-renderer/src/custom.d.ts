@@ -20,3 +20,8 @@ declare module "sort-any" {
 declare namespace React {
 	type StatelessComponent<P> = React.FunctionComponent<P>;
 }
+
+declare module "virtual:markdown-confluence-mermaid-runtime" {
+	const runtime: string;
+	export default runtime;
+}

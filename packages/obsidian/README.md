@@ -87,6 +87,8 @@ Obsidian note embeds are expanded before publishing, so a published note can inc
 ![[Shared Notes/Release Checklist]]
 ```
 
+References must remain inside the configured content root. Recursive embeds have finite count and size limits; existing comments are preserved when bounded matching cannot place them. Mermaid runs in an isolated renderer without external image, font or stylesheet resources. See [file access and publishing limits](../../documentation/SECURITY_LIMITS.md).
+
 ### Example Workflow
 1. Install and configure the `confluence-integration` plugin.
 2. Create a folder in your Obsidian vault named "Confluence Pages" (or the folder name you specified in the settings).

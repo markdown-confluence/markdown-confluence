@@ -1,7 +1,10 @@
 import { defineConfig } from "vite-plus";
 import { packageDependencyExternals } from "../../vite.package-build.ts";
 
+import { mermaidRuntimeBundlePlugin } from "./rendererBundlePlugin";
+
 export default defineConfig({
+	plugins: [mermaidRuntimeBundlePlugin()],
 	build: {
 		emptyOutDir: true,
 		lib: {

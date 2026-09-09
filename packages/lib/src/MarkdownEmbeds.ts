@@ -114,7 +114,14 @@ function escapeRegExp(value: string): string {
 }
 
 /** Rebase links in an included note while leaving code examples and absolute URLs intact. */
-export function rebaseEmbeddedLinks(markdown: string, resolve: (target: string) => string): string {
+export function rebaseEmbeddedLinks(
+	markdown: string,
+	resolve: (target: string) => string,
+	maxOutputBytes = Number.MAX_SAFE_INTEGER,
+): string {
+	let outputBytes = Buffer.byteLength(markdown, "utf8");
+	if (outputBytes > maxOutputBytes)
+		throw new Error("Markdown expansion limit (rebased page bytes) exceeded");
 	const ranges = literalRanges(markdown);
 	return markdown.replace(
 		/(!?\[\[)([^\]\n]+)(]])|(!?\[[^\]\n]*\]\()(<[^>\n]+>|[^\s)]+)([^)\n]*\))/g,
@@ -142,9 +149,14 @@ export function rebaseEmbeddedLinks(markdown: string, resolve: (target: string) 
 				return match;
 			const suffix = split < 0 ? "" : value.slice(split);
 			const resolved = resolve(target) + suffix;
-			return wikiOpen
+			const replacement = wikiOpen
 				? `${wikiOpen}${resolved}${wikiClose}`
 				: `${linkOpen}${angled ? `<${resolved}>` : resolved}${linkClose}`;
+			outputBytes +=
+				Buffer.byteLength(replacement, "utf8") - Buffer.byteLength(match, "utf8");
+			if (outputBytes > maxOutputBytes)
+				throw new Error("Markdown expansion limit (rebased page bytes) exceeded");
+			return replacement;
 		},
 	);
 }
