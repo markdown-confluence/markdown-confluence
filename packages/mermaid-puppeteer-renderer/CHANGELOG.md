@@ -1,5 +1,19 @@
 # Changelog
 
+## [7.0.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v7.0.0...@markdown-confluence/mermaid-puppeteer-renderer-v7.0.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* secure file access, embeds, comments, and Mermaid rendering ([#925](https://github.com/markdown-confluence/markdown-confluence/issues/925)) ([1392d56](https://github.com/markdown-confluence/markdown-confluence/commit/1392d5651c7268a9ddc52db7688f40a879b56614))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @markdown-confluence/lib bumped to 7.0.1
+
 ## [7.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/mermaid-puppeteer-renderer-v6.0.0...@markdown-confluence/mermaid-puppeteer-renderer-v7.0.0) (2026-09-08)
 
 

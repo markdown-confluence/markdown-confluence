@@ -1,5 +1,22 @@
 # Changelog
 
+## [7.0.1](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v7.0.0...@markdown-confluence/cli-v7.0.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* prevent unsafe publishing and preserve document content ([#921](https://github.com/markdown-confluence/markdown-confluence/issues/921)) ([23fa0db](https://github.com/markdown-confluence/markdown-confluence/commit/23fa0db35f7fb10d7e4dd2e9cd589067de660477))
+* secure file access, embeds, comments, and Mermaid rendering ([#925](https://github.com/markdown-confluence/markdown-confluence/issues/925)) ([1392d56](https://github.com/markdown-confluence/markdown-confluence/commit/1392d5651c7268a9ddc52db7688f40a879b56614))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @markdown-confluence/lib bumped to 7.0.1
+    * @markdown-confluence/mermaid-puppeteer-renderer bumped to 7.0.1
+    * @markdown-confluence/plantuml-renderer bumped to 7.0.1
+
 ## [7.0.0](https://github.com/markdown-confluence/markdown-confluence/compare/@markdown-confluence/cli-v6.0.0...@markdown-confluence/cli-v7.0.0) (2026-09-08)
 
 
