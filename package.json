@@ -31,7 +31,10 @@
 		"test:integration:live": "vp run test:integration live",
 		"test:integration:docker": "vp run test:integration docker",
 		"test:integration:obsidian": "vp run test:integration obsidian",
-		"test:vault": "vp run test:integration vault"
+		"test:vault": "vp run test:integration vault",
+		"mutation:plan": "node scripts/mutation-ci.js plan",
+		"mutation:shard": "node scripts/mutation-ci.js run",
+		"mutation:aggregate": "node scripts/mutation-ci.js aggregate"
 	},
 	"devDependencies": {
 		"@effect-oxlint/effect-oxlint": "jsr:^0.2.0",
@@ -39,10 +42,14 @@
 		"@effect/vitest": "4.0.0-rc.112",
 		"@stryker-mutator/core": "9.6.1",
 		"@stryker-mutator/typescript-checker": "9.6.1",
+		"@stryker-mutator/vitest-runner": "9.6.1",
 		"@types/node": "^25.9.1",
 		"@vitest/runner": "4.1.11",
 		"effect": "4.0.0-rc.112",
 		"husky": "^9.1.7",
+		"minimatch": "10.2.6",
+		"mutation-testing-elements": "3.7.3",
+		"mutation-testing-metrics": "3.7.3",
 		"oxlint": "1.66.0",
 		"tslib": "2.8.1",
 		"typescript": "^6.0.3",
