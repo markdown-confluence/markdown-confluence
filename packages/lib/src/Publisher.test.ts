@@ -973,6 +973,12 @@ test("an annotation extraction limit becomes a page failure without a content up
 });
 
 test("a comment limit on one page does not prevent another eligible page publishing", async () => {
+	const filesystemPath = await runEffect(
+		Effect.gen(function* () {
+			return yield* Path;
+		}),
+	);
+	const contentRoot = filesystemPath.join(filesystemPath.sep, "docs");
 	const updated: string[] = [];
 	const client = makePublisherTestConfluenceClient({
 		existingAdf: annotatedPublisherDocument(1_001),
@@ -1014,14 +1020,14 @@ test("a comment limit on one page does not prevent another eligible page publish
 	const workspace = new InMemoryMarkdownWorkspace(
 		["limited", "good"].map((id) => ({
 			folderName: "docs",
-			absoluteFilePath: `/docs/${id}.md`,
+			absoluteFilePath: filesystemPath.join(contentRoot, `${id}.md`),
 			fileName: `${id}.md`,
 			pageTitle: id,
 			contents: "After",
 			frontmatter: { "connie-page-id": id },
 		})),
 	);
-	const publisher = new Publisher(testPublishSettings, client, []);
+	const publisher = new Publisher({ ...testPublishSettings, contentRoot }, client, []);
 	const result = await runEffect(
 		publisher.publishEffect().pipe(Effect.provideService(MarkdownWorkspaceService, workspace)),
 	);
