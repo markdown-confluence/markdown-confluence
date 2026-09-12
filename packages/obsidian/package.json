@@ -20,13 +20,13 @@
 		"@markdown-confluence/plantuml-renderer": "workspace:*",
 		"mime-types": "^3.0.2",
 		"react": "^19.2.7",
-		"react-dom": "^19.2.7"
+		"react-dom": "^19.3.0"
 	},
 	"devDependencies": {
 		"@effect/platform-node": "4.0.0-rc.112",
 		"@types/mime-types": "^3.0.1",
 		"@types/react": "^19.2.15",
-		"@types/react-dom": "^19.2.3",
+		"@types/react-dom": "^19.3.0",
 		"csstype": "^3.2.3",
 		"effect": "4.0.0-rc.112",
 		"mermaid": "^11.16.1",
