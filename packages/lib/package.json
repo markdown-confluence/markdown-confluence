@@ -54,8 +54,8 @@
 		"test": "vp test run --root ../.. --config vitest.config.ts"
 	},
 	"dependencies": {
-		"@atlaskit/adf-schema": "^57.3.4",
-		"@atlaskit/adf-utils": "^20.9.4",
+		"@atlaskit/adf-schema": "^57.4.5",
+		"@atlaskit/adf-utils": "^20.9.11",
 		"@atlaskit/editor-json-transformer": "^9.8.0",
 		"@atlaskit/editor-prosemirror": "^8.0.3",
 		"@effect/platform-node": "4.0.0-rc.112",
