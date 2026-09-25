@@ -1,6 +1,6 @@
 import { expect, test } from "@effect/vitest";
 import { ADFEntity } from "@atlaskit/adf-utils/types";
-import { adfEqual } from "./AdfEqual";
+import { adfEqual, publishedAdfEqual } from "./AdfEqual";
 
 test("ignores Confluence macro metadata when comparing raw ADF", () => {
 	const serverAdf = docWithJiraMacro({
@@ -247,4 +247,37 @@ test("ignores Cloud legacy aliases only for generated footnote anchors", () => {
 	expect(
 		adfEqual(anchor("connie-fn-body-test", "other-target"), anchor("connie-fn-body-test")),
 	).toBe(false);
+});
+
+test("ignores localIds Confluence assigned to nodes the generated document left unnamed", () => {
+	const paragraph = (attrs?: Record<string, string>): ADFEntity => ({
+		type: "paragraph",
+		...(attrs ? { attrs } : {}),
+		content: [{ type: "text", text: "Unchanged" }],
+	});
+	const doc = (...content: ADFEntity[]): ADFEntity => ({ type: "doc", version: 1, content });
+
+	expect(publishedAdfEqual(doc(paragraph({ localId: "40e69692c088" })), doc(paragraph()))).toBe(
+		true,
+	);
+	expect(
+		publishedAdfEqual(
+			doc({
+				...paragraph({ localId: "40e69692c088" }),
+				content: [{ type: "text", text: "Old" }],
+			}),
+			doc(paragraph()),
+		),
+	).toBe(false);
+});
+
+test("still compares localIds the generated document assigns", () => {
+	const task = (localId: string): ADFEntity => ({
+		type: "doc",
+		version: 1,
+		content: [{ type: "taskList", attrs: { localId }, content: [] }],
+	});
+
+	expect(publishedAdfEqual(task("task-list-1"), task("task-list-1"))).toBe(true);
+	expect(publishedAdfEqual(task("task-list-1"), task("task-list-2"))).toBe(false);
 });
