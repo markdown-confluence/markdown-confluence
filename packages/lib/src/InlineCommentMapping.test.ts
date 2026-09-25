@@ -199,3 +199,19 @@ test("all budget fields must be finite and are snapshotted before use", () => {
 	expect(() => work.cell()).toThrow(InlineCommentLimitError);
 	expect(Object.isFrozen(work.limits)).toBe(true);
 });
+
+test("does not add a fallback entry for a comment that is anchored elsewhere", () => {
+	// Confluence can split one comment across several annotated text nodes. When
+	// one part maps and another cannot, the comment is already anchored.
+	const source = document([text("Intro. Question? Next sentence.")]);
+	const remote = document([
+		text("Intro. "),
+		annotated("Question?", "comment"),
+		annotated(" Removed wording", "comment"),
+		text(" Next sentence."),
+	]);
+	const result = remapInlineComments(source, remote);
+	expect(result.unmappedCount).toBe(0);
+	expect(ids(source)).toEqual(["comment"]);
+	expect(source.content).toHaveLength(1);
+});
