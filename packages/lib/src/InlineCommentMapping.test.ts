@@ -215,3 +215,13 @@ test("does not add a fallback entry for a comment that is anchored elsewhere", (
 	expect(ids(source)).toEqual(["comment"]);
 	expect(source.content).toHaveLength(1);
 });
+
+test("lists each unmappable comment once, joining its fragments", () => {
+	const source = document([text("Entirely new text.")]);
+	const remote = document([annotated("Old question?", "comment"), annotated(" ", "comment")]);
+	const result = remapInlineComments(source, remote);
+	expect(result.unmappedCount).toBe(1);
+	const fallbackList = source.content.at(-1)!;
+	expect(fallbackList.content).toHaveLength(1);
+	expect(JSON.stringify(fallbackList)).toContain('"text":"Old question? "');
+});
