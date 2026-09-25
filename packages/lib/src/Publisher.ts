@@ -23,7 +23,8 @@ import { ConfluenceSettings, ConfluenceSettingsService } from "./Settings";
 import { ensureAllFilesExistInConfluenceEffect } from "./TreeConfluence";
 import { createFolderStructureEffect as createLocalAdfTreeEffect } from "./TreeLocal";
 import { isEqual } from "./isEqual";
-import { remapInlineComments } from "./InlineCommentMapping";
+import { INLINE_COMMENT_LIMITS, remapInlineComments } from "./InlineCommentMapping";
+import { resolvedInlineCommentIds } from "./ResolvedInlineComments";
 
 export interface LocalAdfFileTreeNode {
 	name: string;
@@ -304,11 +305,55 @@ export class Publisher {
 				);
 			}
 
+			const hasInlineComments = JSON.stringify(existingPageData.adfContent).includes(
+				'"inlineComment"',
+			);
+			const resolvedCommentIds = hasInlineComments
+				? yield* Effect.tryPromise({
+						try: () =>
+							resolvedInlineCommentIds(
+								confluenceClient,
+								adfFile.pageId,
+								adfFile.contentType,
+							),
+						catch: (error) => error,
+					}).pipe(
+						Effect.catch((error) =>
+							Effect.sync(() => {
+								onProgress(
+									`Could not read resolved inline comments for ${adfFile.pageTitle} (${error instanceof Error ? error.message : String(error)}); any that cannot be mapped are kept in the fallback section.`,
+								);
+								return new Set<string>();
+							}),
+						),
+					)
+				: new Set<string>();
 			const mappedComments = yield* Effect.try({
-				try: () => remapInlineComments(adfFile.contents, existingPageData.adfContent),
+				try: () =>
+					remapInlineComments(
+						adfFile.contents,
+						existingPageData.adfContent,
+						INLINE_COMMENT_LIMITS,
+						resolvedCommentIds,
+					),
 				catch: (error) => error,
 			});
 			adfFile.contents = mappedComments.document;
+			const { unmappedCount, droppedResolvedCount } = mappedComments;
+			if (unmappedCount > 0) {
+				yield* Effect.sync(() =>
+					onProgress(
+						`${unmappedCount} inline comment${unmappedCount === 1 ? "" : "s"} could not be mapped for ${adfFile.pageTitle}; ${unmappedCount === 1 ? "it was" : "they were"} preserved in a fallback section at the end of the page.`,
+					),
+				);
+			}
+			if (droppedResolvedCount > 0) {
+				yield* Effect.sync(() =>
+					onProgress(
+						`${droppedResolvedCount} resolved inline comment${droppedResolvedCount === 1 ? "" : "s"} on ${adfFile.pageTitle} no longer ${droppedResolvedCount === 1 ? "matches" : "match"} any text and ${droppedResolvedCount === 1 ? "was" : "were"} dropped.`,
+					),
+				);
+			}
 			if (mappedComments.limitReached) {
 				yield* Effect.sync(() =>
 					onProgress(
