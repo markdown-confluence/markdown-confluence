@@ -132,6 +132,9 @@ jobs:
     - name: Verify built CLI and real Chromium rendering on Windows
       run: vp run test:integration
 
+    - name: Verify isolated npm packages and retained consumer locks on Windows
+      run: vp run test:integration packages --skip-build
+
     - name: Upload integration reports
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

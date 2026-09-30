@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { Effect } from "effect";
 import { promisify } from "node:util";
+import { pathToFileURL } from "node:url";
 
 const execute = promisify(execFile);
 
@@ -19,13 +20,23 @@ export async function verifyConsumerUpgrades(tarball, reportDirectory, fs, path,
 	const results = [];
 	const command = (executable, args, cwd) =>
 		execute(executable, args, { cwd, timeout: 180_000, maxBuffer: 8 * 1024 * 1024 });
+	// Invoke npm's JS entrypoint directly: npm.cmd cannot be execFile'd on Windows.
+	const npmEntries = [
+		join(path.dirname(node), "node_modules/npm/bin/npm-cli.js"),
+		join(path.dirname(node), "../lib/node_modules/npm/bin/npm-cli.js"),
+	];
+	let npmEntry;
+	for (const entry of npmEntries) {
+		if (await Effect.runPromise(fs.exists(entry))) {
+			npmEntry = entry;
+			break;
+		}
+	}
+	assert.ok(npmEntry, "Node runtime must include npm's JavaScript entrypoint");
+	const npm = (args, cwd) => command(node, [npmEntry, ...args], cwd);
 	const install = (manager, cwd, candidate) =>
 		manager === "npm"
-			? command(
-					"npm",
-					["install", candidate, "--ignore-scripts", "--no-audit", "--no-fund"],
-					cwd,
-				)
+			? npm(["install", candidate, "--ignore-scripts", "--no-audit", "--no-fund"], cwd)
 			: command("vp", ["install", "--no-frozen-lockfile"], cwd);
 	const importScript = `import assert from 'node:assert/strict';
 const library = await import('@markdown-confluence/lib');
@@ -62,7 +73,7 @@ assert.equal(await library.runEffect(Effect.gen(function* () {
 			join(baseline, "index.js"),
 			'export { NodeServices } from "@effect/platform-node";\n',
 		);
-		await command("npm", ["pack", "--ignore-scripts"], baseline);
+		await npm(["pack", "--ignore-scripts"], baseline);
 		const baselineTarball = join(baseline, `markdown-confluence-lib-${version}.tgz`);
 		for (const manager of ["npm", "pnpm"]) {
 			for (const retainedLock of [false, true]) {
@@ -73,7 +84,9 @@ assert.equal(await library.runEffect(Effect.gen(function* () {
 					type: "module",
 					packageManager: "pnpm@11.1.2",
 					dependencies: {
-						"@markdown-confluence/lib": `file:${retainedLock ? baselineTarball : resolve(tarball)}`,
+						"@markdown-confluence/lib": pathToFileURL(
+							retainedLock ? baselineTarball : resolve(tarball),
+						).href,
 					},
 				};
 				await writeFile(join(cwd, ".node-version"), "24.15.0\n");
@@ -115,7 +128,9 @@ assert.equal(await library.runEffect(Effect.gen(function* () {
 						failed,
 						"The legacy adapter fixture must reproduce the incompatible locked tree",
 					);
-					metadata.dependencies["@markdown-confluence/lib"] = `file:${resolve(tarball)}`;
+					metadata.dependencies["@markdown-confluence/lib"] = pathToFileURL(
+						resolve(tarball),
+					).href;
 					await writeFile(join(cwd, "package.json"), JSON.stringify(metadata));
 					// Keep the existing lock and node_modules: no overrides, dedupe or reset.
 				}
