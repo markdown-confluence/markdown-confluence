@@ -556,7 +556,8 @@ function runIntegration() {
 							`${metadata.name.replace("@", "").replace("/", "-")}-${metadata.version}.tgz`,
 						);
 						assert.ok(yield* fs.exists(tarball), `Missing packed ${metadata.name}`);
-						dependencies[metadata.name] = pathToFileURL(tarball).href;
+						// Package managers accept file paths, not percent-encoded import URLs.
+						dependencies[metadata.name] = `file:${tarball.replaceAll("\\", "/")}`;
 					}
 					yield* fs.writeFileString(
 						path.join(cwd, "package.json"),
@@ -597,7 +598,7 @@ function runIntegration() {
 						"Library-only fresh and retained-lock npm/pnpm consumers",
 						Effect.promise(() =>
 							verifyConsumerUpgrades(
-								fileURLToPath(dependencies["@markdown-confluence/lib"]),
+								dependencies["@markdown-confluence/lib"].slice("file:".length),
 								reportDirectory,
 								fs,
 								path,

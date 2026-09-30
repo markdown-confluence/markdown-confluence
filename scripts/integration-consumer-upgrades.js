@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { Effect } from "effect";
 import { promisify } from "node:util";
-import { pathToFileURL } from "node:url";
 
 const execute = promisify(execFile);
 
@@ -84,9 +83,7 @@ assert.equal(await library.runEffect(Effect.gen(function* () {
 					type: "module",
 					packageManager: "pnpm@11.1.2",
 					dependencies: {
-						"@markdown-confluence/lib": pathToFileURL(
-							retainedLock ? baselineTarball : resolve(tarball),
-						).href,
+						"@markdown-confluence/lib": `file:${(retainedLock ? baselineTarball : resolve(tarball)).replaceAll("\\", "/")}`,
 					},
 				};
 				await writeFile(join(cwd, ".node-version"), "24.15.0\n");
@@ -128,9 +125,8 @@ assert.equal(await library.runEffect(Effect.gen(function* () {
 						failed,
 						"The legacy adapter fixture must reproduce the incompatible locked tree",
 					);
-					metadata.dependencies["@markdown-confluence/lib"] = pathToFileURL(
-						resolve(tarball),
-					).href;
+					metadata.dependencies["@markdown-confluence/lib"] =
+						`file:${resolve(tarball).replaceAll("\\", "/")}`;
 					await writeFile(join(cwd, "package.json"), JSON.stringify(metadata));
 					// Keep the existing lock and node_modules: no overrides, dedupe or reset.
 				}
