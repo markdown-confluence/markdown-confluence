@@ -17,8 +17,22 @@ export async function verifyConsumerUpgrades(tarball, reportDirectory, fs, path,
 		fs.makeTempDirectory({ prefix: "confluence-consumer-upgrades-" }),
 	);
 	const results = [];
-	const command = (executable, args, cwd) =>
-		execute(executable, args, { cwd, timeout: 180_000, maxBuffer: 8 * 1024 * 1024 });
+	const command = async (executable, args, cwd, timeout = 180_000) => {
+		try {
+			return await execute(executable, args, { cwd, timeout, maxBuffer: 8 * 1024 * 1024 });
+		} catch (error) {
+			console.error({
+				executable,
+				args,
+				cwd,
+				killed: error.killed,
+				code: error.code,
+				stdout: error.stdout,
+				stderr: error.stderr,
+			});
+			throw error;
+		}
+	};
 	// Invoke npm's JS entrypoint directly: npm.cmd cannot be execFile'd on Windows.
 	const npmEntries = [
 		join(path.dirname(node), "node_modules/npm/bin/npm-cli.js"),
@@ -32,7 +46,7 @@ export async function verifyConsumerUpgrades(tarball, reportDirectory, fs, path,
 		}
 	}
 	assert.ok(npmEntry, "Node runtime must include npm's JavaScript entrypoint");
-	const npm = (args, cwd) => command(node, [npmEntry, ...args], cwd);
+	const npm = (args, cwd) => command(node, [npmEntry, ...args], cwd, 600_000);
 	const install = (manager, cwd, candidate) =>
 		manager === "npm"
 			? npm(["install", candidate, "--ignore-scripts", "--no-audit", "--no-fund"], cwd)
