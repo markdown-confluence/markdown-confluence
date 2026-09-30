@@ -16,6 +16,7 @@ import {
 	validateLiveEnvironment,
 	liveConnectionSettings,
 } from "./integration-options.js";
+import { verifyConsumerUpgrades } from "./integration-consumer-upgrades.js";
 import { prepareIntegrationVault } from "./integration-vault.js";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
@@ -592,6 +593,19 @@ function runIntegration() {
 								`Missing packed declarations: ${packageName}`,
 							);
 					}
+					yield* step(
+						"Library-only fresh and retained-lock npm/pnpm consumers",
+						Effect.promise(() =>
+							verifyConsumerUpgrades(
+								fileURLToPath(dependencies["@markdown-confluence/lib"]),
+								reportDirectory,
+								fs,
+								path,
+								node,
+								rootPackage.version,
+							),
+						),
+					);
 					report.packages = Object.keys(dependencies).map((name) => ({
 						name,
 						version: rootPackage.version,

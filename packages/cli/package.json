@@ -34,11 +34,10 @@
 		"lint": "vp lint src"
 	},
 	"dependencies": {
-		"@effect/platform-node": "4.0.0-rc.112",
-		"@effect/platform-node-shared": "4.0.0-rc.112",
 		"effect": "4.0.0-rc.112"
 	},
 	"devDependencies": {
+		"@effect/platform-node": "4.0.0-rc.112",
 		"@markdown-confluence/lib": "workspace:*",
 		"@markdown-confluence/mermaid-puppeteer-renderer": "workspace:*",
 		"@markdown-confluence/plantuml-renderer": "workspace:*",

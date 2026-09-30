@@ -30,7 +30,7 @@ default always builds first. Unit tests and static checks remain separate:
 | Command | What it exercises | Requirements |
 | --- | --- | --- |
 | `vp run test:integration` | Built library, CLI, real Chromium/Mermaid, artifact validation | Installed workspace dependencies |
-| `vp run test:integration:packages` | All five actual npm tarballs installed in a fresh consumer, then the same runtime checks | npm registry access; pnpm/browser caches are reused |
+| `vp run test:integration:packages` | All five npm tarballs in a fresh consumer; library-only fresh installs and retained-lock upgrades in npm and pnpm; runtime checks | npm registry access; pnpm/browser caches are reused |
 | `vp run test:integration:live` | Live Confluence publish, unchanged republish, one-note update, built CLI, error recovery | Dedicated space and test credentials |
 | `vp run test:integration blogs` | Live blog create/update, attachments, label add/remove, unchanged publishing and CLI ADF file export | Dedicated space with Blogs enabled and blog-create permission |
 | `vp run test:integration:docker` | Local image build, container CLI conversion, unconfigured-publishing failure exit | Running Docker engine |
@@ -279,3 +279,22 @@ round-trips its media IDs, and verifies its version remains unchanged. See
 
 See [Cloud API verification](CLOUD_API_MIGRATION.md) for the current endpoint,
 authentication and feature matrix, including the live device-grant limitation.
+
+### Node adapter packaging regressions
+
+The library bundles the locked Node filesystem/path implementations while keeping
+Effect external at the declared exact version. Node adapters are build dependencies
+in the library, CLI and Puppeteer renderer: consumers do not resolve the adapter's
+broad prerelease edge. The Puppeteer adapter is needed by its build configuration;
+CLI already bundles it. Generated declarations do not reference these adapters.
+This modestly increases the library bundle and requires rebuilding to adopt future
+adapter fixes, without changing the public services or upgrading Effect.
+
+The package profile tests the library alone with npm and pnpm, both fresh and with
+a retained legacy lockfile. A minimal legacy fixture recreates the former external
+adapter boundary at the candidate package version. Its failing Effect import and
+original lockfile are saved in the integration report before upgrading only the
+candidate tarball. No consumer lockfile reset, Effect override or dedupe is used.
+The revised import, Markdown conversion and bundled filesystem/path services must
+then work. Existing all-package integration also exercises Chromium Mermaid/math;
+PlantUML uses a deterministic fake fetch, and the CommonJS check uses dynamic import.
