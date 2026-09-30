@@ -46,7 +46,55 @@ export async function verifyConsumerUpgrades(tarball, reportDirectory, fs, path,
 		}
 	}
 	assert.ok(npmEntry, "Node runtime must include npm's JavaScript entrypoint");
-	const npm = (args, cwd) => command(node, [npmEntry, ...args], cwd, 600_000);
+	let npmCommandNumber = 0;
+	const npm = async (args, cwd) => {
+		const log = join(reportDirectory, `npm-command-${++npmCommandNumber}.json`);
+		const startedAt = new Date().toISOString();
+		try {
+			const result = await command(
+				node,
+				[npmEntry, ...args, "--timing", "--loglevel=verbose"],
+				cwd,
+				600_000,
+			);
+			await writeFile(
+				log,
+				JSON.stringify(
+					{
+						args,
+						cwd,
+						startedAt,
+						finishedAt: new Date().toISOString(),
+						status: "passed",
+						...result,
+					},
+					null,
+					2,
+				),
+			);
+			return result;
+		} catch (error) {
+			await writeFile(
+				log,
+				JSON.stringify(
+					{
+						args,
+						cwd,
+						startedAt,
+						finishedAt: new Date().toISOString(),
+						status: "failed",
+						killed: error.killed,
+						code: error.code,
+						stdout: error.stdout,
+						stderr: error.stderr,
+					},
+					null,
+					2,
+				),
+			);
+			throw error;
+		}
+	};
 	const install = (manager, cwd, candidate) =>
 		manager === "npm"
 			? npm(["install", candidate, "--ignore-scripts", "--no-audit", "--no-fund"], cwd)

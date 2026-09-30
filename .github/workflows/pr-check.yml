@@ -133,6 +133,7 @@ jobs:
       run: vp run test:integration
 
     - name: Verify isolated npm packages and retained consumer locks on Windows
+      timeout-minutes: 25
       run: vp run test:integration packages --skip-build
 
     - name: Upload integration reports
