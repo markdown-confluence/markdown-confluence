@@ -105,13 +105,13 @@ importers:
     dependencies:
       '@atlaskit/adf-schema':
         specifier: ^57.3.4
-        version: 57.3.4(react@19.2.8)
+        version: 57.3.4(react@19.3.0)
       '@atlaskit/adf-utils':
         specifier: ^20.9.4
-        version: 20.9.4(react@18.3.1)
+        version: 20.9.4(react@19.3.0)
       '@atlaskit/editor-json-transformer':
         specifier: ^9.8.0
-        version: 9.8.0(react@18.3.1)
+        version: 9.8.0(react@19.3.0)
       '@atlaskit/editor-prosemirror':
         specifier: ^8.0.3
         version: 8.0.3
@@ -221,7 +221,6 @@ importers:
         specifier: 4.0.0-rc.112
         version: 4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1(@opentelemetry/api@1.9.1))
 
-
   packages/obsidian:
     dependencies:
       '@markdown-confluence/lib':
@@ -237,11 +236,11 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
       react:
-        specifier: ^19.2.7
-        version: 19.2.8
+        specifier: ^19.3.0
+        version: 19.3.0
       react-dom:
         specifier: ^19.2.7
-        version: 19.2.8(react@19.2.8)
+        version: 19.2.8(react@19.3.0)
     devDependencies:
       '@effect/platform-node':
         specifier: 4.0.0-rc.112
@@ -250,11 +249,11 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       '@types/react':
-        specifier: ^19.2.15
-        version: 19.2.18
+        specifier: ^19.3.0
+        version: 19.3.0
       '@types/react-dom':
         specifier: ^19.2.3
-        version: 19.2.7(@types/react@19.2.18)
+        version: 19.2.7(@types/react@19.3.0)
       csstype:
         specifier: ^3.2.3
         version: 3.2.3
@@ -1420,8 +1419,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.2.0
 
-  '@types/react@19.2.18':
-    resolution: {integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==}
+  '@types/react@19.3.0':
+    resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
 
   '@types/spark-md5@3.0.5':
     resolution: {integrity: sha512-lWf05dnD42DLVKQJZrDHtWFidcLrHuip01CtnC2/S6AMhX4t9ZlEUj4iuRlAnts0PQk7KESOqKxeGE/b6sIPGg==}
@@ -1594,123 +1593,145 @@ packages:
     resolution: {integrity: sha512-yo96Oef12WzqnphInfz/eexVse3+kWgfGS5g2S3rFS3dcGn1ENW9xLFDZUP9rh+yP76DOq38wBoFi1+I9+6qBg==}
     cpu: [arm64]
     os: [darwin]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-darwin-x64@0.5.48':
     resolution: {integrity: sha512-aRCTw0EZC4bVosmw//0OMYP5tGWFE0Cu5yUBFkUbhXx/iBzvORcJ2xPNlOp/vtCCo9Ys4vp8b0DigJV6uOVb2g==}
     cpu: [x64]
     os: [darwin]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-freebsd-x64@0.5.48':
     resolution: {integrity: sha512-CA0AQAEApDkbw51PdLWMtKPJ41/7rvXsS3SJs+phG7fHJI+MuFzWuLbkucZfZoEOiDscmcsfYIdgL8BsfuyKKQ==}
     cpu: [x64]
     os: [freebsd]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm-gnu@0.5.48':
     resolution: {integrity: sha512-DuSQlk8bH4gpmW3/00P0NLagAcMv8jOxjT40cQmxKRkktr+SUOALCfkT89tdDq3qtY95NR2GXOZ7AjNh7KKqCw==}
     cpu: [arm]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm-musl@0.5.48':
     resolution: {integrity: sha512-bxj4Ee+wlaJcWJwft2ReJXWw5sfl1qavDz6+dlRdU1xfTEtjPSNiAWhiCHnJR0R4Ygd57DnzSQmAVGvFv6RcGw==}
     cpu: [arm]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm64-gnu@0.5.48':
     resolution: {integrity: sha512-mk5JVWh+0JOe5ue8k17kbYX8uGBoKt3ZqoCyxNh4nYAAcX7+X1tFUiU7jbjctu4vHeejCBFSTdQ021+V31cUCQ==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm64-musl@0.5.48':
     resolution: {integrity: sha512-4q3vkrNghbllyxOm2KesFLxCPKHF7r3JyQ7BWZccY1j2Y05yKoIFhoWCqIuQ2W/dpte9RI0+OVfwyxnrKg6fkA==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-x64-gnu@0.5.48':
     resolution: {integrity: sha512-csd4M1EVrGaohM8acM6gq1zpUA/Rwe2ulUMBKUcwQXm/k6n7cq1A++qdew78SOVb4do3JH1WE+WFwoGQAcWc1w==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-x64-musl@0.5.48':
     resolution: {integrity: sha512-KcDuEOT+GFoVKdvAWOv1v9iYjwnmvMZlO+j1Rw+5PYdeFLGWGzv/DD11y4SAAdwXIFcil4T0hibeIaF82WStMg==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-win32-arm64@0.5.48':
     resolution: {integrity: sha512-HI8qNrI8dWM5BuqIMKsqornRvTNFrE6sm5zToIJ9YIa9zt5+29P7fJ7Nr39EVf6dAWSb6q7JSpScJnRsQ+FgZA==}
     cpu: [arm64]
     os: [win32]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-win32-x64@0.5.48':
     resolution: {integrity: sha512-X5YWJLO6EfBZpeBqO0AYESnUizbpFDWArcvVD61w0PEWQ3CaFRLnbQXs+kpM4ZZfGMfIE22zfA08QSY67q7TNQ==}
     cpu: [x64]
     os: [win32]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-parser/binding-darwin-arm64@0.5.48':
     resolution: {integrity: sha512-If8mb7HH3vqghJ2NNZ8SuHfhsnjVzOxJpB8xcNOXS5WjYrs2mUhHIh5KOIvK13hDOzh0htGeGK3A6MsiEqE7HQ==}
     cpu: [arm64]
     os: [darwin]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-darwin-x64@0.5.48':
     resolution: {integrity: sha512-EimvPXfspzxf1K11eB6tCW5oiQEXB8g84T2wP1TwzQagdDKo33bkmmVF0B32vTIpXnk/Ifu5IB61izZ1MylljA==}
     cpu: [x64]
     os: [darwin]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-freebsd-x64@0.5.48':
     resolution: {integrity: sha512-0GcUMrumLHheThY9r5Tp46gaZYzn0irWPS1Zba6WY+vVQfhUtzGiWgXxI6tuXX0N32kEaaEVRpkKctvo6Kx3aQ==}
     cpu: [x64]
     os: [freebsd]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm-gnu@0.5.48':
     resolution: {integrity: sha512-8S5T5wjCC73dmmpQeZ49aYsSunIUM3D4Fc6rdK96c+Ayg/p3FmeSPF3xuLZHejcTmqJIIvnbfPlUF+rB6DITjQ==}
     cpu: [arm]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm-musl@0.5.48':
     resolution: {integrity: sha512-tTmbxvnUHcK2/crS9547vk2SMmsajH1yqJ8ltXhIuHJgqR1v+d9n9KT+kSayo/5CS76LegeYxhMFjEivBH2hFA==}
     cpu: [arm]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm64-gnu@0.5.48':
     resolution: {integrity: sha512-KGYCBMqI2zfwyhgq5tpPVNe7jpUeYTBm8DhjdS+zqWNumde/PEC170QE5RHxcOAlsirIDeIUk0jqx+r/axoFSw==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm64-musl@0.5.48':
     resolution: {integrity: sha512-2wTSMsCSXLTc2lZUjMAuU5X4cje55u205WJqfV5NWNF6j9pW/tXyxr15dJeekj8ziLqBXzIsj4DbRh4sY/WcjA==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-x64-gnu@0.5.48':
     resolution: {integrity: sha512-d/6v9UnGglVu1WC2JQyv/5aWSi5fXZeGSlidCfmHp4+N65N1GDKUnFtys5MK5eAPeAjTgSHGGtOc/yCcKTlv3A==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-x64-musl@0.5.48':
     resolution: {integrity: sha512-gX19gw6u4ApPy7SYMPKfFlEkrtj6WlORvrTKK3sBQqjyV+8+mUAkQgxXNjHw4RnOiAmVYg7TOlZcg8d+Qqod9A==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-win32-arm64@0.5.48':
     resolution: {integrity: sha512-w6cQQLbqj3Jcom5Q7ifm103NUOQ9d+Cb4VU5lkrZDjMnwVJ9Hzzg1vCQR7miJuF44vhCXldbme5UryE3giEKlA==}
     cpu: [arm64]
     os: [win32]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-win32-x64@0.5.48':
     resolution: {integrity: sha512-4gO0HmG7fzFxrw1rs0dUdnnaY9YgennjETqDWrTSp7x9fmTUOAoN4VsMfP7YyliQeG1WJJHc55O+rOhmsLppow==}
     cpu: [x64]
     os: [win32]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-toolchain/types@0.5.43':
     resolution: {integrity: sha512-kSpvPntnXw5+lYjO71ffBEnQ5ycQ74KGIYknh0TS4xeyCuBkOqxyJumxZkMhLBBUCLjDAbx2+Icnr3Zh4ftjpQ==}
@@ -2735,12 +2756,8 @@ packages:
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
-  react@18.3.1:
-    resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
-    engines: {node: '>=0.10.0'}
-
-  react@19.2.8:
-    resolution: {integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==}
+  react@19.3.0:
+    resolution: {integrity: sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==}
     engines: {node: '>=0.10.0'}
 
   redis@6.2.1:
@@ -2881,8 +2898,8 @@ packages:
     resolution: {integrity: sha512-aulFJcD6YK8V1G7iRB5tigAP4TsHBZZrOV8pjV++zdUwmeV8uzbY7yn6h9MswN62adStNZFuCIx4haBnRuMDaw==}
     engines: {node: '>=18'}
 
-  style-mod@4.1.3:
-    resolution: {integrity: sha512-i/n8VsZydrugj3Iuzll8+x/00GH2vnYsk1eomD8QiRrSAeW6ItbCQDtfXCeJHd0iwiNagqjQkvpvREEPtW3IoQ==}
+  style-mod@4.1.4:
+    resolution: {integrity: sha512-XXWIQt633/EpAFx8aZDOTjBzrCaGmhvEQlQo6MVPfa2OzO2cWo+4hV9h+6UkHYlXGfy+ODXKUdP7Pthmcu5ATw==}
 
   stylis@4.4.0:
     resolution: {integrity: sha512-5Z9ZpRzfuH6l/UAvCPAPUo3665Nk2wLaZU3x+TLHKVzIz33+sbJqbtrYoC3KD4/uVOr2Zp+L0LySezP9OHV9yA==}
@@ -3143,12 +3160,12 @@ snapshots:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
 
-  '@atlaskit/adf-schema@57.3.4(react@18.3.1)':
+  '@atlaskit/adf-schema@57.3.4(react@19.3.0)':
     dependencies:
       '@atlaskit/adf-schema-generator': 4.0.2
       '@atlaskit/editor-prosemirror': 8.0.3
-      '@atlaskit/platform-feature-flags': 2.2.0(react@18.3.1)
-      '@atlaskit/tmp-editor-statsig': 178.0.0(react@18.3.1)
+      '@atlaskit/platform-feature-flags': 2.2.0(react@19.3.0)
+      '@atlaskit/tmp-editor-statsig': 178.0.0(react@19.3.0)
       '@babel/runtime': 7.29.7
       css-color-names: 0.0.4
       linkify-it: 5.0.2
@@ -3156,54 +3173,31 @@ snapshots:
     transitivePeerDependencies:
       - react
 
-  '@atlaskit/adf-schema@57.3.4(react@19.2.8)':
+  '@atlaskit/adf-utils@20.9.4(react@19.3.0)':
     dependencies:
-      '@atlaskit/adf-schema-generator': 4.0.2
+      '@atlaskit/adf-schema': 57.3.4(react@19.3.0)
       '@atlaskit/editor-prosemirror': 8.0.3
-      '@atlaskit/platform-feature-flags': 2.2.0(react@19.2.8)
-      '@atlaskit/tmp-editor-statsig': 178.0.0(react@19.2.8)
-      '@babel/runtime': 7.29.7
-      css-color-names: 0.0.4
-      linkify-it: 5.0.2
-      memoize-one: 6.0.0
-    transitivePeerDependencies:
-      - react
-
-  '@atlaskit/adf-utils@20.9.4(react@18.3.1)':
-    dependencies:
-      '@atlaskit/adf-schema': 57.3.4(react@18.3.1)
-      '@atlaskit/editor-prosemirror': 8.0.3
-      '@atlaskit/platform-feature-experiments': 0.3.0(react@18.3.1)
-      '@atlaskit/platform-feature-flags': 2.2.0(react@18.3.1)
-      '@atlaskit/tmp-editor-statsig': 178.0.0(react@19.2.8)
+      '@atlaskit/platform-feature-experiments': 0.3.0(react@19.3.0)
+      '@atlaskit/platform-feature-flags': 2.2.0(react@19.3.0)
+      '@atlaskit/tmp-editor-statsig': 178.0.0(react@19.3.0)
       '@babel/runtime': 7.29.7
     transitivePeerDependencies:
       - react
 
-  '@atlaskit/atlassian-context@1.1.1(react@18.3.1)':
+  '@atlaskit/atlassian-context@1.1.1(react@19.3.0)':
     dependencies:
       '@babel/runtime': 7.29.7
-      react: 18.3.1
+      react: 19.3.0
 
-  '@atlaskit/atlassian-context@1.1.1(react@19.2.8)':
+  '@atlaskit/browser-apis@1.2.0(react@19.3.0)':
     dependencies:
       '@babel/runtime': 7.29.7
-      react: 19.2.8
+      react: 19.3.0
 
-  '@atlaskit/browser-apis@1.2.0(react@18.3.1)':
+  '@atlaskit/editor-json-transformer@9.8.0(react@19.3.0)':
     dependencies:
-      '@babel/runtime': 7.29.7
-      react: 18.3.1
-
-  '@atlaskit/browser-apis@1.2.0(react@19.2.8)':
-    dependencies:
-      '@babel/runtime': 7.29.7
-      react: 19.2.8
-
-  '@atlaskit/editor-json-transformer@9.8.0(react@18.3.1)':
-    dependencies:
-      '@atlaskit/adf-schema': 57.3.4(react@18.3.1)
-      '@atlaskit/adf-utils': 20.9.4(react@18.3.1)
+      '@atlaskit/adf-schema': 57.3.4(react@19.3.0)
+      '@atlaskit/adf-utils': 20.9.4(react@19.3.0)
       '@atlaskit/editor-prosemirror': 8.0.3
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
@@ -3224,9 +3218,9 @@ snapshots:
       prosemirror-utils: 1.2.2(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)
       prosemirror-view: 1.41.5
 
-  '@atlaskit/feature-gate-js-client@6.0.2(react@18.3.1)':
+  '@atlaskit/feature-gate-js-client@6.0.2(react@19.3.0)':
     dependencies:
-      '@atlaskit/atlassian-context': 1.1.1(react@18.3.1)
+      '@atlaskit/atlassian-context': 1.1.1(react@19.3.0)
       '@babel/runtime': 7.29.7
       '@statsig/client-core': 3.30.2
       '@statsig/js-client': 3.30.2
@@ -3234,108 +3228,55 @@ snapshots:
     transitivePeerDependencies:
       - react
 
-  '@atlaskit/feature-gate-js-client@6.0.2(react@19.2.8)':
-    dependencies:
-      '@atlaskit/atlassian-context': 1.1.1(react@19.2.8)
-      '@babel/runtime': 7.29.7
-      '@statsig/client-core': 3.30.2
-      '@statsig/js-client': 3.30.2
-      eventemitter3: 4.0.7
-    transitivePeerDependencies:
-      - react
-
-  '@atlaskit/interaction-context@4.1.0(react@18.3.1)':
+  '@atlaskit/interaction-context@4.1.0(react@19.3.0)':
     dependencies:
       '@babel/runtime': 7.29.7
-      react: 18.3.1
+      react: 19.3.0
 
-  '@atlaskit/interaction-context@4.1.0(react@19.2.8)':
+  '@atlaskit/platform-feature-experiments@0.3.0(react@19.3.0)':
     dependencies:
+      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.3.0)
+      '@atlaskit/react-ufo': 7.8.2(react@19.3.0)
       '@babel/runtime': 7.29.7
-      react: 19.2.8
+      react: 19.3.0
 
-  '@atlaskit/platform-feature-experiments@0.3.0(react@18.3.1)':
+  '@atlaskit/platform-feature-flags@2.2.0(react@19.3.0)':
     dependencies:
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@18.3.1)
-      '@atlaskit/react-ufo': 7.8.2(react@18.3.1)
-      '@babel/runtime': 7.29.7
-      react: 18.3.1
-
-  '@atlaskit/platform-feature-flags@2.2.0(react@18.3.1)':
-    dependencies:
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@18.3.1)
+      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.3.0)
       '@babel/runtime': 7.29.7
     transitivePeerDependencies:
       - react
 
-  '@atlaskit/platform-feature-flags@2.2.0(react@19.2.8)':
+  '@atlaskit/react-compiler-gating@0.2.3(react@19.3.0)':
     dependencies:
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.2.8)
+      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.3.0)
       '@babel/runtime': 7.29.7
     transitivePeerDependencies:
       - react
 
-  '@atlaskit/react-compiler-gating@0.2.3(react@18.3.1)':
+  '@atlaskit/react-ufo@7.8.2(react@19.3.0)':
     dependencies:
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@18.3.1)
-      '@babel/runtime': 7.29.7
-    transitivePeerDependencies:
-      - react
-
-  '@atlaskit/react-compiler-gating@0.2.3(react@19.2.8)':
-    dependencies:
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.2.8)
-      '@babel/runtime': 7.29.7
-    transitivePeerDependencies:
-      - react
-
-  '@atlaskit/react-ufo@7.8.2(react@18.3.1)':
-    dependencies:
-      '@atlaskit/atlassian-context': 1.1.1(react@18.3.1)
-      '@atlaskit/browser-apis': 1.2.0(react@18.3.1)
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@18.3.1)
-      '@atlaskit/interaction-context': 4.1.0(react@18.3.1)
-      '@atlaskit/platform-feature-flags': 2.2.0(react@18.3.1)
-      '@atlaskit/react-compiler-gating': 0.2.3(react@18.3.1)
+      '@atlaskit/atlassian-context': 1.1.1(react@19.3.0)
+      '@atlaskit/browser-apis': 1.2.0(react@19.3.0)
+      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.3.0)
+      '@atlaskit/interaction-context': 4.1.0(react@19.3.0)
+      '@atlaskit/platform-feature-flags': 2.2.0(react@19.3.0)
+      '@atlaskit/react-compiler-gating': 0.2.3(react@19.3.0)
       '@babel/runtime': 7.29.7
       '@opentelemetry/api': 1.9.1
       bind-event-listener: 3.0.0
       bowser-ultralight: 1.0.6
-      react: 18.3.1
+      react: 19.3.0
       scheduler: 0.23.2
       uuid: 11.1.1
 
-  '@atlaskit/react-ufo@7.8.2(react@19.2.8)':
+  '@atlaskit/tmp-editor-statsig@178.0.0(react@19.3.0)':
     dependencies:
-      '@atlaskit/atlassian-context': 1.1.1(react@19.2.8)
-      '@atlaskit/browser-apis': 1.2.0(react@19.2.8)
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.2.8)
-      '@atlaskit/interaction-context': 4.1.0(react@19.2.8)
-      '@atlaskit/platform-feature-flags': 2.2.0(react@19.2.8)
-      '@atlaskit/react-compiler-gating': 0.2.3(react@19.2.8)
+      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.3.0)
+      '@atlaskit/platform-feature-flags': 2.2.0(react@19.3.0)
+      '@atlaskit/react-ufo': 7.8.2(react@19.3.0)
       '@babel/runtime': 7.29.7
-      '@opentelemetry/api': 1.9.1
-      bind-event-listener: 3.0.0
-      bowser-ultralight: 1.0.6
-      react: 19.2.8
-      scheduler: 0.23.2
-      uuid: 11.1.1
-
-  '@atlaskit/tmp-editor-statsig@178.0.0(react@18.3.1)':
-    dependencies:
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@18.3.1)
-      '@atlaskit/platform-feature-flags': 2.2.0(react@18.3.1)
-      '@atlaskit/react-ufo': 7.8.2(react@18.3.1)
-      '@babel/runtime': 7.29.7
-      react: 18.3.1
-
-  '@atlaskit/tmp-editor-statsig@178.0.0(react@19.2.8)':
-    dependencies:
-      '@atlaskit/feature-gate-js-client': 6.0.2(react@19.2.8)
-      '@atlaskit/platform-feature-flags': 2.2.0(react@19.2.8)
-      '@atlaskit/react-ufo': 7.8.2(react@19.2.8)
-      '@babel/runtime': 7.29.7
-      react: 19.2.8
+      react: 19.3.0
 
   '@babel/code-frame@7.29.7':
     dependencies:
@@ -3569,7 +3510,7 @@ snapshots:
     dependencies:
       '@codemirror/state': 6.5.0
       crelt: 1.0.7
-      style-mod: 4.1.3
+      style-mod: 4.1.4
       w3c-keyname: 2.2.8
 
   '@effect/platform-node-shared@4.0.0-rc.112(effect@4.0.0-rc.112)':
@@ -4303,11 +4244,11 @@ snapshots:
     dependencies:
       '@types/node': 26.4.1
 
-  '@types/react-dom@19.2.7(@types/react@19.2.18)':
+  '@types/react-dom@19.2.7(@types/react@19.3.0)':
     dependencies:
-      '@types/react': 19.2.18
+      '@types/react': 19.3.0
 
-  '@types/react@19.2.18':
+  '@types/react@19.3.0':
     dependencies:
       csstype: 3.2.3
 
@@ -5526,18 +5467,14 @@ snapshots:
       es-define-property: 1.0.1
       side-channel: 1.1.1
 
-  react-dom@19.2.8(react@19.2.8):
+  react-dom@19.2.8(react@19.3.0):
     dependencies:
-      react: 19.2.8
+      react: 19.3.0
       scheduler: 0.27.0
 
   react-is@17.0.2: {}
 
-  react@18.3.1:
-    dependencies:
-      loose-envify: 1.4.0
-
-  react@19.2.8: {}
+  react@19.3.0: {}
 
   redis@6.2.1(@opentelemetry/api@1.9.1):
     dependencies:
@@ -5679,7 +5616,7 @@ snapshots:
 
   strip-final-newline@4.0.0: {}
 
-  style-mod@4.1.3: {}
+  style-mod@4.1.4: {}
 
   stylis@4.4.0: {}
 
