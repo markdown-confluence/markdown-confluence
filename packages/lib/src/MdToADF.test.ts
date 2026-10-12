@@ -261,6 +261,16 @@ test.each(markdownTestCases)("parses $fileName", (markdown: MarkdownFile) => {
 	expect(adfFile).toMatchSnapshot();
 });
 
+test("keeps repeated blank lines after a table from changing a thematic break", () => {
+	const adf = parseMarkdownToADF(
+		["| A | B |", "| --- | --- |", "| x | y |", "", "", "---", "# After"].join("\n"),
+		"https://example.com",
+	);
+
+	expect(adf.content?.map((node) => node.type)).toEqual(["table", "rule", "heading"]);
+	expect(adf.content?.at(-1)?.content?.[0]?.text).toBe("After");
+});
+
 test("converts markdown task list items to ADF task nodes", () => {
 	const markdown: MarkdownFile = {
 		folderName: "tasks",
