@@ -389,6 +389,21 @@ function applyComment(location: TextLocation, comment: InlineComment, work: Inli
 	return true;
 }
 
+/** IDs of the inline-comment annotations in a document (not charged to the matching budget). */
+function annotationIds(document: JSONDocNode): Set<string> {
+	const found = new Set<string>();
+	const stack: ADFEntity[] = [document as ADFEntity];
+	while (stack.length) {
+		const node = stack.pop()!;
+		for (const mark of node.marks ?? []) {
+			if (mark.type === "annotation" && mark.attrs?.["annotationType"] === "inlineComment")
+				found.add(mark.attrs["id"]);
+		}
+		for (const child of node.content ?? []) if (child) stack.push(child);
+	}
+	return found;
+}
+
 export function remapInlineComments(
 	document: JSONDocNode,
 	existing: JSONDocNode,
@@ -421,19 +436,27 @@ export function remapInlineComments(
 			unmapped.push(comment);
 		}
 	}
-	if (unmapped.length) {
+	// Confluence can split one comment across several text nodes. Once any part
+	// of it is anchored in the new document, the rest needs no fallback entry.
+	const anchoredIds = unmapped.length ? annotationIds(document) : new Set<string>();
+	const fallback = unmapped.filter((comment) => !anchoredIds.has(comment.id));
+	// One entry per comment: a comment split across text nodes is listed once.
+	const fallbackText = new Map<string, string>();
+	for (const comment of fallback)
+		fallbackText.set(comment.id, (fallbackText.get(comment.id) ?? "") + comment.text);
+	if (fallbackText.size) {
 		document.content.push(
 			heading({ level: 1 })(text("Inline comments that couldn't be mapped")),
 			ol({ order: 1 })(
-				...unmapped.map((comment) =>
+				...[...fallbackText].map(([id, commentText]) =>
 					li([
 						p({
 							type: "text",
-							text: comment.text,
+							text: commentText,
 							marks: [
 								{
 									type: "annotation",
-									attrs: { annotationType: "inlineComment", id: comment.id },
+									attrs: { annotationType: "inlineComment", id },
 								},
 							],
 						} as TextDefinition),
@@ -442,5 +465,5 @@ export function remapInlineComments(
 			),
 		);
 	}
-	return { document, unmappedCount: unmapped.length, limitReached, work };
+	return { document, unmappedCount: fallbackText.size, limitReached, work };
 }
