@@ -1,6 +1,6 @@
 {
 	"name": "@markdown-confluence/plantuml-renderer",
-	"version": "7.0.0",
+	"version": "7.0.1",
 	"description": "HTTP-based PlantUML renderer for the markdown-confluence publish pipeline",
 	"keywords": [],
 	"homepage": "https://github.com/markdown-confluence/markdown-confluence/tree/main/packages/plantuml-renderer",
