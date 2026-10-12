@@ -420,6 +420,28 @@ test("normalizes local heading and relative markdown links", () => {
 	expect(links).not.toContain('"href":"#"');
 });
 
+test("does not retain the table escape before a wikilink alias", () => {
+	const adf = parseMarkdownToADF(
+		["| Link |", "| --- |", String.raw`| [[#Interface: A ↔ B\|§1]] |`].join("\n"),
+		"https://example.com",
+	);
+
+	expect(JSON.stringify(adf)).toContain('"href":"wikilinks:#Interface:-A-↔-B"');
+	expect(JSON.stringify(adf)).not.toContain('↔-B\\\\"');
+});
+
+test("wikilink heading normalization does not shift text after the link", () => {
+	const adf = parseMarkdownToADF(
+		String.raw`Before ([[#Two  spaces|§1]], [[#Other section|§2]]) after`,
+		"https://example.com",
+	);
+	const text = JSON.stringify(adf);
+
+	expect(text).toContain('"text":"Before ("');
+	expect(text).toContain('"text":", "');
+	expect(text).toContain('"text":") after"');
+});
+
 test("keeps indented wikilink-like image text parseable", () => {
 	const adfFile = convertMDtoADF(createMarkdownFile("\t[[!image.png]]"), testSettings);
 
