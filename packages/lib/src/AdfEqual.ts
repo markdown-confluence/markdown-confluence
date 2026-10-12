@@ -122,6 +122,33 @@ export function adfEqual(first: ADFEntity, second: ADFEntity): boolean {
 	return isEqual(normalizeAdfForComparison(first), normalizeAdfForComparison(second));
 }
 
+/**
+ * Compare a page's current ADF with a newly generated document.
+ *
+ * Confluence assigns a random localId to nodes the uploaded document left
+ * unnamed, so a republish of unchanged Markdown would otherwise never compare
+ * equal. localIds the generated document assigns itself are still compared.
+ */
+export function publishedAdfEqual(existing: ADFEntity, generated: ADFEntity): boolean {
+	const generatedLocalIds = new Set<unknown>();
+	traverse(generated, {
+		any: (node) => {
+			if (node.attrs?.["localId"] !== undefined) generatedLocalIds.add(node.attrs["localId"]);
+			return node;
+		},
+	});
+	const withoutAssignedLocalIds = traverse(cloneAdf(existing), {
+		any: (node) => {
+			if (node.attrs && !generatedLocalIds.has(node.attrs["localId"])) {
+				delete node.attrs["localId"];
+				if (Object.keys(node.attrs).length === 0) delete node.attrs;
+			}
+			return node;
+		},
+	}) as ADFEntity;
+	return adfEqual(withoutAssignedLocalIds, generated);
+}
+
 export function marksEqual(
 	first: ADFEntityMark[] | undefined,
 	second: ADFEntityMark[] | undefined,

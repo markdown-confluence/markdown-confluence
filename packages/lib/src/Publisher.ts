@@ -12,7 +12,7 @@ import {
 	executeADFProcessingPipelineEffect,
 	PublisherFunctions,
 } from "./ADFProcessingPlugins/types";
-import { adfEqual } from "./AdfEqual";
+import { publishedAdfEqual } from "./AdfEqual";
 import { CurrentAttachments, UploadedImageData } from "./Attachments";
 import { PageContentType } from "./ConniePageConfig";
 import { RequiredConfluenceClient } from "./ConfluenceClient";
@@ -403,7 +403,7 @@ export class Publisher {
 			};
 
 			if (
-				!adfEqual(existingPageData.adfContent, adfToUpload) ||
+				!publishedAdfEqual(existingPageData.adfContent, adfToUpload) ||
 				!isEqual(existingPageDetails, newPageDetails)
 			) {
 				result.contentResult = "updated";

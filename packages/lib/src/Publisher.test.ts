@@ -853,6 +853,28 @@ test("preserves unchanged pages when the publishing parent has higher ancestors"
 	expect(updateContentRequests).toEqual([]);
 });
 
+test("does not republish unchanged content after Confluence assigns localIds", async () => {
+	const markdown = "# Heading\n\nFirst paragraph.\n\n- item";
+	const existingAdf = parseMarkdownToADF(markdown, testPublishSettings.confluenceBaseUrl);
+	let assigned = 0;
+	const assignLocalIds = (node: {
+		type?: string;
+		attrs?: Record<string, unknown>;
+		content?: unknown[];
+	}) => {
+		if (node.type && node.type !== "text" && node.type !== "doc") {
+			node.attrs = { ...node.attrs, localId: `server-${assigned++}` };
+		}
+		for (const child of node.content ?? []) assignLocalIds(child as typeof node);
+	};
+	assignLocalIds(existingAdf as never);
+
+	const { result, updateContentRequests } = await publishSinglePage({ markdown, existingAdf });
+	expect(assigned).toBeGreaterThan(0);
+	expect(result[0]?.successfulUploadResult?.contentResult).toBe("same");
+	expect(updateContentRequests).toEqual([]);
+});
+
 test("moves a page when its immediate parent differs", async () => {
 	const { result, updateContentRequests } = await publishSinglePage({
 		existingAncestors: [{ id: "parent-id" }, { id: "old-folder" }],
