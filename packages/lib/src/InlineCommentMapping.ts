@@ -389,10 +389,19 @@ function applyComment(location: TextLocation, comment: InlineComment, work: Inli
 	return true;
 }
 
+/**
+ * Carry the existing page's inline-comment annotations onto the new document.
+ *
+ * Comments that cannot be placed are kept in a fallback section at the end of
+ * the page, except resolved ones: their thread is closed and there is nothing
+ * left to anchor it to, so they are dropped, as the Confluence editor does when
+ * the commented text is deleted.
+ */
 export function remapInlineComments(
 	document: JSONDocNode,
 	existing: JSONDocNode,
 	limits: InlineCommentLimits = INLINE_COMMENT_LIMITS,
+	resolvedCommentIds: ReadonlySet<string> = new Set(),
 ) {
 	const work = new InlineCommentWork(limits);
 	// Extraction must complete before modifying the page; a failure cannot lose IDs.
@@ -421,11 +430,13 @@ export function remapInlineComments(
 			unmapped.push(comment);
 		}
 	}
-	if (unmapped.length) {
+	const dropped = unmapped.filter((comment) => resolvedCommentIds.has(comment.id));
+	const fallback = unmapped.filter((comment) => !resolvedCommentIds.has(comment.id));
+	if (fallback.length) {
 		document.content.push(
 			heading({ level: 1 })(text("Inline comments that couldn't be mapped")),
 			ol({ order: 1 })(
-				...unmapped.map((comment) =>
+				...fallback.map((comment) =>
 					li([
 						p({
 							type: "text",
@@ -442,5 +453,11 @@ export function remapInlineComments(
 			),
 		);
 	}
-	return { document, unmappedCount: unmapped.length, limitReached, work };
+	return {
+		document,
+		unmappedCount: fallback.length,
+		droppedResolvedCount: dropped.length,
+		limitReached,
+		work,
+	};
 }

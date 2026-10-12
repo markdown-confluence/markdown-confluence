@@ -199,3 +199,33 @@ test("all budget fields must be finite and are snapshotted before use", () => {
 	expect(() => work.cell()).toThrow(InlineCommentLimitError);
 	expect(Object.isFrozen(work.limits)).toBe(true);
 });
+
+test("drops unmappable resolved comments instead of adding them to the fallback section", () => {
+	const source = document([text("Rewritten paragraph")]);
+	const remote = document(
+		[annotated("Removed wording", "resolved")],
+		[annotated("Gone", "open")],
+	);
+	const result = remapInlineComments(
+		source,
+		remote,
+		INLINE_COMMENT_LIMITS,
+		new Set(["resolved"]),
+	);
+	expect(result.unmappedCount).toBe(1);
+	expect(result.droppedResolvedCount).toBe(1);
+	expect(ids(source)).toEqual(["open"]);
+});
+
+test("still maps resolved comments whose text survives", () => {
+	const source = document([text("Before Anchor after")]);
+	const remote = document([text("Before "), annotated("Anchor", "resolved"), text(" after")]);
+	const result = remapInlineComments(
+		source,
+		remote,
+		INLINE_COMMENT_LIMITS,
+		new Set(["resolved"]),
+	);
+	expect(result.droppedResolvedCount).toBe(0);
+	expect(ids(source)).toEqual(["resolved"]);
+});
