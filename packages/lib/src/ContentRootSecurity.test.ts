@@ -254,7 +254,7 @@ test("rejects an external directory symlink before traversing or reading its con
 });
 
 test("supports a symlinked root and in-root file links while keeping logical file names", async () => {
-	const { fs, directory, root, createWorkspace, canonicalRoot, accesses, deniedAccesses } =
+	const { fs, path, directory, root, createWorkspace, canonicalRoot, accesses, deniedAccesses } =
 		await fixture();
 	const rootLink = `${directory}/root-link`;
 	await Effect.runPromise(fs.symlink(root, rootLink));
@@ -268,7 +268,7 @@ test("supports a symlinked root and in-root file links while keeping logical fil
 		workspace.updateMarkdownValues(`${rootLink}/linked.md`, { pageId: "123" }),
 	);
 	expect(accesses.filter((access) => access.operation === "writeFileString")).toEqual([
-		{ operation: "writeFileString", canonicalPath: `${canonicalRoot}/page.md` },
+		{ operation: "writeFileString", canonicalPath: path.join(canonicalRoot, "page.md") },
 	]);
 	expect(await Effect.runPromise(fs.readFileString(`${root}/page.md`))).toContain(
 		"connie-page-id:",
@@ -277,7 +277,7 @@ test("supports a symlinked root and in-root file links while keeping logical fil
 });
 
 test("internal directory aliases and cycles are visited once per canonical directory", async () => {
-	const { workspace, fs, root, canonicalRoot, accesses, deniedAccesses } = await fixture();
+	const { workspace, fs, path, root, canonicalRoot, accesses, deniedAccesses } = await fixture();
 	await Effect.runPromise(fs.makeDirectory(`${root}/Notes`));
 	await Effect.runPromise(fs.writeFileString(`${root}/Notes/note.md`, "# Directory note"));
 	await Effect.runPromise(fs.symlink(`${root}/Notes`, `${root}/Alias`));
@@ -287,7 +287,7 @@ test("internal directory aliases and cycles are visited once per canonical direc
 	expect(files.filter((file) => file.contents.includes("# Directory note"))).toHaveLength(1);
 	expect(accesses.filter((access) => access.operation === "readDirectory")).toEqual([
 		{ operation: "readDirectory", canonicalPath: canonicalRoot },
-		{ operation: "readDirectory", canonicalPath: `${canonicalRoot}/Notes` },
+		{ operation: "readDirectory", canonicalPath: path.join(canonicalRoot, "Notes") },
 	]);
 	accesses.length = 0;
 	expect(await Effect.runPromise(workspace.readText("missing.md", "page.md"))).toBe(false);
@@ -301,7 +301,7 @@ test("internal directory aliases and cycles are visited once per canonical direc
 test.each(["Notes", "Alias", ".", "./"])(
 	"directory aliases preserve the selected logical publishing route: %s",
 	async (folderToPublish) => {
-		const { fs, root, createWorkspace } = await fixture();
+		const { fs, path, root, createWorkspace } = await fixture();
 		await Effect.runPromise(fs.makeDirectory(`${root}/Notes`));
 		await Effect.runPromise(fs.writeFileString(`${root}/Notes/note.md`, "# Note"));
 		await Effect.runPromise(fs.symlink(`${root}/Notes`, `${root}/Alias`));
@@ -311,7 +311,7 @@ test.each(["Notes", "Alias", ".", "./"])(
 		const files = await Effect.runPromise(workspace.getMarkdownFilesToUpload);
 		const notes = files.filter((file) => file.fileName === "note.md");
 		expect(notes.map((file) => file.absoluteFilePath)).toEqual([
-			`${folderToPublish === "Alias" ? "Alias" : "Notes"}/note.md`,
+			path.join(folderToPublish === "Alias" ? "Alias" : "Notes", "note.md"),
 		]);
 	},
 );
